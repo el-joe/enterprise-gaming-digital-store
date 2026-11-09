@@ -18,9 +18,24 @@ Rule: backend milestones (M3 to M10) do not depend on the visual design and may 
 | BD8 | Gift card resale rights and brand use per platform | Obtain from suppliers and brands | Confirm before using logos or listing each brand | M2, go-live |
 | BD9 | Alert channel, backup storage, GeoIP key, LLM key | Choose providers | Slack or Telegram; S3-compatible storage; MaxMind free tier; Anthropic | M17, M20 |
 
+### Decisions confirmed by the owner (2026-11-10)
+
+| ID | Decision |
+|---|---|
+| BD1 | Build the Stripe adapter now; settle the merchant entity before go-live |
+| BD2 | Direct game top-ups use manual fulfilment at launch |
+| BD3 | Wallet is credits and refunds only |
+| BD4 | Refunds for undelivered orders by default; otherwise at admin discretion |
+| BD5 | Launch in English and Arabic with full RTL |
+| BD6 | Base currency is USD |
+| BD7 | Tax-inclusive prices, with an accountant's advice |
+| BD8 | Official brand logos are not used until rights are confirmed per brand |
+
+BD9 remains open and blocks only M17 and M20.
+
 ## Definition of done (every milestone)
 
-Migrations reversible where practical. Pint clean. Pest passing for the milestone's scope on MySQL `backend_testing`. No N+1 on new listings (`Model::preventLazyLoading()` in tests). No TODOs. Docs updated. `PROGRESS.md` section added. External integrations labelled honestly.
+Migrations reversible where practical. Pint clean. Pest passing for the milestone's scope on MySQL `gaming-store_testing`. No N+1 on new listings (`Model::preventLazyLoading()` in tests). No TODOs. Docs updated. `PROGRESS.md` section added. External integrations labelled honestly.
 
 ## Milestones
 

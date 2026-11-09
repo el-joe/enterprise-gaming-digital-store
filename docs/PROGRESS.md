@@ -7,7 +7,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | Milestone | Name | Status |
 |---|---|---|
 | M0 | Discovery and architecture | Complete |
-| M1 | Figma design | Not started |
+| M1 | Figma design | In progress (delivered, awaiting review) |
 | M2 | Canva assets | Not started |
 | M3 | Foundation | Not started |
 | M4 | Full schema | Not started |
@@ -124,3 +124,53 @@ Not applicable. No code was written.
 ### Next milestone
 
 M1: Figma design. M3 can run in parallel once the database login works.
+
+## M1: Figma design
+
+Date completed: 2026-11-10 (delivered for review)
+Completed by: Senior Product Designer
+
+### Summary of completed work
+
+Complete design system and screens in Figma for the working brand PLAYVAULT, dark-first with an original wordmark and a key-cut card silhouette. English and Arabic with RTL. Official brand logos are not used (BD8): platforms are plain-text tiles with an empty logo slot.
+
+Figma file: https://www.figma.com/design/JkUUSR3WGBYC9ewy2qRFQO
+
+| Page | Frames | Contents |
+|---|---|---|
+| Foundations | 1 | Tokens, typography, spacing, motion, RTL mirroring, implementation notes |
+| Components | 37 sets, 349 variants + 63 icons | Buttons, inputs, tables, modals, navigation, cards, status |
+| Storefront | 28 | Home, platforms, platform detail, category, product (gift card and top-up), search, cart, auth, 404 |
+| Checkout | 7 | Guest (desktop, tablet, mobile), registered, confirmation |
+| Account | 16 | Dashboard, orders, order details, wallet, wishlist, tickets, security, reveal flow |
+| Admin | 24 | Dashboard (incl. Admin Light), catalog list and edit, suppliers and capability matrix, order details with pending verification, payments, pricing rules, users and permissions, settings, DataTables states; two mobile examples |
+| RTL | 7 | Home, product, checkout (desktop, mobile), admin order |
+
+### Files created
+
+`docs/DESIGN_TOKENS.md`
+
+### Migrations
+
+None.
+
+### Features implemented
+
+None (design milestone).
+
+### Tests and results
+
+- Command: not applicable. Visual review through Figma screenshots of main frames and an overflow audit of all frames.
+- Result: defects found were fixed (tablet overflow, spacers, truncation, small-tile labels, light-mode charts).
+- Not tested: real device rendering; Arabic copy has not been reviewed by a native editor.
+
+### Outstanding requirements
+
+- Not produced: Figma prototype links; tablet frames for screens other than those specified (home, category, product, guest checkout, all admin screens except DataTables states); RTL frames beyond home, product, checkout and admin order; admin Customers, Marketing, Content and Support modules; account Profile, Digital code history page, Reviews and Notifications.
+- Code-level art (Canva) and final logos remain for M2 and BD8.
+- Light mode is defined for admin only; storefront remains dark.
+- Chart series palette: lightness band warning accepted, documented in `DESIGN_TOKENS.md`.
+
+### Next milestone
+
+M2: Canva assets, after M1 review. M3 can run in parallel once the database login works.
