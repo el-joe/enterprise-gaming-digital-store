@@ -8,7 +8,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 |---|---|---|
 | M0 | Discovery and architecture | Complete |
 | M1 | Figma design | In progress (delivered, awaiting review) |
-| M2 | Canva assets | Not started |
+| M2 | Canva assets | Partial (hero banners only; blocked by Canva credit quota) |
 | M3 | Foundation | Not started |
 | M4 | Full schema | Not started |
 | M5 | Catalog and CMS services | Not started |
@@ -174,3 +174,46 @@ None (design milestone).
 ### Next milestone
 
 M2: Canva assets, after M1 review. M3 can run in parallel once the database login works.
+
+---
+
+## M2: Canva assets
+
+Date completed: Not complete (partial delivery 2026-11-10)
+Completed by: Brand / Visual Asset Designer agent
+
+### Summary of completed work
+
+Priority 1 only: three textless homepage hero concepts at 2400x1000 with 1080x1350 mobile crops, exported from Canva and converted to WebP. Canva returned `quota_exceeded` during the hero batch, so work stopped there as instructed. Canva folder: https://www.canva.com/folder/FAHad74IjHc
+
+### Files created
+
+- `backend/resources/assets/images/hero/` (6 WebP files)
+- `docs/ASSETS.md`
+
+### Migrations
+
+None.
+
+### Features implemented
+
+None (asset milestone).
+
+### Tests and results
+
+- Command: not applicable. Each export was checked as a real image, converted to WebP, and viewed before acceptance.
+- Result: 6 files accepted, all 52 to 89 KB. One Canva resize rejected. Concept 2 retouched to remove generation artefacts.
+- Not tested: rendering in the storefront, which does not exist yet.
+
+### Outstanding requirements
+
+- Canva credits are needed to produce category banners, platform banners, promotional banners, empty states, marketing and social assets (English and Arabic), and the Open Graph image.
+- Favicon and logo exports were not produced.
+- Export of portrait designs `DAHad4QmPfA` and `DAHad_yXE2Q` was refused by Canva; mobile heroes are crops of the desktop art.
+- Mobile crops have no calm area for copy, so M12 needs a scrim or art-on-top layout.
+- Commercial licence for Canva AI output must be confirmed for this account before launch.
+- Full list: `docs/ASSETS.md`, Missing Assets.
+
+### Next milestone
+
+Finish M2 once Canva credits are available. M12 (Storefront) depends on M2.
