@@ -127,10 +127,10 @@ Index: `idx_cc_user_channel` (user_id, channel, created_at): latest consent per 
 |---|---|---|---|
 | user_id | fk:users cascade | NN | |
 | category | enum | NN | `orders`, `support`, `marketing`, `security` |
-| channel | enum | NN | `mail`, `database` |
+| channel | enum | NN | `mail`, `database`, `sms` (M17) |
 | enabled | bool | NN | default true |
 
-Unique: `uq_np` (user_id, category, channel).
+Unique: `uq_np` (user_id, category, channel). M17: `sms` is the secondary channel of the n8n customer workflows and is opt-in: an order or support SMS needs an enabled row for that category; marketing SMS needs the latest `sms_marketing` consent to be a grant and no disabled marketing `sms` row (`CustomerContactPolicy`).
 
 ### otp_challenges
 
@@ -1562,7 +1562,7 @@ Columns: type str(64) NN, severity enum NN (`info`,`warning`,`critical`), ip str
 
 ### scheduled_task_runs
 
-Columns: command str(120) NN, started_at ts NN, finished_at ts Y, status enum NN (`running`,`completed`,`failed`), duration_ms int unsigned Y, error str(500) Y. Index (command, started_at).
+Columns: command str(120) NN, started_at ts NN, finished_at ts Y, status enum NN (`running`,`completed`,`failed`), duration_ms int unsigned Y, error str(500) Y. Index (command, started_at). Written since M17 for every scheduled task by `RecordScheduledTaskHeartbeat` (the scheduler's own task events): `command` is the artisan name; a non-zero exit code or an exception is `failed`, storing `exit code N` or the exception class only.
 
 ### notification_templates
 
@@ -1620,33 +1620,63 @@ Columns: workflow_id str(16) NN unique (`A01`...), name str(190) NN, category st
 
 ### automation_logs
 
-Spec "Automation Logs" and n8n execution logs.
+Spec "Automation Logs" and n8n execution logs. M17 adds the call rows: every request to `/api/v1/automation`, refused ones included, writes one row of kind `call`; `POST /executions` writes and updates the row of kind `execution`.
 
 | Column | Type | Null | Notes |
 |---|---|---|---|
-| workflow_id | str(16) | NN | |
-| execution_key | str(128) | NN | n8n execution ID or schedule window |
-| status | enum | NN | `started`, `success`, `failed`, `skipped_duplicate` |
+| kind | str(16) | NN | `execution`, `call`; default `execution` (M17) |
+| service_account_id | fk:service_accounts null | Y | M17; null for unauthenticated calls |
+| workflow_id | str(16) | NN | `-` for a call without a valid workflow header |
+| execution_key | str(128) | NN | n8n schedule window or `<ID>:<event_id>`; for a call without a valid key, the request id |
+| endpoint | str(96) | Y | M17: route name after `automation.` (call rows) |
+| http_status | smallint unsigned | Y | M17 |
+| error_code | str(64) | Y | M17: `code` of the error envelope |
+| duration_ms | int unsigned | Y | M17 |
+| ip | str(45) | Y | M17 |
+| request_id | char(26) | Y | M17 |
+| status | enum | NN | `started`, `success`, `failed`, `skipped_duplicate` (call rows: `success` below 400, else `failed`) |
 | started_at | ts | NN | |
 | finished_at | ts | Y | |
-| summary | json | Y | |
+| summary | json | Y | execution: attempt, result, queued job; call: method and redacted query (never the body) |
 | error | text | Y | |
+| execution_unique_key | str(128) stored generated | Y | M17: `execution_key` when `kind = 'execution'`, else null |
 
-Unique: `uq_alog` (workflow_id, execution_key): **duplicate execution protection**. Index: `idx_alog` (workflow_id, started_at), (status, started_at).
+Unique: `uq_alog` (workflow_id, execution_unique_key): **duplicate execution protection** for execution rows only (M17 replaced the key on (workflow_id, execution_key); rolling back the migration deletes call rows). Index: `idx_alog` (workflow_id, started_at), `idx_alog_kind_status` (kind, status, started_at).
 
 ### automation_outbox
 
 | Column | Type | Null | Notes |
 |---|---|---|---|
 | event_id | ulid | NN | unique, n8n dedupe key |
-| event_type | str(96) | NN | |
-| payload | json | NN | no codes or secrets |
+| event_type | str(96) | NN | `order.created`, `payment.succeeded`, `order.delivered`, `order.failed`, `ticket.updated` |
+| payload | json | NN | identifiers only: no codes, secrets or contact details |
 | status | enum | NN | `pending`, `delivered`, `failed` |
 | attempts | smallint unsigned | NN | default 0 |
-| next_attempt_at | ts | Y | |
+| last_http_status | smallint unsigned | Y | M17 |
+| last_error | str(500) | Y | M17: `HTTP 503` or a short reason, never the response body |
+| next_attempt_at | ts | Y | also the lease while a runner sends it |
 | delivered_at | ts | Y | |
+| failed_at | ts | Y | M17: when retries were exhausted |
 
-Index: `idx_ao_pending` (status, next_attempt_at): `automation:flush-outbox`.
+Index: `idx_ao_pending` (status, next_attempt_at): `automation:flush-outbox`. `idx_ao_failed` (status, failed_at): F08. Written in the transaction of the state change by `AutomationOutboxWriter` (order state machine, support tickets) when `AUTOMATION_OUTBOX_ENABLED=true`.
+
+### automation_customer_messages
+
+M17. SMS that n8n customer workflows (D01 to D09) report as sent or failed. No message text or contact details.
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| workflow_id | str(16) | NN | |
+| user_id | fk:users null | Y | |
+| channel | str(16) | NN | `sms` |
+| category | enum | NN | `orders`, `support`, `marketing` |
+| dedupe_key | str(128) | NN | `D03:<event_id>`, `D06:cart:<cart>`, `D07:review:<order_item>`, `D08:reactivation:<user>:<YYYY-MM>`, `D09:reco:<user>:<ISO week>` |
+| event_id | ulid | Y | outbox event, D01 to D05 |
+| status | enum | NN | `sent`, `failed` |
+| provider_message_id | str(128) | Y | |
+| error | str(500) | Y | |
+
+Unique: `uq_acm_dedupe` (dedupe_key): a `sent` row is never repeated or changed. Indexes: `idx_acm_user` (user_id, category, created_at), `idx_acm_workflow` (workflow_id, created_at).
 
 ### ai_suggestions
 
@@ -1659,6 +1689,7 @@ Human-review queue for section C workflows.
 | subject_type | str(64) | Y | |
 | subject_id | bigint unsigned | Y | |
 | content | json | NN | |
+| dedupe_hash | char(64) | Y | M17: SHA-256 of workflow, type, subject and content; unique `uq_ais_dedupe`, so an n8n retry does not queue the same draft twice |
 | status | enum | NN | `pending_review`, `approved`, `rejected` |
 | reviewed_by | fk:users null | Y | |
 | reviewed_at | ts | Y | |
@@ -1733,7 +1764,7 @@ Timestamps are assigned at creation in this order. Each group depends only on ea
 | G15 Affiliates | `affiliates`, `affiliate_referrals`, `affiliate_payouts`, `affiliate_commissions`; add FK `orders.affiliate_referral_id` |
 | G16 Reviews and support | `reviews`, `support_tickets`, `support_ticket_messages`, `support_ticket_attachments`, `refund_requests` |
 | G17 Analytics | `daily_sales_summaries`, `analytics_event_dispatches`, `search_console_metrics` |
-| G18 Automation and MCP | `automation_workflows`, `automation_logs`, `automation_outbox`, `ai_suggestions`, `mcp_pending_actions`, `mcp_audit_logs` |
+| G18 Automation and MCP | `automation_workflows`, `automation_logs`, `automation_outbox`, `ai_suggestions`, `mcp_pending_actions`, `mcp_audit_logs`; M17 adds `automation_customer_messages` |
 
 Order of operations for circular or late references:
 

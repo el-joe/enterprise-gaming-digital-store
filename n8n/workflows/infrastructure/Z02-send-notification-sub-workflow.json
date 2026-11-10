@@ -1,0 +1,213 @@
+{
+    "id": "egsZ02automation",
+    "name": "Z02 Send notification (sub-workflow)",
+    "active": false,
+    "nodes": [
+        {
+            "id": "657ad44f-aafb-42a4-a927-86df1b743bfb",
+            "name": "When called by another workflow",
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                240,
+                300
+            ],
+            "parameters": {
+                "inputSource": "passthrough"
+            }
+        },
+        {
+            "id": "975232a1-d958-457a-b62e-d3065b61acec",
+            "name": "Format message",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const channel = String($env.EGS_ALERT_CHANNEL || '').trim().toLowerCase();\nif (!['slack', 'telegram'].includes(channel)) {\n  throw new Error('Set EGS_ALERT_CHANNEL to slack or telegram (business decision BD9).');\n}\nreturn $input.all().map((item) => {\n  const severity = String(item.json.severity || 'info').toUpperCase();\n  const title = String(item.json.title || 'Notification');\n  const text = String(item.json.text || '');\n  const source = item.json.source ? ' (' + item.json.source + ')' : '';\n  return { json: { channel, message: ('[' + severity + '] ' + title + source + '\\n' + text).slice(0, 3500) } };\n});"
+            }
+        },
+        {
+            "id": "c3af253f-e51e-46cb-8c3f-7a51e5454cbe",
+            "name": "Channel",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3.2,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "mode": "rules",
+                "rules": {
+                    "values": [
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "loose",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "b9a0e71b-1104-4d25-80a4-2796fa4f2b61",
+                                        "leftValue": "={{ $json.channel }}",
+                                        "rightValue": "slack",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "slack"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "loose",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "294d1d92-8d30-4bd2-905d-c2abaccff640",
+                                        "leftValue": "={{ $json.channel }}",
+                                        "rightValue": "telegram",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "telegram"
+                        }
+                    ]
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "0284e687-893e-4f0e-86ae-00684c679016",
+            "name": "Send to Slack",
+            "type": "n8n-nodes-base.slack",
+            "typeVersion": 2.2,
+            "position": [
+                960,
+                200
+            ],
+            "parameters": {
+                "authentication": "accessToken",
+                "select": "channel",
+                "channelId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "={{ $env.EGS_SLACK_CHANNEL_ID }}"
+                },
+                "messageType": "text",
+                "text": "={{ $json.message }}",
+                "otherOptions": {
+                    "includeLinkToWorkflow": false
+                }
+            },
+            "credentials": {
+                "slackApi": {
+                    "name": "AlertSlack"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "e06b6c75-4dac-4da5-a8ee-ee8309461401",
+            "name": "Send to Telegram",
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1.2,
+            "position": [
+                720,
+                420
+            ],
+            "parameters": {
+                "chatId": "={{ $env.EGS_TELEGRAM_CHAT_ID }}",
+                "text": "={{ $json.message }}",
+                "additionalFields": {
+                    "appendAttribution": false
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "name": "AlertTelegram"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        }
+    ],
+    "connections": {
+        "When called by another workflow": {
+            "main": [
+                [
+                    {
+                        "node": "Format message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format message": {
+            "main": [
+                [
+                    {
+                        "node": "Channel",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Channel": {
+            "main": [
+                [
+                    {
+                        "node": "Send to Slack",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Send to Telegram",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "UTC",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "errorWorkflow": "egsZ01automation"
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "egsStatus": "authored and validated, not executed"
+    }
+}

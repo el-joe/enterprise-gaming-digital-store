@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\Affiliates\AffiliateController;
+use App\Http\Controllers\Admin\Automation\AutomationCredentialController;
 use App\Http\Controllers\Admin\Catalog\AttributeDefinitionController;
 use App\Http\Controllers\Admin\Catalog\CategoryController;
 use App\Http\Controllers\Admin\Catalog\DeliveryFieldDefinitionController;
@@ -206,6 +207,12 @@ Route::middleware('permission:service_accounts.manage')->group(static function (
     Route::get('mcp-tokens', [McpTokenController::class, 'index'])->name('mcp-tokens.index');
     Route::post('mcp-tokens', [McpTokenController::class, 'store'])->middleware('throttle:10,1')->name('mcp-tokens.store');
     Route::delete('mcp-tokens/{tokenId}', [McpTokenController::class, 'destroy'])->whereNumber('tokenId')->name('mcp-tokens.destroy');
+});
+// n8n automation credentials (M17). Screens arrive in M15.
+Route::middleware('permission:service_accounts.manage')->group(static function (): void {
+    Route::get('automation-credentials', [AutomationCredentialController::class, 'index'])->name('automation-credentials.index');
+    Route::post('automation-credentials', [AutomationCredentialController::class, 'store'])->middleware('throttle:10,1')->name('automation-credentials.store');
+    Route::delete('automation-credentials/{tokenId}', [AutomationCredentialController::class, 'destroy'])->whereNumber('tokenId')->name('automation-credentials.destroy');
 });
 Route::middleware('permission:mcp_actions.approve')->group(static function (): void {
     Route::get('mcp-actions', [McpActionController::class, 'index'])->name('mcp-actions.index');

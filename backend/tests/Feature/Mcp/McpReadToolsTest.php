@@ -248,7 +248,8 @@ it('lists stalled orders, failed payments, open reconciliation and system health
     mcpGet($this->token, 'operations/system-health')
         ->assertOk()
         ->assertJsonPath('data.checks.database.status', 'ok')
-        ->assertJsonPath('data.checks.scheduler.status', 'unavailable')
+        ->assertJsonPath('data.checks.scheduler.status', 'degraded')
+        ->assertJsonPath('data.checks.scheduler.source', 'scheduled_task_runs')
         ->assertJsonPath('data.checks.fulfilment.open_manual_tasks', 0);
 });
 

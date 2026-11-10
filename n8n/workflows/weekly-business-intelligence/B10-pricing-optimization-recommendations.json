@@ -1,0 +1,578 @@
+{
+    "id": "egsB10automation",
+    "name": "B10 Pricing Optimization Recommendations",
+    "active": false,
+    "nodes": [
+        {
+            "id": "877a5e90-891d-4785-b1cf-c037527b4dd9",
+            "name": "Schedule",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                240,
+                300
+            ],
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "45 7 * * 1"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "a25f40b6-9a12-4daa-9a28-8e9e46ab2305",
+            "name": "Prepare execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst pad = (n) => String(n).padStart(2, '0');\nconst now = new Date();\nconst day = now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate());\nconst floorMinutes = (step) => day + 'T' + pad(now.getUTCHours()) + ':' + pad(Math.floor(now.getUTCMinutes() / step) * step);\nconst isoWeek = () => {\n  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));\n  const weekday = d.getUTCDay() || 7;\n  d.setUTCDate(d.getUTCDate() + 4 - weekday);\n  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));\n  return d.getUTCFullYear() + '-W' + pad(Math.ceil(((d - yearStart) / 86400000 + 1) / 7));\n};\nconst windows = {\n  week: isoWeek,\n  day: () => day,\n  hour: () => day + 'T' + pad(now.getUTCHours()),\n  '30min': () => floorMinutes(30),\n  '15min': () => floorMinutes(15),\n  '5min': () => floorMinutes(5),\n  minute: () => floorMinutes(1),\n};\n// The schedule window is the execution key: a second run in the same window is a duplicate.\nconst executionWindow = windows['week']();\nconst executionKey = 'B10:' + executionWindow;\nconst ctx = { workflow_id: 'B10', execution_key: executionKey };\n\nreturn [{ json: { ctx, request: signRequest('POST', 'executions', { action: 'start' }, ctx) } }];"
+            }
+        },
+        {
+            "id": "30766f85-fc59-4346-81ec-4faecbc4629f",
+            "name": "Start execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "5dfa97cb-ef86-403c-b101-37f4e1a9bca1",
+            "name": "Already ran in this window?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                960,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "2e7b4172-9769-4199-927c-37230a842086",
+                            "leftValue": "={{ $json.data.duplicate }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "f723b49b-08a2-4718-91a8-c9792813c2e5",
+            "name": "Stop: duplicate execution",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                1200,
+                120
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "b5de4981-566a-4e11-9b5b-059806f7b97c",
+            "name": "Sign: Fetch candidates",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1200,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\n\nreturn [{ json: { request: signRequest('GET', 'reports/pricing-recommendations?limit=20', null, ctx) } }];"
+            }
+        },
+        {
+            "id": "2a181a32-7b19-4b7e-bd28-219724f329d8",
+            "name": "Fetch candidates",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1440,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "5c4ef3a2-0ce5-4dc1-bfe3-663d138079a9",
+            "name": "Any candidates?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                1680,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "e703c6f4-49b8-4e83-abf4-252910a35816",
+                            "leftValue": "={{ ($json.data.candidates || []).length > 0 }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "a31748b6-6ade-4d0b-8c96-bed0f27217ba",
+            "name": "Sign: Store pricing suggestion",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1920,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\nconst report = $('Fetch candidates').first().json.data;\nconst body = {\n  type: 'pricing',\n  content: {\n    title: 'Pricing review: ' + report.candidates.length + ' variants below ' + report.threshold_pct + ' % margin',\n    candidates: report.candidates.slice(0, 20),\n    unavailable: report.unavailable,\n    rationale: 'Current price leaves less than the threshold margin against current supplier cost. Staff decide any price change; nothing is applied automatically.',\n  },\n};\nreturn [{ json: { request: signRequest('POST', 'suggestions', body, ctx) } }];"
+            }
+        },
+        {
+            "id": "11432611-aa1f-479c-904a-98518b03dcb9",
+            "name": "Store pricing suggestion",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2160,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "75cb2d71-3226-4270-b7e2-d0307aa11cd1",
+            "name": "Summarise",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2400,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const stored = $('Store pricing suggestion').isExecuted ? $('Store pricing suggestion').first().json.data : null;\nreturn [{ json: { data: { suggestions_created: stored && stored.created ? 1 : 0, status: stored ? stored.status : 'no candidates' } } }];"
+            }
+        },
+        {
+            "id": "d09e407f-9854-4528-a4dd-2cc7c073635c",
+            "name": "Build message",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2640,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const data = $input.first().json.data || {};\nconst money = (v) => (v && typeof v === 'object' && !Array.isArray(v) && 'amount' in v && 'currency' in v) ? v.amount + ' ' + v.currency : null;\nconst label = (row) => {\n  const name = row.name || row.product_name || row.platform || row.supplier || row.gateway || row.order_number || row.command || row.variant_sku || row.code || row.sku;\n  const figure = money(row.net_revenue) || money(row.revenue) || money(row.sales) || money(row.net_profit) || row.units_count || row.state || row.status || row.margin_pct;\n  return name ? (figure !== undefined && figure !== null ? name + ': ' + figure : String(name)) : JSON.stringify(row).slice(0, 80);\n};\nconst lines = [];\nconst render = (obj, prefix, depth) => {\n  for (const [key, value] of Object.entries(obj)) {\n    if (['unavailable', 'note', 'basis', 'source', 'reason', 'status', 'alert'].includes(key) && depth === 0) continue;\n    if (value === null || value === undefined) continue;\n    const name = prefix + key;\n    const m = money(value);\n    if (m) { lines.push(name + ': ' + m); continue; }\n    if (Array.isArray(value)) {\n      lines.push(name + ': ' + value.length);\n      value.slice(0, 5).forEach((row) => lines.push('  - ' + (typeof row === 'object' && row !== null ? label(row) : String(row))));\n      continue;\n    }\n    if (typeof value === 'object') { if (depth < 2) render(value, name + '.', depth + 1); continue; }\n    lines.push(name + ': ' + value);\n  }\n};\nrender(data, '', 0);\nfor (const missing of (data.unavailable || [])) lines.push('Unavailable: ' + missing.metric + ' (' + missing.reason + ')');\nif (data.status === 'unavailable') lines.push('Unavailable: ' + data.reason);\nconst alert = data.alert === true;\nreturn [{ json: { notify: data.suggestions_created > 0, severity: 'info', title: 'B10 Pricing Optimization Recommendations', text: lines.slice(0, 60).join('\\n'), source: 'B10', summary: { alert } } }];"
+            }
+        },
+        {
+            "id": "f1aec0c4-bf67-42af-9b60-5b9c7930b8bb",
+            "name": "Notify?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                2880,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "d475384b-67eb-4716-b8c0-9f0627d33764",
+                            "leftValue": "={{ $json.notify }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "cfdc77dd-924d-42c7-8277-ce5847a778de",
+            "name": "Notify (Z02)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                3120,
+                300
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsZ02automation",
+                    "cachedResultName": "Z02"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": true
+                }
+            }
+        },
+        {
+            "id": "a8a42bb2-cd91-4675-8eff-b7febda308b7",
+            "name": "Sign: finish execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                3360,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\nconst summary = $('Build message').first().json.summary || {};\nreturn [{ json: { request: signRequest('POST', 'executions', { action: 'finish', status: 'success', summary }, ctx) } }];"
+            }
+        },
+        {
+            "id": "6481d13f-96db-4bde-b00f-a7961bb6c5e9",
+            "name": "Finish execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                3600,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        }
+    ],
+    "connections": {
+        "Schedule": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare execution": {
+            "main": [
+                [
+                    {
+                        "node": "Start execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Start execution": {
+            "main": [
+                [
+                    {
+                        "node": "Already ran in this window?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Already ran in this window?": {
+            "main": [
+                [
+                    {
+                        "node": "Stop: duplicate execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sign: Fetch candidates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: Fetch candidates": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch candidates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch candidates": {
+            "main": [
+                [
+                    {
+                        "node": "Any candidates?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: Store pricing suggestion": {
+            "main": [
+                [
+                    {
+                        "node": "Store pricing suggestion",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Any candidates?": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: Store pricing suggestion",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Summarise",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Store pricing suggestion": {
+            "main": [
+                [
+                    {
+                        "node": "Summarise",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: finish execution": {
+            "main": [
+                [
+                    {
+                        "node": "Finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Summarise": {
+            "main": [
+                [
+                    {
+                        "node": "Build message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build message": {
+            "main": [
+                [
+                    {
+                        "node": "Notify?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Notify?": {
+            "main": [
+                [
+                    {
+                        "node": "Notify (Z02)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Notify (Z02)": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "UTC",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "errorWorkflow": "egsZ01automation"
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "egsStatus": "authored and validated, not executed"
+    }
+}

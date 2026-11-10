@@ -1,0 +1,817 @@
+{
+    "id": "egsZ03automation",
+    "name": "Z03 Laravel event router",
+    "active": false,
+    "nodes": [
+        {
+            "id": "cadc12bc-e0f4-4033-83f5-dc0341582859",
+            "name": "Webhook from Laravel",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                240,
+                300
+            ],
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "egs-events",
+                "authentication": "headerAuth",
+                "responseMode": "responseNode",
+                "options": {
+                    "rawBody": true
+                }
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelOutboundWebhook"
+                }
+            },
+            "webhookId": "221a3dcc-4204-4f5c-94a3-61c36a1f442e"
+        },
+        {
+            "id": "b37b749c-6c8a-4f4b-8b4e-1430d3963571",
+            "name": "Verify signature",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Laravel signs: X-Signature = hex HMAC-SHA256(X-Signature-Timestamp + \".\" + raw body, N8N_OUTBOUND_SECRET).\nconst item = $input.first();\nconst headers = item.json.headers || {};\nconst secret = String($env.EGS_OUTBOUND_SECRET || '');\nconst raw = item.binary && item.binary.data ? (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8') : '';\nconst timestamp = String(headers['x-signature-timestamp'] || '');\nconst signature = String(headers['x-signature'] || '');\nconst fresh = /^[0-9]+$/.test(timestamp) && Math.abs(Date.now() / 1000 - Number(timestamp)) <= 300;\nconst expected = secret === '' ? '' : crypto.createHmac('sha256', secret).update(timestamp + '.' + raw).digest('hex');\nconst valid = secret !== '' && fresh && signature.length === expected.length && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));\nlet event = null;\nif (valid) {\n  try {\n    event = JSON.parse(raw);\n  } catch (error) {\n    event = null;\n  }\n}\nreturn [{ json: { valid: valid && event !== null && typeof event.event_id === 'string', event } }];"
+            }
+        },
+        {
+            "id": "5e5d72a4-fb0f-41d9-8fb8-3252dd952945",
+            "name": "Signature valid?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "41487181-a236-40b0-ac09-4014368c2f66",
+                            "leftValue": "={{ $json.valid }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "7a3e3ce8-4e3e-4fc7-9620-a23591d005b7",
+            "name": "Respond 202 accepted",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                960,
+                300
+            ],
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ JSON.stringify({ received: true }) }}",
+                "options": {
+                    "responseCode": 202
+                }
+            }
+        },
+        {
+            "id": "a53e5dbf-84a1-4c72-9028-f87237234574",
+            "name": "Respond 401 rejected",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                960,
+                520
+            ],
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ JSON.stringify({ received: false }) }}",
+                "options": {
+                    "responseCode": 401
+                }
+            }
+        },
+        {
+            "id": "1be3f3ac-b00b-4540-9022-2d11a07f477c",
+            "name": "Prepare execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1200,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst event = $('Verify signature').first().json.event;\nconst executionKey = 'Z03:' + event.event_id;\nconst ctx = { workflow_id: 'Z03', execution_key: executionKey };\n\nreturn [{ json: { ctx, request: signRequest('POST', 'executions', { action: 'start' }, ctx) } }];"
+            }
+        },
+        {
+            "id": "22f6ca6b-f8ff-4984-89be-407cf4098a05",
+            "name": "Start execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1440,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "b762beb4-1674-47cc-8a83-1a4b57e62817",
+            "name": "Already ran in this window?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                1680,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "3c4ce5d0-9758-495c-959b-f35fb6cb00f7",
+                            "leftValue": "={{ $json.data.duplicate }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "b04fb321-008a-4c38-86f6-9b7e96616f2d",
+            "name": "Stop: duplicate execution",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                1920,
+                120
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "7db1b517-52bc-4210-9264-ac877ee9ef67",
+            "name": "Route event",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1920,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "return [{ json: { event: $('Verify signature').first().json.event } }];"
+            }
+        },
+        {
+            "id": "ac178326-9b0e-434a-b6ec-4d20506ecd0d",
+            "name": "Event type",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 3.2,
+            "position": [
+                2160,
+                300
+            ],
+            "parameters": {
+                "mode": "rules",
+                "rules": {
+                    "values": [
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "loose",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "70efd976-92ad-482e-88df-8ce3deab1410",
+                                        "leftValue": "={{ $json.event.event_type }}",
+                                        "rightValue": "order.created",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "order.created"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "loose",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "bc3d4868-716f-40c8-bfef-e734c39f4ede",
+                                        "leftValue": "={{ $json.event.event_type }}",
+                                        "rightValue": "payment.succeeded",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "payment.succeeded"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "loose",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "a081b09f-4f5c-4eef-8bc0-a9fb4bff4d40",
+                                        "leftValue": "={{ $json.event.event_type }}",
+                                        "rightValue": "order.delivered",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "order.delivered"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "loose",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "c8b6cd03-47cd-4554-95d1-b71f0f742ac3",
+                                        "leftValue": "={{ $json.event.event_type }}",
+                                        "rightValue": "order.failed",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "order.failed"
+                        },
+                        {
+                            "conditions": {
+                                "options": {
+                                    "caseSensitive": true,
+                                    "leftValue": "",
+                                    "typeValidation": "loose",
+                                    "version": 2
+                                },
+                                "conditions": [
+                                    {
+                                        "id": "ffdeb5e1-1c62-4101-810d-fd2b002fea52",
+                                        "leftValue": "={{ $json.event.event_type }}",
+                                        "rightValue": "ticket.updated",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        }
+                                    }
+                                ],
+                                "combinator": "and"
+                            },
+                            "renameOutput": true,
+                            "outputKey": "ticket.updated"
+                        }
+                    ]
+                },
+                "options": {
+                    "fallbackOutput": "extra",
+                    "renameFallbackOutput": "unknown"
+                }
+            }
+        },
+        {
+            "id": "a9c3eacd-b50c-4c0b-99b0-6473eaee4b7c",
+            "name": "Sign: finish execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2400,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\nconst summary = { event_id: $('Verify signature').first().json.event.event_id, event_type: $('Verify signature').first().json.event.event_type } || {};\nreturn [{ json: { request: signRequest('POST', 'executions', { action: 'finish', status: 'success', summary }, ctx) } }];"
+            }
+        },
+        {
+            "id": "e4d26883-116c-4caa-91b6-31431b60e51d",
+            "name": "Finish execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2640,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "e29af3bd-6896-4a67-b8a2-3c9042e92d99",
+            "name": "Run D01 (order.created)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                2880,
+                700
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsD01automation",
+                    "cachedResultName": "D01"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": false
+                }
+            }
+        },
+        {
+            "id": "62908f0b-c20d-4317-ac1b-44c63d6e4e37",
+            "name": "Run D02 (payment.succeeded)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                2880,
+                820
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsD02automation",
+                    "cachedResultName": "D02"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": false
+                }
+            }
+        },
+        {
+            "id": "593571be-b196-4b2e-b0f1-69d2b143cf77",
+            "name": "Run D03 (order.delivered)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                2880,
+                940
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsD03automation",
+                    "cachedResultName": "D03"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": false
+                }
+            }
+        },
+        {
+            "id": "0d4ac473-44d8-4a55-9999-d36aeb8d05bc",
+            "name": "Run D04 (order.failed)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                2880,
+                1060
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsD04automation",
+                    "cachedResultName": "D04"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": false
+                }
+            }
+        },
+        {
+            "id": "fdc98293-ced5-4ee5-be67-5d195080d2ab",
+            "name": "Run D05 (ticket.updated)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                2880,
+                1180
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsD05automation",
+                    "cachedResultName": "D05"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": false
+                }
+            }
+        },
+        {
+            "id": "06fc8d89-d81e-4b11-9e7a-2ab388b57629",
+            "name": "Ignore unknown event",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                4080,
+                300
+            ],
+            "parameters": {}
+        }
+    ],
+    "connections": {
+        "Webhook from Laravel": {
+            "main": [
+                [
+                    {
+                        "node": "Verify signature",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Verify signature": {
+            "main": [
+                [
+                    {
+                        "node": "Signature valid?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Signature valid?": {
+            "main": [
+                [
+                    {
+                        "node": "Respond 202 accepted",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Respond 401 rejected",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Respond 202 accepted": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare execution": {
+            "main": [
+                [
+                    {
+                        "node": "Start execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Start execution": {
+            "main": [
+                [
+                    {
+                        "node": "Already ran in this window?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Already ran in this window?": {
+            "main": [
+                [
+                    {
+                        "node": "Stop: duplicate execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Route event",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Route event": {
+            "main": [
+                [
+                    {
+                        "node": "Event type",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: finish execution": {
+            "main": [
+                [
+                    {
+                        "node": "Finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Event type": {
+            "main": [
+                [
+                    {
+                        "node": "Run D01 (order.created)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Run D02 (payment.succeeded)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Run D03 (order.delivered)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Run D04 (order.failed)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Run D05 (ticket.updated)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Ignore unknown event",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run D01 (order.created)": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run D02 (payment.succeeded)": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run D03 (order.delivered)": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run D04 (order.failed)": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Run D05 (ticket.updated)": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Ignore unknown event": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "UTC",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "errorWorkflow": "egsZ01automation"
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "egsStatus": "authored and validated, not executed"
+    }
+}

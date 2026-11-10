@@ -12,6 +12,7 @@ use App\Domains\Analytics\Models\SearchConsoleMetric;
 use App\Domains\Audit\Models\AuditLog;
 use App\Domains\Audit\Models\SecurityEvent;
 use App\Domains\Automation\Models\AiSuggestion;
+use App\Domains\Automation\Models\AutomationCustomerMessage;
 use App\Domains\Automation\Models\AutomationLog;
 use App\Domains\Automation\Models\AutomationOutbox;
 use App\Domains\Automation\Models\AutomationWorkflow;
@@ -137,6 +138,7 @@ final class MorphMap
             'analytics_event_dispatch' => AnalyticsEventDispatch::class,
             'attribute_definition' => AttributeDefinition::class,
             'audit_log' => AuditLog::class,
+            'automation_customer_message' => AutomationCustomerMessage::class,
             'automation_log' => AutomationLog::class,
             'automation_outbox' => AutomationOutbox::class,
             'automation_workflow' => AutomationWorkflow::class,

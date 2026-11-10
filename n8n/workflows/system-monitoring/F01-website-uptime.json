@@ -1,0 +1,227 @@
+{
+    "id": "egsF01automation",
+    "name": "F01 Website uptime",
+    "active": false,
+    "nodes": [
+        {
+            "id": "e8fc36a2-73ba-4697-9eae-bf6dadb6cc1e",
+            "name": "Schedule",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                240,
+                300
+            ],
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "* * * * *"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "741e118d-6d53-413f-9001-af62ad5be119",
+            "name": "Check /up",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "method": "GET",
+                "url": "={{ String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '') + '/up' }}",
+                "options": {
+                    "timeout": 10000,
+                    "response": {
+                        "response": {
+                            "neverError": true,
+                            "fullResponse": true
+                        }
+                    }
+                }
+            },
+            "onError": "continueRegularOutput",
+            "alwaysOutputData": true
+        },
+        {
+            "id": "5aba8b2d-83ed-41bb-aa7f-7af5a4239453",
+            "name": "Check homepage",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "method": "GET",
+                "url": "={{ $env.EGS_STOREFRONT_URL }}",
+                "options": {
+                    "timeout": 10000,
+                    "response": {
+                        "response": {
+                            "neverError": true,
+                            "fullResponse": true
+                        }
+                    }
+                }
+            },
+            "onError": "continueRegularOutput",
+            "alwaysOutputData": true
+        },
+        {
+            "id": "b9027d0e-00f6-4ef1-8a08-6b6ea6655dd9",
+            "name": "Evaluate",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                960,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const status = (name) => {\n  const json = $(name).first().json || {};\n  return Number(json.statusCode || 0);\n};\nconst checks = { up: status('Check /up'), homepage: status('Check homepage') };\nconst healthy = checks.up === 200 && checks.homepage >= 200 && checks.homepage < 400;\n// Alert only when the state changes, so a long outage sends one alert and one recovery.\nconst state = $getWorkflowStaticData('global');\nconst changed = state.healthy !== undefined && state.healthy !== healthy;\nconst first = state.healthy === undefined && !healthy;\nstate.healthy = healthy;\nreturn [{ json: {\n  notify: changed || first,\n  severity: healthy ? 'info' : 'critical',\n  title: healthy ? 'Website recovered' : 'Website is down',\n  text: '/up: HTTP ' + (checks.up || 'no response') + '\\nHomepage: HTTP ' + (checks.homepage || 'no response'),\n  source: 'F01',\n} }];"
+            }
+        },
+        {
+            "id": "06d9ddb8-58e9-457e-a737-2940fd301f0e",
+            "name": "Notify?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                1200,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "d001a498-de45-4aab-90d3-19fffd26a1ed",
+                            "leftValue": "={{ $json.notify }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "85721037-2334-434f-b03a-1fb368bd389b",
+            "name": "Notify (Z02)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                1440,
+                300
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsZ02automation",
+                    "cachedResultName": "Z02"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": true
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Schedule": {
+            "main": [
+                [
+                    {
+                        "node": "Check /up",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check /up": {
+            "main": [
+                [
+                    {
+                        "node": "Check homepage",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check homepage": {
+            "main": [
+                [
+                    {
+                        "node": "Evaluate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Evaluate": {
+            "main": [
+                [
+                    {
+                        "node": "Notify?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Notify?": {
+            "main": [
+                [
+                    {
+                        "node": "Notify (Z02)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "UTC",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "errorWorkflow": "egsZ01automation"
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "egsStatus": "authored and validated, not executed"
+    }
+}

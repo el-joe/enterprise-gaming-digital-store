@@ -6,6 +6,9 @@ use App\Domains\Affiliates\Listeners\TrackAffiliateCommission;
 use App\Domains\Analytics\Listeners\RecordPurchaseEvent;
 use App\Domains\Audit\Enums\SecurityEventSeverity;
 use App\Domains\Audit\Services\SecurityEventRecorder;
+use App\Domains\Automation\DTOs\AutomationCaller;
+use App\Domains\Automation\Listeners\RecordScheduledTaskHeartbeat;
+use App\Domains\Automation\Services\ScheduledTaskHeartbeat;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
@@ -28,6 +31,9 @@ use App\Domains\Shared\Models\MorphMap;
 use App\Domains\Suppliers\Services\SupplierAdapterRegistry;
 use App\Domains\Support\Listeners\CompleteRefundRequests;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskStarting;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
@@ -55,6 +61,9 @@ class AppServiceProvider extends ServiceProvider
             : new NullGeoIpResolver);
 
         $this->app->singleton(SupplierAdapterRegistry::class);
+
+        // M17: holds the open heartbeat of each running scheduled task for the process.
+        $this->app->singleton(ScheduledTaskHeartbeat::class);
     }
 
     /**
@@ -75,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(OrderStatusChanged::class, RedeemCouponWhenPaid::class);
         Event::listen(OrderStatusChanged::class, TrackAffiliateCommission::class);
         Event::listen(OrderStatusChanged::class, CompleteRefundRequests::class);
+        Event::listen([ScheduledTaskStarting::class, ScheduledTaskFinished::class, ScheduledTaskFailed::class], RecordScheduledTaskHeartbeat::class);
     }
 
     private function configureRateLimiting(): void
@@ -122,6 +132,13 @@ class AppServiceProvider extends ServiceProvider
             return $caller instanceof McpCaller
                 ? Limit::perMinute(max(1, $caller->account->rate_limit_per_minute))->by('mcp|account|'.$caller->account->id)
                 : Limit::perMinute(30)->by('mcp|ip|'.$request->ip());
+        });
+        RateLimiter::for('automation', static function (Request $request): Limit {
+            $caller = $request->attributes->get(AutomationCaller::REQUEST_ATTRIBUTE);
+
+            return $caller instanceof AutomationCaller
+                ? Limit::perMinute(max(1, $caller->account->rate_limit_per_minute))->by('automation|account|'.$caller->account->id)
+                : Limit::perMinute(30)->by('automation|ip|'.$request->ip());
         });
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }

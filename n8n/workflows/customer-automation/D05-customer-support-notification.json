@@ -1,0 +1,502 @@
+{
+    "id": "egsD05automation",
+    "name": "D05 Customer support notification",
+    "active": false,
+    "nodes": [
+        {
+            "id": "ec19405a-b30f-46fc-87f0-1efe4525be89",
+            "name": "When called by Z03",
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                240,
+                300
+            ],
+            "parameters": {
+                "inputSource": "passthrough"
+            }
+        },
+        {
+            "id": "1594ceda-668c-4488-b409-490efe164abc",
+            "name": "Prepare execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst event = $input.first().json.event || {};\nif (!event.event_id) {\n  throw new Error('Called without an outbox event; this workflow is started by Z03.');\n}\nconst executionKey = 'D05:' + event.event_id;\nconst ctx = { workflow_id: 'D05', execution_key: executionKey };\nctx.event_id = event.event_id;\nreturn [{ json: { ctx, request: signRequest('POST', 'executions', { action: 'start' }, ctx) } }];"
+            }
+        },
+        {
+            "id": "1ea7008f-6f43-44c5-ac11-b9267de34a78",
+            "name": "Start execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "99a85719-94f3-4dc2-b64a-c082e83a32a4",
+            "name": "Already ran in this window?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                960,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "c0b5f7fc-6153-494a-8912-4e99d233b896",
+                            "leftValue": "={{ $json.data.duplicate }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "72183469-1076-4ea7-9bf6-ed6873a76be9",
+            "name": "Stop: duplicate execution",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                1200,
+                120
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "d1d98cce-559b-4af2-b9a3-5a82c8d4976b",
+            "name": "Sign: Prepare message",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1200,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\n\nreturn [{ json: { request: signRequest('POST', 'customers/messages/prepare', { event_id: ctx.event_id }, ctx) } }];"
+            }
+        },
+        {
+            "id": "37c1cf4a-2240-4844-9ad8-58e5dee43c4e",
+            "name": "Prepare message",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1440,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "9fae4b05-857f-4771-a20f-ccb8ed8a5275",
+            "name": "Customer may be contacted?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                1680,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "e9a4b1d5-8113-40e4-9225-91a8b708e73e",
+                            "leftValue": "={{ $json.data.eligible }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "4639640a-2ad6-42d5-91d2-5c44c437f959",
+            "name": "Recipient",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1920,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const data = $input.first().json.data;\nreturn [{ json: { dedupe_key: data.dedupe_key, customer_id: data.recipient.customer_id, phone: data.recipient.phone, message: data.message } }];"
+            }
+        },
+        {
+            "id": "21370475-4880-4ea7-bb93-367530c7873c",
+            "name": "Send SMS",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2160,
+                300
+            ],
+            "parameters": {
+                "method": "POST",
+                "url": "={{ $env.EGS_SMS_API_URL }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendBody": true,
+                "contentType": "json",
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({ to: $json.phone, text: $json.message.text, reference: $json.dedupe_key }) }}",
+                "options": {
+                    "timeout": 15000,
+                    "response": {
+                        "response": {
+                            "neverError": true,
+                            "fullResponse": true
+                        }
+                    }
+                }
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "CustomerSmsApi"
+                }
+            },
+            "onError": "continueRegularOutput"
+        },
+        {
+            "id": "6c1505a8-d51b-4336-bfb8-75c97d1b106d",
+            "name": "Sign: Log message",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2400,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\nconst outcome = (response) => {\n  const status = Number(response.statusCode || 0);\n  const body = response.body && typeof response.body === 'object' ? response.body : {};\n  const sent = status >= 200 && status < 300;\n  return {\n    status: sent ? 'sent' : 'failed',\n    provider_message_id: sent ? String(body.id || body.sid || body.message_id || '').slice(0, 128) || null : null,\n    error: sent ? null : ('SMS provider answered HTTP ' + (status || 'no response')).slice(0, 500),\n  };\n};\nconst recipient = $('Recipient').first().json;\nconst body = { dedupe_key: recipient.dedupe_key, customer_id: recipient.customer_id, ...outcome($input.first().json) };\nreturn [{ json: { request: signRequest('POST', 'customers/messages/log', body, ctx) } }];"
+            }
+        },
+        {
+            "id": "f8296ba3-4510-482f-af26-02954f00ac09",
+            "name": "Log message",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2640,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "1c169f54-8518-4219-a1a0-16cfa574dc2c",
+            "name": "Sign: finish execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2880,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\nconst summary = { event_id: ctx.event_id, eligible: $('Prepare message').first().json.data.eligible, reason: $('Prepare message').first().json.data.reason || null, logged: $('Log message').isExecuted ? $('Log message').first().json.data.status : null } || {};\nreturn [{ json: { request: signRequest('POST', 'executions', { action: 'finish', status: 'success', summary }, ctx) } }];"
+            }
+        },
+        {
+            "id": "3fcc4fc6-fb36-45b8-bf94-a5b602d2bf15",
+            "name": "Finish execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                3120,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        }
+    ],
+    "connections": {
+        "When called by Z03": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare execution": {
+            "main": [
+                [
+                    {
+                        "node": "Start execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Start execution": {
+            "main": [
+                [
+                    {
+                        "node": "Already ran in this window?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Already ran in this window?": {
+            "main": [
+                [
+                    {
+                        "node": "Stop: duplicate execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sign: Prepare message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: Prepare message": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare message": {
+            "main": [
+                [
+                    {
+                        "node": "Customer may be contacted?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: Log message": {
+            "main": [
+                [
+                    {
+                        "node": "Log message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: finish execution": {
+            "main": [
+                [
+                    {
+                        "node": "Finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Customer may be contacted?": {
+            "main": [
+                [
+                    {
+                        "node": "Recipient",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Recipient": {
+            "main": [
+                [
+                    {
+                        "node": "Send SMS",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send SMS": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: Log message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Log message": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "UTC",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "errorWorkflow": "egsZ01automation"
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "egsStatus": "authored and validated, not executed"
+    }
+}

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Orders\Services;
 
+use App\Domains\Automation\Services\AutomationOutboxWriter;
 use App\Domains\Orders\DTOs\OrderActor;
 use App\Domains\Orders\Enums\OrderEventActorType;
 use App\Domains\Orders\Enums\OrderStatus;
@@ -16,11 +17,12 @@ use Illuminate\Support\Facades\Log;
 /**
  * The only writer of orders.status (architecture section 6). Each transition locks the order,
  * checks the transition table, the actor and verified payment, writes the status and an
- * order event in one transaction, and raises OrderStatusChanged after commit.
+ * order event in one transaction, and raises OrderStatusChanged after commit. Status changes
+ * that n8n subscribes to are written to automation_outbox in the same transaction (M17).
  */
 class OrderStateMachine
 {
-    public function __construct(private OrderTransitionTable $table, private CheckoutCoupons $coupons) {}
+    public function __construct(private OrderTransitionTable $table, private CheckoutCoupons $coupons, private AutomationOutboxWriter $outbox) {}
 
     /**
      * Bring a new order into existence in pending_payment. Callers run this inside their own
@@ -39,6 +41,7 @@ class OrderStateMachine
         $order->save();
 
         $this->record($order, 'order.placed', null, OrderStatus::PendingPayment, $actor, 'Order placed.', $metadata);
+        $this->outbox->recordOrderStatus($order, null, OrderStatus::PendingPayment);
 
         OrderStatusChanged::dispatch($order->id, null, OrderStatus::PendingPayment);
 
@@ -81,6 +84,7 @@ class OrderStateMachine
             }
 
             $this->record($locked, 'status_changed', $from, $to, $actor, $message, $metadata, $unitId);
+            $this->outbox->recordOrderStatus($locked, $from, $to);
 
             OrderStatusChanged::dispatch($locked->id, $from, $to);
 

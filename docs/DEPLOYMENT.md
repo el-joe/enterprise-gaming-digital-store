@@ -35,7 +35,8 @@ MAIL_MAILER=smtp            (host, user, password, from)
 DIGITAL_CODE_KEYS=          DIGITAL_CODE_ACTIVE_KID=  DIGITAL_CODE_BLIND_INDEX_KEY=
 SUPER_ADMIN_EMAIL=          SUPER_ADMIN_PASSWORD=     (first deploy only, removed after)
 GEOIP_DATABASE_PATH=        MAXMIND_LICENSE_KEY=
-N8N_WEBHOOK_BASE_URL=       N8N_OUTBOUND_SECRET=
+AUTOMATION_OUTBOX_ENABLED=true   N8N_WEBHOOK_URL=https://n8n.example.com/webhook/egs-events
+N8N_OUTBOUND_SECRET=        N8N_WEBHOOK_AUTH_TOKEN=
 ```
 
 Supplier and gateway credentials are entered in the admin panel and stored encrypted, not in `.env`.
@@ -112,6 +113,8 @@ server { listen 80; server_name example.com; return 301 https://$host$request_ur
 Set `TrustProxies` if a CDN is placed in front.
 
 ### n8n
+
+The full n8n setup (environment variables, credentials, import order) is in `/n8n/README.md`. Workflows there are authored and validated, not executed.
 
 ```nginx
 server {
@@ -201,7 +204,7 @@ stdout_logfile=/var/log/egs/long.log
 command=/usr/bin/n8n start
 directory=/opt/n8n
 user=n8n
-environment=N8N_HOST="n8n.example.com",N8N_PROTOCOL="https",WEBHOOK_URL="https://n8n.example.com/",N8N_ENCRYPTION_KEY="%(ENV_N8N_ENCRYPTION_KEY)s"
+environment=N8N_HOST="n8n.example.com",N8N_PROTOCOL="https",WEBHOOK_URL="https://n8n.example.com/",GENERIC_TIMEZONE="UTC",NODE_FUNCTION_ALLOW_BUILTIN="crypto",N8N_ENCRYPTION_KEY="%(ENV_N8N_ENCRYPTION_KEY)s",EGS_API_BASE_URL="https://example.com",EGS_AUTOMATION_HMAC_SECRET="%(ENV_EGS_AUTOMATION_HMAC_SECRET)s",EGS_OUTBOUND_SECRET="%(ENV_EGS_OUTBOUND_SECRET)s",EGS_ALERT_CHANNEL="%(ENV_EGS_ALERT_CHANNEL)s"
 autostart=true
 autorestart=true
 stdout_logfile=/var/log/egs/n8n.log
@@ -241,7 +244,7 @@ Restore drill: quarterly, documented with date in `PROGRESS.md`. Restore into a 
 | Uptime | n8n F01, and an external monitor (n8n cannot report on its own outage) |
 | Errors | Laravel logs, F03, optional Sentry-compatible reporter (not chosen) |
 | Queues | `queue:monitor`, `failed_jobs`, F02 |
-| Scheduler | `scheduled_task_runs`, F04 |
+| Scheduler | `scheduled_task_runs` heartbeats (written for every scheduled task since M17), F04, MCP `get_system_health` |
 | DB | Slow log, F05 |
 | Host | disk, memory alerts (provider or node exporter) |
 

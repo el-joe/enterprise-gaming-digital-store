@@ -45,6 +45,7 @@ it('creates exactly the tables in the design', function (): void {
         'analytics_event_dispatches',
         'attribute_definitions',
         'audit_logs',
+        'automation_customer_messages',
         'automation_logs',
         'automation_outbox',
         'automation_workflows',

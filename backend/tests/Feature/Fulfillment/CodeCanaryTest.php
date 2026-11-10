@@ -22,6 +22,8 @@ const CANARY_CODE = '73310000999988887777';
 const CANARY_PIN = '55667788';
 
 it('keeps the canary code out of logs, tables, job payloads, mail, resources and errors', function (): void {
+    // M17: the outbox is off by default; turn it on so the automation_outbox sink holds real events.
+    config(['automation.outbox.enabled' => true]);
     $logFile = storage_path('logs/laravel.log');
     $logOffset = is_file($logFile) ? filesize($logFile) : 0;
     $logged = [];
@@ -55,7 +57,8 @@ it('keeps the canary code out of logs, tables, job payloads, mail, resources and
     Log::info('fulfilment.canary_probe', ['code' => CANARY_CODE, 'cardNumber' => CANARY_CODE]);
 
     $unit = OrderItemUnit::query()->sole();
-    expect($unit->fresh()->delivered_at)->not->toBeNull();
+    expect($unit->fresh()->delivered_at)->not->toBeNull()
+        ->and(DB::table('automation_outbox')->where('event_type', 'order.delivered')->exists())->toBeTrue();
 
     actingAsStaffWith(['orders.view', 'suppliers.logs']);
     $timeline = $this->getJson("/admin/api/orders/{$order->public_id}/timeline")->assertOk()->getContent();

@@ -4,6 +4,7 @@ namespace App\Domains\Support\Services;
 
 use App\Domains\Audit\DTOs\AuditEntry;
 use App\Domains\Audit\Services\AuditLogger;
+use App\Domains\Automation\Services\AutomationOutboxWriter;
 use App\Domains\Identity\Enums\PermissionName;
 use App\Domains\Identity\Models\User;
 use App\Domains\Orders\Models\Order;
@@ -32,7 +33,7 @@ use Illuminate\Support\Str;
  */
 class SupportTicketService
 {
-    public function __construct(private SupportTicketRepository $tickets, private AuditLogger $audit) {}
+    public function __construct(private SupportTicketRepository $tickets, private AuditLogger $audit, private AutomationOutboxWriter $outbox) {}
 
     /**
      * @param  array{category: string, subject: string, body: string, order_public_id?: ?string}  $input
@@ -101,6 +102,7 @@ class SupportTicketService
             }
 
             $locked->forceFill(['status' => SupportTicketStatus::PendingCustomer, 'last_activity_at' => now()])->save();
+            $this->outbox->recordTicketUpdate($locked, 'staff_reply');
 
             if ($locked->user_id !== null) {
                 DB::afterCommit(static function () use ($locked): void {
@@ -171,6 +173,10 @@ class SupportTicketService
             }
 
             $locked->forceFill([...$values, 'last_activity_at' => now()])->save();
+
+            if (isset($values['status']) && $before['status'] !== $locked->status->value) {
+                $this->outbox->recordTicketUpdate($locked, 'status_changed');
+            }
 
             $this->audit->record(new AuditEntry(
                 action: $action,

@@ -1,0 +1,235 @@
+{
+    "id": "egsZ01automation",
+    "name": "Z01 Global error handler",
+    "active": false,
+    "nodes": [
+        {
+            "id": "f85bf4ae-4c3a-4f5f-9d54-0d79800ede0c",
+            "name": "Error Trigger",
+            "type": "n8n-nodes-base.errorTrigger",
+            "typeVersion": 1,
+            "position": [
+                240,
+                300
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "102833aa-5203-4bc6-ad15-5c1936fd1da7",
+            "name": "Build alert",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst input = $input.first().json;\nconst execution = input.execution || {};\nconst failed = input.workflow || {};\nconst trigger = input.trigger || {};\nconst error = execution.error || trigger.error || {};\nconst failedName = String(failed.name || 'unknown workflow');\nconst match = failedName.match(/^([A-Z][0-9]{2})\\b/);\nconst failedId = match ? match[1] : null;\nconst executionId = String(execution.id || ('trigger-' + Date.now()));\nconst ctx = { workflow_id: 'Z01', execution_key: 'Z01:' + executionId.replace(/[^A-Za-z0-9:._-]/g, '-').slice(0, 120) };\nconst message = String(error.message || 'No error message').slice(0, 1000);\nconst alert = {\n  severity: 'critical',\n  title: ('Workflow ' + failedName + ' failed').slice(0, 190),\n  message,\n  failed_workflow_id: failedId,\n  n8n_execution_id: execution.id ? String(execution.id).slice(0, 64) : null,\n  node: execution.lastNodeExecuted ? String(execution.lastNodeExecuted).slice(0, 190) : null,\n};\nreturn [{ json: {\n  request: signRequest('POST', 'alerts', alert, ctx),\n  notify: failedId !== 'Z02',\n  severity: 'critical',\n  title: alert.title,\n  text: message + (alert.node ? '\\nLast node: ' + alert.node : '') + (execution.url ? '\\nExecution: ' + execution.url : ''),\n  source: 'Z01',\n} }];"
+            }
+        },
+        {
+            "id": "716b71e9-bdbc-4d8a-a535-e6d1590646e0",
+            "name": "Record alert in Laravel",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000,
+            "onError": "continueRegularOutput"
+        },
+        {
+            "id": "e22d508b-a574-4d8c-a645-6140fe02d662",
+            "name": "Restore alert",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                960,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "return [{ json: $('Build alert').first().json }];"
+            }
+        },
+        {
+            "id": "30c3418c-a52a-439a-934b-c1a932105c44",
+            "name": "Notify channel?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                1200,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "52d7831f-1351-4e57-999d-de66ee32d7e2",
+                            "leftValue": "={{ $json.notify }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "32d44de2-6a0a-47ce-a72c-cacdf804e252",
+            "name": "Notify (Z02)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                1440,
+                300
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsZ02automation",
+                    "cachedResultName": "Z02"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": true
+                }
+            },
+            "onError": "continueRegularOutput"
+        },
+        {
+            "id": "6d46aeb8-5db4-479c-9f38-24334f677067",
+            "name": "Z02 failed: Laravel log only",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                1680,
+                300
+            ],
+            "parameters": {}
+        }
+    ],
+    "connections": {
+        "Error Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Build alert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build alert": {
+            "main": [
+                [
+                    {
+                        "node": "Record alert in Laravel",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Record alert in Laravel": {
+            "main": [
+                [
+                    {
+                        "node": "Restore alert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Restore alert": {
+            "main": [
+                [
+                    {
+                        "node": "Notify channel?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Notify channel?": {
+            "main": [
+                [
+                    {
+                        "node": "Notify (Z02)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Z02 failed: Laravel log only",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "UTC",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner"
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "egsStatus": "authored and validated, not executed"
+    }
+}

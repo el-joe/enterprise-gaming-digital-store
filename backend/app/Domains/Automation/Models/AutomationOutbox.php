@@ -40,6 +40,8 @@ class AutomationOutbox extends Model
             'payload' => 'array',
             'status' => AutomationOutboxStatus::class,
             'attempts' => 'integer',
+            'last_http_status' => 'integer',
+            'failed_at' => 'datetime',
             'next_attempt_at' => 'datetime',
             'delivered_at' => 'datetime',
         ];

@@ -1,0 +1,642 @@
+{
+    "id": "egsC10automation",
+    "name": "C10 Prepare Social Media Content",
+    "active": false,
+    "nodes": [
+        {
+            "id": "4728667f-31d8-401c-bc3c-96d7ed61c047",
+            "name": "Schedule",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [
+                240,
+                300
+            ],
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 8 * * 4"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "feceafe5-9217-404c-bd02-9fbab5fbc534",
+            "name": "Prepare execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                480,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst pad = (n) => String(n).padStart(2, '0');\nconst now = new Date();\nconst day = now.getUTCFullYear() + '-' + pad(now.getUTCMonth() + 1) + '-' + pad(now.getUTCDate());\nconst floorMinutes = (step) => day + 'T' + pad(now.getUTCHours()) + ':' + pad(Math.floor(now.getUTCMinutes() / step) * step);\nconst isoWeek = () => {\n  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));\n  const weekday = d.getUTCDay() || 7;\n  d.setUTCDate(d.getUTCDate() + 4 - weekday);\n  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));\n  return d.getUTCFullYear() + '-W' + pad(Math.ceil(((d - yearStart) / 86400000 + 1) / 7));\n};\nconst windows = {\n  week: isoWeek,\n  day: () => day,\n  hour: () => day + 'T' + pad(now.getUTCHours()),\n  '30min': () => floorMinutes(30),\n  '15min': () => floorMinutes(15),\n  '5min': () => floorMinutes(5),\n  minute: () => floorMinutes(1),\n};\n// The schedule window is the execution key: a second run in the same window is a duplicate.\nconst executionWindow = windows['week']();\nconst executionKey = 'C10:' + executionWindow;\nconst ctx = { workflow_id: 'C10', execution_key: executionKey };\n\nreturn [{ json: { ctx, request: signRequest('POST', 'executions', { action: 'start' }, ctx) } }];"
+            }
+        },
+        {
+            "id": "7275a37c-209c-40ae-a356-b68344cdbd5f",
+            "name": "Start execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                720,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "73b5fd0b-2337-4a4a-b1e6-856f00ec0f48",
+            "name": "Already ran in this window?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                960,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "237a6224-e40c-43bf-ac5b-752fa6c45d61",
+                            "leftValue": "={{ $json.data.duplicate }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "acaad56b-7eb6-4e37-9d92-a6e4368ed448",
+            "name": "Stop: duplicate execution",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                1200,
+                120
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "79f09f22-a575-4464-963d-ecfa199c7a4c",
+            "name": "Sign: Fetch sales data",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1200,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\n\nreturn [{ json: { request: signRequest('GET', 'data/trending?days=7&limit=10', null, ctx) } }];"
+            }
+        },
+        {
+            "id": "c17d8b5e-9a0d-4fc6-8f44-97ed29e3e3bf",
+            "name": "Fetch sales data",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                1440,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "76ccd9e0-0e27-4764-a1e5-cbcbbfdd8f75",
+            "name": "Build prompts",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1680,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const data = $input.first().json.data || {};\nreturn [{ json: {\n  product_id: null,\n  prompt: 'Draft up to 5 social media posts (platform, text under 250 characters, suggested hashtags) about the products below. No prices, no discount claims, no official brand logos.\\n\\nAnswer with JSON only: an array of objects, each with \\\"title\\\" (string), \\\"body\\\" (string) and \\\"rationale\\\" (string), plus any fields the task asks for. Use only the data given; never invent sales figures, prices, stock or supplier availability. Everything you write is a draft that a person reviews before anything is published.\\n\\nStore data (JSON; external market trends are not available):\\n' + JSON.stringify({ products: data.products || [], platforms: data.platforms || [], from: data.from, to: data.to }),\n} }];"
+            }
+        },
+        {
+            "id": "161e6871-0232-4568-9339-6a170a2cc549",
+            "name": "Draft with LLM",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1.7,
+            "position": [
+                1920,
+                300
+            ],
+            "parameters": {
+                "promptType": "define",
+                "text": "={{ $json.prompt }}",
+                "hasOutputParser": false
+            },
+            "retryOnFail": true,
+            "maxTries": 2,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "2f9bf4cd-cf08-4bfc-a80d-2b32ee72ae0e",
+            "name": "LLM provider (Anthropic)",
+            "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+            "typeVersion": 1.3,
+            "position": [
+                1920,
+                520
+            ],
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "={{ $env.EGS_LLM_MODEL }}"
+                },
+                "options": {
+                    "maxTokensToSample": 2048,
+                    "temperature": 0.4
+                }
+            },
+            "credentials": {
+                "anthropicApi": {
+                    "name": "LlmProvider"
+                }
+            }
+        },
+        {
+            "id": "6c3a560a-963d-4021-8850-4bbe0d5640b4",
+            "name": "Parse drafts",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2160,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const prompts = $('Build prompts').all().filter((item) => item.json.none !== true);\nconst drafts = [];\n$input.all().forEach((item, index) => {\n  const text = String(item.json.text || '');\n  const start = text.indexOf('[');\n  const end = text.lastIndexOf(']');\n  let parsed = [];\n  try {\n    parsed = JSON.parse(start >= 0 && end > start ? text.slice(start, end + 1) : text);\n  } catch (error) {\n    parsed = [];\n  }\n  (Array.isArray(parsed) ? parsed : [parsed]).slice(0, 10).forEach((draft) => {\n    if (draft && typeof draft === 'object' && typeof draft.title === 'string' && draft.title.trim() !== '') {\n      drafts.push({ json: { body: { type: 'social_post', product_id: prompts[index] ? prompts[index].json.product_id : null, content: { ...draft, title: draft.title.slice(0, 255) } } } });\n    }\n  });\n});\nif (drafts.length === 0) {\n  throw new Error('The model returned no usable drafts (expected a JSON array of objects with a title).');\n}\nreturn drafts;"
+            }
+        },
+        {
+            "id": "8e188788-60fd-42ab-8f9e-4b51cc420f15",
+            "name": "Sign: Store suggestion",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2400,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\nconst body = $json.body;\nreturn { json: { ...$json, request: signRequest('POST', 'suggestions', body, ctx) } };"
+            }
+        },
+        {
+            "id": "7623aeb1-6287-4cde-8b4c-cd23ecc2bc11",
+            "name": "Store suggestion",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                2640,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        },
+        {
+            "id": "8d4810a3-6f98-499f-a1df-72b0c64af809",
+            "name": "Summarise",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2880,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const results = $input.all().map((item) => item.json.data || {});\nreturn [{ json: { data: { suggestion_type: 'social_post', drafts_stored: results.filter((r) => r.created).length, already_queued: results.filter((r) => r.created === false).length, status: 'pending_review', note: 'Drafts await human review in the admin; nothing is published automatically.' } } }];"
+            }
+        },
+        {
+            "id": "87eea3b4-3bd2-4e83-8cee-7cc77f491157",
+            "name": "Build message",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                3120,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const data = $input.first().json.data || {};\nconst money = (v) => (v && typeof v === 'object' && !Array.isArray(v) && 'amount' in v && 'currency' in v) ? v.amount + ' ' + v.currency : null;\nconst label = (row) => {\n  const name = row.name || row.product_name || row.platform || row.supplier || row.gateway || row.order_number || row.command || row.variant_sku || row.code || row.sku;\n  const figure = money(row.net_revenue) || money(row.revenue) || money(row.sales) || money(row.net_profit) || row.units_count || row.state || row.status || row.margin_pct;\n  return name ? (figure !== undefined && figure !== null ? name + ': ' + figure : String(name)) : JSON.stringify(row).slice(0, 80);\n};\nconst lines = [];\nconst render = (obj, prefix, depth) => {\n  for (const [key, value] of Object.entries(obj)) {\n    if (['unavailable', 'note', 'basis', 'source', 'reason', 'status', 'alert'].includes(key) && depth === 0) continue;\n    if (value === null || value === undefined) continue;\n    const name = prefix + key;\n    const m = money(value);\n    if (m) { lines.push(name + ': ' + m); continue; }\n    if (Array.isArray(value)) {\n      lines.push(name + ': ' + value.length);\n      value.slice(0, 5).forEach((row) => lines.push('  - ' + (typeof row === 'object' && row !== null ? label(row) : String(row))));\n      continue;\n    }\n    if (typeof value === 'object') { if (depth < 2) render(value, name + '.', depth + 1); continue; }\n    lines.push(name + ': ' + value);\n  }\n};\nrender(data, '', 0);\nfor (const missing of (data.unavailable || [])) lines.push('Unavailable: ' + missing.metric + ' (' + missing.reason + ')');\nif (data.status === 'unavailable') lines.push('Unavailable: ' + data.reason);\nconst alert = data.alert === true;\nreturn [{ json: { notify: data.drafts_stored > 0, severity: 'info', title: 'C10 Prepare Social Media Content: drafts awaiting review', text: lines.slice(0, 60).join('\\n'), source: 'C10', summary: { alert } } }];"
+            }
+        },
+        {
+            "id": "f0ec44bc-4e59-4ad8-8add-5c599fee1333",
+            "name": "Notify?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.2,
+            "position": [
+                3360,
+                300
+            ],
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "537eff6d-9269-4666-853b-41c85961eba8",
+                            "leftValue": "={{ $json.notify }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            }
+        },
+        {
+            "id": "ed16f216-f99a-4e75-a3fb-43bb6d239939",
+            "name": "Notify (Z02)",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1.2,
+            "position": [
+                3600,
+                300
+            ],
+            "parameters": {
+                "source": "database",
+                "workflowId": {
+                    "__rl": true,
+                    "mode": "id",
+                    "value": "egsZ02automation",
+                    "cachedResultName": "Z02"
+                },
+                "workflowInputs": {
+                    "mappingMode": "defineBelow",
+                    "value": {},
+                    "matchingColumns": [],
+                    "schema": [],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": true
+                },
+                "mode": "once",
+                "options": {
+                    "waitForSubWorkflow": true
+                }
+            }
+        },
+        {
+            "id": "539b7927-0675-45f7-9bd8-6b7a8f5f2659",
+            "name": "Sign: finish execution",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                3840,
+                300
+            ],
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "const crypto = require('crypto');\n// Signs a request to the Laravel automation API (docs/API_DOCUMENTATION.md section 7).\n// Canonical string: timestamp, nonce, METHOD, path with query, workflow id, execution key, raw body.\nconst signRequest = (method, path, body, ctx) => {\n  const base = String($env.EGS_API_BASE_URL || '').replace(/\\/+$/, '');\n  const secret = String($env.EGS_AUTOMATION_HMAC_SECRET || '');\n  if (!base || !secret) {\n    throw new Error('EGS_API_BASE_URL and EGS_AUTOMATION_HMAC_SECRET must be set in the n8n environment.');\n  }\n  const uri = '/api/v1/automation/' + String(path).replace(/^\\/+/, '');\n  const raw = body === null ? '' : JSON.stringify(body);\n  const timestamp = String(Math.floor(Date.now() / 1000));\n  const nonce = crypto.randomBytes(16).toString('hex');\n  const canonical = [timestamp, nonce, method, uri, ctx.workflow_id, ctx.execution_key, raw].join('\\n');\n  const signature = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  return {\n    method,\n    url: base + uri,\n    body: raw,\n    headers: {\n      'Accept': 'application/json',\n      'X-Workflow-Id': ctx.workflow_id,\n      'X-Execution-Key': ctx.execution_key,\n      'X-Automation-Timestamp': timestamp,\n      'X-Automation-Nonce': nonce,\n      'X-Automation-Signature': signature,\n    },\n  };\n};\nconst ctx = $('Prepare execution').first().json.ctx;\nconst summary = $('Build message').first().json.summary || {};\nreturn [{ json: { request: signRequest('POST', 'executions', { action: 'finish', status: 'success', summary }, ctx) } }];"
+            }
+        },
+        {
+            "id": "c6eff4cc-98f6-4463-8f1d-e026867ec9e4",
+            "name": "Finish execution",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                4080,
+                300
+            ],
+            "parameters": {
+                "method": "={{ $json.request.method }}",
+                "url": "={{ $json.request.url }}",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "specifyHeaders": "json",
+                "jsonHeaders": "={{ JSON.stringify($json.request.headers) }}",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "contentType": "raw",
+                "rawContentType": "application/json",
+                "body": "={{ $json.request.body }}"
+            },
+            "credentials": {
+                "httpHeaderAuth": {
+                    "name": "LaravelAutomationApi"
+                }
+            },
+            "retryOnFail": true,
+            "maxTries": 3,
+            "waitBetweenTries": 5000
+        }
+    ],
+    "connections": {
+        "Schedule": {
+            "main": [
+                [
+                    {
+                        "node": "Prepare execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Prepare execution": {
+            "main": [
+                [
+                    {
+                        "node": "Start execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Start execution": {
+            "main": [
+                [
+                    {
+                        "node": "Already ran in this window?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Already ran in this window?": {
+            "main": [
+                [
+                    {
+                        "node": "Stop: duplicate execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sign: Fetch sales data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: Fetch sales data": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch sales data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch sales data": {
+            "main": [
+                [
+                    {
+                        "node": "Build prompts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build prompts": {
+            "main": [
+                [
+                    {
+                        "node": "Draft with LLM",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "LLM provider (Anthropic)": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Draft with LLM",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Draft with LLM": {
+            "main": [
+                [
+                    {
+                        "node": "Parse drafts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: Store suggestion": {
+            "main": [
+                [
+                    {
+                        "node": "Store suggestion",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse drafts": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: Store suggestion",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Store suggestion": {
+            "main": [
+                [
+                    {
+                        "node": "Summarise",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sign: finish execution": {
+            "main": [
+                [
+                    {
+                        "node": "Finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Summarise": {
+            "main": [
+                [
+                    {
+                        "node": "Build message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Build message": {
+            "main": [
+                [
+                    {
+                        "node": "Notify?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Notify?": {
+            "main": [
+                [
+                    {
+                        "node": "Notify (Z02)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Notify (Z02)": {
+            "main": [
+                [
+                    {
+                        "node": "Sign: finish execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "timezone": "UTC",
+        "saveDataErrorExecution": "all",
+        "saveDataSuccessExecution": "all",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "errorWorkflow": "egsZ01automation"
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "egsStatus": "authored and validated, not executed"
+    }
+}

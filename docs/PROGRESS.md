@@ -23,7 +23,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M14 | Admin core | Not started |
 | M15 | Admin remaining | Not started |
 | M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
-| M17 | n8n workflows | Not started |
+| M17 | n8n workflows | Complete (run before M14 and BD9 by PM decision; Laravel automation API, outbox and heartbeats built and tested; 58 workflows authored and validated, **not executed**: n8n is not installed here; admin screen is M15) |
 | M18 | SEO and analytics | Not started |
 | M19 | Full test pass | Not started |
 | M20 | Production readiness | Not started |
@@ -41,7 +41,7 @@ Status values: Not started, In progress, Blocked (state why), Complete.
 | Open Exchange Rates | Built | Yes (`Http::fake` only) | Awaiting credentials; OXR has no sandbox | No |
 | GA4 Measurement Protocol | Not built (M10 queues the `purchase` row once; sending is M18) | No | Awaiting credentials | No |
 | Google Search Console | Not built | No | Awaiting credentials | No |
-| n8n | Not built | No | Not installed on this machine | No |
+| n8n | Automation API, outbox and 58 workflows built (M17) | Laravel side: yes (`tests/Feature/Automation`); workflows: static validation only | **Not executed**: n8n is not installed on this machine; SMS provider, alert channel and LLM key not chosen (BD9) | No |
 | GeoIP | Contract built; `null` (default) and trusted-header drivers. GeoLite2 not built: needs `geoip2/geoip2` and a MaxMind database (BD9) | Yes (header parsing) | Not applicable | No |
 
 ## Business decisions
@@ -927,3 +927,112 @@ PM scope decision: M16 ran before M14/M15. Tokens are issued and revoked with `p
 
 M12 (storefront) or M14 (admin core) as the PM schedules; M15 must add the MCP token and approval screens on the M16 JSON endpoints.
 
+
+---
+
+## M17: n8n workflows
+
+Date completed: 2026-11-10
+Completed by: n8n Automation Engineer
+
+### Summary of completed work
+
+The Laravel automation API for n8n (`/api/v1/automation`, 42 routes), dedicated credentials, the outbox to n8n, scheduled-task heartbeats, and all 58 workflows of `N8N_AUTOMATIONS.md` with one document each, a README, a credentials example and a static validator. **The workflows are authored and validated, not executed: n8n is not installed on this machine, and none has run.**
+
+PM scope decisions (recorded in `IMPLEMENTATION_ROADMAP.md`): M17 ran before M14 and before BD9. No Blade or frontend JS: credentials go through `php artisan automation:credentials` and `/admin/api/automation-credentials` (`service_accounts.manage`); the screen is M15. All alerts go through the Z02 notify sub-workflow, whose Slack or Telegram branch is chosen by `EGS_ALERT_CHANNEL`; no workflow names a channel.
+
+### Files created
+
+- `backend/app/Domains/Automation/`: `Enums/{AutomationScope,AutomationLogKind,AutomationTask,CustomerMessageStatus}`; `DTOs/{AutomationCaller,SignedRequest}`; `Models/AutomationCustomerMessage`; `Repositories/{AutomationReportRepository,CustomerSegmentRepository}`; `Services/{AutomationSignature,AutomationCredentialService,AutomationWorkflowRegistry,AutomationCallRecorder,AutomationExecutionService,AutomationAlertService,AutomationTaskDrivers,AutomationJobService,AutomationOutboxWriter,AutomationOutboxDispatcher,AutomationReportService,FinancialReportService,AutomationMonitorService,SystemMonitorService,SchedulerMonitor,ScheduledTaskHeartbeat,MarketingDataService,AiSuggestionService,CustomerMessagingService}`; `Listeners/RecordScheduledTaskHeartbeat`
+- `backend/app/Domains/Customers/Services/CustomerContactPolicy`
+- `backend/app/Http/`: `Middleware/Automation/{RecordAutomationCall,AuthenticateAutomationRequest,RequireAutomationScope}`; `Controllers/Automation/{AutomationController,ExecutionController,ReportController,MonitorController,JobController,MarketingController,CustomerMessagingController}`; `Controllers/Admin/Automation/AutomationCredentialController`; `Requests/Automation/{AutomationQueryRequest,ExecutionRequest,AlertRequest,StoreSuggestionRequest,PrepareCustomerMessageRequest,LogCustomerMessageRequest}`; `Requests/Admin/Automation/IssueAutomationCredentialRequest`
+- `backend/app/Console/TaskSchedule.php`; `backend/app/Console/Commands/Automation/{AutomationCredentialsCommand,AutomationWorkflowsCommand,FlushOutboxCommand}`
+- `backend/config/automation.php`, `backend/routes/automation.php`, `backend/database/factories/Automation/AutomationCustomerMessageFactory.php`
+- Tests: `backend/tests/Feature/Automation/{AutomationAuthTest,AutomationExecutionTest,AutomationOutboxTest,AutomationCustomerMessagingTest,AutomationReportsTest,AutomationCredentialTest,ScheduledTaskHeartbeatTest,N8nWorkflowValidationTest}`, `backend/tests/Support/AutomationFixtures.php`
+- `n8n/workflows/<category>/<ID>-<slug>.json` (58), `n8n/documentation/<ID>-<slug>.md` (58), `n8n/README.md`, `n8n/credentials.example.md`, `n8n/scripts/validate-workflows.mjs`
+- Changed: `OrderStateMachine` and `SupportTicketService` (outbox writes inside their transactions), `McpOperationsReader` (real scheduler check), `NotificationPreferenceChannel` (`sms`), `AutomationLog`, `AutomationOutbox`, `MorphMap`, `AppServiceProvider` (`automation` limiter, heartbeat listener and singleton), `bootstrap/app.php` (route file, `automation` group, `automation.scope`), `routes/admin.php`, `routes/console.php` (now calls `TaskSchedule::register`), `tests/Pest.php` (fixtures), `.env.example` (six empty variables)
+- Docs: `N8N_AUTOMATIONS.md`, `API_DOCUMENTATION.md` section 7, `DATABASE_DESIGN.md` (automation tables, `sms` channel, heartbeats), `PROJECT_ARCHITECTURE.md` (section 5, 16, ADR-033, ADR-034), `SECURITY.md`, `DEPLOYMENT.md`, `IMPLEMENTATION_ROADMAP.md`
+
+### Migrations
+
+Rolled back and re-applied on `gaming-store_testing`. **Not applied to the app database `gaming-store`**; run `php artisan migrate`.
+
+- `2026_11_11_020001_add_call_columns_to_automation_logs`: `kind`, `service_account_id`, `endpoint`, `http_status`, `error_code`, `duration_ms`, `ip`, `request_id`, stored generated `execution_unique_key`; `uq_alog` moved onto (workflow_id, execution_unique_key) so call rows can share a key; `idx_alog_kind_status`. Rollback deletes call rows.
+- `2026_11_11_020002_create_automation_customer_messages_table`
+- `2026_11_11_020003_add_delivery_columns_to_automation_outbox`: `last_http_status`, `last_error`, `failed_at`, `idx_ao_failed`
+- `2026_11_11_020004_add_dedupe_hash_to_ai_suggestions`: `dedupe_hash`, `uq_ais_dedupe`
+
+### Features implemented
+
+- Credentials: `n8n` service account with its own encrypted HMAC secret and a Sanctum token with exact `automation:` scopes; privileged scopes (`jobs:run`, `suggestions:write`, `customers:message`) only when named; token and secret shown once, never audited or logged.
+- Signed requests: bearer token plus HMAC-SHA256 over timestamp, nonce, method, path with query, workflow id, execution key and raw body (ADR-033); 5-minute window; nonce refused on reuse; only enabled workflows (`automation:workflows enable`); IP allow-list; per-account rate limit; standard error envelope; an `automation_logs` call row for every request, refused ones included (redacted query, never the body).
+- Duplicate-execution protection: `POST /executions` start/finish keyed by workflow and execution key; duplicates return `skipped_duplicate`; failed keys can be restarted; job endpoints act only for a running execution and once per execution.
+- Outbox: written in the transaction of the state change (order created, paid, delivered, failed; ticket staff reply or status change), identifiers only; delivered by `automation:flush-outbox` (every minute) with header token and HMAC, `SKIP LOCKED` lease, 6 retries with backoff, then `failed` with status or reason (never the body). Off unless `AUTOMATION_OUTBOX_ENABLED=true`.
+- Heartbeats (inherited gap from M9 and M16): every scheduled task writes `scheduled_task_runs` through the scheduler's own events; `GET /monitor/scheduler` (F04) and the MCP `get_system_health` scheduler check compare each task with its cron (`ok`, `late`, `failing`, `never_run`, `driven_by_n8n`). ADR-014 enforced: the three n8n-drivable tasks skip in the scheduler when the setting says `n8n`, and the job endpoint refuses otherwise.
+- Reports and monitors reuse the M16 readers (`order_item_financials` for revenue and profit) and fixed aggregate queries; every monitor returns `alert`.
+- Customer messaging: SMS only (ADR-034); `CustomerContactPolicy` decides eligibility server-side (opt-in preference for order and support updates, latest SMS marketing consent for marketing, active customer account with a phone, never guests); Laravel writes the text; sends are logged and deduplicated.
+- AI marketing: drafts stored as `pending_review` only, deduplicated, restricted to each workflow's own types; nothing published. The LLM is the n8n `LlmProvider` credential.
+
+### Endpoints returning `unavailable`
+
+| Endpoint | Part | Reason |
+|---|---|---|
+| `GET /monitor/exceptions` (F03) | all | Exceptions go to log files only; no exception store or tracker |
+| `GET /monitor/latency` (F06) | web request latency | Not recorded (no APM) |
+| `GET /monitor/database` (F05) | replication | Single MySQL server |
+| `GET /reports/expenses` (E01) | operating expenses | Not recorded in the store |
+| `GET /reports/gateway-performance` (B07) | provider latency, decline reasons | Not stored per attempt |
+| `GET /reports/customer-retention` (B08) | guest retention | Guest orders are not linked to accounts |
+| `GET /reports/pricing-recommendations` (B10) | competitor prices, price elasticity | No licensed source or history |
+| `GET /data/trending` (C) | external market trends | No external source connected |
+| `GET /reports/weekly-business` (B01) | visitor and cart conversion | GA4 is M18 (from the M16 reader) |
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Endpoint auth tests: token | Met | `AutomationAuthTest`: no token, garbage, expired, disabled account, MCP account, user token; staff session ignored |
+| HMAC | Met | Missing or malformed headers (7 cases), wrong secret, tampered body, signature bound to path, query, workflow and key |
+| Replay | Met | Same nonce refused (`replay_detected`), one execution row; a badly signed request does not burn the nonce |
+| Stale timestamp | Met | 6 minutes old, 1 hour old, 6 minutes ahead refused; 299 s accepted |
+| Duplicate execution | Met | `AutomationExecutionTest`: second start `skipped_duplicate` with one row; after success still refused; failed restarts with attempt 2; finish only once; job queued once per execution |
+| Scopes, rate limit (PM) | Met | Every route group without its scope 403; wildcard grants nothing; 429 per account, audited, others unaffected, resets |
+| Outbox signing and retry (PM) | Met | `AutomationOutboxTest`: signature recomputed from the sent body; header token; 500 then backoff 60 s then 300 s; failed after the last delay with F08 alert; connection failure retried; leased events skipped; written in the state change's transaction (rolled back with it); identifiers only |
+| Consent filtering (PM) | Met | `AutomationCustomerMessagingTest`: opt-in required for order SMS; guest, disabled preference, marketing-only consent, no phone, suspended account refused; latest consent wins (granted then revoked excluded), email-only consent, disabled marketing SMS, staff, no phone excluded; review, reactivation and recommendation segments apply the same rule; log idempotent |
+| Heartbeats (PM) | Met | `ScheduledTaskHeartbeatTest`: completed with duration, non-zero exit failed, exception class only; scheduler skips n8n-driven tasks; F04 and MCP check `ok` with fresh heartbeats and `late`/`failing`/`never_run`/`driven_by_n8n` otherwise |
+| `unavailable` instead of fabricated numbers (PM) | Met | `AutomationReportsTest`: 8 endpoints return `unavailable` with a reason; empty store gives no alert and no invented figures |
+| AI output only as drafts (PM) | Met | `pending_review`, deduplicated, wrong type for the workflow 403, product description unchanged |
+| Every JSON parses, has an error workflow, no credentials embedded | Met, statically | `node n8n/scripts/validate-workflows.mjs` (and `N8nWorkflowValidationTest`): 58 workflows; Z01 exempt from the error-workflow rule (it cannot be its own); credentials by name only; secret scan; node types and versions checked against n8n's source; JS syntax of every Code node and expression. Negative run on a broken copy reported all 11 seeded faults |
+| One doc per workflow with all required headings | Met | 58 documents, 9 headings each, checked by the validator |
+| Labelled not executed | Met | Every document, the README, workflow `meta.egsStatus`, `N8N_AUTOMATIONS.md` |
+| Workflows behave correctly in n8n | **Not verified** | n8n is not installed; nothing has run. Node parameter shapes were taken from n8n's source and docs, not from a running instance |
+
+### Tests and results
+
+- Command: `php artisan test --compact` (MySQL `gaming-store_testing`)
+- Result: **1838 passed, 0 failed, 0 skipped (10783 assertions), 137.4 s**, up from 1697 (141 new: 135 in `tests/Feature/Automation`, the rest from architecture datasets over the new classes).
+- Command: `node n8n/scripts/validate-workflows.mjs`: passed, 58 workflows and 58 documents (infrastructure 3, daily-operations 11, weekly-business-intelligence 10, smart-marketing 10, customer-automation 9, financial-monitoring 7, system-monitoring 8).
+- Existing tests changed: `McpReadToolsTest` asserted the scheduler check was `unavailable` (the M17 gap); it now asserts `degraded` with source `scheduled_task_runs` on an empty heartbeat table, and new tests prove `ok` and each problem state. `SchemaAcceptanceTest` "creates exactly the tables in the design" gains `automation_customer_messages`. `CodeCanaryTest` now turns the outbox on and asserts an `order.delivered` event exists, so its `automation_outbox` sink is no longer empty (stronger, not weaker).
+- Not tested, and why: any workflow in n8n (not installed); the n8n side of the signature (the Code node is checked for syntax only; Laravel's verifier is tested with the same canonical form); a real SMS provider, Slack, Telegram or LLM; `schedule:run` end to end (it spawns real artisan processes; the heartbeat listener is tested through the scheduler's own events); Redis nonce storage (tests use the array cache).
+
+### Outstanding requirements
+
+- Install n8n, create credentials, issue the Laravel credential, import, run each workflow once against staging and only then publish (`n8n/README.md`). Until then every workflow is unexecuted.
+- BD9: alert channel (Slack or Telegram), SMS provider (the D workflows' SMS node sends `{to, text, reference}` and will need adapting) and LLM key.
+- Apply the four migrations to `gaming-store`; set `AUTOMATION_OUTBOX_ENABLED`, `N8N_WEBHOOK_URL`, `N8N_OUTBOUND_SECRET`, `N8N_WEBHOOK_AUTH_TOKEN` when n8n exists.
+- M15: admin screens for automation credentials and the AI suggestion review queue (approval creating drafts is not built; suggestions can only be stored).
+- Customers cannot yet set SMS preferences or consent (account pages are M13), so no customer is eligible for n8n messages until then.
+- The Error Trigger does not give the failed run's execution key; Z01 makes Laravel close the newest running execution of that workflow. A run that dies without reaching Z01 leaves its window `started` (refused as a duplicate; the next window runs).
+- `automation_logs` grows by about one row per request (roughly 15 to 20 thousand a day with every workflow active); `logs:prune` (13-month retention) is not built yet.
+- Not built from the architecture schedule list: `carts:detect-abandoned` (D06 reads active carts by `last_activity_at` instead), `analytics:*`, `seo:generate-sitemaps`, `logs:prune`.
+
+### Design changes made
+
+- ADR-033 (signature over a canonical form with an explicit nonce) and ADR-034 (SMS as the only, opt-in secondary channel).
+- `automation_logs` holds call rows; `uq_alog` moved onto a generated column. New `automation_customer_messages`; outbox delivery columns; suggestion dedupe hash; `sms` preference channel.
+- Schedule definitions moved to `App\Console\TaskSchedule` so the monitor can read them in HTTP requests.
+- B workflows staggered every 5 minutes from Monday 07:00; D06 at minute 20; E06 window 15 minutes; documentation file names `<ID>-<slug>.md`.
+
+### Next milestone
+
+M12 (storefront) or M14 (admin core) as the PM schedules. M15 must add the automation credential and AI review screens; M13 must let customers set SMS preferences and consent.

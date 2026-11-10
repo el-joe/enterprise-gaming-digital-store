@@ -149,6 +149,10 @@ PM scope decision (2026-11-10): M16 runs before M14 and M15. MCP tokens are issu
 
 Depends: M14, BD9. Scope: all 58 workflows, docs, automation API, outbox.
 Accept: endpoint auth tests (token, HMAC, replay, stale timestamp, duplicate execution); every JSON parses and has an error workflow and no credentials embedded; one doc per workflow with all required headings; labelled not executed.
+PM scope decisions (2026-11-10): M17 runs now, before M14, and before BD9 is decided.
+- No Blade or frontend JS. Automation credentials (token plus HMAC secret) are issued, listed and revoked through `php artisan automation:credentials` and a JSON endpoint behind `service_accounts.manage` (`/admin/api/automation-credentials`); workflows are enabled with `php artisan automation:workflows`. The admin screen is part of M15.
+- BD9 (alert channel) is open, so all alerts go through one reusable notify sub-workflow (Z02). Its Slack and Telegram branches are selected by the n8n environment variable `EGS_ALERT_CHANNEL`, both are documented, and no workflow hardcodes a channel.
+- n8n is not installed on the development machine: the workflows are labelled "authored and validated, not executed" everywhere and are checked statically by `n8n/scripts/validate-workflows.mjs`.
 
 ### M18: SEO and analytics (Step 11)
 

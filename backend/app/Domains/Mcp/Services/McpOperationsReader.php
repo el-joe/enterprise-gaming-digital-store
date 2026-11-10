@@ -2,6 +2,7 @@
 
 namespace App\Domains\Mcp\Services;
 
+use App\Domains\Automation\Services\SchedulerMonitor;
 use App\Domains\Currency\Exceptions\ExchangeRateMissing;
 use App\Domains\Currency\Services\ExchangeRateRegistry;
 use App\Domains\Mcp\Repositories\McpOperationsRepository;
@@ -21,6 +22,7 @@ class McpOperationsReader
     public function __construct(
         private McpOperationsRepository $operations,
         private ExchangeRateRegistry $rates,
+        private SchedulerMonitor $scheduler,
     ) {}
 
     /**
@@ -138,10 +140,7 @@ class McpOperationsReader
                 'unresolved_supplier_attempts' => $this->operations->unresolvedSupplierAttempts(),
                 'open_manual_tasks' => $this->operations->openManualTasks(),
             ],
-            'scheduler' => [
-                'status' => 'unavailable',
-                'reason' => 'Scheduled commands do not write scheduled_task_runs heartbeats yet (milestone M17), so the last run of each task is not known.',
-            ],
+            'scheduler' => $this->schedulerHealth(),
         ];
 
         $statuses = array_column($checks, 'status');
@@ -150,6 +149,27 @@ class McpOperationsReader
             'status' => in_array('down', $statuses, true) ? 'down' : (in_array('degraded', $statuses, true) ? 'degraded' : 'ok'),
             'checked_at' => now()->toIso8601String(),
             'checks' => $checks,
+        ];
+    }
+
+    /**
+     * From scheduled_task_runs heartbeats (M17): late, failing or never-run tasks degrade it.
+     *
+     * @return array<string, mixed>
+     */
+    private function schedulerHealth(): array
+    {
+        $report = $this->scheduler->report();
+
+        return [
+            'status' => $report['status'],
+            'source' => 'scheduled_task_runs',
+            'tasks' => count($report['tasks']),
+            'counts' => $report['counts'],
+            'problems' => array_values(array_map(
+                static fn (array $task): array => ['command' => $task['command'], 'state' => $task['state'], 'last_due_at' => $task['last_due_at'], 'last_started_at' => $task['last_run']['started_at'] ?? null],
+                array_filter($report['tasks'], static fn (array $task): bool => in_array($task['state'], ['late', 'failing', 'never_run'], true)),
+            )),
         ];
     }
 

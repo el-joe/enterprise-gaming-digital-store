@@ -7,6 +7,9 @@ use App\Http\Middleware\Admin\EnforceIdleTimeout;
 use App\Http\Middleware\Admin\EnsureStaff;
 use App\Http\Middleware\Admin\EnsureTwoFactor;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\Automation\AuthenticateAutomationRequest;
+use App\Http\Middleware\Automation\RecordAutomationCall;
+use App\Http\Middleware\Automation\RequireAutomationScope;
 use App\Http\Middleware\Mcp\AuthenticateMcpToken;
 use App\Http\Middleware\Mcp\RecordMcpCall;
 use App\Http\Middleware\Mcp\RequireMcpScope;
@@ -30,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('admin')->prefix('admin/api')->name('admin.api.')->group(base_path('routes/admin.php'));
             Route::middleware('web')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/checkout.php'));
             Route::middleware('mcp')->prefix('api/v1/mcp')->name('mcp.')->group(base_path('routes/mcp.php'));
+            Route::middleware('automation')->prefix('api/v1/automation')->name('automation.')->group(base_path('routes/automation.php'));
             Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/api.php'));
             Route::prefix('webhooks')->name('webhooks.')->group(base_path('routes/webhooks.php'));
         },
@@ -47,11 +51,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'two_factor' => EnsureTwoFactor::class,
             'admin.idle' => EnforceIdleTimeout::class,
             'mcp.scope' => RequireMcpScope::class,
+            'automation.scope' => RequireAutomationScope::class,
         ]);
 
         $middleware->group('account', ['web', 'auth', 'account.active']);
         $middleware->group('admin', ['web', 'auth', 'staff', 'two_factor', 'admin.idle', 'throttle:admin']);
         $middleware->group('mcp', [RecordMcpCall::class, AuthenticateMcpToken::class, 'throttle:mcp']);
+        $middleware->group('automation', [RecordAutomationCall::class, AuthenticateAutomationRequest::class, 'throttle:automation']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'code', 'recovery_code']);

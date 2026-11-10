@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -14,7 +14,7 @@
 | Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a to 5d built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
-| Automation (n8n) | `/api/v1/automation` | Sanctum token (`n8n`) + HMAC | planned |
+| Automation (n8n) | `/api/v1/automation` | Sanctum bearer token of an `n8n` service account + HMAC signature, timestamp and nonce + scopes | built (M17, section 7) |
 | MCP | `/api/v1/mcp` | Sanctum bearer token of an `mcp` service account + scopes | built (M16, section 8) |
 
 Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
@@ -97,7 +97,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `account` (M11), `mcp` (M16, per account, `service_accounts.rate_limit_per_minute`), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
+Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `account` (M11), `mcp` (M16) and `automation` (M17), per account, `service_accounts.rate_limit_per_minute` (30/min per IP before authentication), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -408,24 +408,48 @@ Not built: affiliate payouts (`affiliate_payouts`), DataTables endpoints for the
 
 Built in M10 (payment rows). Outside the `web` group: no session, cookies or CSRF; `webhooks` limiter (600/min per IP). A valid event is stored once in `payment_webhooks` (unique per gateway and event id; payload encrypted; signature headers not kept), then processed on the `webhooks` queue: the payment is found by provider reference and re-read from the provider before anything changes. A bad signature is not stored; it is recorded in `security_events`. Not built: `GET /payments/paymob/return` (the provider redirects to the M12 return page at `PAYMENTS_RETURN_URL`, which calls verify-payment).
 
-## 7. Automation API
+## 7. Automation API (built, M17)
 
-See `N8N_AUTOMATIONS.md` for the mapping of workflows to endpoints. Common request headers: `Authorization: Bearer`, `X-Automation-Timestamp`, `X-Automation-Signature` (`hex(HMAC-SHA256(timestamp + "." + raw_body, secret))`), `X-Workflow-Id`, `X-Execution-Key`.
+Prefix `/api/v1/automation`, middleware group `automation`: `RecordAutomationCall` (one `automation_logs` row of kind `call` per request, refused ones included; method and redacted query only, never the body), `AuthenticateAutomationRequest`, `throttle:automation`. Route names after `automation.` are stored as the endpoint. Responses use the standard envelopes and carry `Cache-Control: no-store`. The workflows that call each route are in `N8N_AUTOMATIONS.md`. The n8n workflows are authored and validated, not executed.
 
-Responses carry `{ success, data, meta: { generated_at } }`.
+### Authentication
 
-| Method | Path |
+| Header | Rule |
 |---|---|
-| GET | `/reports/sales`, `/reports/profit`, `/reports/revenue-comparison`, `/reports/weekly-business`, `/reports/best-selling?by=game\|platform`, `/reports/profitable-products`, `/reports/underperforming-products`, `/reports/supplier-performance`, `/reports/gateway-performance`, `/reports/customer-retention`, `/reports/coupon-performance`, `/reports/pricing-recommendations`, `/reports/expenses`, `/reports/gateway-fees`, `/reports/refunds`, `/reports/unusual-transactions` |
-| GET | `/monitor/orders/failed`, `/monitor/orders/pending`, `/monitor/payments/failures`, `/monitor/products/low-margin`, `/monitor/margin-alerts`, `/monitor/suppliers/balances`, `/monitor/suppliers/health`, `/monitor/queues`, `/monitor/exceptions`, `/monitor/scheduler`, `/monitor/database`, `/monitor/latency`, `/monitor/webhooks` |
-| GET | `/payments/reconciliation` |
-| POST | `/jobs/{catalog-sync\|pricing-sync\|exchange-rates\|reconcile-payments}` |
-| GET | `/data/trending`, `/data/product-context/{id}` |
-| POST | `/suggestions` (always `pending_review`) |
-| GET | `/customers/segments/{abandoned\|review-eligible\|reactivation\|recommendations}` (consented only, no raw email unless the scope allows) |
-| POST | `/customers/messages/log` |
-| POST | `/executions` (start, finish) |
-| POST | `/alerts` |
+| `Authorization: Bearer <token>` | Live Sanctum token of an enabled `n8n` service account; sessions ignored; the account IP allow-list applies |
+| `X-Workflow-Id` | `^[A-Z][0-9]{2}$`, a workflow registered and **enabled** in `automation_workflows` (`php artisan automation:workflows enable A01`) |
+| `X-Execution-Key` | `^[A-Za-z0-9:._-]{1,128}$`; the schedule window (`A01:2026-11-10`) or `<ID>:<event_id>` |
+| `X-Automation-Timestamp` | Unix seconds; refused when more than 300 s from the server clock |
+| `X-Automation-Nonce` | `^[A-Za-z0-9_-]{16,64}$`; refused if seen for the account in the last 900 s (cache `add`, stored only after the signature verified) |
+| `X-Automation-Signature` | `hex(HMAC-SHA256(secret, timestamp + "\n" + nonce + "\n" + METHOD + "\n" + path_with_query_as_sent + "\n" + workflow_id + "\n" + execution_key + "\n" + raw_body))`, secret = the account's `hmac_secret` |
+
+Errors (standard envelope): `unauthenticated` 401, `signature_missing` 401, `signature_invalid` 401, `timestamp_stale` 401, `replay_detected` 401, `forbidden` 403 (IP), `workflow_unknown` 403, `workflow_disabled` 403, `scope_missing` 403, `rate_limited` 429, `validation_failed` 422, `execution_not_started` 409, `task_driver_mismatch` 409, `event_type_mismatch` 422. A wildcard ability grants nothing; scopes are exact `automation:` abilities.
+
+### Routes
+
+| Method | Path | Scope | Notes |
+|---|---|---|---|
+| POST | `/executions` | `executions:write` | `{action: start}`: 201 `started`, or 200 `skipped_duplicate` (`data.duplicate: true`, the workflow stops) when the key is `started` or `success`; a `failed` key restarts (`attempt` + 1). `{action: finish, status: success\|failed, summary?, error?}`: 409 unless running. Sets `automation_workflows.last_success_at` / `last_failure_at` |
+| POST | `/alerts` | `executions:write` | `{severity: info\|warning\|critical, title, message?, failed_workflow_id?, failed_execution_key?, n8n_execution_id?, node?, context?}`: written to the Laravel log as `automation.alert`; closes the failed execution (by key, else the newest running one of that workflow in 24 h) |
+| GET | `/reports/{sales, profit, revenue-comparison, weekly-business, best-selling?by=game\|platform, profitable-products, underperforming-products, supplier-performance, gateway-performance, customer-retention, coupon-performance, pricing-recommendations, expenses, gateway-fees, unusual-transactions, refunds}` | `reports:read` | Window: `period` (`today`, `yesterday`, `last_15_minutes`, `last_hour`, `last_24_hours`, `last_7_days`, `last_week`, `last_30_days`, `last_month`) or `from`/`to` dates (max 366 days); `limit` 1 to 100; `threshold_pct` |
+| GET | `/payments/reconciliation` | `reports:read` | Runs since `since` (default 24 h) and open items by type |
+| GET | `/monitor/{orders/failed?since, orders/pending?older_than, suppliers/balances?level=warning\|critical, suppliers/health?detail=1, payments/failures?window, products/low-margin, margin-alerts, queues?window, exceptions, scheduler, database, latency?window, webhooks?window}` | `monitor:read` | Each result has `alert` (true when the workflow should notify) |
+| POST | `/jobs/{catalog-sync, exchange-rates, reconcile-payments}` | `jobs:run` | Only workflow A09, A10 or E02 respectively; 409 `task_driver_mismatch` unless `settings.automation.task_drivers.{catalog_sync, exchange_rates, payment_reconciliation}` is `n8n`; needs a running execution; queues the same artisan command the scheduler runs, once per execution (202, then 200 `repeated`) |
+| GET | `/data/trending?days&limit`, `/data/product-context/{product_ulid}`, `/data/products/missing-descriptions?limit` | `marketing:read` | Aggregated internal data and public catalog facts; no customers, costs or suppliers |
+| POST | `/suggestions` | `suggestions:write` | `{type, product_id?, content: {title, ...}}` (content at most 20 KB): stored as `pending_review` (201), or the existing row for identical content (200). Each workflow may create only its own types (B10 `pricing`, C01 to C03 `product`, C04 `campaign`, C05 `bundle`, C06 `coupon`, C07 `blog_idea`, C08 `seo_description`, C09 `marketing_copy`, C10 `social_post`) |
+| POST | `/customers/messages/prepare` | `customers:message` | D01 to D05: `{event_id}` of an outbox event of the workflow's type; returns `eligible: false` with `reason` (`guest_has_no_preferences`, `account_not_active`, `no_phone_number`, `channel_not_enabled_by_customer`, `already_sent`) or the recipient (`customer_id`, `phone`, `locale`), `dedupe_key` and `message.text` |
+| GET | `/customers/segments/{abandoned, review-eligible, reactivation, recommendations}` | `customers:message` | Only D06, D07, D08, D09 respectively; up to 100 eligible recipients with `dedupe_key`, `customer_id`, `phone`, `locale`, `message.text` |
+| POST | `/customers/messages/log` | `customers:message` | `{dedupe_key, customer_id, status: sent\|failed, provider_message_id?, error?}`; the key must start with the caller's workflow id; idempotent: a `sent` row is never changed (200 `repeated`) |
+
+Results Laravel cannot compute are returned as `{status: "unavailable", reason}` (or an `unavailable` list beside real figures): exceptions (no exception store), web request latency, database replication, operating expenses, external market trends, competitor prices and price elasticity, provider latency and decline reasons, guest retention, visitor and cart conversion (from the M16 reader).
+
+Customer contact rules (`CustomerContactPolicy`): SMS only; active customer account (not staff) with a phone number; order and support messages need an enabled `notification_preferences` row (`sms` channel) for that category; marketing needs the latest `sms_marketing` consent to be a grant and no disabled marketing SMS preference. Guests are never contacted by n8n.
+
+Admin (session, 2FA, `service_accounts.manage`): `GET /admin/api/automation-credentials`, `POST /admin/api/automation-credentials` (`account`, `scopes[]`, `rate_limit_per_minute`, `allowed_ips[]`, `expires_in_days`; 201 with `token` and `hmac_secret` once; issuing replaces the account's secret; 10 per minute), `DELETE /admin/api/automation-credentials/{token_id}`. Console: `php artisan automation:credentials {issue|list|revoke}`, `php artisan automation:workflows {list|enable|disable}`, `php artisan automation:flush-outbox`.
+
+### Outbound webhooks (Laravel to n8n)
+
+`automation:flush-outbox` (every minute) posts each due `automation_outbox` event to `N8N_WEBHOOK_URL` as `{event_id, event_type, occurred_at, attempt, payload}` with headers `X-EGS-Webhook-Token` (`N8N_WEBHOOK_AUTH_TOKEN`), `X-Signature-Timestamp`, `X-Signature` (`hex(HMAC-SHA256(N8N_OUTBOUND_SECRET, timestamp + "." + raw_body))`), `X-Event-Id`, `X-Event-Type`. A 2xx marks it delivered; otherwise it is retried after 1, 5, 15, 60, 180 and 360 minutes and then marked `failed` with the HTTP status or a short reason (reported by `GET /monitor/webhooks`). Events: `order.created`, `payment.succeeded`, `order.delivered` (completed or partially fulfilled), `order.failed`, `ticket.updated` (public staff reply or status change). Payloads hold identifiers only. Writing is off unless `AUTOMATION_OUTBOX_ENABLED=true`.
 
 ## 8. MCP API (built, M16)
 
