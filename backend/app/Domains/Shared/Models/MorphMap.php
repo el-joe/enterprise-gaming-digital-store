@@ -54,6 +54,8 @@ use App\Domains\Customers\Models\CustomerProfile;
 use App\Domains\Fulfillment\Models\DigitalCode;
 use App\Domains\Fulfillment\Models\DigitalCodeAccess;
 use App\Domains\Fulfillment\Models\ManualFulfillmentTask;
+use App\Domains\Identity\Models\MobileLoginChallenge;
+use App\Domains\Identity\Models\MobileRefreshToken;
 use App\Domains\Identity\Models\OtpChallenge;
 use App\Domains\Identity\Models\ServiceAccount;
 use App\Domains\Identity\Models\User;
@@ -176,6 +178,8 @@ final class MorphMap
             'media' => Media::class,
             'menu' => Menu::class,
             'menu_item' => MenuItem::class,
+            'mobile_login_challenge' => MobileLoginChallenge::class,
+            'mobile_refresh_token' => MobileRefreshToken::class,
             'newsletter_subscriber' => NewsletterSubscriber::class,
             'not_found_log' => NotFoundLog::class,
             'notification_preference' => NotificationPreference::class,

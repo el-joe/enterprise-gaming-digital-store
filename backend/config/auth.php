@@ -42,6 +42,16 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        /*
+         * Bearer tokens of customers (mobile app, ADR-035) and, through `sanctum.guard`, the
+         * web session. Bound to the `users` provider so that a service-account token (MCP,
+         * n8n) is never accepted here; those authenticate only through their own middleware.
+         */
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
     ],
 
     /*

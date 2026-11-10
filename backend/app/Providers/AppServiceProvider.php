@@ -107,11 +107,24 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('otp', static function (Request $request): Limit {
-            $identifier = $request->session()->get('auth.two_factor.pending.user_id') ?? $request->ip();
+            // Web: the pending user in the session. Mobile (no session): the challenge token.
+            $challenge = $request->input('challenge_token');
+            $identifier = $request->hasSession()
+                ? $request->session()->get('auth.two_factor.pending.user_id')
+                : (is_string($challenge) && $challenge !== '' ? 'mobile|'.hash('sha256', $challenge) : null);
+            $identifier ??= $request->ip();
 
             return Limit::perMinutes(10, 5)->by('otp|'.$identifier);
         });
 
+        RateLimiter::for('mobile-refresh', static function (Request $request): array {
+            $token = $request->input('refresh_token');
+
+            return [
+                Limit::perMinute((int) config('mobile.auth.refresh_per_minute_per_token'))->by('mobile-refresh|token|'.hash('sha256', is_string($token) ? $token : '')),
+                Limit::perMinute((int) config('mobile.auth.refresh_per_minute_per_ip'))->by('mobile-refresh|ip|'.$request->ip()),
+            ];
+        });
         RateLimiter::for('storefront', static fn (Request $request): Limit => Limit::perMinute(120)->by('storefront|'.$request->ip()));
         RateLimiter::for('search', static fn (Request $request): Limit => Limit::perMinute(60)->by('search|'.$request->ip()));
         RateLimiter::for('checkout', static fn (Request $request): array => [

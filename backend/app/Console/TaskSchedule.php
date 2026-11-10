@@ -45,6 +45,9 @@ final class TaskSchedule
         // MCP (M16)
         $schedule->command('mcp:expire-pending-actions')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
+        // Mobile authentication (M-A2)
+        $schedule->command('auth:prune-mobile-tokens')->hourly()->withoutOverlapping()->onOneServer();
+
         // Automation (M17)
         $schedule->command('automation:flush-outbox')->everyMinute()->withoutOverlapping()->onOneServer();
     }

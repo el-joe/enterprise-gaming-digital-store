@@ -1,6 +1,6 @@
 # Mobile App Roadmap (boxcards.shop customer app)
 
-Status: plan (2026-11-10). M-A1 (Flutter foundation) is done; every later milestone is not started. Flutter project: `application/` (Flutter 3.47.9, Dart SDK ^3.13, package `application`, Android `applicationId` `shop.boxcards.app` as proposed in open decision 2, still changeable before the first store upload). Backend facts below were checked against the code on this date; file paths are given as evidence.
+Status: plan (2026-11-10). M-A1 (Flutter foundation) and M-A2 (backend mobile authentication, gap G1 closed) are done; every later milestone is not started. Flutter project: `application/` (Flutter 3.47.9, Dart SDK ^3.13, package `application`, Android `applicationId` `shop.boxcards.app` as proposed in open decision 2, still changeable before the first store upload). Backend facts below were checked against the code on this date; file paths are given as evidence.
 
 Related documents: `API_DOCUMENTATION.md` (contract), `PROJECT_ARCHITECTURE.md` (ADRs), `SECURITY.md`, `DESIGN_TOKENS.md`, `IMPLEMENTATION_ROADMAP.md` (BD1 to BD9, brand decision), `INTEGRATIONS.md` (payment providers).
 
@@ -359,6 +359,7 @@ Order: design-independent work first (M-A1 to M-A7), then design and the approva
 - **Tests**: Money (`fromJson` rejects numbers, preserves 6 dp, formats by exponent without double, Arabic digits option); error mapper for every row of 2.3; auth interceptor single-flight refresh; idempotency interceptor reuses the key on retry; retry interceptor never retries non-idempotent POSTs; redaction; router guards; token round-trip in secure store (mocked); golden tests of tokens in LTR and RTL.
 
 ### M-A2: Backend mobile authentication (G1)
+- **Status**: Done (2026-11-10, awaiting PM verification and commit). Routes under `/api/v1/mobile/auth` (register, login, two-factor-challenge, refresh, logout, logout-all, me), `mobile_refresh_tokens` and `mobile_login_challenges`, ADR-035, `API_DOCUMENTATION.md` section 1b; 40 new Pest tests, full backend suite 1888 passed. Details and deviations in `PROGRESS.md` (Mobile app, M-A2).
 - **Owner**: BEL.
 - **Scope**: `HasApiTokens` on `User`; `MobileAuthService` (Identity domain) reusing `AuthenticationService` checks and `TwoFactorService`; refresh-token model and migration (hashed, family id, `used_at`, `revoked_at`, `expires_at`, device name, last used); DTOs (`MobileLoginData`, `IssuedTokens`); enums (`TokenRevocationReason`); Form Requests; `MobileTokenResource`; routes under `/api/v1/mobile/auth` with `auth`/`otp` limiters; customer-only (staff refused); 2FA challenge token; audit of sign-in from a new device; Sanctum expiration for customer tokens.
 - **Deliverables**: endpoints, migration, `API_DOCUMENTATION.md` section "Mobile auth", `SECURITY.md` update.

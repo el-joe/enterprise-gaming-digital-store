@@ -29,6 +29,7 @@ require_once __DIR__.'/Support/PaymentFixtures.php';
 require_once __DIR__.'/Support/M11Fixtures.php';
 require_once __DIR__.'/Support/McpFixtures.php';
 require_once __DIR__.'/Support/AutomationFixtures.php';
+require_once __DIR__.'/Support/MobileFixtures.php';
 
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)

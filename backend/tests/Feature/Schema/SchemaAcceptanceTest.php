@@ -89,6 +89,8 @@ it('creates exactly the tables in the design', function (): void {
         'media',
         'menu_items',
         'menus',
+        'mobile_login_challenges',
+        'mobile_refresh_tokens',
         'model_has_permissions',
         'model_has_roles',
         'newsletter_subscribers',

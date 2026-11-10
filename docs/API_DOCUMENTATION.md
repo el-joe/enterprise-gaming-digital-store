@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17); section 1b mobile authentication with customer bearer tokens (M-A2). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -16,6 +16,7 @@
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum bearer token of an `n8n` service account + HMAC signature, timestamp and nonce + scopes | built (M17, section 7) |
 | MCP | `/api/v1/mcp` | Sanctum bearer token of an `mcp` service account + scopes | built (M16, section 8) |
+| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); storefront, checkout and account for bearer clients planned (M-A3 to M-A6) |
 
 Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 
@@ -56,6 +57,7 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 | HTTP | `code` | `errors` | Client behaviour |
 |---|---|---|---|
 | 401 | `unauthenticated` | absent | Redirect to login |
+| 401 | `refresh_token_invalid` | absent | Mobile: the refresh token is unknown, expired, revoked or reused; sign out locally and show the login |
 | 403 | `forbidden` | absent | SweetAlert2 error |
 | 403 | `two_factor_required` | absent | Redirect to two-factor enrolment or challenge |
 | 404 | `not_found` | absent | SweetAlert2 error |
@@ -89,7 +91,8 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `storefront` | 120/min per IP |
 | `search` | 60/min per IP |
 | `auth` | 5/min per email+IP |
-| `otp` | 5 per 10 min per identifier |
+| `otp` | 5 per 10 min per identifier (web: pending user in the session; mobile: the challenge token; else IP) |
+| `mobile-refresh` | 5/min per presented refresh token and 60/min per IP (`config/mobile.php`) |
 | `checkout` | 20/min per session and 60/min per IP |
 | `code-reveal` | 10/hour per user or guest order |
 | `admin` | 300/min per user |
@@ -97,7 +100,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `account` (M11), `mcp` (M16) and `automation` (M17), per account, `service_accounts.rate_limit_per_minute` (30/min per IP before authentication), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
+Built limiters: `auth`, `otp`, `mobile-refresh` (M-A2), `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `account` (M11), `mcp` (M16) and `automation` (M17), per account, `service_accounts.rate_limit_per_minute` (30/min per IP before authentication), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -118,6 +121,49 @@ Session routes in the `web` middleware group (CSRF applies). Responses use the s
 | POST | `/email/verification-notification` | Session required | 6/min | Link resent |
 
 Admin: `GET /admin/api/me` returns `{ user, roles, permissions }`. Two-factor enrolment is under `/api/v1/account/security/two-factor`.
+
+
+## 1b. Mobile authentication (built, M-A2)
+
+Prefix `/api/v1/mobile/auth`, `api` middleware group: stateless, no session, cookies or CSRF. Design in `PROJECT_ARCHITECTURE.md` ADR-035. Responses use the standard envelopes; every response that carries a token or challenge has `Cache-Control: no-store, private`. Token values are never logged or audited.
+
+Customers only. Credentials, account status and the error for a refused sign-in are shared with the web login (`AuthenticationService::verifyCredentials`): a wrong password, an unknown email, a suspended or closed account **and a staff account** all get the same 422 `validation_failed` with `errors.email = ["These credentials do not match our records."]`.
+
+| Method | Path | Auth | Body | Limiter | Result |
+|---|---|---|---|---|---|
+| POST | `/register` | none | `name`, `email`, `password`, `password_confirmation`, `device_name` | `auth` | 201 `{ tokens, user }`; customer account and profile created, verification email sent (customer password policy, as the web) |
+| POST | `/login` | none | `email`, `password`, `device_name` | `auth` | 200 `{ two_factor_required: false, challenge: null, tokens, user }`, or, when TOTP is enabled, 200 `{ two_factor_required: true, challenge: { token, expires_at }, tokens: null, user: null }` |
+| POST | `/two-factor-challenge` | none | `challenge_token`, `code` (6 digits) or `recovery_code` | `otp` (per challenge) | 200 `{ tokens, user }`. 422 `two_factor_invalid` (wrong code); 422 `two_factor_expired` (unknown, used or expired challenge, account no longer active, or `challenge_max_attempts` wrong codes) |
+| POST | `/refresh` | none | `refresh_token` | `mobile-refresh` | 200 `{ tokens }` (new pair; the old refresh token and the old access token stop working). 401 `refresh_token_invalid` for an unknown, expired, revoked or already used token; an already used token also revokes its whole family |
+| GET | `/me` | customer bearer | | `account` | 200 `{ user }` |
+| POST | `/logout` | customer bearer | | `account` | 200; revokes this device's family (its refresh tokens and access token) |
+| POST | `/logout-all` | customer bearer | | `account` | 200; revokes every family and every access token of the customer |
+
+`device_name` (required on register and login): 1 to 100 printable characters, for example `Pixel 9`. It names the access token and the sign-in; the first sign-in from a device name is audited.
+
+`tokens`:
+
+```json
+{
+  "token_type": "Bearer",
+  "access_token": "17|Qm9...",
+  "access_token_expires_at": "2026-11-10T12:15:00+00:00",
+  "refresh_token": "kq3...64 chars",
+  "refresh_token_expires_at": "2026-12-10T12:00:00+00:00"
+}
+```
+
+`user` is the account `UserResource`: `{ public_id, name, email, type, email_verified, two_factor_enabled }`.
+
+Rules for the client:
+
+- Send `Authorization: Bearer <access_token>`. The access token lives `mobile.auth.access_token_ttl_minutes` (default 15). On 401 `unauthenticated`, refresh once (single flight) and retry.
+- Each refresh token is **single use**. Store the new pair atomically before using it. Presenting a used refresh token is treated as theft: the whole sign-in (family) is revoked and audited, and every device copy must sign in again. Two concurrent refreshes with the same token therefore sign the device out.
+- `refresh_token_expires_at` is absolute (`mobile.auth.refresh_token_ttl_days`, default 30, from the sign-in); rotation does not extend it.
+- The challenge token lives `mobile.auth.challenge_ttl_seconds` (default 300) and is single use.
+- A bearer request of a suspended or closed account gets 403 `forbidden`; its next refresh revokes the family.
+
+Bearer tokens are accepted only by `/api/v1/mobile` routes in this milestone. Account, cart and checkout routes still need the web session until M-A3 adds `auth:sanctum` to them (the `sanctum` guard already accepts both the web session and customer tokens and refuses service-account tokens). A customer token is refused (401) by the MCP and automation APIs and the admin API; a service-account token is refused (401) by the mobile routes, whatever its abilities.
 
 ---
 

@@ -13,6 +13,7 @@ Scope: application and operational security requirements. Each **must** has a te
 | Staff 2FA | TOTP mandatory for `type=staff`, enforced by `EnsureTwoFactor` on all `/admin` routes |
 | Login throttling | `auth` limiter (5/min per email+IP), then `security_events` |
 | Session | `http_only`, `secure`, `same_site=lax`; regenerated at login; 120-minute idle (admin 30). Customer can revoke sessions from the account page. `SESSION_DRIVER=redis`. |
+| Mobile app tokens (M-A2, ADR-035) | Customers only (staff refused with the generic login error). Sanctum access token, exact ability `customer`, 15-minute expiry; opaque refresh token stored only as SHA-256, single use, rotated on every refresh, family revoked and audited (`auth.mobile_refresh_token_reused`, security event `auth.refresh_token_reused`) on reuse, absolute 30-day family lifetime; logout revokes the device's family, logout-all every family. Two-factor pending state is a hashed, single-use, 5-attempt, 300-second challenge row. First sign-in from a device name audited (`auth.mobile_new_device`). `sanctum` guard bound to the `users` provider: service-account tokens never authenticate customers, and customer tokens are refused by the MCP, automation and admin APIs. Limiters `auth` (login, register), `otp` (challenge) and `mobile-refresh`. Expired rows pruned hourly. Tokens are returned with `Cache-Control: no-store` and never logged or audited. |
 
 ## 2. Web hardening
 
@@ -90,7 +91,7 @@ Limiters in `API_DOCUMENTATION.md`. Coupon brute force: limiter plus lockout per
 
 ## 9. Logging, audit and retention
 
-Audited actions (always to `audit_logs`): logins by staff, permission changes, settings, credentials set (never values), price changes, coupon creation, refunds, reveal attempts, order overrides, supplier retries, service account changes, MCP writes.
+Audited actions (always to `audit_logs`): logins by staff, mobile sign-in from a new device and refresh-token reuse (M-A2), permission changes, settings, credentials set (never values), price changes, coupon creation, refunds, reveal attempts, order overrides, supplier retries, service account changes, MCP writes.
 
 Redaction: `RedactSensitiveLogData` Monolog processor removes keys including `password`, `token`, `secret`, `api_key`, `authorization`, `card*`, `pin*`, `code`, `client_secret`, `redemption*`. `dontFlash` and `dontReport` are configured. Provider HTTP exceptions are logged by status and operation only.
 

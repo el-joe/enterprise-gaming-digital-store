@@ -30,23 +30,9 @@ class AuthenticationService
      */
     public function login(LoginData $data, Session $session): LoginResult
     {
-        $guard = Auth::guard('web');
-
-        if (! $guard->once(['email' => $data->email, 'password' => $data->password])) {
-            throw $this->failedLogin();
-        }
-
-        /** @var User $user */
-        $user = $guard->user();
-
-        if ($user->status !== UserStatus::Active) {
-            $guard->forgetUser();
-
-            throw $this->failedLogin();
-        }
+        $user = $this->verifyCredentials($data);
 
         if ($user->hasTwoFactorEnabled()) {
-            $guard->forgetUser();
             $session->migrate(true);
             $session->put(self::PENDING_KEY, [
                 'user_id' => $user->id,
@@ -60,6 +46,52 @@ class AuthenticationService
         $this->finalizeLogin($user, $data->remember, $data->ip, $session);
 
         return new LoginResult($user, false, $user->type === UserType::Staff);
+    }
+
+    /**
+     * The credential and account-status check shared by the web and mobile sign-ins. Returns the
+     * active user without signing anyone in, or throws the generic failed-login error.
+     *
+     * @throws ValidationException
+     */
+    public function verifyCredentials(LoginData $data): User
+    {
+        $guard = Auth::guard('web');
+
+        if (! $guard->once(['email' => $data->email, 'password' => $data->password])) {
+            throw $this->failedLogin();
+        }
+
+        /** @var User $user */
+        $user = $guard->user();
+        $guard->forgetUser();
+
+        if ($user->status !== UserStatus::Active) {
+            throw $this->failedLogin();
+        }
+
+        return $user;
+    }
+
+    /**
+     * Bookkeeping after any successful sign-in: last login and the staff login audit.
+     */
+    public function recordSuccessfulLogin(User $user, ?string $ip): void
+    {
+        $user->forceFill(['last_login_at' => now(), 'last_login_ip' => $ip])->save();
+
+        if ($user->type === UserType::Staff) {
+            $this->audit->record(new AuditEntry(action: 'auth.staff_login', subject: $user));
+        }
+    }
+
+    /**
+     * The generic error every refused sign-in gets (wrong password, unknown email, inactive
+     * account, and on mobile also staff accounts).
+     */
+    public function failedLogin(): ValidationException
+    {
+        return ValidationException::withMessages(['email' => [__('auth.failed')]]);
     }
 
     /**
@@ -102,15 +134,6 @@ class AuthenticationService
         Auth::guard('web')->login($user, $remember);
         $session->regenerateToken();
 
-        $user->forceFill(['last_login_at' => now(), 'last_login_ip' => $ip])->save();
-
-        if ($user->type === UserType::Staff) {
-            $this->audit->record(new AuditEntry(action: 'auth.staff_login', subject: $user));
-        }
-    }
-
-    private function failedLogin(): ValidationException
-    {
-        return ValidationException::withMessages(['email' => [__('auth.failed')]]);
+        $this->recordSuccessfulLogin($user, $ip);
     }
 }

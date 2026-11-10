@@ -12,9 +12,22 @@ use Illuminate\Support\Facades\DB;
 class RegistrationService
 {
     /**
-     * Create a customer account and sign the new customer in.
+     * Create a customer account and sign the new customer in (web session).
      */
     public function register(RegistrationData $data): User
+    {
+        $user = $this->createCustomer($data);
+
+        Auth::guard('web')->login($user);
+
+        return $user;
+    }
+
+    /**
+     * Create a customer account with its profile and send the verification email, without
+     * signing anyone in. The mobile app issues tokens instead (MobileAuthService).
+     */
+    public function createCustomer(RegistrationData $data): User
     {
         $user = DB::transaction(static function () use ($data): User {
             $user = new User([
@@ -32,8 +45,6 @@ class RegistrationService
         });
 
         event(new Registered($user));
-
-        Auth::guard('web')->login($user);
 
         return $user;
     }

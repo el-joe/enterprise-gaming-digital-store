@@ -69,7 +69,7 @@ Indexes: `idx_users_type_status` (type, status): admin customer list filter. `id
 
 ### personal_access_tokens
 
-Standard Sanctum table. `tokenable` is a `ServiceAccount` (or staff user for testing). Abilities store scopes.
+Standard Sanctum table. `tokenable` is a `ServiceAccount` (abilities store scopes) or, since M-A2, a customer `User` of the mobile app (ability `customer`, `name` = device name, `expires_at` always set).
 
 ### service_accounts [sd]
 
@@ -144,6 +144,34 @@ Unique: `uq_np` (user_id, category, channel). M17: `sms` is the secondary channe
 | consumed_at | ts | Y | |
 
 Index: `idx_otp_lookup` (purpose, identifier_hash, expires_at): verification lookup.
+
+### mobile_refresh_tokens (M-A2)
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| user_id | fk:users cascade | NN | customer |
+| family_id | char(26) | NN | ULID, one per sign-in |
+| token_hash | char(64) | NN | SHA-256 of the refresh token; unique `uq_mrt_token_hash` |
+| device_name | str(100) | NN | |
+| access_token_id | fk:personal_access_tokens null | Y | access token issued with this refresh token |
+| ip | str(45) | Y | |
+| expires_at | ts | NN | absolute family expiry, copied on rotation |
+| used_at | ts | Y | set when rotated; a second use revokes the family |
+| revoked_at | ts | Y | |
+| revocation_reason | enum | Y | `logout`, `logout_all`, `reuse`, `account_inactive` |
+
+Indexes: `idx_mrt_family` (family_id): family revocation. `idx_mrt_user_device` (user_id, device_name): new-device check. `idx_mrt_expires` (expires_at): prune. Rows are deleted by `auth:prune-mobile-tokens` once expired.
+
+### mobile_login_challenges (M-A2)
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| user_id | fk:users cascade | NN | |
+| token_hash | char(64) | NN | SHA-256 of the challenge token; unique `uq_mlc_token_hash` |
+| device_name | str(100) | NN | carried to the tokens issued on success |
+| attempts | tinyint unsigned | NN | default 0; spent at `mobile.auth.challenge_max_attempts` |
+| expires_at | ts | NN | index `idx_mlc_expires` (prune) |
+| consumed_at | ts | Y | single use |
 
 ### `notifications`, `sessions`, `password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`
 

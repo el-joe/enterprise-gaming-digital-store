@@ -13,6 +13,7 @@ use App\Http\Middleware\Automation\RequireAutomationScope;
 use App\Http\Middleware\Mcp\AuthenticateMcpToken;
 use App\Http\Middleware\Mcp\RecordMcpCall;
 use App\Http\Middleware\Mcp\RequireMcpScope;
+use App\Http\Middleware\Mobile\EnsureCustomerToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('web')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/checkout.php'));
             Route::middleware('mcp')->prefix('api/v1/mcp')->name('mcp.')->group(base_path('routes/mcp.php'));
             Route::middleware('automation')->prefix('api/v1/automation')->name('automation.')->group(base_path('routes/automation.php'));
+            Route::middleware('api')->prefix('api/v1/mobile')->name('mobile.')->group(base_path('routes/mobile.php'));
             Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/api.php'));
             Route::prefix('webhooks')->name('webhooks.')->group(base_path('routes/webhooks.php'));
         },
@@ -57,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('account', ['web', 'auth', 'account.active']);
         $middleware->group('admin', ['web', 'auth', 'staff', 'two_factor', 'admin.idle', 'throttle:admin']);
         $middleware->group('mcp', [RecordMcpCall::class, AuthenticateMcpToken::class, 'throttle:mcp']);
+        $middleware->group('mobile.customer', ['auth:sanctum', EnsureCustomerToken::class, 'account.active', 'throttle:account']);
         $middleware->group('automation', [RecordAutomationCall::class, AuthenticateAutomationRequest::class, 'throttle:automation']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
