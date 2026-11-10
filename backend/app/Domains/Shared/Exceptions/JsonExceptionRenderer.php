@@ -31,7 +31,7 @@ class JsonExceptionRenderer
         return match (true) {
             $exception instanceof ValidationException => $this->respond(422, 'validation_failed', 'The given data was invalid.', $exception->errors()),
             $exception instanceof AuthenticationException => $this->respond(401, 'unauthenticated', 'Unauthenticated.'),
-            $exception instanceof ApplicationException => $this->respond($exception->status, $exception->errorCode, $exception->getMessage(), $exception->errors),
+            $exception instanceof ApplicationException => $this->respond($exception->status, $exception->errorCode, $exception->localizedMessage(), $exception->localizedErrors()),
             $exception instanceof HttpExceptionInterface => $this->respondToHttpException($exception),
             default => $this->respond(500, 'server_error', 'Something went wrong. Please try again.'),
         };
@@ -59,15 +59,25 @@ class JsonExceptionRenderer
     }
 
     /**
+     * Messages are English source strings, translated through the JSON translation files
+     * (lang/ar.json, M-A3) into the request locale; an untranslated string stays English. Codes
+     * never change. Validation messages arrive already translated (lang/ar/validation.php).
+     */
+    private static function translate(mixed $message): mixed
+    {
+        return is_string($message) ? __($message) : $message;
+    }
+
+    /**
      * @param  array<string, list<string>>  $errors
      * @param  array<string, mixed>  $headers
      */
     private function respond(int $status, string $code, string $message, array $errors = [], array $headers = []): JsonResponse
     {
-        $payload = ['success' => false, 'message' => $message, 'code' => $code];
+        $payload = ['success' => false, 'message' => self::translate($message), 'code' => $code];
 
         if ($errors !== []) {
-            $payload['errors'] = $errors;
+            $payload['errors'] = array_map(static fn (array $messages): array => array_map(self::translate(...), $messages), $errors);
         }
 
         $payload['request_id'] = Context::get('request_id') ?? (string) Str::ulid();

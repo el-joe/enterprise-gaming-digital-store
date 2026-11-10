@@ -13,7 +13,9 @@ use App\Http\Middleware\Automation\RequireAutomationScope;
 use App\Http\Middleware\Mcp\AuthenticateMcpToken;
 use App\Http\Middleware\Mcp\RecordMcpCall;
 use App\Http\Middleware\Mcp\RequireMcpScope;
+use App\Http\Middleware\Mobile\AuthenticateOptionalCustomerToken;
 use App\Http\Middleware\Mobile\EnsureCustomerToken;
+use App\Http\Middleware\SetLocaleFromRequest;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -31,8 +33,11 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function (): void {
             Route::middleware('web')->group(base_path('routes/auth.php'));
             Route::middleware('account')->prefix('api/v1/account')->name('account.')->group(base_path('routes/account.php'));
+            Route::middleware(['api', 'mobile.account'])->prefix('api/v1/mobile/account')->name('mobile.account.')->group(base_path('routes/account.php'));
             Route::middleware('admin')->prefix('admin/api')->name('admin.api.')->group(base_path('routes/admin.php'));
-            Route::middleware('web')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/checkout.php'));
+            Route::middleware(['web', 'locale'])->prefix('api/v1')->name('api.v1.')->group(base_path('routes/checkout.php'));
+            Route::middleware('web')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/affiliates.php'));
+            Route::middleware(['api', AuthenticateOptionalCustomerToken::class])->prefix('api/v1/mobile')->name('mobile.')->group(base_path('routes/checkout.php'));
             Route::middleware('mcp')->prefix('api/v1/mcp')->name('mcp.')->group(base_path('routes/mcp.php'));
             Route::middleware('automation')->prefix('api/v1/automation')->name('automation.')->group(base_path('routes/automation.php'));
             Route::middleware('api')->prefix('api/v1/mobile')->name('mobile.')->group(base_path('routes/mobile.php'));
@@ -54,12 +59,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.idle' => EnforceIdleTimeout::class,
             'mcp.scope' => RequireMcpScope::class,
             'automation.scope' => RequireAutomationScope::class,
+            'locale' => SetLocaleFromRequest::class,
         ]);
 
-        $middleware->group('account', ['web', 'auth', 'account.active']);
+        $middleware->appendToGroup('api', SetLocaleFromRequest::class);
+
+        $middleware->group('account', ['web', 'auth', 'account.active', 'locale']);
         $middleware->group('admin', ['web', 'auth', 'staff', 'two_factor', 'admin.idle', 'throttle:admin']);
         $middleware->group('mcp', [RecordMcpCall::class, AuthenticateMcpToken::class, 'throttle:mcp']);
         $middleware->group('mobile.customer', ['auth:sanctum', EnsureCustomerToken::class, 'account.active', 'throttle:account']);
+        // M-A3: the account routes for bearer clients; routes/account.php sets its own limiters.
+        $middleware->group('mobile.account', ['auth:sanctum', EnsureCustomerToken::class, 'account.active']);
         $middleware->group('automation', [RecordAutomationCall::class, AuthenticateAutomationRequest::class, 'throttle:automation']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

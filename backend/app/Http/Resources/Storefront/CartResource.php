@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Storefront;
 
+use App\Domains\Catalog\Services\ContentTranslator;
 use App\Domains\Currency\Services\CurrencyConverter;
 use App\Domains\Orders\DTOs\CartLineQuote;
 use App\Domains\Orders\DTOs\CartQuote;
@@ -15,7 +16,8 @@ class CartResource extends JsonResource
 {
     /**
      * Amounts are in the display currency. Cost, floor and margin stay on the server. Delivery
-     * values are shown only to the cart's owner, who entered them.
+     * values are shown only to the cart's owner, who entered them. Product names and variant
+     * titles are in the request locale (one translation query per cart, none in English).
      *
      * @return array<string, mixed>
      */
@@ -24,6 +26,9 @@ class CartResource extends JsonResource
         $quote = $this->resource;
         $converter = app(CurrencyConverter::class);
         $currency = $quote->displayCurrency;
+        $translator = app(ContentTranslator::class);
+        $variants = array_map(static fn (CartLineQuote $line) => $line->item->productVariant, $quote->lines);
+        $translator->preload([...$variants, ...array_map(static fn ($variant) => $variant?->product, $variants)], ['name', 'title']);
 
         return [
             'public_id' => $quote->cart->public_id,
@@ -33,11 +38,11 @@ class CartResource extends JsonResource
                 'id' => $line->item->id,
                 'variant' => [
                     'public_id' => $line->item->productVariant?->public_id,
-                    'title' => $line->item->productVariant?->title,
+                    'title' => $translator->text($line->item->productVariant, 'title'),
                     'sku' => $line->item->productVariant?->sku,
                 ],
                 'product' => [
-                    'name' => $line->item->productVariant?->product?->name,
+                    'name' => $translator->text($line->item->productVariant?->product, 'name'),
                     'slug' => $line->item->productVariant?->product?->slug,
                     'delivery_type' => $line->item->productVariant?->product?->delivery_type->value,
                 ],

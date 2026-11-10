@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Storefront\Concerns;
 
-use App\Domains\Currency\Services\CurrencyConverter;
 use App\Domains\Identity\Enums\UserStatus;
 use App\Domains\Identity\Models\User;
 use App\Domains\Orders\DTOs\CartOwner;
@@ -12,12 +11,19 @@ use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- * Cart ownership from the request: the signed-in customer, or the guest `cart_token` cookie
- * (encrypted and HTTP-only), issued on the first write.
+ * Cart ownership from the request: the signed-in customer, or a guest cart token issued on the
+ * first write. The browser holds it in the encrypted, HTTP-only `cart_token` cookie; a stateless
+ * client (M-A3, ADR-036) sends it in the `X-Cart-Token` header and receives it in the same header
+ * and in `meta.cart_token` when issued. Only its SHA-256 hash is stored. A signed-in customer who
+ * presents a guest token adopts that cart when they have none (merge on sign-in).
  */
 trait InteractsWithCart
 {
+    use ResolvesDisplayCurrency;
+
     private static string $cartCookie = 'cart_token';
+
+    private static string $cartHeader = 'X-Cart-Token';
 
     private static int $cartCookieMinutes = 43200;
 
@@ -30,8 +36,7 @@ trait InteractsWithCart
             throw new AccessDeniedHttpException;
         }
 
-        $token = $request->cookie(self::$cartCookie);
-        $token = is_string($token) && preg_match('/^[A-Za-z0-9]{64}$/', $token) === 1 ? $token : null;
+        $token = $this->presentedCartToken($request);
 
         if ($user !== null) {
             return CartOwner::user($user, $token);
@@ -40,19 +45,32 @@ trait InteractsWithCart
         return CartOwner::guest($token ?? ($issueToken ? Str::random(64) : null));
     }
 
+    /**
+     * Hand a newly issued guest token to the client: the cookie for the browser, the header and
+     * `meta.cart_token` for a stateless client.
+     */
     protected function withCartCookie(JsonResponse $response, Request $request, CartOwner $owner): JsonResponse
     {
-        if ($owner->isGuest() && $owner->guestToken !== null && $request->cookie(self::$cartCookie) !== $owner->guestToken) {
-            $response->withCookie(cookie(self::$cartCookie, $owner->guestToken, self::$cartCookieMinutes, secure: $request->isSecure(), httpOnly: true, sameSite: 'lax'));
+        if (! $owner->isGuest() || $owner->guestToken === null || $this->presentedCartToken($request) === $owner->guestToken) {
+            return $response;
         }
 
-        return $response;
+        if ($request->hasSession()) {
+            return $response->withCookie(cookie(self::$cartCookie, $owner->guestToken, self::$cartCookieMinutes, secure: $request->isSecure(), httpOnly: true, sameSite: 'lax'));
+        }
+
+        $body = $response->getData(true);
+        $body['meta'] = (object) [...(array) ($body['meta'] ?? []), 'cart_token' => $owner->guestToken];
+
+        return $response->setData($body)
+            ->header(self::$cartHeader, $owner->guestToken)
+            ->header('Cache-Control', 'no-store, private');
     }
 
-    protected function displayCurrency(Request $request): string
+    private function presentedCartToken(Request $request): ?string
     {
-        $cookie = $request->cookie('currency');
+        $token = $request->hasSession() ? $request->cookie(self::$cartCookie) : $request->headers->get(self::$cartHeader);
 
-        return app(CurrencyConverter::class)->resolveDisplayCurrency(is_string($cookie) ? $cookie : null);
+        return is_string($token) && preg_match('/^[A-Za-z0-9]{64}$/', $token) === 1 ? $token : null;
     }
 }

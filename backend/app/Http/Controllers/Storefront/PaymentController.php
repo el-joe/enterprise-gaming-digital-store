@@ -9,6 +9,7 @@ use App\Domains\Payments\Services\CheckoutPaymentService;
 use App\Domains\Payments\Services\PaymentOptionsService;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storefront\Concerns\InteractsWithCart;
+use App\Http\Controllers\Storefront\Concerns\InteractsWithGuestOrderToken;
 use App\Http\Requests\Storefront\PaymentOptionsRequest;
 use App\Http\Requests\Storefront\RetryPaymentRequest;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
 class PaymentController extends Controller
 {
     use InteractsWithCart;
+    use InteractsWithGuestOrderToken;
 
     public function __construct(private OrderStatusReader $reader, private CheckoutPaymentService $payments) {}
 
@@ -62,6 +64,6 @@ class PaymentController extends Controller
 
     private function order(Request $request, string $orderPublicId): Order
     {
-        return $this->reader->viewableOrder($orderPublicId, $request->user(), $request->session()->get(OrderStatusReader::SESSION_KEY, []));
+        return $this->reader->viewableOrder($orderPublicId, $request->user(), $this->guestOrderIds($request, $orderPublicId));
     }
 }

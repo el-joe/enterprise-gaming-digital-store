@@ -9,7 +9,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 abstract class Controller
 {
     /**
-     * Build the standard success envelope.
+     * Build the standard success envelope. The message is an English source string translated
+     * into the request locale (lang/ar.json, M-A3).
      *
      * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $meta
@@ -18,7 +19,7 @@ abstract class Controller
     {
         return new JsonResponse([
             'success' => true,
-            'message' => $message,
+            'message' => __($message),
             'data' => (object) $data,
             'meta' => (object) $meta,
         ], $status);

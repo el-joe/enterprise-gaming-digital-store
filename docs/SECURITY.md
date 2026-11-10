@@ -12,14 +12,16 @@ Scope: application and operational security requirements. Each **must** has a te
 | Password reset | Standard broker, 30-minute token, throttled, identical response whether the email exists or not |
 | Staff 2FA | TOTP mandatory for `type=staff`, enforced by `EnsureTwoFactor` on all `/admin` routes |
 | Login throttling | `auth` limiter (5/min per email+IP), then `security_events` |
+| Locale | `Accept-Language` (`en`, `ar`) changes message text only; error `code` values and `errors` keys are identical in every language (M-A3) |
 | Session | `http_only`, `secure`, `same_site=lax`; regenerated at login; 120-minute idle (admin 30). Customer can revoke sessions from the account page. `SESSION_DRIVER=redis`. |
 | Mobile app tokens (M-A2, ADR-035) | Customers only (staff refused with the generic login error). Sanctum access token, exact ability `customer`, 15-minute expiry; opaque refresh token stored only as SHA-256, single use, rotated on every refresh, family revoked and audited (`auth.mobile_refresh_token_reused`, security event `auth.refresh_token_reused`) on reuse, absolute 30-day family lifetime; logout revokes the device's family, logout-all every family. Two-factor pending state is a hashed, single-use, 5-attempt, 300-second challenge row. First sign-in from a device name audited (`auth.mobile_new_device`). `sanctum` guard bound to the `users` provider: service-account tokens never authenticate customers, and customer tokens are refused by the MCP, automation and admin APIs. Limiters `auth` (login, register), `otp` (challenge) and `mobile-refresh`. Expired rows pruned hourly. Tokens are returned with `Cache-Control: no-store` and never logged or audited. |
+| Stateless cart, checkout and account (M-A3, ADR-036) | Bearer clients use the parallel `/api/v1/mobile` routes in the `api` group; the web routes keep the session and CSRF and never accept a bearer token (no CSRF exemption keyed on an `Authorization` header). A present but invalid or non-customer bearer token is 401, never treated as a guest; staff and service-account tokens are refused. Guest cart token (`X-Cart-Token`) and guest order token (`X-Guest-Order-Token`): 64 random characters, stored only as SHA-256, returned with `Cache-Control: no-store, private`, never logged or audited. A guest order token is scoped to one guest order, expires after 24 h (`orders.guest_order_token_ttl_hours`), never opens a customer's order, and is pruned hourly. A guest reveal needs the signed-link proof and the email OTP proof on one token, as the session needs both; OTP verification always issues a new token (rotation). Recent authentication for reveal is stored per access token with the session's 15-minute window and is not extended by refresh. |
 
 ## 2. Web hardening
 
 | Threat | Control |
 |---|---|
-| CSRF | Default middleware on all session writes. Exemptions only `/webhooks/*`. |
+| CSRF | Default middleware on all session writes. Exemptions only `/webhooks/*`. Stateless `api` routes (`/api/v1/mobile`, `/api/v1/storefront` catalog) start no session and read no session cookie, so they need none. |
 | XSS | Blade `{{ }}` escaping. Rich text through HTML Purifier-style sanitization on save. `{!! !!}` is only allowed on fields sanitized at write time, and each use is listed in code review. |
 | CSP | Nonce-based `Content-Security-Policy` via middleware. Allow-listed: Stripe, PayPal, GTM, GA as required. `frame-ancestors 'none'`, except Stripe and PayPal frames as `frame-src`. |
 | Headers | HSTS (after SSL confirmed), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` |
@@ -87,11 +89,11 @@ See `PROJECT_ARCHITECTURE.md` section 10. Automated tests must assert a seeded c
 
 ## 8. Rate limiting and abuse
 
-Limiters in `API_DOCUMENTATION.md`. Coupon brute force: limiter plus lockout per session. Search has per-IP limits. Nginx adds a coarse `limit_req` on `/login`, `/webhooks`. Registration and guest checkout use a CAPTCHA only if abuse is observed (setting-driven, off by default, no vendor chosen).
+Limiters in `API_DOCUMENTATION.md`. Coupon brute force: limiter plus lockout per session (per customer, bearer token or cart token for stateless clients, plus the per-IP limit, M-A3). Search has per-IP limits. Nginx adds a coarse `limit_req` on `/login`, `/webhooks`. Registration and guest checkout use a CAPTCHA only if abuse is observed (setting-driven, off by default, no vendor chosen).
 
 ## 9. Logging, audit and retention
 
-Audited actions (always to `audit_logs`): logins by staff, mobile sign-in from a new device and refresh-token reuse (M-A2), permission changes, settings, credentials set (never values), price changes, coupon creation, refunds, reveal attempts, order overrides, supplier retries, service account changes, MCP writes.
+Audited actions (always to `audit_logs`): logins by staff, mobile sign-in from a new device and refresh-token reuse (M-A2), guest order tokens issued after the email code or the signed link (M-A3, never the token), permission changes, settings, credentials set (never values), price changes, coupon creation, refunds, reveal attempts, order overrides, supplier retries, service account changes, MCP writes.
 
 Redaction: `RedactSensitiveLogData` Monolog processor removes keys including `password`, `token`, `secret`, `api_key`, `authorization`, `card*`, `pin*`, `code`, `client_secret`, `redemption*`. `dontFlash` and `dontReport` are configured. Provider HTTP exceptions are logged by status and operation only.
 

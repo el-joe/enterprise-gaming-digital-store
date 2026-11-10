@@ -10,4 +10,9 @@ class ExchangeRateMissing extends ApplicationException
     {
         parent::__construct("No exchange rate is available for {$currency}.", 'rate_missing');
     }
+
+    public function localizedMessage(): string
+    {
+        return __('No exchange rate is available for :currency.', ['currency' => $this->currency]);
+    }
 }

@@ -9,6 +9,7 @@ use App\Domains\Audit\Services\SecurityEventRecorder;
 use App\Domains\Automation\DTOs\AutomationCaller;
 use App\Domains\Automation\Listeners\RecordScheduledTaskHeartbeat;
 use App\Domains\Automation\Services\ScheduledTaskHeartbeat;
+use App\Domains\Catalog\Services\ContentTranslator;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
@@ -38,6 +39,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -64,6 +66,9 @@ class AppServiceProvider extends ServiceProvider
 
         // M17: holds the open heartbeat of each running scheduled task for the process.
         $this->app->singleton(ScheduledTaskHeartbeat::class);
+
+        // M-A3: translations preloaded for the current request's storefront resources.
+        $this->app->scoped(ContentTranslator::class);
     }
 
     /**
@@ -85,6 +90,33 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(OrderStatusChanged::class, TrackAffiliateCommission::class);
         Event::listen(OrderStatusChanged::class, CompleteRefundRequests::class);
         Event::listen([ScheduledTaskStarting::class, ScheduledTaskFinished::class, ScheduledTaskFailed::class], RecordScheduledTaskHeartbeat::class);
+    }
+
+    /**
+     * The client a per-session limiter counts: the web session, else (stateless clients, M-A3)
+     * the signed-in user, the bearer token, the guest cart token or the guest order token, else
+     * the IP. Token values are hashed into the key.
+     */
+    private static function checkoutClientKey(Request $request): string
+    {
+        if ($request->hasSession()) {
+            return $request->session()->getId();
+        }
+
+        // The limiter runs before route authentication, so a bearer token is resolved here.
+        $userId = $request->bearerToken() !== null ? Auth::guard('sanctum')->user()?->getAuthIdentifier() : null;
+
+        if ($userId !== null) {
+            return 'user:'.$userId;
+        }
+
+        foreach (['bearer' => $request->bearerToken(), 'cart' => $request->headers->get('X-Cart-Token'), 'guest-order' => $request->headers->get('X-Guest-Order-Token')] as $kind => $value) {
+            if (is_string($value) && $value !== '') {
+                return $kind.':'.hash('sha256', $value);
+            }
+        }
+
+        return 'ip:'.$request->ip();
     }
 
     private function configureRateLimiting(): void
@@ -128,7 +160,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('storefront', static fn (Request $request): Limit => Limit::perMinute(120)->by('storefront|'.$request->ip()));
         RateLimiter::for('search', static fn (Request $request): Limit => Limit::perMinute(60)->by('search|'.$request->ip()));
         RateLimiter::for('checkout', static fn (Request $request): array => [
-            Limit::perMinute(20)->by('checkout|session|'.($request->hasSession() ? $request->session()->getId() : $request->ip())),
+            Limit::perMinute(20)->by('checkout|session|'.self::checkoutClientKey($request)),
             Limit::perMinute(60)->by('checkout|ip|'.$request->ip()),
         ]);
         RateLimiter::for('code-reveal', static function (Request $request): Limit {

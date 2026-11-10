@@ -15,7 +15,7 @@ class EnrollTwoFactorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'current_password' => ['required', 'string', 'current_password:web'],
+            'current_password' => ['required', 'string', 'current_password'],
         ];
     }
 }

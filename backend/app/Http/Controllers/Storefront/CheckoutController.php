@@ -6,11 +6,13 @@ use App\Domains\Affiliates\Services\AffiliateTracker;
 use App\Domains\Orders\Actions\PlaceOrderAction;
 use App\Domains\Orders\DTOs\PlaceOrderInput;
 use App\Domains\Orders\Services\CheckoutService;
+use App\Domains\Orders\Services\GuestOrderTokenService;
 use App\Domains\Orders\Services\OrderStatusReader;
 use App\Domains\Payments\Contracts\GeoIpResolver;
 use App\Domains\Payments\Services\CheckoutPaymentService;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storefront\Concerns\InteractsWithCart;
+use App\Http\Controllers\Storefront\Concerns\InteractsWithGuestOrderToken;
 use App\Http\Requests\Storefront\PlaceOrderRequest;
 use App\Http\Requests\Storefront\ValidateCheckoutRequest;
 use App\Http\Resources\Storefront\CartResource;
@@ -20,6 +22,7 @@ use Illuminate\Http\Request;
 class CheckoutController extends Controller
 {
     use InteractsWithCart;
+    use InteractsWithGuestOrderToken;
 
     /**
      * Step 1: reprice with checkout rules and revalidate. A stale rate is refused here.
@@ -43,8 +46,12 @@ class CheckoutController extends Controller
      * attempt could not be started; the client then uses retry-payment. A new order is linked to
      * the browser's last affiliate click before payment starts (M11). A wallet attempt is settled
      * at once, so its `next` is `{ type: "wallet" }` and the order is already paid.
+     *
+     * A stateless guest (ADR-036) receives `guest_order_token` instead of the session order list,
+     * also on a replay (the stored body never holds a token, so a client whose first response was
+     * lost can still follow its order).
      */
-    public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action, GeoIpResolver $geoIp, CheckoutPaymentService $payments, AffiliateTracker $affiliates): JsonResponse
+    public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action, GeoIpResolver $geoIp, CheckoutPaymentService $payments, AffiliateTracker $affiliates, GuestOrderTokenService $guestTokens): JsonResponse
     {
         $result = $action->handle(new PlaceOrderInput(
             owner: $this->cartOwner($request),
@@ -69,8 +76,13 @@ class CheckoutController extends Controller
 
         $body = $result->body;
 
-        if (is_string($placed)) {
+        $issuedGuestToken = null;
+
+        if (is_string($placed) && $request->hasSession()) {
             $request->session()->push(OrderStatusReader::SESSION_KEY, $placed);
+        } elseif (is_string($placed) && $request->user() === null) {
+            $issuedGuestToken = $guestTokens->issueForPlacement($placed);
+            $body['data']['guest_order_token'] = $issuedGuestToken->toArray();
         }
 
         if (is_string($placed) && ! $result->replayed && $result->createdOrderPublicId !== null) {
@@ -84,11 +96,15 @@ class CheckoutController extends Controller
 
         $response = new JsonResponse($body, $result->status);
 
+        if ($issuedGuestToken !== null) {
+            $this->withoutCaching($response);
+        }
+
         return $result->replayed ? $response->header('Idempotency-Replayed', 'true') : $response;
     }
 
     public function status(Request $request, string $orderPublicId, OrderStatusReader $reader): JsonResponse
     {
-        return $this->success($reader->forViewer($orderPublicId, $request->user(), $request->session()->get(OrderStatusReader::SESSION_KEY, [])));
+        return $this->success($reader->forViewer($orderPublicId, $request->user(), $this->guestOrderIds($request, $orderPublicId)));
     }
 }

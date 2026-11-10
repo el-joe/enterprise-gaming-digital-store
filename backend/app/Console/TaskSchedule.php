@@ -48,6 +48,9 @@ final class TaskSchedule
         // Mobile authentication (M-A2)
         $schedule->command('auth:prune-mobile-tokens')->hourly()->withoutOverlapping()->onOneServer();
 
+        // Stateless storefront and checkout (M-A3)
+        $schedule->command('orders:prune-guest-order-tokens')->hourly()->withoutOverlapping()->onOneServer();
+
         // Automation (M17)
         $schedule->command('automation:flush-outbox')->everyMinute()->withoutOverlapping()->onOneServer();
     }

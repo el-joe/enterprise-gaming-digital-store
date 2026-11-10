@@ -20,4 +20,23 @@ class ApplicationException extends RuntimeException
     ) {
         parent::__construct($message);
     }
+
+    /**
+     * The message in the request locale (M-A3). By default the English message is the JSON
+     * translation key; exceptions with variable parts override this with a placeholder key.
+     */
+    public function localizedMessage(): string
+    {
+        return __($this->getMessage());
+    }
+
+    /**
+     * Field errors in the request locale, translated like the message.
+     *
+     * @return array<string, list<string>>
+     */
+    public function localizedErrors(): array
+    {
+        return array_map(static fn (array $messages): array => array_map(static fn (string $message): string => __($message), $messages), $this->errors);
+    }
 }

@@ -1,20 +1,21 @@
 <?php
 
-use App\Http\Controllers\Storefront\AffiliateController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\GuestOrderCodeController;
 use App\Http\Controllers\Storefront\GuestOrderController;
 use App\Http\Controllers\Storefront\PaymentController;
+use App\Http\Middleware\Storefront\ValidateGuestAccessSignature;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Cart and checkout JSON under /api/v1, in the `web` group: they need the session (signed-in
- * customers, guest order access) and CSRF protection on writes. Guests are identified by the
- * encrypted, HTTP-only `cart_token` cookie.
+ * Cart and checkout JSON, registered twice (bootstrap/app.php, ADR-036):
+ * - under /api/v1 in the `web` group for the browser: session (signed-in customers, guest order
+ *   access), CSRF on writes, guests identified by the encrypted, HTTP-only `cart_token` cookie;
+ * - under /api/v1/mobile in the stateless `api` group for the app: optional customer bearer
+ *   token, `X-Cart-Token`, `X-Currency` and `X-Guest-Order-Token` headers, no cookies or CSRF.
+ * The controllers tell the two apart with `$request->hasSession()`.
  */
-Route::post('storefront/affiliates/click', [AffiliateController::class, 'click'])->middleware('throttle:storefront')->name('storefront.affiliates.click');
-
 Route::prefix('storefront/cart')->name('storefront.cart.')->middleware('throttle:storefront')->group(function (): void {
     Route::get('/', [CartController::class, 'show'])->name('show');
     Route::post('/items', [CartController::class, 'store'])->name('items.store');
@@ -36,7 +37,7 @@ Route::prefix('checkout')->name('checkout.')->group(function (): void {
     });
 
     Route::get('/guest/orders/{orderPublicId}/access', [GuestOrderCodeController::class, 'access'])
-        ->middleware(['signed', 'throttle:otp'])->name('guest.orders.access');
+        ->middleware([ValidateGuestAccessSignature::class, 'throttle:otp'])->name('guest.orders.access');
     Route::post('/guest/orders/{order}/units/{unit}/reveal', [GuestOrderCodeController::class, 'reveal'])
         ->middleware('throttle:code-reveal')->name('guest.orders.units.reveal');
 

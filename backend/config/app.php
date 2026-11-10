@@ -82,6 +82,12 @@ return [
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
+    /*
+    | Locales the JSON API answers in (M-A3, `SetLocaleFromRequest`). English is the base
+    | language of every content column (ADR-015); other locales come from content_translations.
+    */
+    'supported_locales' => ['en', 'ar'],
+
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*

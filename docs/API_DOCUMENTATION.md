@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17); section 1b mobile authentication with customer bearer tokens (M-A2). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17); section 1b mobile authentication with customer bearer tokens (M-A2); section 1c stateless cart, checkout, account and locale for the app under `/api/v1/mobile` (M-A3). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -16,7 +16,7 @@
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum bearer token of an `n8n` service account + HMAC signature, timestamp and nonce + scopes | built (M17, section 7) |
 | MCP | `/api/v1/mcp` | Sanctum bearer token of an `mcp` service account + scopes | built (M16, section 8) |
-| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); storefront, checkout and account for bearer clients planned (M-A3 to M-A6) |
+| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); cart, checkout and account built (M-A3, section 1c); rest planned (M-A4 to M-A6) |
 
 Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 
@@ -27,7 +27,12 @@ Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 | `Accept: application/json` | Required for JSON behaviour |
 | `X-CSRF-TOKEN` | Session writes |
 | `X-Request-Id` | Accepted or generated (ULID); echoed; logged |
-| `Idempotency-Key` | Required on `POST /api/v1/checkout/place-order`. Refund creation is protected by `uq_ru_unit` and the remaining-amount check instead; provider calls carry their own keys (architecture 9.3) |
+| `Idempotency-Key` | Required on `POST /api/v1/checkout/place-order` (and its `/api/v1/mobile` twin). Refund creation is protected by `uq_ru_unit` and the remaining-amount check instead; provider calls carry their own keys (architecture 9.3) |
+| `Accept-Language` | `en` or `ar` (region suffixes and quality values honoured, e.g. `ar-EG,ar;q=0.9`); anything else is `en`. Sets the language of messages and translated storefront content; the response carries `Content-Language` (M-A3, section 1c) |
+| `Authorization: Bearer` | Customer access token (section 1b). Stateless `/api/v1/mobile` routes only |
+| `X-Cart-Token` | Stateless guest cart (section 1c) |
+| `X-Currency` | Display currency for stateless clients; overrides the `currency` cookie (section 1c) |
+| `X-Guest-Order-Token` | Per-order guest access for stateless clients (section 1c) |
 
 ### Standard success envelope
 
@@ -93,7 +98,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `auth` | 5/min per email+IP |
 | `otp` | 5 per 10 min per identifier (web: pending user in the session; mobile: the challenge token; else IP) |
 | `mobile-refresh` | 5/min per presented refresh token and 60/min per IP (`config/mobile.php`) |
-| `checkout` | 20/min per session and 60/min per IP |
+| `checkout` | 20/min per client and 60/min per IP. Client: the session; without one, the bearer user, else the bearer token, the `X-Cart-Token` or the `X-Guest-Order-Token` (hashed), else the IP |
 | `code-reveal` | 10/hour per user or guest order |
 | `admin` | 300/min per user |
 | `account` | 60/min per user (M11 account routes) |
@@ -163,7 +168,42 @@ Rules for the client:
 - The challenge token lives `mobile.auth.challenge_ttl_seconds` (default 300) and is single use.
 - A bearer request of a suspended or closed account gets 403 `forbidden`; its next refresh revokes the family.
 
-Bearer tokens are accepted only by `/api/v1/mobile` routes in this milestone. Account, cart and checkout routes still need the web session until M-A3 adds `auth:sanctum` to them (the `sanctum` guard already accepts both the web session and customer tokens and refuses service-account tokens). A customer token is refused (401) by the MCP and automation APIs and the admin API; a service-account token is refused (401) by the mobile routes, whatever its abilities.
+Bearer tokens are accepted only by `/api/v1/mobile` routes. Since M-A3 the account, cart and checkout routes have stateless twins there (section 1c); the web routes under `/api/v1/account`, `/api/v1/storefront/cart` and `/api/v1/checkout` keep the session and never accept a bearer token. A customer token is refused (401) by the MCP and automation APIs and the admin API; a service-account token is refused (401) by the mobile routes, whatever its abilities.
+
+## 1c. Stateless cart, checkout, account and locale (built, M-A3)
+
+Design: `PROJECT_ARCHITECTURE.md` ADR-036. The same route files, controllers and rules as sections 3a, 3b, 4a and 4b are registered a second time under `/api/v1/mobile` in the stateless `api` group (no session, cookies or CSRF). Paths, bodies, results, error codes and limiters are those of the web routes; only identification differs.
+
+| Web route | Stateless twin | Auth |
+|---|---|---|
+| `/api/v1/storefront/cart...` (3a) | `/api/v1/mobile/storefront/cart...` | guest (`X-Cart-Token`) or customer bearer |
+| `/api/v1/checkout/...` (3a, 3b, 4a guest routes) | `/api/v1/mobile/checkout/...` | guest (`X-Cart-Token`, `X-Guest-Order-Token`) or customer bearer |
+| `/api/v1/account/...` (4, 4a, 4b) | `/api/v1/mobile/account/...` | customer bearer, active account |
+| `/api/v1/storefront/catalog/...`, `/currencies`, `/search/...` (2a, 2b) | same paths (already stateless) | none; `X-Currency` and `Accept-Language` apply |
+
+Not duplicated: `POST /api/v1/storefront/currency` (sets a cookie; the app sends `X-Currency` instead) and `POST /api/v1/storefront/affiliates/click` (browser cookie).
+
+**Bearer on checkout and cart.** Without an `Authorization` header the request is a guest. With one, it must be a valid customer token with the `customer` ability (staff and service-account tokens included in the refusal): otherwise 401 `unauthenticated`, never a silent fallback to guest. A suspended or closed account gets 403 `forbidden`.
+
+**Cart token.** The first `POST /api/v1/mobile/storefront/cart/items` of a guest without `X-Cart-Token` issues a 64-character token, returned once in the `X-Cart-Token` response header and in `meta.cart_token` (`Cache-Control: no-store, private`). Send it as `X-Cart-Token` on every cart and checkout call. Only its SHA-256 is stored (`carts.session_token`). A request with a bearer token and `X-Cart-Token` adopts that guest cart when the customer has no active cart (merge on sign-in: send the guest token with the first cart call after login; a customer who already has a cart keeps it).
+
+**Currency.** `X-Currency: EGP` sets the display currency of the catalog, variants, cart, validate, payment options and place-order, and overrides the `currency` cookie. It must be a three-letter code of an active currency, else 422 `validation_failed` with `errors.currency = ["The X-Currency header must be the code of an active currency."]`. An active currency without a usable rate falls back to the base currency (see `meta.display_currency`).
+
+**Guest order token.** Replaces the browser session's order list and guest proofs.
+
+| Issued by | `data.guest_order_token` | Grants |
+|---|---|---|
+| `POST /mobile/checkout/place-order` by a guest, 201 and replay (not `meta.duplicate: true`, not for a signed-in customer) | `{ token, order_public_id, expires_at }` | status, verify-payment, paypal/capture, retry-payment of that order |
+| `POST /mobile/checkout/guest/otp/verify` | a **new** token; the presented `X-Guest-Order-Token` of the same order (if any) is deleted and its link proof carried over | as above, plus the OTP proof |
+| `GET /mobile/checkout/guest/orders/{id}/access?expires=&signature=` (the signed delivery link: same query as the web link, verified against the web URL) | a link-only token when none is presented; with a presented token of that order, the link proof is added to it and `guest_order_token` is null | the link proof only; it opens nothing by itself |
+
+The token is opaque (64 characters), stored only as SHA-256 (`guest_order_tokens`), scoped to one guest order, and expires after `orders.guest_order_token_ttl_hours` (default 24). Responses that carry it have `Cache-Control: no-store, private`. Send it as `X-Guest-Order-Token`. A token of another order, an expired token, a link-only token, or any token for an order that belongs to a customer account gets 404 on the order routes. `POST /mobile/checkout/guest/orders/{order}/units/{unit}/reveal` needs one live token holding **both** the link proof and the OTP proof (the two session proofs of the web), otherwise 403 `reveal_denied`; the order must still have a verified guest email, be paid and the unit delivered, and every attempt is audited. Issuing a token after OTP or a link is audited (`orders.guest_order_token_issued`, `orders.guest_order_link_opened`), without the token.
+
+App flow for a guest: place-order (keep the token) -> pay -> verify-payment / status with the token. For codes: open the delivery link in the app and call its `/mobile` twin with the current token -> `otp/send` -> `otp/verify` with the token (replace the stored token with the new one) -> reveal.
+
+**Recent authentication.** `POST /mobile/account/confirm-password` records the confirmation on the access token (`personal_access_tokens.password_confirmed_at`); reveal accepts it for `fulfillment.reveal_recent_auth_minutes` (15), as the session does. A refresh keeps the time on the new access token of the same sign-in (the window is not extended); another device must confirm on its own. Two-factor enrolment, confirmation and disabling take `current_password` in the body, as on the web.
+
+**Locale.** `Accept-Language` sets the locale of every `/api/v1` JSON route (also the web checkout and account routes). Order: a request with a session (web) uses the signed-in customer's saved `users.locale`, then `Accept-Language`, then `en`; a stateless request uses `Accept-Language`, then `en`. The response carries `Content-Language`. Storefront content (catalog `name`, `short_description`, platform and category names, variant `title`, cart product names and variant titles) comes from `content_translations` for `ar`, falling back to the English column when there is no translation; search suggest and popular default to the request locale when `locale` is not given; reviews are shown as written. Envelope `message` values, domain error messages and validation messages are localized (`lang/ar.json`, `lang/ar/validation.php`); `code` values and `errors` keys never change. Place-order stores the request locale on the order.
 
 ---
 
@@ -218,7 +258,7 @@ Place-order idempotency: same key and same body replays the stored response; sam
 
 ### 3a. Built cart and checkout routes (M7)
 
-Registered in the `web` middleware group under `/api/v1` (session and CSRF on writes). A guest's cart is identified by the encrypted, HTTP-only `cart_token` cookie, set on the first `POST /storefront/cart/items`; a signed-in customer's cart by account, and a guest cart is adopted on sign-in when the customer has none. All amounts are in the display currency from the `currency` cookie (section 2a) and are money objects. Suspended accounts get 403.
+Registered in the `web` middleware group under `/api/v1` (session and CSRF on writes); the stateless twins for the app are in section 1c. A guest's cart is identified by the encrypted, HTTP-only `cart_token` cookie, set on the first `POST /storefront/cart/items`; a signed-in customer's cart by account, and a guest cart is adopted on sign-in when the customer has none. All amounts are in the display currency from the `currency` cookie (section 2a) and are money objects. Suspended accounts get 403.
 
 | Method | Path | Body | Limiter | Result |
 |---|---|---|---|---|
@@ -282,7 +322,7 @@ Reveal response: `{ code, pin, redemption_url, instructions }`, `Cache-Control: 
 
 | Method | Path | Body | Limiter | Result |
 |---|---|---|---|---|
-| POST | `/api/v1/account/confirm-password` | `password` | `auth` | Stores `auth.password_confirmed_at` in the session; reveals need it within `fulfillment.reveal_recent_auth_minutes` (15) |
+| POST | `/api/v1/account/confirm-password` | `password` | `auth` | Stores `auth.password_confirmed_at` in the session (on the access token for `/api/v1/mobile/account`, section 1c); reveals need it within `fulfillment.reveal_recent_auth_minutes` (15) |
 | POST | `/api/v1/account/orders/{order_public_id}/units/{unit_public_id}/reveal` | | `code-reveal` | Reveal body above, `Cache-Control: no-store, private`. Owner only (others 404), verified email, recent password (else 423 `recent_auth_required`), paid order and delivered unit (else 403 `reveal_denied`). Sets `first_revealed_at` |
 | GET | `/api/v1/checkout/guest/orders/{order_public_id}/access` | signed URL from the delivery email, valid 72 h | `otp` | Opens the order to this browser session; `{ order_public_id, otp_required }`. Unsigned or expired: 403 |
 | POST | `/api/v1/checkout/guest/orders/{order_public_id}/units/{unit_public_id}/reveal` | | `code-reveal` | As above for a guest: the session must hold both the signed link and a verified email one-time code (`POST /checkout/guest/otp/verify`) for this order |

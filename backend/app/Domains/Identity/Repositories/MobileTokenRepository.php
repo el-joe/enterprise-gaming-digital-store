@@ -58,6 +58,11 @@ class MobileTokenRepository
             ->update(['revoked_at' => now(), 'revocation_reason' => $reason->value, 'updated_at' => now()]);
     }
 
+    public function findAccessToken(int $id): ?PersonalAccessToken
+    {
+        return PersonalAccessToken::query()->find($id);
+    }
+
     /**
      * @param  list<int>  $ids
      */

@@ -7,18 +7,26 @@ use App\Domains\Fulfillment\DTOs\RevealedCode;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessActorType;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessPurpose;
 use App\Domains\Fulfillment\Services\CodeRevealService;
+use App\Domains\Identity\Services\RecentAuthService;
 use App\Domains\Orders\Models\Order;
 use App\Domains\Orders\Models\OrderItemUnit;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class OrderCodeController extends Controller
 {
-    public function reveal(Request $request, Order $order, OrderItemUnit $unit, CodeRevealService $reveals): JsonResponse
+    /**
+     * Recent authentication comes from the session (web) or from the access token (bearer
+     * clients, ADR-036), with the same window.
+     */
+    public function reveal(Request $request, Order $order, OrderItemUnit $unit, CodeRevealService $reveals, RecentAuthService $recentAuth): JsonResponse
     {
-        $confirmedAt = (int) $request->session()->get(ConfirmPasswordController::SESSION_KEY, 0);
-        $recent = $confirmedAt > 0 && now()->getTimestamp() - $confirmedAt <= 60 * (int) config('fulfillment.reveal_recent_auth_minutes');
+        $token = $request->user()?->currentAccessToken();
+        $recent = $request->hasSession()
+            ? $recentAuth->isRecent((int) $request->session()->get(ConfirmPasswordController::SESSION_KEY, 0))
+            : $token instanceof PersonalAccessToken && $recentAuth->tokenIsRecent($token);
 
         $revealed = $reveals->revealUnit($order, $unit, new RevealContext(
             DigitalCodeAccessActorType::Customer,

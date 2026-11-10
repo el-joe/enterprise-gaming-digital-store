@@ -17,7 +17,7 @@ class SearchController extends Controller
     {
         $suggestions = $this->search->suggest(
             $request->validated('q'),
-            $request->validated('locale', config('app.locale')),
+            $request->validated('locale', $this->requestLocale()),
             $request->boolean('commit'),
         );
 
@@ -28,11 +28,20 @@ class SearchController extends Controller
         ], $suggestions)]);
     }
 
+    /**
+     * Without an explicit `locale`, the request locale (Accept-Language, M-A3) when it is a search
+     * locale, else the default.
+     */
+    private function requestLocale(): string
+    {
+        return in_array(app()->getLocale(), config('catalog.search_locales'), true) ? app()->getLocale() : (string) config('app.fallback_locale');
+    }
+
     public function popular(Request $request): JsonResponse
     {
         $locale = in_array($request->query('locale'), config('catalog.search_locales'), true)
             ? $request->query('locale')
-            : config('app.locale');
+            : $this->requestLocale();
 
         return $this->success(['terms' => $this->search->popular($locale)]);
     }

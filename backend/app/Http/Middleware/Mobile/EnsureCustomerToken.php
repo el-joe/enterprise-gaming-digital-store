@@ -23,13 +23,22 @@ class EnsureCustomerToken
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
-        $token = $user instanceof User ? $user->currentAccessToken() : null;
-
-        if (! $token instanceof PersonalAccessToken || $user->isStaff() || ! in_array(MobileTokenService::ABILITY, $token->abilities ?? [], true)) {
+        if (! self::isCustomerToken($request->user())) {
             throw new AuthenticationException;
         }
 
         return $next($request);
+    }
+
+    /**
+     * Whether the user authenticated with a customer access token holding the `customer` ability.
+     */
+    public static function isCustomerToken(mixed $user): bool
+    {
+        $token = $user instanceof User ? $user->currentAccessToken() : null;
+
+        return $token instanceof PersonalAccessToken
+            && ! $user->isStaff()
+            && in_array(MobileTokenService::ABILITY, $token->abilities ?? [], true);
     }
 }

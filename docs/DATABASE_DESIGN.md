@@ -71,6 +71,8 @@ Indexes: `idx_users_type_status` (type, status): admin customer list filter. `id
 
 Standard Sanctum table. `tokenable` is a `ServiceAccount` (abilities store scopes) or, since M-A2, a customer `User` of the mobile app (ability `customer`, `name` = device name, `expires_at` always set).
 
+M-A3 adds `password_confirmed_at` (ts, null): the last password confirmation made with this access token, the bearer twin of the session key `auth.password_confirmed_at`; reveal accepts it for `fulfillment.reveal_recent_auth_minutes`. A refresh copies it to the successor token.
+
 ### service_accounts [sd]
 
 | Column | Type | Null | Notes |
@@ -810,6 +812,20 @@ Unique: `uq_ci` (cart_id, product_variant_id, custom_amount).
 Unique: `uq_ik` (scope, key, owner_hash). Index: `idx_ik_expiry` (expires_at): prune.
 
 Behaviour (M7, `IdempotencyStore`): the claim row is committed on its own before the work starts, with `locked_at` as a fencing token; `response_status` and `response_body` are written inside the work's transaction, so they exist exactly when the work committed. A claim with no response older than 120 s is treated as abandoned and taken over by compare-and-set on `locked_at`. A failure that changed nothing deletes the claim. `owner_hash` is SHA-256 of `user:{id}` or `guest:{sha256(cart token)}`. Rows are kept 24 hours; `orders:prune-idempotency-keys` deletes them daily. MySQL's JSON type does not keep key order, so a replay returns the same content, not the same bytes.
+
+### guest_order_tokens (M-A3)
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| order_id | fk:orders cascade | NN | the one guest order the token opens; index `idx_got_order` |
+| token_hash | char(64) | NN | SHA-256 of the token; unique `uq_got_token_hash` |
+| source | enum | NN | `placement`, `otp` (both open the order), `link` (proof only) |
+| link_verified_at | ts | Y | the signed delivery link was opened with this token |
+| otp_verified_at | ts | Y | the email one-time code was verified for this token |
+| expires_at | ts | NN | `orders.guest_order_token_ttl_hours` (24); index `idx_got_expires` (prune) |
+| last_used_at | ts | Y | |
+
+Stateless twin of the browser session's order list and guest proofs (ADR-036). A guest reveal needs both `link_verified_at` and `otp_verified_at` on one live row. Rows are deleted by `orders:prune-guest-order-tokens` (hourly) once expired. `owner_hash` of `idempotency_keys` for a stateless guest is the same `guest:{sha256(cart token)}` as for the cookie.
 
 ### orders
 

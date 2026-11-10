@@ -93,6 +93,18 @@ class CurrencyConverter
     }
 
     /**
+     * Whether the code names an active currency (the base currency is always active).
+     */
+    public function isActiveCurrency(string $code): bool
+    {
+        if (strtoupper($code) === $this->registry->baseCurrency()) {
+            return true;
+        }
+
+        return $this->registry->currency($code)['is_active'] ?? false;
+    }
+
+    /**
      * The currency to browse in: the request if it is active with a rate, otherwise base.
      */
     public function resolveDisplayCurrency(?string $requested): string

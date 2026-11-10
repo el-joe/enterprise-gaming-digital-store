@@ -42,7 +42,7 @@ class PlaceOrderRequest extends FormRequest
      */
     public function messages(): array
     {
-        return ['idempotency_key.required' => 'The Idempotency-Key header is required.'];
+        return ['idempotency_key.required' => __('The Idempotency-Key header is required.')];
     }
 
     /**

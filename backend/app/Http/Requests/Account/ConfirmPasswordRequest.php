@@ -13,7 +13,7 @@ class ConfirmPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'password' => ['required', 'string', 'current_password:web'],
+            'password' => ['required', 'string', 'current_password'],
         ];
     }
 }

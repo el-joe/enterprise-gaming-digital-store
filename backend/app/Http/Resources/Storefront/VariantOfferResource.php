@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Storefront;
 
 use App\Domains\Catalog\DTOs\VariantOffer;
+use App\Domains\Catalog\Services\ContentTranslator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,7 +24,7 @@ class VariantOfferResource extends JsonResource
 
         return [
             'public_id' => $variant->public_id,
-            'title' => $variant->title,
+            'title' => app(ContentTranslator::class)->text($variant, 'title'),
             'sku' => $variant->sku,
             'region' => $variant->region?->code,
             'denomination_value' => $variant->denomination_value,

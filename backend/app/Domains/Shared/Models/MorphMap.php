@@ -65,6 +65,7 @@ use App\Domains\Notifications\Models\NotificationPreference;
 use App\Domains\Notifications\Models\NotificationTemplate;
 use App\Domains\Orders\Models\Cart;
 use App\Domains\Orders\Models\CartItem;
+use App\Domains\Orders\Models\GuestOrderToken;
 use App\Domains\Orders\Models\IdempotencyKey;
 use App\Domains\Orders\Models\Order;
 use App\Domains\Orders\Models\OrderEvent;
@@ -169,6 +170,7 @@ final class MorphMap
             'faq' => Faq::class,
             'faq_group' => FaqGroup::class,
             'gaming_platform' => GamingPlatform::class,
+            'guest_order_token' => GuestOrderToken::class,
             'homepage_section' => HomepageSection::class,
             'homepage_section_item' => HomepageSectionItem::class,
             'idempotency_key' => IdempotencyKey::class,

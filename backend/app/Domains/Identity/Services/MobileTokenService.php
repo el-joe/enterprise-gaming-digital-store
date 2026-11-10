@@ -34,6 +34,7 @@ class MobileTokenService
         private MobileTokenRepository $tokens,
         private AuditLogger $audit,
         private SecurityEventRecorder $securityEvents,
+        private RecentAuthService $recentAuth,
     ) {}
 
     /**
@@ -90,12 +91,13 @@ class MobileTokenService
             }
 
             $current->forceFill(['used_at' => now()])->save();
+            $previousAccessToken = $current->access_token_id === null ? null : $this->tokens->findAccessToken($current->access_token_id);
 
             if ($current->access_token_id !== null) {
                 $this->tokens->deleteAccessTokens([$current->access_token_id]);
             }
 
-            return $this->issue($user, $current->family_id, $current->device_name, $ip, $current->expires_at->toImmutable());
+            return $this->issue($user, $current->family_id, $current->device_name, $ip, $current->expires_at->toImmutable(), $previousAccessToken);
         });
 
         if (! $outcome instanceof IssuedTokens) {
@@ -135,10 +137,15 @@ class MobileTokenService
         return hash('sha256', $plainToken);
     }
 
-    private function issue(User $user, string $familyId, string $deviceName, ?string $ip, CarbonImmutable $familyExpiresAt): IssuedTokens
+    /**
+     * A recent password confirmation (reveal re-auth, ADR-036) of the replaced access token is kept
+     * on its successor within the same family.
+     */
+    private function issue(User $user, string $familyId, string $deviceName, ?string $ip, CarbonImmutable $familyExpiresAt, ?PersonalAccessToken $replacedAccessToken = null): IssuedTokens
     {
         $accessExpiresAt = now()->addMinutes((int) config('mobile.auth.access_token_ttl_minutes'))->toImmutable();
         $access = $user->createToken($deviceName, [self::ABILITY], $accessExpiresAt);
+        $this->recentAuth->carryOver($replacedAccessToken, $access->accessToken);
 
         $plainRefreshToken = Str::random(64);
 

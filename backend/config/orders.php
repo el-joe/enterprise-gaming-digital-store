@@ -3,6 +3,17 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Guest order tokens (M-A3, ADR-036)
+    |--------------------------------------------------------------------------
+    |
+    | Lifetime of the opaque token a stateless guest client receives from place-order, the
+    | signed delivery link or the email one-time code. It stands in for the browser session.
+    |
+    */
+    'guest_order_token_ttl_hours' => (int) (env('GUEST_ORDER_TOKEN_TTL_HOURS') ?: 24),
+
+    /*
+    |--------------------------------------------------------------------------
     | Risk engine (PROJECT_ARCHITECTURE.md section 15)
     |--------------------------------------------------------------------------
     |

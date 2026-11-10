@@ -78,6 +78,7 @@ it('creates exactly the tables in the design', function (): void {
         'faq_groups',
         'faqs',
         'gaming_platforms',
+        'guest_order_tokens',
         'homepage_section_items',
         'homepage_sections',
         'idempotency_keys',

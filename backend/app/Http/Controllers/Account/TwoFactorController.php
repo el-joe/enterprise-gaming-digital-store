@@ -25,7 +25,9 @@ class TwoFactorController extends Controller
     {
         $recoveryCodes = $twoFactor->confirmEnrollment($request->user(), $request->string('code')->toString());
 
-        $request->session()->put(TwoFactorService::SESSION_PASSED_KEY, now()->getTimestamp());
+        if ($request->hasSession()) {
+            $request->session()->put(TwoFactorService::SESSION_PASSED_KEY, now()->getTimestamp());
+        }
 
         return $this->success(['recovery_codes' => $recoveryCodes], 'Two-factor authentication enabled.');
     }
