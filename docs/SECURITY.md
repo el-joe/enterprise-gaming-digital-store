@@ -84,6 +84,9 @@ Frontend receives only publishable identifiers: Stripe publishable key, PayPal c
 ## 6. Payments and webhooks
 
 - Never trust frontend confirmation; never fulfil from a redirect (`PROJECT_ARCHITECTURE.md` section 9).
+- **A return never pays** (M-A6, ADR-039). The web return page, the app return links `/app/payments/return/{order}` and `/app/payments/cancel/{order}`, and every query parameter a provider appends (Paymob `success`, PayPal `token`, anything else) are display hints only. The app links read only the order public id, verify, capture and change nothing, and redirect a browser to the web return page with no query string (`Cache-Control: no-store`, `Referrer-Policy: no-referrer`). The client then calls `verify-payment` or `paypal/capture`, which read the provider server side.
+- **Allow-listed return URLs.** Provider return and cancel URLs are built by the server (`PaymentReturnUrlBuilder`) from `config/payments.php` only. A client chooses a channel (`client: web|app`, validated against the enum), never a URL; any URL field in the request is ignored. App templates must be paths and are joined to `APP_URL` (HTTPS in production), not to the request host, so a forged Host header cannot move an app link. No token is put in a return URL: the order and attempt public ids are identifiers, not credentials (status and payment calls still need the session, bearer token or guest order token).
+- **App link files** (`/.well-known/assetlinks.json`, `apple-app-site-association`) come from owner-supplied configuration; malformed values are dropped and nothing is published when unconfigured, so no app is ever declared by mistake.
 - Signature verified over the raw body before anything else; comparisons with `hash_equals`.
 - Stripe replay tolerance 5 minutes. Replayed events are absorbed by the unique key.
 - Amount and currency are compared against the stored snapshot; a mismatch sends the order to `manual_review`.

@@ -87,7 +87,7 @@ class CheckoutController extends Controller
 
         if (is_string($placed) && ! $result->replayed && $result->createdOrderPublicId !== null) {
             $affiliates->attribute($placed, $request->cookie((string) config('affiliates.cookie')));
-            $session = $payments->startAfterPlacement($placed, $request->validated('method'))['session'];
+            $session = $payments->startAfterPlacement($placed, $request->validated('method'), $request->paymentClient())['session'];
 
             if ($session !== null) {
                 $body['data']['next'] = $session->toArray();

@@ -41,6 +41,21 @@ N8N_OUTBOUND_SECRET=        N8N_WEBHOOK_AUTH_TOKEN=
 
 Supplier and gateway credentials are entered in the admin panel and stored encrypted, not in `.env`.
 
+Mobile payment returns and app links (M-A6, `API_DOCUMENTATION.md` 1e). `APP_URL` must be the HTTPS store domain the app links are verified on (`https://boxcards.shop`); an app attempt is refused in production otherwise.
+
+```
+PAYMENTS_RETURN_URL=                 (web return page, default /checkout/orders/{order}/return)
+PAYMENTS_CANCEL_URL=                 (web cancel page for PayPal, default: the return page)
+PAYMENTS_APP_RETURN_URL=             (path only, default /app/payments/return/{order}?attempt={attempt})
+PAYMENTS_APP_CANCEL_URL=             (path only, default /app/payments/cancel/{order}?attempt={attempt})
+PAYMENTS_STRIPE_APP_RETURN_URL=      (the app's custom scheme for Stripe PaymentSheet, e.g. boxcards://stripe-redirect)
+MOBILE_ANDROID_PACKAGES=shop.boxcards.app            (comma-separated; add shop.boxcards.app.staging,shop.boxcards.app.dev on those hosts)
+MOBILE_ANDROID_SHA256_FINGERPRINTS=                  (comma-separated AA:BB:..., from the Play Console App signing page; empty publishes [])
+MOBILE_IOS_APP_IDS=                                  (comma-separated TEAMID.shop.boxcards.app; empty publishes no apps)
+```
+
+Values are supplied by the owner (open decision 4 in `MOBILE_APP_ROADMAP.md`); never invent a fingerprint or team id. Run `php artisan config:cache` after a change; Android re-verifies only on install or update (Android 15+ periodically), Apple caches through its CDN.
+
 ## 4. Database
 
 Tuning start: `innodb_buffer_pool_size=4G`, `max_connections=200`, `slow_query_log=1`, `long_query_time=0.5`, UTC server time zone.
@@ -109,6 +124,8 @@ server {
 
 server { listen 80; server_name example.com; return 301 https://$host$request_uri; }
 ```
+
+App links (M-A6): `/.well-known/assetlinks.json`, `/.well-known/apple-app-site-association` and `/app/payments/...` are Laravel routes. The config above already passes them to `index.php` (`location /` falls through `try_files`, and `location ~ /\.(?!well-known)` exempts `.well-known` from the dot-file deny). Keep it that way: do not add a `location /.well-known/` block that serves only static files or returns 404, do not put files under `backend/public/.well-known/` (a static file would shadow the route), do not redirect these paths (Apple and Android refuse redirects), and keep them on the apex HTTPS host. If certbot's webroot plugin is used instead of `--nginx`, scope it to `location ^~ /.well-known/acme-challenge/` only. Smoke check: `curl -sI https://<host>/.well-known/assetlinks.json` shows `200` and `content-type: application/json`.
 
 Set `TrustProxies` if a CDN is placed in front.
 

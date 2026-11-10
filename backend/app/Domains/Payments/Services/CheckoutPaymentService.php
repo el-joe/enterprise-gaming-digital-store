@@ -5,6 +5,7 @@ namespace App\Domains\Payments\Services;
 use App\Domains\Orders\DTOs\OrderActor;
 use App\Domains\Orders\Models\Order;
 use App\Domains\Payments\DTOs\PaymentSession;
+use App\Domains\Payments\Enums\PaymentClient;
 use App\Domains\Payments\Exceptions\GatewayCapabilityNotSupported;
 use App\Domains\Payments\Exceptions\PaymentAttemptRefused;
 use App\Domains\Payments\Models\Payment;
@@ -26,14 +27,14 @@ class CheckoutPaymentService
 
     /**
      * The first attempt, right after the order commits. A failure does not undo the order:
-     * the customer can retry payment.
+     * the customer can retry payment. `$client` selects the return URLs (M-A6).
      *
      * @return array{session: ?PaymentSession, error: ?string}
      */
-    public function startAfterPlacement(string $orderPublicId, ?string $methodCode): array
+    public function startAfterPlacement(string $orderPublicId, ?string $methodCode, PaymentClient $client = PaymentClient::Web): array
     {
         try {
-            return ['session' => $this->attempts->start($orderPublicId, null, $methodCode), 'error' => null];
+            return ['session' => $this->attempts->start($orderPublicId, null, $methodCode, $client), 'error' => null];
         } catch (ApplicationException $exception) {
             Log::warning('payments.first_attempt_not_started', ['order_public_id' => $orderPublicId, 'code' => $exception->errorCode]);
 
@@ -41,9 +42,9 @@ class CheckoutPaymentService
         }
     }
 
-    public function retry(Order $order, ?string $gatewayKey, ?string $methodCode): PaymentSession
+    public function retry(Order $order, ?string $gatewayKey, ?string $methodCode, PaymentClient $client = PaymentClient::Web): PaymentSession
     {
-        return $this->attempts->start($order->public_id, $gatewayKey, $methodCode);
+        return $this->attempts->start($order->public_id, $gatewayKey, $methodCode, $client);
     }
 
     /**

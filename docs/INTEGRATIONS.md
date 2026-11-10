@@ -198,6 +198,8 @@ Events subscribed: `payment_intent.succeeded`, `payment_intent.processing`, `pay
 
 ---
 
+**Return URL (M-A6).** The PaymentIntent is confirmed by the client (Stripe.js or PaymentSheet), which supplies its own `return_url`; the create request is unchanged. For `client=app` attempts the server publishes the value to use as `next.return_url`. Verified (`https://docs.stripe.com/payments/accept-a-payment?payment-ui=mobile&platform=ios`, section "Set up a return URL", read 2026-11-10): the iOS SDK needs a **custom URL scheme** for redirect-based methods and does not support universal links, so `PAYMENTS_STRIPE_APP_RETURN_URL` must be set to the app's scheme; without it the HTTPS app link is published, which is not expected to work on iOS. Whether the Android SDK reads `returnURL` at all is `UNVERIFIED` here.
+
 **Adapter status (M10):** `StripePaymentGateway` built; mocked tests only (SDK on a faked transport); awaiting sandbox verification and BD1. Fees are estimated from fee rules because the balance-transaction expansion is `UNVERIFIED`. ISK, UGX, HUF and TWD are refused until their special cases are verified.
 
 ---
@@ -222,6 +224,8 @@ Sources: `https://developer.paypal.com/api/rest/requests/`, `/api/rest/authentic
 | Webhook verify | `POST /v1/notifications/verify-webhook-signature` |
 
 **Create body:** `intent=CAPTURE`; `purchase_units[0]` (schema allows up to 10; we use 1): `reference_id` (max 256), `custom_id` (max 255) = `payment.public_id`, `invoice_id` (max 127) = `{order_number}-{attempt}` (PayPal can reject duplicate invoice IDs per account, so the attempt number must be included), `amount{currency_code,value}`, `description`. `Prefer: return=representation` for the full resource.
+
+**Return and cancel URLs (M-A6).** Sent as `payment_source.paypal.experience_context.return_url` ("The URL where the customer will be redirected upon approving a payment") and `cancel_url` (upon cancelling), both `format: uri`. Verified against the official Orders v2 schema (`https://developer.paypal.com/api/orders/v2/schema.json`, version 2.36, `paypal_wallet_experience_context`, read 2026-11-10); the same schema marks the top-level `application_context` fields deprecated in favour of `experience_context`. `UNVERIFIED`: which approval link rel the create response carries when `payment_source.paypal` is sent (`payer-action` is expected; the adapter accepts `approve` or `payer-action`), whether the order status is then `CREATED` or `PAYER_ACTION_REQUIRED` (both map to requires-action), and which query parameters PayPal appends on return (ignored). Values: web = the return page (`PAYMENTS_RETURN_URL`) and `PAYMENTS_CANCEL_URL` (else the return page); app = `{APP_URL}/app/payments/return/{order}?attempt={payment}` and `/app/payments/cancel/...`.
 
 **Statuses.** Order: `CREATED`, `SAVED`, `APPROVED`, `VOIDED`, `COMPLETED`, `PAYER_ACTION_REQUIRED`. Capture: `COMPLETED`, `DECLINED`, `PARTIALLY_REFUNDED`, `PENDING`, `REFUNDED`, `FAILED`.
 
@@ -309,6 +313,8 @@ Fields to read: `obj.id`, `obj.success`, `obj.pending`, `obj.amount_cents`, `obj
 **Not supported:** Multi-region accounts; idempotency keys; automatic fee reporting (use `payment_gateway_fee_rules`).
 
 ---
+
+**Return URL (M-A6).** `redirection_url` is set per channel: the web return page for `client=web`, the app link `{APP_URL}/app/payments/return/{order}?attempt={payment}` for `client=app`. Verified as a create-intention field from the create-intention page above ("card and wallet only"); the query parameters Paymob appends on the browser return are the transaction response callback and are display only (the docs say not to update order status from it), so the app link ignores them and the app calls `verify-payment`. `UNVERIFIED`: the behaviour of `redirection_url` for methods other than card and wallet (kiosk, BNPL), and whether Paymob follows an HTTPS app link into an installed app from Unified Checkout (to prove in sandbox on devices).
 
 **Adapter status (M10):** `PaymobPaymentGateway` built; mocked tests only; awaiting sandbox verification. EGP only. `UNVERIFIED` and handled conservatively: `hmac` location (query string, then body), empty-string for missing HMAC fields, `NA` placeholders for missing billing name and phone, `special_reference` uniqueness, `merchant_commission` as fee (not used). A timed-out refund is never re-sent; it stays `unknown` until the transaction's `refunded_amount_cents` shows it, or fails for staff after 24 hours.
 

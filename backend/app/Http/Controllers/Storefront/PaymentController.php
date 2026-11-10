@@ -38,7 +38,7 @@ class PaymentController extends Controller
 
     public function retry(RetryPaymentRequest $request, string $orderPublicId): JsonResponse
     {
-        $session = $this->payments->retry($this->order($request, $orderPublicId), $request->validated('gateway'), $request->validated('method'));
+        $session = $this->payments->retry($this->order($request, $orderPublicId), $request->validated('gateway'), $request->validated('method'), $request->paymentClient());
 
         return $this->success(['next' => $session->toArray()], 'Payment started.', status: 201);
     }

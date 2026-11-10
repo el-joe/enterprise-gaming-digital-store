@@ -84,6 +84,7 @@ class PaymobPaymentGateway extends AbstractPaymentGateway
             ],
             'special_reference' => $reference,
             'notification_url' => $request->notificationUrl,
+            // The browser return for the attempt's channel (web page or app link, M-A6); display only.
             'redirection_url' => $request->returnUrl,
             'extras' => ['payment_public_id' => $request->payment->public_id],
         ], secretAuth: true);

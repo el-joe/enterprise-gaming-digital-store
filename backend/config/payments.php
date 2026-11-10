@@ -43,6 +43,25 @@ return [
     */
     'return_url' => env('PAYMENTS_RETURN_URL') ?: '/checkout/orders/{order}/return',
 
+    // Where a cancelled provider page (PayPal `cancel_url`) sends the browser; null uses `return_url`.
+    'cancel_url' => env('PAYMENTS_CANCEL_URL') ?: null,
+
+    /*
+    | App channel (M-A6, ADR-039): `client=app` attempts return to these paths on APP_URL (HTTPS
+    | in production), verified as app links by /.well-known/assetlinks.json and
+    | apple-app-site-association (config/mobile.php `app_links`). Paths only: a host cannot be
+    | configured here, and nothing a client sends is used. `{order}` is the order public id,
+    | `{attempt}` the payment public id. Opened in a browser, they redirect to the web pages above.
+    |
+    | `stripe_app_return_url` is what the app passes to Stripe PaymentSheet as `returnURL`
+    | (`next.return_url`). Stripe's iOS docs require a custom URL scheme and do not support
+    | universal links, so set it to the app's registered scheme (for example
+    | `boxcards://stripe-redirect`) once the app defines one; null publishes the app return URL.
+    */
+    'app_return_url' => env('PAYMENTS_APP_RETURN_URL') ?: '/app/payments/return/{order}?attempt={attempt}',
+    'app_cancel_url' => env('PAYMENTS_APP_CANCEL_URL') ?: '/app/payments/cancel/{order}?attempt={attempt}',
+    'stripe_app_return_url' => env('PAYMENTS_STRIPE_APP_RETURN_URL') ?: null,
+
     'http' => [
         'connect_timeout' => (int) env('PAYMENTS_CONNECT_TIMEOUT', 5),
         'timeout' => (int) env('PAYMENTS_TIMEOUT', 20),

@@ -17,7 +17,8 @@
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum bearer token of an `n8n` service account + HMAC signature, timestamp and nonce + scopes | built (M17, section 7) |
 | MCP | `/api/v1/mcp` | Sanctum bearer token of an `mcp` service account + scopes | built (M16, section 8) |
-| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); cart, checkout and account built (M-A3, section 1c); public storefront reads (2a, 2b reviews, 2c) and app config (1d) built (M-A4); account orders, profile, devices, notifications and guest order detail built (M-A5, section 4c); payment returns planned (M-A6) |
+| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); cart, checkout and account built (M-A3, section 1c); public storefront reads (2a, 2b reviews, 2c) and app config (1d) built (M-A4); account orders, profile, devices, notifications and guest order detail built (M-A5, section 4c); `client` channel and payment returns built (M-A6, section 1e) |
+| App links | `/app/payments/{return,cancel}/{order}`, `/.well-known/assetlinks.json`, `/.well-known/apple-app-site-association` | none, no session or cookies | built (M-A6, section 1e) |
 
 Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 
@@ -241,6 +242,29 @@ Sources and how to change them without a deploy: settings group `app` (keys `and
 
 ---
 
+## 1e. Payment returns for the app (built, M-A6)
+
+Design: `PROJECT_ARCHITECTURE.md` ADR-039. Closes gap G8.
+
+**`client` on place-order and retry-payment.** Optional `client`: `web` or `app` (anything else, including a URL, is 422 `validation_failed` on `errors.client`). Without it, the session routes (`/api/v1/checkout/...`) mean `web` and the stateless routes (`/api/v1/mobile/checkout/...`) mean `app`. It is stored on the attempt (`payments.client`). A retry uses the `client` it is sent with, else the default of its route group, so a retry from the app keeps `app`. `client` is part of the place-order body fingerprint (send the same body with the same `Idempotency-Key`). No return, cancel or redirect URL is read from any request: unknown fields such as `return_url` are ignored.
+
+**Return URLs, built by the server from configuration only** (`config/payments.php`):
+
+| Channel | Return | Cancel (PayPal) |
+|---|---|---|
+| `web` | `PAYMENTS_RETURN_URL` (default `/checkout/orders/{order}/return`, the M12 page) | `PAYMENTS_CANCEL_URL`, else the return page |
+| `app` | `{APP_URL}/app/payments/return/{order_public_id}?attempt={payment_public_id}` (`PAYMENTS_APP_RETURN_URL`, path only) | `{APP_URL}/app/payments/cancel/{order_public_id}?attempt={payment_public_id}` (`PAYMENTS_APP_CANCEL_URL`, path only) |
+
+Per provider: PayPal receives both as `payment_source.paypal.experience_context.return_url` and `cancel_url`; Paymob receives the return URL as `redirection_url`; Stripe receives neither (the PaymentIntent is confirmed by the client SDK), and for `app` attempts `next.return_url` carries the value the app must pass to PaymentSheet as `returnURL` (`PAYMENTS_STRIPE_APP_RETURN_URL`, the app's custom scheme, when set; else the app return URL above). The web `next` is unchanged (no `return_url`).
+
+**App flow.** Open `approve_url` / `redirect_url` in an authentication session whose callback is the app link; on return (or cancel), ignore every query parameter (Paymob's `success`, `txn_response_code` and so on) and call `paypal/capture` (PayPal) or `verify-payment`, then poll `status`, with the stored guest order token or bearer token. The `attempt` parameter only lets the app match the return to the attempt it started.
+
+**`GET /app/payments/return/{order_public_id}` and `GET /app/payments/cancel/{order_public_id}`** (web paths, not JSON; no session, cookies or CSRF; `storefront` limiter). When the app is installed and the link is verified, the operating system opens the app and the server is not called. In a browser: 302 to the web return page (or the web cancel page) of that order with no query string, `Cache-Control: no-store, private`, `Referrer-Policy: no-referrer`; 404 for an unknown order or an id that is not a ULID. They never verify, capture, change or mark anything paid and never read a query parameter; the web return page asks the server to verify, as for any browser return.
+
+**`GET /.well-known/assetlinks.json`** and **`GET /.well-known/apple-app-site-association`**: plain JSON (no envelope), `Content-Type: application/json`, 200 with no redirect, `Cache-Control: public, max-age=3600`, ETag, no cookies. From `config/mobile.php` `app_links` (`DEPLOYMENT.md` 3):
+- assetlinks: one statement per package in `MOBILE_ANDROID_PACKAGES` (default `shop.boxcards.app`; add `shop.boxcards.app.staging`, `shop.boxcards.app.dev` for the flavors), each with relation `delegate_permission/common.handle_all_urls` and every fingerprint in `MOBILE_ANDROID_SHA256_FINGERPRINTS`. **With no fingerprint configured the file is `[]`**: no app is verified, and app links open in the browser (the return route then redirects to the web page). Malformed packages or fingerprints are left out.
+- apple-app-site-association: `{"applinks":{"details":[{"appIDs":["TEAMID.shop.boxcards.app"],"components":[{"/":"/app/*"}]}]}}` from `MOBILE_IOS_APP_IDS`; unconfigured: `{"applinks":{"details":[]}}`.
+
 ## 2. Storefront JSON
 
 | Method | Path | Purpose |
@@ -338,9 +362,9 @@ Query budgets with a cold cache (tests enforce them; none grows with the number 
 |---|---|---|---|
 | POST | `/validate` | `{ email?, country }` | Repriced summary or 422 |
 | GET | `/payment-options?country=` | | `[{ gateway, label, methods, payment_currency, payment_amount, display_amount, display_currency, notice }]` |
-| POST | `/place-order` | `{ email, country, gateway, method?, consents, ga_client_id? }`, `Idempotency-Key` | `{ order_public_id, status, next: { type, client_secret?, approve_url?, redirect_url? } }` |
+| POST | `/place-order` | `{ email, country, gateway, method?, consents, ga_client_id?, client? }`, `Idempotency-Key` | `{ order_public_id, status, next: { type, client_secret?, approve_url?, redirect_url?, return_url? } }` |
 | POST | `/orders/{public_id}/paypal/capture` | | Server capture; returns order status |
-| POST | `/orders/{public_id}/retry-payment` | `{ gateway, method? }` | New attempt |
+| POST | `/orders/{public_id}/retry-payment` | `{ gateway, method?, client? }` | New attempt |
 | GET | `/orders/{public_id}/status` | | `{ status, payment_status, is_final }`, for the return page. Never confirms from the browser. |
 | POST | `/guest/otp/send` | `{ order_public_id, email }` | OTP |
 | POST | `/guest/otp/verify` | `{ order_public_id, code }` | Guest order session |
@@ -360,7 +384,7 @@ Registered in the `web` middleware group under `/api/v1` (session and CSRF on wr
 | POST | `/storefront/cart/coupon` | `code` | `checkout` | `{ cart }` or 422 `coupon_invalid` with a reason in `message` (not active, expired, below the minimum, usage limit reached, already used by this customer, first order only, not applicable to the cart). Codes are case-insensitive. Validity is checked again, under the coupon row lock, at place-order (M11). |
 | DELETE | `/storefront/cart/coupon` | | `storefront` | `{ cart }` |
 | POST | `/checkout/validate` | `country` (active ISO code), `email?` | `checkout` | `{ cart }` repriced with checkout rules, or 422: `rate_stale` / `rate_missing` for the display currency, `item_unavailable`, `validation_failed` with `errors.items.{id}.delivery_values.{code}`, `coupon_invalid`, `cart_empty` |
-| POST | `/checkout/place-order` | `email` (guests only; customers use their account email), `country`, `gateway`, `method?`, `currency` and `expected_total` (exactly what the customer was shown), `consents.terms` (must be accepted), `consents.marketing?`, `ga_client_id?`; header `Idempotency-Key` (8 to 128 of `A-Za-z0-9_-:.`) | `checkout` | 201 `{ order: { public_id, order_number, status, display_total, payment_total, expires_at }, next }` (`next`: section 3b, or null), `meta.duplicate: false`. 200 `{ order: { public_id, status } }`, `meta.duplicate: true` when the same buyer already has an open order with the same contents. A replay carries `Idempotency-Replayed: true`. Errors as for validate, plus `price_changed`, `gateway_not_eligible`, `order_total_invalid`, the idempotency 409s. `gateway_not_eligible` whenever the chosen gateway fails eligibility (M10, default deny). |
+| POST | `/checkout/place-order` | `email` (guests only; customers use their account email), `country`, `gateway`, `method?`, `currency` and `expected_total` (exactly what the customer was shown), `consents.terms` (must be accepted), `consents.marketing?`, `ga_client_id?`, `client?` (`web` or `app`, section 1e); header `Idempotency-Key` (8 to 128 of `A-Za-z0-9_-:.`) | `checkout` | 201 `{ order: { public_id, order_number, status, display_total, payment_total, expires_at }, next }` (`next`: section 3b, or null), `meta.duplicate: false`. 200 `{ order: { public_id, status } }`, `meta.duplicate: true` when the same buyer already has an open order with the same contents. A replay carries `Idempotency-Replayed: true`. Errors as for validate, plus `price_changed`, `gateway_not_eligible`, `order_total_invalid`, the idempotency 409s. `gateway_not_eligible` whenever the chosen gateway fails eligibility (M10, default deny). |
 | GET | `/checkout/orders/{public_id}/status` | | `checkout` | `{ public_id, status, payment_status, is_final }`. Visible to the owning customer, or to the browser session that placed or verified a guest order; 404 otherwise. |
 | POST | `/checkout/guest/otp/send` | `order_public_id`, `email` | `otp` | Always 200 with the same message. Emails a 6-digit code only when the email matches the guest order; at most 5 codes per order per hour; a new code replaces the old. |
 | POST | `/checkout/guest/otp/verify` | `order_public_id`, `code` | `otp` | `{ order_public_id, email_verified: true }`, sets `orders.guest_email_verified_at` and opens the order to the session; or 422 `otp_invalid` (wrong, expired after 10 minutes, or 5 attempts used) |
@@ -376,11 +400,11 @@ Same group, middleware and `checkout` limiter as 3a. The order routes are visibl
 | Method | Path | Body | Result |
 |---|---|---|---|
 | GET | `/checkout/payment-options` | `country`, `email?` | `{ options: [{ gateway, label, methods: [{ code, label }], available, payment_currency, payment_amount, display_currency, display_amount, notice }] }`. Only eligible gateways are listed. `notice`: null, `charged_in_payment_currency` (the gateway charges another currency than the display currency, for example PayPal for an EGP, SAR or AED shopper), or `payment_currency_below_margin` with `available: false`. Errors as for validate. Advisory: place-order re-checks everything. |
-| POST | `/checkout/orders/{public_id}/retry-payment` | `gateway?`, `method?` | 201 `{ next }`. A new attempt on the order's gateway with the frozen snapshot. 409 `order_not_payable` (not `pending_payment`, or already paid), `order_expired`, `payment_attempts_exhausted` (`orders.max_payment_attempts`, default 5); 422 `gateway_change_unsupported` (another gateway: place the order again), `gateway_not_eligible`; 503 `gateway_unavailable` when the provider could not create it. |
+| POST | `/checkout/orders/{public_id}/retry-payment` | `gateway?`, `method?`, `client?` (section 1e) | 201 `{ next }`. A new attempt on the order's gateway with the frozen snapshot. 409 `order_not_payable` (not `pending_payment`, or already paid), `order_expired`, `payment_attempts_exhausted` (`orders.max_payment_attempts`, default 5); 422 `gateway_change_unsupported` (another gateway: place the order again), `gateway_not_eligible`; 503 `gateway_unavailable` when the provider could not create it. |
 | POST | `/checkout/orders/{public_id}/verify-payment` | | `{ public_id, status, payment_status, is_final }` after a server-side read of the latest attempt. For the return page. |
 | POST | `/checkout/orders/{public_id}/paypal/capture` | | Same shape. Server capture of an approved PayPal order (`PayPal-Request-Id: pay_capture:{payment}`); paid only on capture `COMPLETED`. 422 `capability_not_supported` for other gateways. |
 
-`next` shapes: Wallet (M11) `{ payment_public_id, gateway: "wallet", type: "wallet" }`, returned when the order is already paid from the wallet balance (no redirect, no provider); Stripe `{ payment_public_id, gateway, type: "stripe", client_secret }`; PayPal `{ ..., type: "paypal", provider_order_id, approve_url }`; Paymob `{ ..., type: "redirect", redirect_url }` (Unified Checkout with the public key and the intention's client secret). Publishable values only.
+`next` shapes: Wallet (M11) `{ payment_public_id, gateway: "wallet", type: "wallet" }`, returned when the order is already paid from the wallet balance (no redirect, no provider); Stripe `{ payment_public_id, gateway, type: "stripe", client_secret, return_url? }` (`return_url` for `app` attempts only, section 1e); PayPal `{ ..., type: "paypal", provider_order_id, approve_url }`; Paymob `{ ..., type: "redirect", redirect_url }` (Unified Checkout with the public key and the intention's client secret). Publishable values only.
 
 ### 2b. Built storefront routes (M11)
 

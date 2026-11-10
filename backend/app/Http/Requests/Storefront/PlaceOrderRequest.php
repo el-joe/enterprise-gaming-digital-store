@@ -4,12 +4,15 @@ namespace App\Http\Requests\Storefront;
 
 use App\Domains\Shared\Rules\DecimalString;
 use App\Domains\Shared\Services\CountryDirectory;
+use App\Http\Requests\Storefront\Concerns\ResolvesPaymentClient;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class PlaceOrderRequest extends FormRequest
 {
+    use ResolvesPaymentClient;
+
     protected function prepareForValidation(): void
     {
         $this->merge(['idempotency_key' => $this->header('Idempotency-Key')]);
@@ -18,6 +21,7 @@ class PlaceOrderRequest extends FormRequest
     /**
      * A guest must give an email; a signed-in customer's account email is used instead.
      * `currency` and `expected_total` are what the customer was shown and must still be true.
+     * `client` (M-A6) names the channel for the return URLs; it is part of the fingerprint.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -35,6 +39,7 @@ class PlaceOrderRequest extends FormRequest
             'consents.terms' => ['accepted'],
             'consents.marketing' => ['sometimes', 'boolean'],
             'ga_client_id' => ['sometimes', 'nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9.\-]+$/'],
+            ...$this->paymentClientRules(),
         ];
     }
 

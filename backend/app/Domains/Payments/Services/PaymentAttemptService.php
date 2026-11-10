@@ -7,6 +7,7 @@ use App\Domains\Orders\Models\Order;
 use App\Domains\Payments\Contracts\InternalLedgerGateway;
 use App\Domains\Payments\DTOs\CreatePaymentRequest;
 use App\Domains\Payments\DTOs\PaymentSession;
+use App\Domains\Payments\Enums\PaymentClient;
 use App\Domains\Payments\Enums\PaymentStatus;
 use App\Domains\Payments\Exceptions\GatewayNotConfigured;
 use App\Domains\Payments\Exceptions\GatewayRequestFailed;
@@ -40,15 +41,18 @@ class PaymentAttemptService
     public function __construct(
         private PaymentGatewayRegistry $registry,
         private SettingsService $settings,
+        private PaymentReturnUrlBuilder $returnUrls,
     ) {}
 
     /**
+     * `$client` (M-A6) is stored on the attempt and selects the configured return and cancel URLs.
+     *
      * @throws PaymentAttemptRefused
      * @throws GatewayNotConfigured
      */
-    public function start(string $orderPublicId, ?string $gatewayKey = null, ?string $methodCode = null): PaymentSession
+    public function start(string $orderPublicId, ?string $gatewayKey = null, ?string $methodCode = null, PaymentClient $client = PaymentClient::Web): PaymentSession
     {
-        $payment = $this->openAttempt($orderPublicId, $gatewayKey, $methodCode);
+        $payment = $this->openAttempt($orderPublicId, $gatewayKey, $methodCode, $client);
         $order = Order::query()->findOrFail($payment->order_id);
         $account = PaymentGateway::query()->findOrFail($payment->payment_gateway_id);
         $adapter = $this->registry->for($account);
@@ -66,13 +70,14 @@ class PaymentAttemptService
         }
 
         try {
+            $urls = $this->returnUrls->for($order, $payment, $client);
             $result = $adapter->createPayment(new CreatePaymentRequest(
                 payment: $payment,
                 order: $order,
                 gatewayAmount: $gatewayAmount,
                 currency: $payment->currency,
                 idempotencyKey: 'pay_create:'.$payment->public_id,
-                returnUrl: $this->returnUrl($order),
+                returnUrl: $urls->returnUrl,
                 notificationUrl: route('webhooks.payments', ['gateway' => $account->key]),
                 description: 'Order '.$order->order_number,
                 customerEmail: $order->contact_email,
@@ -80,6 +85,9 @@ class PaymentAttemptService
                 customerPhone: $order->contact_phone,
                 methodCode: $payment->method_code,
                 integrationRefs: $this->integrationRefs($account, $payment),
+                cancelUrl: $urls->cancelUrl,
+                client: $client,
+                sdkReturnUrl: $urls->sdkReturnUrl,
             ));
         } catch (GatewayRequestFailed $exception) {
             $this->close($payment, $exception->ambiguous ? PaymentStatus::Expired : PaymentStatus::Failed, $exception->ambiguous ? 'create_unknown' : 'create_refused');
@@ -103,9 +111,9 @@ class PaymentAttemptService
         return new PaymentSession($payment->public_id, $account->key, $result->next);
     }
 
-    private function openAttempt(string $orderPublicId, ?string $gatewayKey, ?string $methodCode): Payment
+    private function openAttempt(string $orderPublicId, ?string $gatewayKey, ?string $methodCode, PaymentClient $client): Payment
     {
-        return DB::transaction(function () use ($orderPublicId, $gatewayKey, $methodCode): Payment {
+        return DB::transaction(function () use ($orderPublicId, $gatewayKey, $methodCode, $client): Payment {
             $order = Order::query()->where('public_id', $orderPublicId)->lockForUpdate()->firstOrFail();
 
             if ($order->status !== OrderStatus::PendingPayment || $order->primary_payment_id !== null) {
@@ -136,6 +144,7 @@ class PaymentAttemptService
                 'attempt_no' => (int) Payment::query()->where('order_id', $order->id)->max('attempt_no') + 1,
                 'status' => PaymentStatus::Created,
                 'method_code' => $methodCode,
+                'client' => $client,
                 'base_amount' => $order->total_base,
                 'base_currency' => $order->base_currency,
                 'rate' => $order->payment_rate,
@@ -184,10 +193,5 @@ class PaymentAttemptService
     private function close(Payment $payment, PaymentStatus $status, string $code): void
     {
         $payment->forceFill(['status' => $status, 'failure_code' => $code, 'next_check_at' => null])->save();
-    }
-
-    private function returnUrl(Order $order): string
-    {
-        return url(str_replace('{order}', $order->public_id, (string) config('payments.return_url')));
     }
 }

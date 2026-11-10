@@ -46,6 +46,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/storefront.php'));
             Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/api.php'));
             Route::prefix('webhooks')->name('webhooks.')->group(base_path('routes/webhooks.php'));
+            // M-A6: app link association files and payment return links, outside every group.
+            Route::group([], base_path('routes/app_links.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

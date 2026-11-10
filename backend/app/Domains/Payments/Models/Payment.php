@@ -4,6 +4,7 @@ namespace App\Domains\Payments\Models;
 
 use App\Domains\Currency\Models\Currency;
 use App\Domains\Orders\Models\Order;
+use App\Domains\Payments\Enums\PaymentClient;
 use App\Domains\Payments\Enums\PaymentStatus;
 use Database\Factories\Payments\PaymentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,13 +19,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Table('payments')]
-#[Fillable(['order_id', 'payment_gateway_id', 'attempt_no', 'method_code', 'provider_payment_id', 'provider_order_id', 'provider_capture_id', 'provider_reference', 'base_currency', 'currency', 'fee_currency', 'fee_is_estimate', 'settled_currency', 'failure_code', 'failure_message', 'card_country', 'card_fingerprint_hash', 'verified_at', 'next_check_at', 'expires_at'])]
+#[Fillable(['order_id', 'payment_gateway_id', 'attempt_no', 'method_code', 'client', 'provider_payment_id', 'provider_order_id', 'provider_capture_id', 'provider_reference', 'base_currency', 'currency', 'fee_currency', 'fee_is_estimate', 'settled_currency', 'failure_code', 'failure_message', 'card_country', 'card_fingerprint_hash', 'verified_at', 'next_check_at', 'expires_at'])]
 #[UseFactory(PaymentFactory::class)]
 #[Hidden(['card_fingerprint_hash'])]
 class Payment extends Model
 {
     /** @use HasFactory<PaymentFactory> */
     use HasFactory, HasUlids;
+
+    /**
+     * The column default, so an attempt built in memory reads the same as one read back (M-A6).
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['client' => 'web'];
 
     /**
      * Get the columns that receive a ULID on creation.
@@ -54,6 +62,7 @@ class Payment extends Model
         return [
             'attempt_no' => 'integer',
             'status' => PaymentStatus::class,
+            'client' => PaymentClient::class,
             'base_amount' => 'decimal:6',
             'rate' => 'decimal:12',
             'amount' => 'decimal:6',

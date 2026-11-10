@@ -37,6 +37,8 @@ use Stripe\Webhook;
  *
  * - Create `POST /v1/payment_intents` with `automatic_payment_methods[enabled]=true`, so the
  *   methods are whatever the account enables; none are hardcoded. Key `pay_create:{public_id}`.
+ *   The intent is confirmed by the client, which passes its own `return_url`; for an `app`
+ *   attempt the server's value is published as `next.return_url` for PaymentSheet (M-A6).
  * - Verify `GET /v1/payment_intents/{id}` (status, `amount_received`, `currency`), with
  *   `latest_charge` expanded for card country only. The provider fee is not read: the
  *   balance-transaction expansion is UNVERIFIED, so fees are estimated from fee rules.
@@ -94,7 +96,7 @@ class StripePaymentGateway extends AbstractPaymentGateway
         return new CreatePaymentResult(
             providerPaymentId: (string) $intent->id,
             status: $this->mapIntentStatus((string) $intent->status, $intent->last_payment_error ?? null),
-            next: ['type' => 'stripe', 'client_secret' => (string) $intent->client_secret],
+            next: array_filter(['type' => 'stripe', 'client_secret' => (string) $intent->client_secret, 'return_url' => $request->sdkReturnUrl]),
         );
     }
 

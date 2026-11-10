@@ -71,4 +71,30 @@ return [
 
         'cache_seconds' => 60,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | App link association files (M-A6, ADR-039, gap G8)
+    |--------------------------------------------------------------------------
+    |
+    | Served by Laravel at /.well-known/assetlinks.json and /.well-known/apple-app-site-association.
+    | Values are supplied by the owner and never invented: with no fingerprint, assetlinks.json
+    | is `[]`; with no iOS app id, the Apple file lists no apps.
+    |
+    | - `android_packages`: application ids (comma-separated), for example
+    |   `shop.boxcards.app,shop.boxcards.app.staging,shop.boxcards.app.dev` for the flavors.
+    | - `android_sha256_fingerprints`: SHA-256 signing certificate fingerprints (comma-separated,
+    |   `AA:BB:...`, 32 bytes); with Play App Signing, the one shown in the Play Console. Every
+    |   listed package is declared with every fingerprint.
+    | - `ios_app_ids`: `TEAMID.bundle.id` (comma-separated), for example `ABCDE12345.shop.boxcards.app`.
+    | - `paths`: the paths the apps handle. Only the payment return paths live under `/app/`.
+    |
+    */
+    'app_links' => [
+        'android_packages' => env('MOBILE_ANDROID_PACKAGES') ?: 'shop.boxcards.app',
+        'android_sha256_fingerprints' => env('MOBILE_ANDROID_SHA256_FINGERPRINTS') ?: '',
+        'ios_app_ids' => env('MOBILE_IOS_APP_IDS') ?: '',
+        'paths' => ['/app/*'],
+        'cache_seconds' => 3600,
+    ],
 ];

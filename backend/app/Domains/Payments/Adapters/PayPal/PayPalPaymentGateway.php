@@ -32,7 +32,10 @@ use Throwable;
  * PayPal Orders v2 (INTEGRATIONS.md 3). Status: mocked tests only, awaiting sandbox verification.
  *
  * - Create `POST /v2/checkout/orders` (intent CAPTURE, one purchase unit, `custom_id` = payment
- *   public id, `invoice_id` = `{order_number}-{attempt}`), `PayPal-Request-Id: pay_create:{id}`.
+ *   public id, `invoice_id` = `{order_number}-{attempt}`), `PayPal-Request-Id: pay_create:{id}`,
+ *   `payment_source.paypal.experience_context.return_url` / `cancel_url` for the attempt's
+ *   channel (M-A6). With `payment_source` the approval link may be `payer-action` instead of
+ *   `approve` (UNVERIFIED), so both are read.
  * - Capture is server-initiated: `POST /v2/checkout/orders/{id}/capture` with
  *   `PayPal-Request-Id: pay_capture:{id}`. Paid only on capture `COMPLETED`; an order
  *   `COMPLETED` with a `PENDING` capture is processing, never paid.
@@ -94,6 +97,12 @@ class PayPalPaymentGateway extends AbstractPaymentGateway
                 'description' => mb_substr($request->description, 0, 127),
                 'amount' => ['currency_code' => strtoupper($request->currency), 'value' => (string) $request->gatewayAmount],
             ]],
+            // M-A6: where PayPal sends the payer after approving or cancelling (Orders v2 schema
+            // 2.36, `paypal_wallet_experience_context`). Built by the server for the channel.
+            'payment_source' => ['paypal' => ['experience_context' => [
+                'return_url' => $request->returnUrl,
+                'cancel_url' => $request->cancelUrl ?? $request->returnUrl,
+            ]]],
         ];
 
         $response = $this->api('orders.create', 'POST', '/v2/checkout/orders', $body, ['PayPal-Request-Id' => $request->idempotencyKey, 'Prefer' => 'return=representation']);

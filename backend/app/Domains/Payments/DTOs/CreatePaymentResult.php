@@ -11,7 +11,7 @@ use App\Domains\Payments\Enums\ProviderPaymentStatus;
 final readonly class CreatePaymentResult
 {
     /**
-     * @param  array{type: string, client_secret?: string, approve_url?: string, redirect_url?: string, provider_order_id?: string}  $next
+     * @param  array{type: string, client_secret?: string, approve_url?: string, redirect_url?: string, provider_order_id?: string, return_url?: string}  $next
      */
     public function __construct(
         public string $providerPaymentId,
