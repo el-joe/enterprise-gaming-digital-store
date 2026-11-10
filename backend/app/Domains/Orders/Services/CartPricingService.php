@@ -41,9 +41,10 @@ class CartPricingService
     ) {}
 
     /**
-     * The cart must be loaded with CartService::RELATIONS.
+     * The cart must be loaded with CartService::RELATIONS. Pass `$paymentCurrency` once the
+     * gateway's charge currency is known, so the margin floor includes its conversion cost.
      */
-    public function price(Cart $cart, string $currency, ?string $country, bool $forCheckout, ?string $email = null): CartQuote
+    public function price(Cart $cart, string $currency, ?string $country, bool $forCheckout, ?string $email = null, ?string $paymentCurrency = null): CartQuote
     {
         $base = $this->registry->baseCurrency();
         $items = $cart->cartItems->sortBy('id')->values();
@@ -58,7 +59,7 @@ class CartPricingService
 
         $quotes = $pricedVariants->isEmpty()
             ? collect()
-            : $this->engine->quoteMany($pricedVariants, new PricingContext($country, $currency, null, $forCheckout));
+            : $this->engine->quoteMany($pricedVariants, new PricingContext($country, $currency, null, $forCheckout, $paymentCurrency));
 
         /** @var list<array{item: CartItem, quote: PriceQuote, reason: ?string}> $rows */
         $rows = $items->map(static function (CartItem $item) use ($reasons, $quotes): array {

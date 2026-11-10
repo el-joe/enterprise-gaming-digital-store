@@ -80,3 +80,11 @@ it('does not cast to float in money code', function (): void {
 arch('DTOs are readonly')
     ->expect('App\Domains\Identity\DTOs')
     ->toBeReadonly();
+
+arch('order, checkout and fulfilment code never names a supplier adapter (rule 7)')
+    ->expect(['App\\Domains\\Orders', 'App\\Domains\\Fulfillment', 'App\\Domains\\Pricing', 'App\\Http\\Controllers\\Storefront', 'App\\Http\\Controllers\\Account'])
+    ->not->toUse('App\\Domains\\Suppliers\\Adapters');
+
+arch('jobs carry ids, never code material')
+    ->expect('App\\Domains\\Fulfillment\\Jobs')
+    ->not->toUse(['App\\Domains\\Suppliers\\DTOs\\DeliverableItem', 'App\\Domains\\Suppliers\\DTOs\\DeliverablePayload', 'App\\Domains\\Fulfillment\\DTOs\\RevealedCode']);

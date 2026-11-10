@@ -24,6 +24,8 @@ use Tests\Support\FakeCheckoutCoupons;
 use Tests\Support\FakePaymentCurrencyResolver;
 use Tests\TestCase;
 
+require_once __DIR__.'/Support/FulfilmentFixtures.php';
+
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)
     ->in('Feature');

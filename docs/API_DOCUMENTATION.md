@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -9,9 +9,9 @@
 | Group | Prefix | Auth | Status |
 |---|---|---|---|
 | Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); newsletter planned |
-| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor routes built; rest planned |
-| Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status and guest OTP built (3a); payment routes planned (M10) |
-| Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me` and section 5a built; rest planned |
+| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); rest planned |
+| Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status, guest OTP (3a) and guest code access (4a) built; payment routes planned (M10) |
+| Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a and 5b built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no CSRF | planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum token (`n8n`) + HMAC | planned |
@@ -60,11 +60,13 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 | 403 | `two_factor_required` | absent | Redirect to two-factor enrolment or challenge |
 | 404 | `not_found` | absent | SweetAlert2 error |
 | 403 | `margin_override_forbidden` | absent | SweetAlert2 error |
-| 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled` | absent | SweetAlert2 and reload row |
+| 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled`, `duplicate_code` | absent | SweetAlert2 and reload row |
+| 423 | `recent_auth_required` | absent | Ask for the password (`POST /api/v1/account/confirm-password`), then retry |
 | 422 | `cart_empty`, `item_unavailable` (`errors.items.{cart_item_id}` or `errors.variant_id`), `order_total_invalid`, `otp_invalid` | optional | Message near the form |
 | 419 | `csrf_expired` | absent | Prompt to refresh |
 | 422 | `validation_failed` | object | Field-level display |
-| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired` | optional | Message near the form |
+| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired`, `payment_currency_below_margin`, `supplier_not_configured` | optional | Message near the form |
+| 403 | `reveal_denied` | absent | Generic message; the attempt is audited |
 | 429 | `rate_limited` | absent | Retry after `Retry-After` |
 | 500 | `server_error` | absent | Generic message, `request_id` shown. No stack traces or provider bodies. |
 | 503 | `maintenance`, `rates_provider_unavailable` | absent | |
@@ -93,7 +95,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`. The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
+Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -208,6 +210,17 @@ Not built in M7: `GET /payment-options`, PayPal capture and retry-payment (M10);
 
 Reveal response: `{ code, pin, redemption_url, instructions }`, `Cache-Control: no-store`.
 
+### 4a. Built code reveal routes (M9)
+
+| Method | Path | Body | Limiter | Result |
+|---|---|---|---|---|
+| POST | `/api/v1/account/confirm-password` | `password` | `auth` | Stores `auth.password_confirmed_at` in the session; reveals need it within `fulfillment.reveal_recent_auth_minutes` (15) |
+| POST | `/api/v1/account/orders/{order_public_id}/units/{unit_public_id}/reveal` | | `code-reveal` | Reveal body above, `Cache-Control: no-store, private`. Owner only (others 404), verified email, recent password (else 423 `recent_auth_required`), paid order and delivered unit (else 403 `reveal_denied`). Sets `first_revealed_at` |
+| GET | `/api/v1/checkout/guest/orders/{order_public_id}/access` | signed URL from the delivery email, valid 72 h | `otp` | Opens the order to this browser session; `{ order_public_id, otp_required }`. Unsigned or expired: 403 |
+| POST | `/api/v1/checkout/guest/orders/{order_public_id}/units/{unit_public_id}/reveal` | | `code-reveal` | As above for a guest: the session must hold both the signed link and a verified email one-time code (`POST /checkout/guest/otp/verify`) for this order |
+
+Every attempt, granted or denied, is written to `audit_logs` (`digital_codes.revealed` / `digital_codes.reveal_denied`) and, where a code exists, to `digital_code_accesses`. Delivery emails link here and never contain a code.
+
 ## 5. Admin JSON
 
 Pattern: RESTful per resource under `/admin/api`. Each route has a permission from `SECURITY.md` section 4.
@@ -284,6 +297,29 @@ Rules worth knowing:
 - `conditions` on a dynamic rule take `availability` (list), `cost_min` and `cost_max`. Minimum margin cannot be set on a platform-scope rule.
 - A non-base currency cannot be activated without a current rate (`rate_missing`, `rate_stale`). The base currency cannot be deactivated or overridden. Currencies are seeded ISO reference data, so there is no create or delete route.
 - Exchange rate routes are keyed by currency code rather than the table's id, because an override can supply a currency's first rate.
+
+### 5b. Built supplier and fulfilment routes (M8, M9)
+
+| Resource | Routes | Permission |
+|---|---|---|
+| `suppliers` | CRUD (`status` defaults to `inactive`; `adapter_key` must be registered; `base_url_override` HTTPS on the adapter's host list) | read `suppliers.view`, write `suppliers.manage` |
+| `suppliers/{id}/credentials` | `POST { mode, credentials: {key: value}, webhook_secret? }`. Write-only: returns `credentials_configured` per mode, never values | `suppliers.credentials` |
+| `suppliers/{id}/test-connection` | `POST`, `{ reachable, latency_ms, error }`, 6 per minute | `suppliers.manage` |
+| `suppliers/{id}/sync-catalog`, `/sync-pricing` | `POST`, 202, queued on `sync`, 6 per minute | `suppliers.sync` |
+| `suppliers/{id}/capabilities` | `GET`: `{ capabilities: {capability: full/advisory/none/unverified}, delivery_types, default_per_request_cap }` | `suppliers.view` |
+| `suppliers/{id}/balance` | `GET`: cached balance and the last 30 snapshots | `suppliers.view` |
+| `suppliers/{id}/logs` | `GET`, list conventions; `filter[succeeded]=0` for failed requests, `filter[operation]` | `suppliers.logs` |
+| `supplier-mappings` | CRUD by id. One `primary` per variant; the supplier product must belong to the supplier; internal stock creates its supplier product on first mapping | read `suppliers.view` or `mappings.manage`, write `mappings.manage` |
+| `orders/{public_id}/timeline` | `GET`: order events, including unit events (`unit.*`) | `orders.view` |
+| `orders/{public_id}/review` | `POST { reason }`: `manual_review` to `processing`; pending units are then planned | `orders.review` |
+| `orders/{public_id}/retry-verified-unit` | `POST { unit_public_id, reason }`: only a unit whose last attempt is `rejected` or `not_accepted_verified`, on an order in `manual_review` or `partially_fulfilled`. Reuses the client reference on the same supplier | `orders.review` |
+| `orders/{public_id}/reconcile` | `POST`: status lookup now for every unresolved attempt, past the deadline too; never places an order | `orders.reconcile` |
+| `transactions/{public_id}/mark-not-accepted` | `POST { reason, evidence }`: sets `not_accepted_verified`, releasing the active lock; the unit stays in review until retried | `orders.reconcile` |
+| `manual-tasks` | List (`filter[status]`), `GET {id}` (includes the customer's delivery values, such as player ID), `POST {id}/claim`, `POST {id}/complete { reason }`, `POST {id}/reject { reason }` | `orders.fulfill_manual` |
+| `digital-codes/import` | `POST { product_variant_id, codes: [{ code, pin?, redemption_url?, expires_at? }] }` up to 1000. Duplicates are rejected by position (`rejected: [{ index, reason }]`), never echoed | `digital_codes.import` |
+| `digital-codes/{public_id}/reveal` | `POST { reason }`: staff reveal, audited, `no-store` | `digital_codes.reveal` (explicit grant) |
+
+Not built: `GET supplier-mappings/suggestions`, `POST supplier-mappings/bulk` (M14), and `POST /webhooks/suppliers/{key}`: Reloadly's webhook signature is `UNVERIFIED`, so polling is the only path.
 
 ## 6. Webhooks
 

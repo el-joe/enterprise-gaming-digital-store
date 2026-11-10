@@ -14,8 +14,8 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M5 | Catalog and CMS services | Complete |
 | M6 | Currency and pricing | Complete |
 | M7 | Orders and checkout core | Complete (place-order and coupons fail closed until M10 and M11 bind their contracts) |
-| M8 | Supplier engine and Reloadly | Not started |
-| M9 | Fulfilment and digital codes | Not started |
+| M8 | Supplier engine and Reloadly | Complete (Reloadly mocked only, awaiting sandbox verification) |
+| M9 | Fulfilment and digital codes | Complete (reveal pages and account order list are M13) |
 | M10 | Payments | Not started |
 | M11 | Wallet, promotions, affiliates, reviews, support | Not started |
 | M12 | Storefront | Not started |
@@ -34,7 +34,7 @@ Status values: Not started, In progress, Blocked (state why), Complete.
 
 | Integration | Adapter | Mock tests | Sandbox verified | Production |
 |---|---|---|---|---|
-| Reloadly Gift Cards | Not built | No | Awaiting credentials | No |
+| Reloadly Gift Cards | Built (`ReloadlyGiftCardAdapter`) | Yes (`Http::fake` only) | **Awaiting sandbox verification**; no credentials; never called live | No |
 | Stripe | Not built | No | Awaiting credentials | No |
 | PayPal | Not built | No | Awaiting credentials | No |
 | Paymob | Not built | No | Awaiting credentials | No |
@@ -549,3 +549,140 @@ Coupon validity and limits (M11) and payment currency with eligibility (M10) are
 
 M8: Supplier engine and Reloadly. M10 can start in parallel and should begin with `PaymentCurrencyResolver`.
 
+
+---
+
+## M8: Supplier engine and Reloadly
+
+Date completed: 2026-11-10
+Completed by: Senior Backend Engineer
+
+### Summary of completed work
+
+Supplier adapter contract and capability declaration, registry, Reloadly Gift Cards adapter, internal stock and manual adapters, supplier selection, the exactly-once submission gate, outcome application with safe fallback, stale-submission sweeper, verification by reference, deliverable retrieval, daily reconciliation, catalog and price sync, balances, health with a circuit breaker, admin JSON for suppliers, mappings and fulfilment actions, and the scheduler entries. Backend only; no new packages. **Reloadly is tested with `Http::fake` only and is awaiting sandbox verification: it has never called the live API and no credentials exist.**
+
+### Files created
+
+- `app/Domains/Suppliers/`: `Contracts/SupplierAdapter`; `Adapters/{AbstractSupplierAdapter,InternalStockAdapter,ManualFulfillmentAdapter}`, `Adapters/Reloadly/{ReloadlyGiftCardAdapter,ReloadlyClient,ReloadlyOutcomeClassifier,ReloadlyProductParser}`; `Enums/{SupplierCapability,CapabilityLevel,SupplierOutcomeKind}`; 21 DTOs; `Exceptions/{CapabilityNotSupported,SupplierRequestFailed,SupplierNotConfigured,DeliverableFetchFailed}`; `Services/{SupplierAdapterRegistry,SupplierSelector,SupplierCatalogSync,SupplierPriceSync,SupplierPriceWriter,SupplierCostCalculator,SupplierMonitor,SupplierReconciler,SupplierAdminService,SupplierMappingService,SupplierApiLogger,HttpFailureClassifier,ExactJson}`; `Jobs/SyncSupplierCatalog`
+- `app/Domains/Fulfillment/`: `Services/{FulfilmentPlanner,FulfilmentGuard,SupplierSubmissionGate,SupplierOutcomeApplier,AttemptLocks,SupplierVerificationService,StaleSubmissionSweeper,DeliverableRetriever,FulfilmentAdminService}`, `Strategies/{CodeDeliveryStrategy,DirectTopupStrategy,ManualTaskStrategy}`, `Contracts/DeliveryStrategy`, `Jobs/{FulfilOrder,SubmitUnitToSupplier,VerifySupplierTransaction,RetrieveDeliverables}`, `Listeners/StartFulfilmentWhenPaid`
+- `app/Domains/Orders/`: `Services/{OrderProgress,UnitStatusRecorder}`, `Listeners/SendFulfilmentNotifications`, `Notifications/{OrderDelivered,OrderFulfilmentFailed}`, `Exceptions/PaymentCurrencyBelowMargin`
+- `app/Console/Commands/Suppliers/*` (7 commands), `config/suppliers.php`
+- `app/Http/{Controllers,Requests,Resources}/Admin/{Suppliers,Fulfillment}`
+- Tests: `tests/Feature/Suppliers/{ReloadlyAdapterTest,SupplierManagementTest}`, `tests/Feature/Fulfillment/{SupplierFulfilmentTest,SupplierConcurrencyTest}`, `tests/Support/{FulfilmentFixtures.php,Concurrency/submit_unit_worker.php}`
+- Changed: `PricingContext`, `PricingEngine` (payment-currency conversion in the floor, `floorAtCost`), `CartPricingService`, `PlaceOrderAction`, `AppServiceProvider` (registry singleton, listeners, `code-reveal` limiter), `routes/{admin,console}.php`, `tests/Pest.php`, `ArchitectureTest`
+
+### Migrations
+
+None. The M4 schema was sufficient.
+
+### Features implemented
+
+- Contract per architecture 7.1 plus `getTransactions()`. Unsupported operations throw `CapabilityNotSupported` and are declared `none`; only `full` capabilities are relied on.
+- Default-deny classification (INTEGRATIONS 1.5). Pre-send transport failures are recognised from the cURL error (DNS, refused, TLS, connect-phase timeout); everything else, including read timeouts, resets, 5xx, 429, malformed bodies and unknown codes, is ambiguous.
+- Gate (architecture 8.2): the attempt is committed as `submitting` before the HTTP call; `uq_st_active_unit`, the unit row lock, the `queued` check and a unique-until-processing job key all apply; `tries = 1`. No path leads from an ambiguous outcome to `createOrder`.
+- Fallback only on `Rejected`, with `fallback_enabled`, the attempt limit and a fresh margin check; same-supplier retry only for pre-send failures under `retry_policy`.
+- Verification with the documented backoff until the deadline; not found at the deadline holds the unit in `manual_review` with the active lock kept. Staff can confirm "verified not accepted" with reason and evidence, retry reusing the client reference, or force a lookup.
+- Deliverable fetch is a separate GET, retried by the sweeper; never a new order.
+- Inherited 1: catalog and pricing sync write effective cost to `supplier_product_prices`; tested end to end through the pricing engine.
+- Inherited 2: `OrderRiskGate` runs from `FulfilOrder` on entering `paid`; `review` and `block` go to `manual_review`, tested with no supplier call.
+- Inherited 3: `OrderStatusChanged` listeners dispatch fulfilment (on `paid` and `processing`) and send delivery and failure notifications, which carry the order id and a link only.
+- Inherited 4: closed in the pricing engine (see Design changes). The per-gateway display in `payment-options` is M10.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Every row of the classification table | Met (mocked) | `ReloadlyAdapterTest`: 21 response rows, 9 refusal codes, 9 uncertain codes |
+| Read timeout gives `pending_verification` and no second POST | Met | Adapter test and `SupplierFulfilmentTest` (one POST, then lookups only) |
+| Crash after submit leads the sweeper to `pending_verification` | Met | In-process (claim + send, no step 3) and **separate process killed with SIGKILL** after claim and after send |
+| Redelivered job is a no-op | Met | Job dispatched and handled again: one attempt, one POST |
+| Concurrent submit (two real connections) produces one attempt | Met | `SupplierConcurrencyTest`: two PHP processes started together, 3 rounds; one attempt and one logged POST each time. Also a second connection's insert rejected by `uq_st_active_unit`, and a worker blocked by another connection's unit lock |
+| Fallback only on `Rejected`, honours margin guard | Met | Refusal falls back to internal stock; 5 ambiguous cases do not; next candidate below margin holds for review |
+| Not found until deadline: `manual_review`, lock retained | Met | `active_unit_key` still set, polling stopped, one POST |
+| `cancelOrder` and `refundOrder` raise `CapabilityNotSupported` | Met | Adapter test, nothing sent |
+| Deliverable fetch failure retries the GET only | Met | First GET 500, sweeper retries, completed; one POST |
+| `cardNumber` with 20 digits stays intact | Met | `ExactJson` keeps every number as text |
+| Request body has no `recipientEmail` | Met | Adapter test on the recorded POST |
+| Also required by the brief: auth expiry/refresh, duplicate response, partial multi-unit, USD 100 cap, balance shortfall | Met | Adapter auth tests; duplicate transaction id goes to verification; partially fulfilled order; cap and balance excluded in selection |
+
+### Tests and results
+
+- Command: `php artisan test --compact` (M8 and M9 together)
+- Result: **1344 passed, 0 failed, 0 skipped (7422 assertions), 74.1 s**, up from 1179.
+- Separate processes or connections: concurrent submit (2 processes x 3 rounds), worker killed after claim, worker killed after send, unit row lock held by a second connection, `uq_st_active_unit` from a second connection, and `SKIP LOCKED` stock allocation (M9).
+- In-process only: redelivered job, fallback, deadline, deliverable retry, duplicate transaction id, reconciliation, and the "died between send and record" simulation.
+- Not tested, and why: the live Reloadly API (no credentials); real queue workers and Redis unique locks (tests use the sync queue and array cache; the database gate does not depend on them).
+
+### Outstanding requirements
+
+- Sandbox verification of every `UNVERIFIED` item in `INTEGRATIONS.md` 1.10a, including the Rejected list, the cost formula and response shapes. Raising the USD 100 cap needs 2FA and a static egress IP.
+- Reloadly webhooks are not routed (signature unknown); polling is the only path.
+- Supplier management screens are M14; `supplier-mappings/suggestions` and `bulk` are not built.
+- Scheduled commands do not yet write `scheduled_task_runs` heartbeats (none of the existing commands do; M17).
+- `order_item_financials` is not written at completion (profit reporting).
+
+### Design changes made
+
+- `PROJECT_ARCHITECTURE.md` 6.2, 7.1, 7.3, 7.4, 11.5 and 10: manual fulfilment as a strategy, `OrderProgress` hold rules, selection and fallback details, payment-currency conversion in the margin floor.
+- `INTEGRATIONS.md` 1.10a adapter status and assumptions. `DATABASE_DESIGN.md`: `cost_map` for range products, effective cost in `supplier_product_prices`. `API_DOCUMENTATION.md` 5b.
+
+### Next milestone
+
+M9 (below), then M10.
+
+---
+
+## M9: Fulfilment and digital codes
+
+Date completed: 2026-11-10
+Completed by: Senior Backend Engineer
+
+### Summary of completed work
+
+Delivery strategies, the digital code vault and keyring, key rotation, internal stock import and `SKIP LOCKED` allocation, manual fulfilment tasks with admin actions (BD2), and the audited reveal flows for customers, guests and staff.
+
+### Files created
+
+- `app/Domains/Fulfillment/Services/{DigitalCodeKeyring,DigitalCodeVault,DigitalCodeKeyRotator,DigitalCodeImporter,StockAllocator,CodeRevealService,ManualTaskService}`, `DTOs/{RevealedCode,RevealContext}`, `Exceptions/{DigitalCodeKeyMissing,DuplicateDigitalCode,CodeRevealDenied}`
+- `app/Console/Commands/Fulfillment/RotateDigitalCodeKeysCommand`, `config/fulfillment.php`
+- `app/Http/Controllers/Account/{ConfirmPasswordController,OrderCodeController}`, `Storefront/GuestOrderCodeController`, `Admin/Fulfillment/{ManualTaskController,DigitalCodeController}`
+- Tests: `tests/Feature/Fulfillment/{DigitalCodeTest,CodeCanaryTest,ManualFulfilmentTest}`
+- Changed: `GuestOrderController` (marks the session OTP-verified for the order), `routes/{account,checkout}.php`, `phpunit.xml` (test keyring values), `.env.example` (`DIGITAL_CODE_KEYS`, `DIGITAL_CODE_ACTIVE_KID`, `DIGITAL_CODE_BLIND_INDEX_KEY`, empty)
+
+### Migrations
+
+None.
+
+### Features implemented
+
+- AES-256-GCM per key id, separate from `APP_KEY`; code, PIN and URL encrypted separately; HMAC blind index ignoring case, spaces and hyphens; mask of the last four. No key, no storage.
+- Code material types refuse serialization and hide values from dumps; jobs carry ids (arch test).
+- Reveal: owner with verified email and a password confirmed within 15 minutes; guest with the signed 72-hour link and the email OTP in the same session; staff with the explicit `digital_codes.reveal` grant and a reason. Paid order and delivered unit required. 10 per hour. `no-store`. Every attempt audited in `audit_logs` and, where a code exists, `digital_code_accesses`.
+- Manual tasks: list, view with the customer's delivery values, claim, complete, reject, all audited.
+- **Production-relevant fix found by the tests:** MySQL chose an index-merge plan for stock allocation under which `SKIP LOCKED` waited on a locked row (lock wait timeout). The allocator now forces `idx_dc_stock`.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Canary across all sinks in `SECURITY.md` 7 | Met | `CodeCanaryTest`: log events and log file, `supplier_api_logs`, `order_events`, `audit_logs`, `automation_outbox`, `analytics_event_dispatches`, job payloads, mail, admin resources and the reveal error response, after a failed then successful fetch |
+| Reveal denied for non-owner, unpaid, undelivered; each attempt audited | Met | Dataset in `DigitalCodeTest`, plus missing recent auth (423) and unverified email |
+| Ciphertext differs by key version; rotation works | Met | Rotation to kid 2 re-encrypts, decrypts, and a second run does nothing |
+| Duplicate code rejected | Met | Vault and import (by position, never echoed) |
+| Guest needs signed link and OTP | Met | Each alone denied; tampered and expired links 403; OTP verification marks the session |
+| `SKIP LOCKED` allocation | Met | Second real connection holds the first code; allocation takes the next |
+| Email contains no code | Met | Rendered delivery mail and the canary mail sink |
+
+### Tests and results
+
+See M8 (shared run): **1344 passed, 0 failed (7422 assertions)**.
+
+### Outstanding requirements
+
+- `DIGITAL_CODE_KEYS`, `DIGITAL_CODE_ACTIVE_KID` and `DIGITAL_CODE_BLIND_INDEX_KEY` must be generated and set in `backend/.env` before any code can be stored; without them fulfilment of code products fails closed (`DigitalCodeKeyMissing`). They must be backed up separately from the database.
+- Customer pages (order list, masked code history, reveal UI) are M13; the delivery email links to `/account/orders/{public_id}`, which does not exist until then.
+- Staff entry of a code when completing a manual task is not supported; manual completion records that the work was done.
+
+### Next milestone
+
+M10: Payments. It must bind `PaymentCurrencyResolver`, mark orders paid only through verified webhooks or re-reads (which now starts fulfilment automatically), and pass the payment currency into pricing for `payment-options`.

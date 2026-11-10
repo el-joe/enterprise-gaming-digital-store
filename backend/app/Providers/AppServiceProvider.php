@@ -6,16 +6,22 @@ use App\Domains\Audit\Enums\SecurityEventSeverity;
 use App\Domains\Audit\Services\SecurityEventRecorder;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
+use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
+use App\Domains\Orders\Events\OrderStatusChanged;
+use App\Domains\Orders\Listeners\SendFulfilmentNotifications;
+use App\Domains\Orders\Models\Order;
 use App\Domains\Payments\Contracts\PaymentCurrencyResolver;
 use App\Domains\Payments\Services\UnavailablePaymentCurrencyResolver;
 use App\Domains\Promotions\Contracts\CheckoutCoupons;
 use App\Domains\Promotions\Services\UnavailableCheckoutCoupons;
 use App\Domains\Shared\Models\MorphMap;
+use App\Domains\Suppliers\Services\SupplierAdapterRegistry;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         // Fail-closed until M10 (payment currency and eligibility) and M11 (coupon limits) bind real implementations.
         $this->app->bind(PaymentCurrencyResolver::class, UnavailablePaymentCurrencyResolver::class);
         $this->app->bind(CheckoutCoupons::class, UnavailableCheckoutCoupons::class);
+
+        $this->app->singleton(SupplierAdapterRegistry::class);
     }
 
     /**
@@ -42,6 +50,9 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap(MorphMap::aliases());
 
         $this->configureRateLimiting();
+
+        Event::listen(OrderStatusChanged::class, StartFulfilmentWhenPaid::class);
+        Event::listen(OrderStatusChanged::class, SendFulfilmentNotifications::class);
     }
 
     private function configureRateLimiting(): void
@@ -75,6 +86,12 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(20)->by('checkout|session|'.($request->hasSession() ? $request->session()->getId() : $request->ip())),
             Limit::perMinute(60)->by('checkout|ip|'.$request->ip()),
         ]);
+        RateLimiter::for('code-reveal', static function (Request $request): Limit {
+            $order = $request->route('order');
+            $viewer = $request->user()?->getAuthIdentifier() ?? 'guest:'.($order instanceof Order ? $order->public_id : (string) $order);
+
+            return Limit::perHour((int) config('fulfillment.reveal_per_hour'))->by('code-reveal|'.$viewer);
+        });
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }

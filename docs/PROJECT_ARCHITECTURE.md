@@ -234,6 +234,8 @@ Additions to the spec's 11 suggested statuses, with reasons: `pending_verificati
 | `completed`, `partially_refunded` | `refund_pending` | Authorized refund | Admin (`refunds.create`) |
 | `cancelled`, `failed` | `manual_review` | **Late verified payment** on a closed order. Never auto-fulfil. Refund or approve by a human. | Webhook or poll job |
 
+Settled at M8 (`OrderProgress`): the order follows the aggregator only through rows the actor may use. Two implied moves are held instead: `supplier_pending` to `processing` (a fallback unit queued while others wait; the order stays `supplier_pending`), and any exit from `manual_review` by the system. A staff actor whose permission does not cover the implied row releases the order to `processing` first when they hold `orders.review`; otherwise a `status_held` event is recorded and the order waits for `POST orders/{id}/review`. Unit status changes are recorded as `unit.*` order events with `unit_from` and `unit_to` in metadata.
+
 Terminal statuses: `refunded`. Effectively terminal unless a row above applies: `completed`, `partially_refunded`, `cancelled`, `failed`. Disputes do not change status; they set `orders.has_open_dispute` and raise an alert.
 
 Enforcement settled at M7 (`OrderTransitionTable`, `OrderStateMachine`):
@@ -311,7 +313,9 @@ enum CapabilityLevel: string { case Full = 'full'; case Advisory = 'advisory'; c
 
 Reloadly's declared matrix is in `INTEGRATIONS.md` section 1.6. Adapters are registered in `SupplierAdapterRegistry` by `suppliers.adapter_key`, so a new supplier is a new class plus a database row; checkout and order code do not change (rule 7).
 
-Built-in adapters: `ReloadlyGiftCardAdapter`, `InternalStockAdapter` (admin-loaded codes in `digital_codes`), `ManualFulfillmentAdapter` (creates a staff task). The latter two are real fulfilment paths, not mocks. Test doubles live under `tests/` only.
+Built-in adapters: `ReloadlyGiftCardAdapter`, `InternalStockAdapter` (admin-loaded codes in `digital_codes`), `ManualFulfillmentAdapter`. The latter two are real fulfilment paths, not mocks. Test doubles live under `tests/` only.
+
+Settled at M8: manual fulfilment is a delivery strategy (`ManualTaskStrategy`, used by `DirectTopupStrategy` per BD2), not a supplier order. `ManualFulfillmentAdapter` declares every supplier operation `none` and only lists its delivery types, so the capability matrix shows it but selection never picks it. A staff task has no supplier order to poll and `supplier_product_mappings` requires a supplier product, so routing it through the gate would invent both. `SupplierCapabilities` also carries `defaultPerRequestCap` (Reloadly: USD 100), used when `suppliers.per_request_cap_base` is null. The contract gained `getTransactions()` for daily reconciliation.
 
 ### 7.2 Outcome classification
 
@@ -335,6 +339,8 @@ Every `createOrder`, `getOrderStatus` and `findOrderByReference` returns a `Supp
 
 Filters (all must pass): mapping active; supplier `active` and circuit not open; supplier supports the product's delivery type; region and country allowed for this mapping; availability not `out_of_stock`; cost known and younger than `max_price_age_minutes`; cached balance covers the cost; amount within per-request cap if declared; margin at the mapping's cost is at or above the minimum, or the product allows it.
 
+Settled at M8: an unknown cached balance excludes a supplier that declares `Balance` (`balance_unknown`); cost is the mapping override or the latest effective cost in `supplier_product_prices` for the mapped denomination, younger than `suppliers.max_price_age_minutes`; the margin is checked on the unit's net base price after its coupon share, including the payment currency's conversion cost. Availability calls the adapter only when it declares `availability` as `full` (internal stock); Reloadly's is advisory and uses the synced status.
+
 Sort by the strategy in `settings.suppliers.selection_strategy`:
 
 - `priority` (default): mapping `priority` ascending, then lowest cost.
@@ -354,6 +360,8 @@ Fallback to the next candidate occurs **only** when all of these hold:
 Ambiguous or timeout outcomes always go to `pending_verification`. There is no code path from `Ambiguous` to a new `createOrder`. If verification later proves "not accepted", section 8.3 applies.
 
 `retry_policy` on a supplier applies only to `Rejected` failures of type (a) above, and only on the same supplier.
+
+Settled at M8: `retry_policy` is `{ "max_attempts": n }` (0 to 3). The schema has no per-mapping fallback flag, so condition 2 is `suppliers.fallback_enabled` of the refusing supplier only. Condition 3 counts attempts on the unit: fallback is allowed while attempts so far are at most `max_fallback_attempts`. A unit whose remaining candidates fail only on margin goes to `manual_review` (`fallback_below_margin`); with no candidate at all it is `failed`. A supplier transaction id already held by another attempt of the same supplier is treated as ambiguous and alerted.
 
 ### 7.5 Delivery types
 
@@ -520,7 +528,8 @@ Redis locks are never a safety mechanism. They are used only to reduce contentio
 | Supplier email | `recipientEmail` is omitted on Reloadly orders so the supplier sends nothing outside our control |
 | Parsing | JSON decoded with `JSON_BIGINT_AS_STRING`; Reloadly types `cardNumber` as integer, and a numeric cast can lose digits or leading zeros. Treat as string. |
 | Logs | `supplier_api_logs` stores the redacted body. Deliverable endpoint bodies are never stored at all. A Monolog processor strips known key names. HTTP exceptions from deliverable endpoints are caught and rethrown without the response body. |
-| Queues | Jobs carry IDs only, never code material |
+| Queues | Jobs carry IDs only, never code material. `DeliverableItem` and `RevealedCode` refuse serialization and hide their values from dumps |
+| Built (M9) | `DigitalCodeVault` (store, decrypt, re-encrypt), `DigitalCodeKeyring` (`DIGITAL_CODE_KEYS` as `kid:base64` pairs), `CodeRevealService`, `digital-codes:rotate-keys`. Customer recent auth is `POST /api/v1/account/confirm-password`. Stock allocation forces `idx_dc_stock`, because an index-merge plan made `SKIP LOCKED` wait |
 
 ---
 
@@ -593,6 +602,8 @@ Computed in the base currency by `PricingEngine`. Markup rules do not stack: the
 8. **Currency conversion** and per-currency rounding (`currencies.rounding_rule`).
 
 **Margin guard**: net margin is estimated after supplier cost, default gateway fee and conversion cost. If below `min_margin` (most specific of variant, product, category, global), behaviour follows `below_margin_policy`: `floor` (raise the price to the floor), `block` (not purchasable), or `allow`. `allow`, and any admin price below the floor, need `pricing.override_margin` and create an audit entry with a reason. A coupon may not take an item below the floor unless the coupon has `allow_below_margin`.
+
+Settled at M8 (inherited from M7): `PricingContext.paymentCurrency` adds the conversion cost to the floor when the gateway charges a non-base currency, even when the display currency is the base. `place-order` prices the cart again with the resolved payment currency and refuses with `payment_currency_below_margin` when any unit would then fall below its floor or change price; it never changes the confirmed price. Showing the per-gateway price before placement is M10 (`GET /checkout/payment-options` must pass the payment currency).
 
 Clarifications settled at M6:
 

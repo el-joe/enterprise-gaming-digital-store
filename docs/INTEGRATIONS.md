@@ -134,6 +134,27 @@ Design consequence: Reloadly webhooks, if enabled later, only schedule an immedi
 
 Mobile airtime and data only, not game accounts. Not in initial scope; an adapter can be added under the same contract if mobile top-ups are wanted.
 
+### 1.10a Adapter status (M8)
+
+**Built: `App\Domains\Suppliers\Adapters\Reloadly\ReloadlyGiftCardAdapter`. Tested with `Http::fake` only; awaiting sandbox verification. It has never called the live API and no credentials exist.**
+
+| Operation | Endpoint used | State |
+|---|---|---|
+| Token | `POST https://auth.reloadly.com/oauth/token` | Implemented. Cached encrypted until 5 minutes before `expires_in`; one refresh on 401 |
+| Balance, test connection | `GET /accounts/balance` | Implemented |
+| Products, details, pricing, advisory availability | `GET /products`, `GET /products/{id}` | Implemented |
+| Countries | `GET /countries` | Implemented (`isoName`, `name`, `currencyCode`; field names `UNVERIFIED`) |
+| Create order | `POST /orders` | Implemented: `quantity=1`, `customIdentifier`, `senderName`, `preOrder=false`, `productAdditionalRequirements.userId` from a `user_id` delivery field, no `recipientEmail` |
+| Order status | `GET /reports/transactions/{id}` | Implemented; response shape assumed to be the transaction object (`UNVERIFIED`) |
+| Lookup by reference | `GET /reports/transactions?customIdentifier=` | Implemented; dates not sent. Only a well-formed empty page counts as not found; two matches are ambiguous |
+| Deliverables | `GET /orders/transactions/{id}/cards` (v2 Accept header for `redemptionUrl`) | Implemented; body never logged; single object or list accepted |
+| Transaction report | `GET /reports/transactions?startDate=&endDate=` | Implemented for reconciliation only; date format `Y-m-d H:i:s` is `UNVERIFIED` and the run only reports |
+| Cancel, refund | none | Declared `none`; calling them throws `CapabilityNotSupported` |
+| Webhooks | none | Declared `unverified`; no route is registered |
+| Client idempotency | `customIdentifier` | Declared `unverified`; never relied on as a guarantee |
+
+Assumptions to check in the sandbox (`UNVERIFIED`): paged responses use `content` and `last` (or `totalPages`); product `status` values beyond `ACTIVE`/`INACTIVE`; effective cost = sender amount + `senderFee` + `senderFeePercentage`, with `discountPercentage` **not** subtracted until confirmed (`suppliers.apply_discount_to_cost`, default false); the error-code split in 1.5; the HTTP status that carries each `errorCode` (codes are read from any non-2xx below 500). JSON is decoded with every number kept as its literal text, which covers `cardNumber` typed as an integer.
+
 ### 1.10 Not supported
 
 Cancel or refund orders; stock level query; player-ID game top-up as a general mechanism; a documented idempotency guarantee on `POST /orders`.

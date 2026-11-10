@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\GuestOrderCodeController;
 use App\Http\Controllers\Storefront\GuestOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,11 @@ Route::prefix('checkout')->name('checkout.')->group(function (): void {
         Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
         Route::get('/orders/{orderPublicId}/status', [CheckoutController::class, 'status'])->name('orders.status');
     });
+
+    Route::get('/guest/orders/{orderPublicId}/access', [GuestOrderCodeController::class, 'access'])
+        ->middleware(['signed', 'throttle:otp'])->name('guest.orders.access');
+    Route::post('/guest/orders/{order}/units/{unit}/reveal', [GuestOrderCodeController::class, 'reveal'])
+        ->middleware('throttle:code-reveal')->name('guest.orders.units.reveal');
 
     Route::middleware('throttle:otp')->group(function (): void {
         Route::post('/guest/otp/send', [GuestOrderController::class, 'send'])->name('guest.otp.send');

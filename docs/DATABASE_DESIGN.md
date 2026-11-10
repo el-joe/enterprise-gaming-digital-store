@@ -487,7 +487,7 @@ Supplier catalog as synced, before mapping.
 | min_denomination | money | Y | |
 | max_denomination | money | Y | |
 | sender_currency | str(3) | Y | |
-| cost_map | json | Y | recipient to sender amounts |
+| cost_map | json | Y | recipient to sender amounts; for `range` products `{"rate": recipient-to-sender rate}` (M8) |
 | discount_pct | pct | Y | |
 | fee_fixed | money | Y | |
 | fee_pct | pct | Y | |
@@ -502,7 +502,7 @@ Unique: `uq_spd` (supplier_id, external_id): sync upsert. Indexes: `idx_spd_name
 
 ### supplier_product_prices [append]
 
-History of supplier cost for cost analysis.
+History of supplier cost for cost analysis. Since M8 this holds the **effective** cost (sender amount plus fees) written by catalog and pricing sync, and it is the only synced cost the pricing engine and supplier selection read. A row is appended when the cost changes, or when the latest is older than half of `suppliers.max_price_age_minutes`.
 
 | Column | Type | Null | Notes |
 |---|---|---|---|

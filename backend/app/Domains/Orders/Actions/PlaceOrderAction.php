@@ -13,6 +13,7 @@ use App\Domains\Orders\DTOs\PlaceOrderInput;
 use App\Domains\Orders\DTOs\PlaceOrderResult;
 use App\Domains\Orders\Enums\CartStatus;
 use App\Domains\Orders\Exceptions\CartEmpty;
+use App\Domains\Orders\Exceptions\PaymentCurrencyBelowMargin;
 use App\Domains\Orders\Exceptions\PriceChanged;
 use App\Domains\Orders\Models\Cart;
 use App\Domains\Orders\Models\Order;
@@ -138,6 +139,8 @@ class PlaceOrderAction
             productIds: array_values(array_unique(array_map(static fn ($line): int => $line->item->productVariant->product_id, $quote->lines))),
         ));
 
+        $this->assertMarginInPaymentCurrency($cart, $input, $quote, $email, $resolved->currency);
+
         [$paymentRate, $paymentTotal] = $this->paymentAmount($quote, $resolved->currency);
         $snapshotRate = $paymentRate->quote === $quote->baseCurrency ? $quote->displayRate : $paymentRate;
 
@@ -219,6 +222,26 @@ class PlaceOrderAction
 
         if ($input->confirmedCurrency !== $quote->displayCurrency || bccomp($input->expectedTotal, $presented['amount'], Money::SCALE) !== 0) {
             throw new PriceChanged($presented['amount'], $presented['currency']);
+        }
+    }
+
+    /**
+     * The quote the customer confirmed was priced for the display currency. When the gateway
+     * charges another currency, its conversion cost belongs in the margin floor too: the cart is
+     * priced again with the payment currency, and placement is refused if any unit would then be
+     * below its floor (or priced differently). The customer can pay in the displayed currency or
+     * choose another method; the confirmed price is never changed silently.
+     */
+    private function assertMarginInPaymentCurrency(Cart $cart, PlaceOrderInput $input, CartQuote $quote, string $email, string $paymentCurrency): void
+    {
+        if ($paymentCurrency === $quote->displayCurrency) {
+            return;
+        }
+
+        $withPayment = $this->pricing->price($cart, $input->displayCurrency, $input->country, forCheckout: true, email: $email, paymentCurrency: $paymentCurrency);
+
+        if (! $withPayment->totalDisplay->equals($quote->totalDisplay) || count($withPayment->purchasableItems()) !== count($quote->purchasableItems())) {
+            throw new PaymentCurrencyBelowMargin;
         }
     }
 

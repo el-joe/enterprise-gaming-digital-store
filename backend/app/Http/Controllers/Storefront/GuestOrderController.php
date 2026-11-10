@@ -28,6 +28,7 @@ class GuestOrderController extends Controller
         $order = $this->access->verify($request->validated('order_public_id'), $request->validated('code'));
 
         $request->session()->push(OrderStatusReader::SESSION_KEY, $order->public_id);
+        $request->session()->push(GuestOrderCodeController::OTP_SESSION_KEY, $order->public_id);
 
         return $this->success(['order_public_id' => $order->public_id, 'email_verified' => true], 'Email verified.');
     }

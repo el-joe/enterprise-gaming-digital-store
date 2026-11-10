@@ -76,15 +76,17 @@ class PricingEngine
         $cost = $this->costs->resolve($variant, $data);
         $explicit = $this->explicitPrices->resolve($variant, $country, $currency);
 
+        $conversion = $this->involvesConversion($currency, $cost->costCurrency, $context->paymentCurrency);
+
         if ($explicit !== null) {
-            return $this->priceExplicit($explicit, $variant, $country, $currency, $context, $data, $cost->baseCost, $cost->costCurrency);
+            return $this->priceExplicit($explicit, $variant, $country, $currency, $context, $data, $cost->baseCost, $conversion);
         }
 
         if ($cost->baseCost === null) {
             return PriceQuote::blocked((string) $cost->unavailableReason);
         }
 
-        return $this->priceByMarkup($variant, $country, $currency, $context, $data, $cost->baseCost, $cost->costCurrency);
+        return $this->priceByMarkup($variant, $country, $currency, $context, $data, $cost->baseCost, $conversion);
     }
 
     /**
@@ -109,6 +111,24 @@ class PricingEngine
         ];
     }
 
+    /**
+     * The margin floor at a given base cost, for a supplier other than the primary mapping
+     * (selection and fallback, architecture 7.3 and 7.4). Null floor: no price can reach the
+     * margin. `allowsBelowMargin` reflects the variant's `allow` policy.
+     *
+     * @return array{floor: ?Money, allows_below_margin: bool}
+     */
+    public function floorAtCost(ProductVariant $variant, Money $baseCost, ?string $costCurrency, ?string $country, string $currency, ?string $paymentCurrency = null): array
+    {
+        $data = $this->loader->load(new EloquentCollection([$variant]));
+        $threshold = $this->rules->marginThreshold($variant, $data, $country, $currency, $baseCost);
+
+        return [
+            'floor' => $this->guard->floor($baseCost, $threshold, $data->feeRules, $country, $currency, $this->involvesConversion($currency, $costCurrency, $paymentCurrency)),
+            'allows_below_margin' => $threshold->policy === PricingRuleBelowMarginPolicy::Allow,
+        ];
+    }
+
     private function priceByMarkup(
         ProductVariant $variant,
         ?string $country,
@@ -116,7 +136,7 @@ class PricingEngine
         PricingContext $context,
         PricingDataset $data,
         Money $cost,
-        ?string $costCurrency,
+        bool $conversion,
     ): PriceQuote {
         $rule = $this->rules->markupRule($variant, $data, $country, $currency, $cost);
 
@@ -134,7 +154,7 @@ class PricingEngine
         $promotionDiscount = $markupPrice->minus($price);
 
         $threshold = $this->rules->marginThreshold($variant, $data, $country, $currency, $cost);
-        $floor = $this->guard->floor($cost, $threshold, $data->feeRules, $country, $currency, $this->involvesConversion($currency, $costCurrency));
+        $floor = $this->guard->floor($cost, $threshold, $data->feeRules, $country, $currency, $conversion);
 
         if ($floor === null) {
             return PriceQuote::blocked('margin_unattainable', $cost);
@@ -188,7 +208,7 @@ class PricingEngine
         PricingContext $context,
         PricingDataset $data,
         ?Money $cost,
-        ?string $costCurrency,
+        bool $conversion,
     ): PriceQuote {
         $listed = Money::of($explicit->price, $explicit->currency);
         $listedRate = $this->rates->resolve($explicit->currency);
@@ -198,7 +218,7 @@ class PricingEngine
 
         if ($cost !== null) {
             $threshold = $this->rules->marginThreshold($variant, $data, $country, $currency, $cost);
-            $floor = $this->guard->floor($cost, $threshold, $data->feeRules, $country, $currency, $this->involvesConversion($currency, $costCurrency));
+            $floor = $this->guard->floor($cost, $threshold, $data->feeRules, $country, $currency, $conversion);
         }
 
         [$price, $promotionIds] = $this->discounts->applyPromotions($base, $variant, $data);
@@ -268,10 +288,17 @@ class PricingEngine
         return [$discounted, $price->minus($discounted)];
     }
 
-    private function involvesConversion(string $currency, ?string $costCurrency): bool
+    /**
+     * Conversion cost applies when the customer sees or pays a non-base currency, or the supplier
+     * bills in one. The payment currency counts even when the display currency is the base
+     * (for example an order shown in USD but charged in EGP).
+     */
+    private function involvesConversion(string $currency, ?string $costCurrency, ?string $paymentCurrency = null): bool
     {
         $base = $this->rates->baseCurrency();
 
-        return $currency !== $base || ($costCurrency !== null && $costCurrency !== $base);
+        return $currency !== $base
+            || ($costCurrency !== null && $costCurrency !== $base)
+            || ($paymentCurrency !== null && strtoupper($paymentCurrency) !== $base);
     }
 }
