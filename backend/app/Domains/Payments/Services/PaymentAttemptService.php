@@ -4,6 +4,7 @@ namespace App\Domains\Payments\Services;
 
 use App\Domains\Orders\Enums\OrderStatus;
 use App\Domains\Orders\Models\Order;
+use App\Domains\Payments\Contracts\InternalLedgerGateway;
 use App\Domains\Payments\DTOs\CreatePaymentRequest;
 use App\Domains\Payments\DTOs\PaymentSession;
 use App\Domains\Payments\Enums\PaymentStatus;
@@ -30,6 +31,9 @@ use InvalidArgumentException;
  * fails before sending, or is refused, marks the attempt failed; one whose outcome is unknown
  * marks it expired: no customer was given its client secret, so it cannot be paid, and a new
  * attempt is needed (for Paymob, which has no idempotency, this is the documented recovery).
+ *
+ * An internal-ledger gateway (the wallet, M11) has no provider: the committed attempt is settled
+ * by the gateway itself, which debits the ledger and applies the result in one transaction.
  */
 class PaymentAttemptService
 {
@@ -48,6 +52,10 @@ class PaymentAttemptService
         $order = Order::query()->findOrFail($payment->order_id);
         $account = PaymentGateway::query()->findOrFail($payment->payment_gateway_id);
         $adapter = $this->registry->for($account);
+
+        if ($adapter instanceof InternalLedgerGateway) {
+            return $adapter->settle($payment);
+        }
 
         try {
             $gatewayAmount = $adapter->toGatewayAmount(Money::of($payment->amount, $payment->currency));

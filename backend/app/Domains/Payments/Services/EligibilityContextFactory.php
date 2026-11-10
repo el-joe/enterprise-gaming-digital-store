@@ -19,6 +19,7 @@ class EligibilityContextFactory
             isGuest: $query->isGuest,
             riskLevel: $this->riskLevel($query->userId),
             productIds: $query->productIds,
+            userId: $query->isGuest ? null : $query->userId,
         );
     }
 

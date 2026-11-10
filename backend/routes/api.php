@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CurrencyController;
+use App\Http\Controllers\Storefront\ProductReviewController;
 use App\Http\Controllers\Storefront\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,7 @@ Route::prefix('storefront')->name('storefront.')->group(function (): void {
     Route::middleware('throttle:storefront')->group(function (): void {
         Route::get('/catalog/products', [CatalogController::class, 'products'])->name('catalog.products');
         Route::get('/catalog/products/{product:slug}/variants', [CatalogController::class, 'variants'])->name('catalog.variants');
+        Route::get('/catalog/products/{product:slug}/reviews', [ProductReviewController::class, 'index'])->name('catalog.reviews');
         Route::get('/currencies', [CatalogController::class, 'currencies'])->name('currencies');
         Route::post('/currency', [CurrencyController::class, 'store'])->name('currency.store');
     });

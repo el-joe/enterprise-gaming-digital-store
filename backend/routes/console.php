@@ -25,3 +25,6 @@ Schedule::command('suppliers:sync-pricing')->everySixHours()->withoutOverlapping
 // Payments (PROJECT_ARCHITECTURE.md 9.5)
 Schedule::command('payments:reconcile-open')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('payments:reconcile-daily')->dailyAt('02:45')->withoutOverlapping()->onOneServer();
+
+// Wallet (M11)
+Schedule::command('wallet:verify-ledger')->dailyAt('03:30')->withoutOverlapping()->onOneServer();

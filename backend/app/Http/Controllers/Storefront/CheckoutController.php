@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Domains\Affiliates\Services\AffiliateTracker;
 use App\Domains\Orders\Actions\PlaceOrderAction;
 use App\Domains\Orders\DTOs\PlaceOrderInput;
 use App\Domains\Orders\Services\CheckoutService;
@@ -39,9 +40,11 @@ class CheckoutController extends Controller
      * Step 3, then step 4: once the order has committed, the first payment attempt is created
      * at the provider (outside the placement transaction) and returned as `next`. A replay
      * returns the stored placement response, whose `next` is null, as is `next` when the first
-     * attempt could not be started; the client then uses retry-payment.
+     * attempt could not be started; the client then uses retry-payment. A new order is linked to
+     * the browser's last affiliate click before payment starts (M11). A wallet attempt is settled
+     * at once, so its `next` is `{ type: "wallet" }` and the order is already paid.
      */
-    public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action, GeoIpResolver $geoIp, CheckoutPaymentService $payments): JsonResponse
+    public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action, GeoIpResolver $geoIp, CheckoutPaymentService $payments, AffiliateTracker $affiliates): JsonResponse
     {
         $result = $action->handle(new PlaceOrderInput(
             owner: $this->cartOwner($request),
@@ -71,6 +74,7 @@ class CheckoutController extends Controller
         }
 
         if (is_string($placed) && ! $result->replayed && $result->createdOrderPublicId !== null) {
+            $affiliates->attribute($placed, $request->cookie((string) config('affiliates.cookie')));
             $session = $payments->startAfterPlacement($placed, $request->validated('method'))['session'];
 
             if ($session !== null) {

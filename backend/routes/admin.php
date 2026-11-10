@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\Affiliates\AffiliateController;
 use App\Http\Controllers\Admin\Catalog\AttributeDefinitionController;
 use App\Http\Controllers\Admin\Catalog\CategoryController;
 use App\Http\Controllers\Admin\Catalog\DeliveryFieldDefinitionController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Admin\Cms\MenuItemController;
 use App\Http\Controllers\Admin\Cms\PageController;
 use App\Http\Controllers\Admin\Currency\CurrencyController;
 use App\Http\Controllers\Admin\Currency\ExchangeRateController;
+use App\Http\Controllers\Admin\Customers\CustomerWalletController;
 use App\Http\Controllers\Admin\Fulfillment\DigitalCodeController;
 use App\Http\Controllers\Admin\Fulfillment\ManualTaskController;
 use App\Http\Controllers\Admin\Fulfillment\OrderFulfilmentController;
@@ -27,10 +29,15 @@ use App\Http\Controllers\Admin\Payments\RefundController;
 use App\Http\Controllers\Admin\Pricing\PriceSimulationController;
 use App\Http\Controllers\Admin\Pricing\PricingRuleController;
 use App\Http\Controllers\Admin\Pricing\VariantPriceController;
+use App\Http\Controllers\Admin\Promotions\CouponController;
+use App\Http\Controllers\Admin\Promotions\PromotionController;
+use App\Http\Controllers\Admin\Reviews\ReviewController;
 use App\Http\Controllers\Admin\Seo\RedirectController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\Suppliers\SupplierController;
 use App\Http\Controllers\Admin\Suppliers\SupplierMappingController;
+use App\Http\Controllers\Admin\Support\RefundRequestController;
+use App\Http\Controllers\Admin\Support\SupportTicketController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/me', [SessionController::class, 'show'])->name('me');
@@ -153,3 +160,41 @@ Route::post('digital-codes/{digitalCode}/reveal', [DigitalCodeController::class,
 
 // Payments (M10)
 Route::post('orders/{order}/refunds', [RefundController::class, 'store'])->middleware(['permission:refunds.create', 'throttle:30,1'])->name('orders.refunds.store');
+
+// Marketing (M11)
+$crud('coupons', CouponController::class, 'marketing.coupons', 'marketing.coupons');
+$crud('promotions', PromotionController::class, 'marketing.promotions', 'marketing.promotions');
+Route::get('affiliates/{affiliate}/commissions', [AffiliateController::class, 'commissions'])->middleware('permission:marketing.affiliates')->name('affiliates.commissions');
+Route::post('affiliate-commissions/{commission}/approve', [AffiliateController::class, 'approveCommission'])->middleware('permission:marketing.affiliates')->name('affiliate-commissions.approve');
+$crud('affiliates', AffiliateController::class, 'marketing.affiliates', 'marketing.affiliates');
+
+// Reviews (M11): moderation is a catalog content task
+Route::middleware('permission:catalog.manage')->group(static function (): void {
+    Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    Route::get('reviews/{review}', [ReviewController::class, 'show'])->name('reviews.show');
+    Route::post('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
+    Route::post('reviews/{review}/reject', [ReviewController::class, 'reject'])->name('reviews.reject');
+    Route::patch('reviews/{review}/feature', [ReviewController::class, 'feature'])->name('reviews.feature');
+    Route::delete('reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+});
+
+// Support (M11)
+Route::get('tickets', [SupportTicketController::class, 'index'])->middleware('permission:support.view')->name('tickets.index');
+Route::get('tickets/{ticket}', [SupportTicketController::class, 'show'])->middleware('permission:support.view')->name('tickets.show');
+Route::post('tickets/{ticket}/messages', [SupportTicketController::class, 'reply'])->middleware('permission:support.reply')->name('tickets.messages.store');
+Route::post('tickets/{ticket}/assign', [SupportTicketController::class, 'assign'])->middleware('permission:support.manage')->name('tickets.assign');
+Route::patch('tickets/{ticket}', [SupportTicketController::class, 'update'])->middleware('permission:support.manage')->name('tickets.update');
+
+Route::middleware('permission:support.refund_requests')->group(static function (): void {
+    Route::get('refund-requests', [RefundRequestController::class, 'index'])->name('refund-requests.index');
+    Route::post('refund-requests/{refundRequest}/approve', [RefundRequestController::class, 'approve'])->middleware('permission:refunds.create')->name('refund-requests.approve');
+    Route::post('refund-requests/{refundRequest}/reject', [RefundRequestController::class, 'reject'])->name('refund-requests.reject');
+});
+
+// Customer wallets (M11)
+Route::get('customers/{customer:public_id}/wallet', [CustomerWalletController::class, 'show'])->middleware('permission:customers.view')->name('customers.wallet.show');
+Route::get('customers/{customer:public_id}/wallet/transactions', [CustomerWalletController::class, 'transactions'])->middleware('permission:customers.view')->name('customers.wallet.transactions');
+Route::middleware('permission:customers.wallet_adjust')->group(static function (): void {
+    Route::post('customers/{customer:public_id}/wallet/adjustments', [CustomerWalletController::class, 'adjust'])->middleware('throttle:30,1')->name('customers.wallet.adjust');
+    Route::post('customers/{customer:public_id}/wallet/status', [CustomerWalletController::class, 'status'])->name('customers.wallet.status');
+});

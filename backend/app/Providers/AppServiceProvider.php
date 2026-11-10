@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domains\Affiliates\Listeners\TrackAffiliateCommission;
 use App\Domains\Analytics\Listeners\RecordPurchaseEvent;
 use App\Domains\Audit\Enums\SecurityEventSeverity;
 use App\Domains\Audit\Services\SecurityEventRecorder;
@@ -20,9 +21,11 @@ use App\Domains\Payments\Services\HeaderGeoIpResolver;
 use App\Domains\Payments\Services\NullGeoIpResolver;
 use App\Domains\Payments\Services\PaymentGatewayRegistry;
 use App\Domains\Promotions\Contracts\CheckoutCoupons;
-use App\Domains\Promotions\Services\UnavailableCheckoutCoupons;
+use App\Domains\Promotions\Listeners\RedeemCouponWhenPaid;
+use App\Domains\Promotions\Services\DatabaseCheckoutCoupons;
 use App\Domains\Shared\Models\MorphMap;
 use App\Domains\Suppliers\Services\SupplierAdapterRegistry;
+use App\Domains\Support\Listeners\CompleteRefundRequests;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -41,9 +44,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(ExchangeRateProvider::class, OpenExchangeRatesProvider::class);
 
-        // M10: payment currency through eligibility (default deny). Coupons stay fail-closed until M11.
+        // M10: payment currency through eligibility (default deny). M11: real coupon validity and
+        // limits; UnavailableCheckoutCoupons remains the fail-closed implementation of the contract.
         $this->app->bind(PaymentCurrencyResolver::class, EligiblePaymentCurrencyResolver::class);
-        $this->app->bind(CheckoutCoupons::class, UnavailableCheckoutCoupons::class);
+        $this->app->bind(CheckoutCoupons::class, DatabaseCheckoutCoupons::class);
         $this->app->singleton(PaymentGatewayRegistry::class);
         $this->app->bind(GeoIpResolver::class, static fn (): GeoIpResolver => config('payments.geoip.driver') === 'header'
             ? new HeaderGeoIpResolver((string) config('payments.geoip.header'))
@@ -67,6 +71,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(OrderStatusChanged::class, RefundUndeliveredUnits::class);
         Event::listen(OrderStatusChanged::class, RecognizeOrderFinancials::class);
         Event::listen(OrderStatusChanged::class, RecordPurchaseEvent::class);
+        Event::listen(OrderStatusChanged::class, RedeemCouponWhenPaid::class);
+        Event::listen(OrderStatusChanged::class, TrackAffiliateCommission::class);
+        Event::listen(OrderStatusChanged::class, CompleteRefundRequests::class);
     }
 
     private function configureRateLimiting(): void
@@ -107,6 +114,7 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perHour((int) config('fulfillment.reveal_per_hour'))->by('code-reveal|'.$viewer);
         });
         RateLimiter::for('webhooks', static fn (Request $request): Limit => Limit::perMinute(600)->by('webhooks|'.$request->ip()));
+        RateLimiter::for('account', static fn (Request $request): Limit => Limit::perMinute(60)->by('account|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }

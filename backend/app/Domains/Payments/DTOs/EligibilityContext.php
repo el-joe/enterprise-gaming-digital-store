@@ -21,5 +21,6 @@ final readonly class EligibilityContext
         public bool $isGuest,
         public CustomerRiskLevel $riskLevel,
         public array $productIds,
+        public ?int $userId = null,
     ) {}
 }

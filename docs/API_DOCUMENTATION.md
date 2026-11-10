@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -8,10 +8,10 @@
 
 | Group | Prefix | Auth | Status |
 |---|---|---|---|
-| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); newsletter planned |
-| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); rest planned |
+| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); reviews and affiliate clicks built (2b); newsletter planned |
+| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); wallet, reviews, tickets, refund requests built (4b); rest planned |
 | Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status, guest OTP (3a), guest code access (4a) and payment routes (3b) built |
-| Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a and 5b built; rest planned |
+| Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a to 5d built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum token (`n8n`) + HMAC | planned |
@@ -60,12 +60,13 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 | 403 | `two_factor_required` | absent | Redirect to two-factor enrolment or challenge |
 | 404 | `not_found` | absent | SweetAlert2 error |
 | 403 | `margin_override_forbidden` | absent | SweetAlert2 error |
-| 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled`, `duplicate_code` | absent | SweetAlert2 and reload row |
+| 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled`, `duplicate_code`, `review_exists`, `ticket_closed`, `refund_request_open`, `wallet_frozen`, `wallet_idempotency_mismatch` | absent | SweetAlert2 and reload row |
 | 423 | `recent_auth_required` | absent | Ask for the password (`POST /api/v1/account/confirm-password`), then retry |
 | 422 | `cart_empty`, `item_unavailable` (`errors.items.{cart_item_id}` or `errors.variant_id`), `order_total_invalid`, `otp_invalid` | optional | Message near the form |
 | 419 | `csrf_expired` | absent | Prompt to refresh |
 | 422 | `validation_failed` | object | Field-level display |
-| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired`, `payment_currency_below_margin`, `supplier_not_configured` | optional | Message near the form |
+| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired`, `payment_currency_below_margin`, `supplier_not_configured`, `wallet_insufficient_balance`, `wallet_unavailable`, `wallet_amount_invalid`, `review_not_eligible`, `refund_destination_unavailable` | optional | Message near the form |
+| 403 | `email_unverified` (reviews) | absent | Ask the customer to verify their email |
 | 403 | `reveal_denied` | absent | Generic message; the attempt is audited |
 | 429 | `rate_limited` | absent | Retry after `Retry-After` |
 | 500 | `server_error` | absent | Generic message, `request_id` shown. No stack traces or provider bodies. |
@@ -92,10 +93,11 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `checkout` | 20/min per session and 60/min per IP |
 | `code-reveal` | 10/hour per user or guest order |
 | `admin` | 300/min per user |
+| `account` | 60/min per user (M11 account routes) |
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
+Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `account` (M11), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -178,7 +180,7 @@ Registered in the `web` middleware group under `/api/v1` (session and CSRF on wr
 | POST | `/storefront/cart/items` | `variant_id` (variant `public_id`), `quantity` 1 to 10, `delivery_values?` `{ code: value }` | `storefront` | 201 `{ cart }`. Delivery values are validated against the product's fields (`errors.delivery_values.{code}`). Same variant and same values merge into one line. Refused: inactive, out of stock, custom amount (`custom_amount` is prohibited until a cost model exists), more than `max_quantity_per_order` per product, more than 20 lines. |
 | PATCH | `/storefront/cart/items/{id}` | `quantity` | `storefront` | `{ cart }`; 404 for an item not in the caller's cart |
 | DELETE | `/storefront/cart/items/{id}` | | `storefront` | `{ cart }`; 404 likewise |
-| POST | `/storefront/cart/coupon` | `code` | `checkout` | `{ cart }` or 422 `coupon_invalid`. **Until M11 every code is refused** (ADR-026). |
+| POST | `/storefront/cart/coupon` | `code` | `checkout` | `{ cart }` or 422 `coupon_invalid` with a reason in `message` (not active, expired, below the minimum, usage limit reached, already used by this customer, first order only, not applicable to the cart). Codes are case-insensitive. Validity is checked again, under the coupon row lock, at place-order (M11). |
 | DELETE | `/storefront/cart/coupon` | | `storefront` | `{ cart }` |
 | POST | `/checkout/validate` | `country` (active ISO code), `email?` | `checkout` | `{ cart }` repriced with checkout rules, or 422: `rate_stale` / `rate_missing` for the display currency, `item_unavailable`, `validation_failed` with `errors.items.{id}.delivery_values.{code}`, `coupon_invalid`, `cart_empty` |
 | POST | `/checkout/place-order` | `email` (guests only; customers use their account email), `country`, `gateway`, `method?`, `currency` and `expected_total` (exactly what the customer was shown), `consents.terms` (must be accepted), `consents.marketing?`, `ga_client_id?`; header `Idempotency-Key` (8 to 128 of `A-Za-z0-9_-:.`) | `checkout` | 201 `{ order: { public_id, order_number, status, display_total, payment_total, expires_at }, next }` (`next`: section 3b, or null), `meta.duplicate: false`. 200 `{ order: { public_id, status } }`, `meta.duplicate: true` when the same buyer already has an open order with the same contents. A replay carries `Idempotency-Replayed: true`. Errors as for validate, plus `price_changed`, `gateway_not_eligible`, `order_total_invalid`, the idempotency 409s. `gateway_not_eligible` whenever the chosen gateway fails eligibility (M10, default deny). |
@@ -201,7 +203,14 @@ Same group, middleware and `checkout` limiter as 3a. The order routes are visibl
 | POST | `/checkout/orders/{public_id}/verify-payment` | | `{ public_id, status, payment_status, is_final }` after a server-side read of the latest attempt. For the return page. |
 | POST | `/checkout/orders/{public_id}/paypal/capture` | | Same shape. Server capture of an approved PayPal order (`PayPal-Request-Id: pay_capture:{payment}`); paid only on capture `COMPLETED`. 422 `capability_not_supported` for other gateways. |
 
-`next` shapes: Stripe `{ payment_public_id, gateway, type: "stripe", client_secret }`; PayPal `{ ..., type: "paypal", provider_order_id, approve_url }`; Paymob `{ ..., type: "redirect", redirect_url }` (Unified Checkout with the public key and the intention's client secret). Publishable values only.
+`next` shapes: Wallet (M11) `{ payment_public_id, gateway: "wallet", type: "wallet" }`, returned when the order is already paid from the wallet balance (no redirect, no provider); Stripe `{ payment_public_id, gateway, type: "stripe", client_secret }`; PayPal `{ ..., type: "paypal", provider_order_id, approve_url }`; Paymob `{ ..., type: "redirect", redirect_url }` (Unified Checkout with the public key and the intention's client secret). Publishable values only.
+
+### 2b. Built storefront routes (M11)
+
+| Method | Path | Group | Body or query | Result |
+|---|---|---|---|---|
+| GET | `/api/v1/storefront/catalog/products/{slug}/reviews` | `api`, `storefront` limiter | `page`, `per_page` (max 50) | Approved reviews only, newest first: `[{ id, rating, title, body, reviewer, verified_purchase, created_at }]`; `reviewer` is the first name and last initial, never an email. `meta.rating_avg`, `meta.rating_count` (approved only). 404 unless the product is active. |
+| POST | `/api/v1/storefront/affiliates/click` | `web` (CSRF), `storefront` limiter | `code`, `landing_url?` (site path or http(s) URL) | 202 whether or not the code exists. Sets the encrypted, HTTP-only `aff_ref` cookie (random token, `affiliates.attribution_days`, default 30). A later place-order from that browser is attributed to the last click, never to the buyer's own affiliate account. |
 
 ## 4. Customer JSON
 
@@ -233,6 +242,26 @@ Reveal response: `{ code, pin, redemption_url, instructions }`, `Cache-Control: 
 | POST | `/api/v1/checkout/guest/orders/{order_public_id}/units/{unit_public_id}/reveal` | | `code-reveal` | As above for a guest: the session must hold both the signed link and a verified email one-time code (`POST /checkout/guest/otp/verify`) for this order |
 
 Every attempt, granted or denied, is written to `audit_logs` (`digital_codes.revealed` / `digital_codes.reveal_denied`) and, where a code exists, to `digital_code_accesses`. Delivery emails link here and never contain a code.
+
+### 4b. Built customer routes (M11)
+
+Base `/api/v1/account` (session, active account), `account` limiter. Lists take `page`, `per_page` (max 50). Other customers' records are 404.
+
+| Method | Path | Body | Result |
+|---|---|---|---|
+| GET | `/wallet` | | `{ wallet: { currency, balance: money, status, top_up_available: false } }`. Store credit from refunds and staff credits only (BD3); there is no top-up route. |
+| GET | `/wallet/transactions` | | Statement, newest first: `[{ id, type, amount (signed), balance_after, note, created_at }]` |
+| GET | `/reviews` | | The customer's reviews with `status` |
+| GET | `/reviews/eligible` | | `{ items: [{ order_item_id, order: { public_id, order_number }, product: { name, slug } }] }`: items of paid orders with a delivered unit and no review yet |
+| POST | `/reviews` | `order_item_id`, `rating` 1 to 5, `title?`, `body?` | 201, status `pending` until moderated. 403 `email_unverified`; 422 `review_not_eligible` (not the customer's, unpaid, nothing delivered); 409 `review_exists`. Tags are stripped. |
+| GET | `/tickets` | | The customer's tickets (no messages) |
+| POST | `/tickets` | `category` (`order`, `payment`, `refund`, `account`, `other`), `subject`, `body`, `order_public_id?` (own order) | 201 `{ ticket }` |
+| GET | `/tickets/{public_id}` | | `{ ticket: { ..., messages: [{ id, from, body, created_at }] } }`. Internal staff notes are never included (excluded from the query and again by the resource). |
+| POST | `/tickets/{public_id}/messages` | `body` | 201; the ticket becomes `pending_staff`. 409 `ticket_closed` |
+| GET | `/refund-requests` | | `[{ id, order, reason, status, refund }]` |
+| POST | `/refund-requests` | `order_public_id` (own, paid), `reason` (10 to 2000), `support_ticket_public_id?` | 201 `requested`. 409 `refund_request_open` (one open request per order), `refund_not_allowed` (unpaid) |
+
+Not built in M11: guest tickets (the schema allows `guest_email`), ticket attachments, a customer affiliate dashboard.
 
 ## 5. Admin JSON
 
@@ -338,9 +367,34 @@ Rules worth knowing:
 |---|---|---|
 | `orders/{public_id}/refunds` | `POST { unit_ids: [unit public ids], reason: undelivered/customer_request/fraud/admin, note }`, 30 per minute. Staff refund of chosen units (BD4 admin discretion; failed or delivered units). The order enters `refund_pending` through the state machine (from `completed`, `partially_refunded` or `manual_review`). 201 `{ public_id, status, reason, destination, amount: { amount, currency }, amount_base, failure_reason, note, created_at, completed_at }`; the refund is then sent to the provider (`refund:{public_id}` key). 409 `refund_duplicate` (a unit already refunded), `refund_not_allowed`, `refund_in_progress` (Paymob, one at a time), `refund_exceeds_payment`; 422 `refund_units_invalid`, `refund_not_supported` | `refunds.create` |
 
+`destination` (M11, optional): `original_method` (default) or `wallet`. A wallet refund credits the customer's wallet with the refund's base amount (`credit_refund`, key `refund:{public_id}`) and never calls the provider; only a registered customer's order (422 `refund_destination_unavailable`). A refund of a wallet payment always goes back to the wallet.
+
 Undelivered units are refunded automatically by the system (BD4 default); there is no route for that. Gateway configuration and write-only credential routes are M15; until then gateways are configured in the database (seeded inactive, so nothing is eligible).
 
 Not built: `GET supplier-mappings/suggestions`, `POST supplier-mappings/bulk` (M14), and `POST /webhooks/suppliers/{key}`: Reloadly's webhook signature is `UNVERIFIED`, so polling is the only path.
+
+### 5d. Built marketing, review, support and wallet routes (M11)
+
+| Resource | Routes | Permission |
+|---|---|---|
+| `coupons` | CRUD by id. `code` (stored upper case, unique), `type` `percent`/`fixed`, `value` (decimal string; percent at most 100), `currency?` (fixed only; null means base, otherwise converted at the stored rate when used), `max_discount_base?`, `min_order_base?`, `usage_limit?`, `usage_limit_per_user?` (null = unlimited), `applicable_to?` `{ products?, categories?, platforms? }` (ids, any match), `stackable`, `allow_below_margin`, `first_order_only`, `starts_at?`, `ends_at?`, `is_active`. `used_count` is read-only; `usage_limit` cannot go below it. Delete is a soft delete. Audited | `marketing.coupons` |
+| `promotions` | CRUD by id, with `targets: [{ type: product/variant/category/platform, id }]` replacing the targets. Every change marks all variants for `pricing:recalculate-dirty`. Audited | `marketing.promotions` |
+| `affiliates` | CRUD by id. `user_id` (customer, create only), `code`, `status` (`pending`, `active`, `suspended`), `commission_pct`, `payout_details?` (write-only, encrypted; only `payout_details_configured` is returned), `notes?` | `marketing.affiliates` |
+| `affiliates/{id}/commissions` | `GET`, `filter[status]` | `marketing.affiliates` |
+| `affiliate-commissions/{id}/approve` | `POST`: `pending` to `approved`; 409 otherwise | `marketing.affiliates` |
+| `reviews` | List (`filter[status]`, `filter[product_id]`, `filter[is_featured]`, `filter[rating]`), `GET {id}`, `POST {id}/approve`, `POST {id}/reject { reason }`, `PATCH {id}/feature { is_featured }` (approved only), `DELETE {id}`. Product rating recomputed from approved reviews. Audited | `catalog.manage` (no review permission exists in `SECURITY.md` 4) |
+| `tickets` | List (`filter[status]`, `filter[priority]`, `filter[category]`, `filter[assigned_to]`, `q`), `GET {public_id}` (all messages, `is_internal` marked) | `support.view` |
+| `tickets/{public_id}/messages` | `POST { body, is_internal? }`. A public reply sets `pending_customer` and emails the customer a link (no text); an internal note is visible to staff only | `support.reply` |
+| `tickets/{public_id}/assign` | `POST { assigned_to: user id or null }`: staff with `support.reply` only. Audited | `support.manage` |
+| `tickets/{public_id}` | `PATCH { status?, priority? }`. Audited | `support.manage` |
+| `refund-requests` | List (`filter[status]`) | `support.refund_requests` |
+| `refund-requests/{id}/approve` | `POST { unit_ids, reason, note, destination? }`: creates the refund through 5c (all its rules apply); the request becomes `completed` when the refund succeeds | `support.refund_requests` and `refunds.create` |
+| `refund-requests/{id}/reject` | `POST { note }`. Audited with the note | `support.refund_requests` |
+| `customers/{public_id}/wallet` | `GET`; `GET .../transactions` (with `reference_type`, `reference_id`, `created_by`) | `customers.view` |
+| `customers/{public_id}/wallet/adjustments` | `POST { direction: credit/debit, amount, reason }`, header `Idempotency-Key` (8 to 128 of `A-Za-z0-9_-:.`), 30 per minute. Posted once per key (`credit_admin`/`debit_admin`); a debit beyond the balance is 422 `wallet_insufficient_balance`. Audited | `customers.wallet_adjust` |
+| `customers/{public_id}/wallet/status` | `POST { status: active/frozen, reason }`. A frozen wallet cannot pay; refunds still credit it. Audited | `customers.wallet_adjust` |
+
+Not built: affiliate payouts (`affiliate_payouts`), DataTables endpoints for these resources (M14/M15).
 
 ## 6. Webhooks
 

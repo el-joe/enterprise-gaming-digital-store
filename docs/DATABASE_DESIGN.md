@@ -1235,6 +1235,8 @@ Columns: user_id fk:users NN unique, currency ccy NN (base currency), balance mo
 
 Unique: `uq_wt_idem` (customer_wallet_id, idempotency_key). Index: `idx_wt_wallet` (customer_wallet_id, id): statement.
 
+M11: `chk_cw_balance_nonneg` CHECK (`balance >= 0`) on `customer_wallets`. Keys used: `pay:{payment public id}` (wallet payment), `refund:{refund public id}` (wallet refund credit), `admin:{Idempotency-Key}` (staff adjustment).
+
 ---
 
 ## 9. Promotions and affiliates
@@ -1276,7 +1278,7 @@ Index: `idx_c_active` (is_active, ends_at).
 
 Unique: `uq_cr` (coupon_id, order_id). Indexes: `idx_cr_user` (coupon_id, user_id, status): per-user limit. `idx_cr_perf` (coupon_id, status, created_at): coupon performance.
 
-`used_count` is incremented with a row lock on the coupon at order placement; released on cancel.
+`used_count` is incremented with a row lock on the coupon at order placement; released on cancel, expiry or failure before payment; the redemption becomes `redeemed` on `paid`. M11: `chk_c_usage` CHECK (`usage_limit IS NULL OR used_count <= usage_limit`). `email_hash` is HMAC-SHA256 of the lower-cased email with `APP_KEY`, written for every redemption, so per-user limits match by account or email. `applicable_to` is `{ products?, categories?, platforms? }` (ids).
 
 ### promotions [sd]
 

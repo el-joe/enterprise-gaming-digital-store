@@ -9,8 +9,9 @@ use App\Domains\Promotions\Exceptions\CouponInvalid;
 use App\Domains\Shared\ValueObjects\Money;
 
 /**
- * Fail-closed binding used until M11 delivers coupon validity and usage limits. Every code is
- * refused, so no discount can be granted without limits being enforced.
+ * Fail-closed implementation of the coupon contract (the default binding until M11, which bound
+ * DatabaseCheckoutCoupons). Every code is refused, so no discount can be granted without limits
+ * being enforced; bind it to switch coupons off.
  */
 class UnavailableCheckoutCoupons implements CheckoutCoupons
 {

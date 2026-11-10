@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin\Payments;
 
+use App\Domains\Payments\Enums\RefundDestination;
 use App\Domains\Payments\Enums\RefundReason;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -22,6 +23,7 @@ class CreateRefundRequest extends FormRequest
             'unit_ids.*' => ['required', 'string', 'ulid', 'distinct'],
             'reason' => ['required', Rule::enum(RefundReason::class)->except([RefundReason::Duplicate])],
             'note' => ['required', 'string', 'min:5', 'max:2000'],
+            'destination' => ['sometimes', Rule::enum(RefundDestination::class)],
         ];
     }
 }

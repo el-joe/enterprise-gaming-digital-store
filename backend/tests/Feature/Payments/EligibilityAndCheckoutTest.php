@@ -113,7 +113,7 @@ describe('default deny', function (): void {
         'product excluded' => [fn ($gateway, $variant) => $gateway->excludedProducts()->attach($variant->product_id)],
     ]);
 
-    it('never offers the wallet, which has no adapter until M11', function (): void {
+    it('never offers the wallet to a customer without a wallet balance', function (): void {
         gatewayFor('wallet', keepRules: true);
         addToPaymentCart($this->user, $this->variant);
 

@@ -76,7 +76,7 @@ class OrderStateMachine
 
             Order::query()->whereKey($locked->id)->update($changes);
 
-            if (in_array($to, [OrderStatus::Cancelled, OrderStatus::Failed], true) && in_array($from, [OrderStatus::PendingPayment, OrderStatus::PaymentProcessing], true)) {
+            if (in_array($to, [OrderStatus::Cancelled, OrderStatus::Failed], true) && $locked->paid_at === null) {
                 $this->coupons->release($locked->id);
             }
 

@@ -8,10 +8,10 @@ use App\Domains\Promotions\Exceptions\CouponInvalid;
 use App\Domains\Shared\ValueObjects\Money;
 
 /**
- * The only way cart and checkout code reaches coupons. M11 implements validity, eligibility and
- * usage limits behind it; until then the container binds UnavailableCheckoutCoupons, which
- * refuses every code. Implementations must not make HTTP calls: reserve() and release() run
- * inside the order transaction.
+ * The only way cart and checkout code reaches coupons. Bound to DatabaseCheckoutCoupons (M11:
+ * validity, eligibility and usage limits); UnavailableCheckoutCoupons is the fail-closed
+ * implementation that refuses every code. Implementations must not make HTTP calls: reserve()
+ * and release() run inside the order transaction.
  */
 interface CheckoutCoupons
 {

@@ -3,12 +3,14 @@
 namespace App\Domains\Payments\Services;
 
 use App\Domains\Payments\DTOs\RefundResult;
+use App\Domains\Payments\Enums\RefundDestination;
 use App\Domains\Payments\Enums\RefundStatus;
 use App\Domains\Payments\Exceptions\GatewayNotConfigured;
 use App\Domains\Payments\Exceptions\GatewayRequestFailed;
 use App\Domains\Payments\Models\Payment;
 use App\Domains\Payments\Models\Refund;
 use App\Domains\Shared\ValueObjects\Money;
+use App\Domains\Wallet\Services\WalletRefundService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -19,10 +21,13 @@ use Illuminate\Support\Facades\Log;
  * anything is re-sent: Stripe and PayPal re-send with the same idempotency key inside the
  * retry window, Paymob never re-sends (no idempotency) and a refund it has no record of fails
  * for staff to retry as a new refund.
+ *
+ * A refund with destination `wallet` never reaches the provider: it is a keyed ledger credit,
+ * so re-sending it is always safe.
  */
 class RefundExecutor
 {
-    public function __construct(private PaymentGatewayRegistry $registry, private RefundStateApplier $applier) {}
+    public function __construct(private PaymentGatewayRegistry $registry, private RefundStateApplier $applier, private WalletRefundService $wallet) {}
 
     public function execute(int $refundId): ?Refund
     {
@@ -47,6 +52,12 @@ class RefundExecutor
     public function poll(Refund $refund): Refund
     {
         $payment = Payment::query()->findOrFail($refund->payment_id);
+
+        if ($refund->destination === RefundDestination::Wallet) {
+            $result = $this->wallet->lookup($refund);
+
+            return $result->status === RefundStatus::Requested ? $this->send($refund) : $this->applier->apply($refund->id, $result);
+        }
 
         try {
             $result = $this->registry->forPayment($payment)->fetchRefund($refund, $payment);
@@ -80,6 +91,10 @@ class RefundExecutor
 
     private function send(Refund $refund): Refund
     {
+        if ($refund->destination === RefundDestination::Wallet) {
+            return $this->applier->apply($refund->id, $this->wallet->credit($refund));
+        }
+
         $payment = Payment::query()->findOrFail($refund->payment_id);
 
         try {

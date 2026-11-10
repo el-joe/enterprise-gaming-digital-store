@@ -26,6 +26,7 @@ use Tests\TestCase;
 
 require_once __DIR__.'/Support/FulfilmentFixtures.php';
 require_once __DIR__.'/Support/PaymentFixtures.php';
+require_once __DIR__.'/Support/M11Fixtures.php';
 
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)

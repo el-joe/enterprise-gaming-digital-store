@@ -31,7 +31,9 @@ use Illuminate\Support\Facades\DB;
  * system: units that definitively failed. Anything else, including delivered units, is at the
  * discretion of staff holding `refunds.create`. Each unit is refunded at most once
  * (`uq_ru_unit`), and a refund never exceeds what remains refundable on the payment. Refunds go
- * back to the original method; wallet credit is M11 (BD3).
+ * back to the original method by default. Staff may send one to the customer's wallet instead
+ * (BD3, M11): the amount is then credited as store credit and the provider is not called; only a
+ * registered customer's order can be refunded that way.
  *
  * The refund row is committed as `requested` and sent to the provider afterwards, outside the
  * transaction, by ExecuteRefund.
@@ -75,13 +77,17 @@ class RefundService
      *
      * @param  list<string>  $unitPublicIds
      */
-    public function refundUnits(Order $order, array $unitPublicIds, RefundReason $reason, OrderActor $actor, ?string $note = null): Refund
+    public function refundUnits(Order $order, array $unitPublicIds, RefundReason $reason, OrderActor $actor, ?string $note = null, RefundDestination $destination = RefundDestination::OriginalMethod): Refund
     {
-        return DB::transaction(function () use ($order, $unitPublicIds, $reason, $actor, $note): Refund {
+        return DB::transaction(function () use ($order, $unitPublicIds, $reason, $actor, $note, $destination): Refund {
             $locked = Order::query()->lockForUpdate()->findOrFail($order->id);
 
             if ($locked->primary_payment_id === null) {
                 throw new RefundRefused('This order has no verified payment to refund.', 'refund_not_allowed', 409);
+            }
+
+            if ($destination === RefundDestination::Wallet && $locked->user_id === null) {
+                throw new RefundRefused('Only a registered customer can be refunded to a wallet.', 'refund_destination_unavailable');
             }
 
             if ($locked->status !== OrderStatus::RefundPending) {
@@ -92,7 +98,7 @@ class RefundService
                 $this->machine->transition($locked, OrderStatus::RefundPending, $actor, 'Refund requested by staff.', ['reason' => $reason->value]);
             }
 
-            return $this->create($locked, $unitPublicIds, $reason, $actor, $note);
+            return $this->create($locked, $unitPublicIds, $reason, $actor, $note, $destination);
         }, 3);
     }
 
@@ -124,7 +130,7 @@ class RefundService
     /**
      * @param  list<string>  $unitPublicIds
      */
-    private function create(Order $order, array $unitPublicIds, RefundReason $reason, OrderActor $actor, ?string $note): Refund
+    private function create(Order $order, array $unitPublicIds, RefundReason $reason, OrderActor $actor, ?string $note, RefundDestination $destination = RefundDestination::OriginalMethod): Refund
     {
         $payment = Payment::query()->lockForUpdate()->findOrFail($order->primary_payment_id);
 
@@ -154,7 +160,9 @@ class RefundService
             }
         }
 
-        $this->assertGatewayCanRefund($payment);
+        if ($destination === RefundDestination::OriginalMethod) {
+            $this->assertGatewayCanRefund($payment);
+        }
 
         [$amount, $amountBase] = $this->amounts($order, $payment, $units);
 
@@ -165,7 +173,7 @@ class RefundService
         $refund = (new Refund)->forceFill([
             'order_id' => $order->id,
             'payment_id' => $payment->id,
-            'destination' => RefundDestination::OriginalMethod,
+            'destination' => $destination,
             'status' => RefundStatus::Requested,
             'reason' => $reason,
             'amount' => $amount->amount,

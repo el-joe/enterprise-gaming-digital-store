@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Storefront\AffiliateController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\GuestOrderCodeController;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Route;
  * customers, guest order access) and CSRF protection on writes. Guests are identified by the
  * encrypted, HTTP-only `cart_token` cookie.
  */
+Route::post('storefront/affiliates/click', [AffiliateController::class, 'click'])->middleware('throttle:storefront')->name('storefront.affiliates.click');
+
 Route::prefix('storefront/cart')->name('storefront.cart.')->middleware('throttle:storefront')->group(function (): void {
     Route::get('/', [CartController::class, 'show'])->name('show');
     Route::post('/items', [CartController::class, 'store'])->name('items.store');

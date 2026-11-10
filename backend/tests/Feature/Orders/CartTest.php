@@ -14,6 +14,7 @@ use App\Domains\Orders\Models\Cart;
 use App\Domains\Orders\Models\CartItem;
 use App\Domains\Pricing\DTOs\CouponTerms;
 use App\Domains\Pricing\Models\PricingRule;
+use App\Domains\Promotions\Contracts\CheckoutCoupons;
 use App\Domains\Promotions\Enums\CouponType;
 use App\Domains\Promotions\Models\Coupon;
 use App\Domains\Promotions\Services\UnavailableCheckoutCoupons;
@@ -155,7 +156,8 @@ describe('delivery fields', function (): void {
 });
 
 describe('coupons', function (): void {
-    it('refuses every code until M11 binds real coupon validation', function (): void {
+    it('refuses every code under the fail-closed coupon binding', function (): void {
+        app()->bind(CheckoutCoupons::class, UnavailableCheckoutCoupons::class);
         $user = User::factory()->create();
         Coupon::factory()->create(['code' => 'SAVE10']);
         $this->actingAs($user)->postJson(CART.'/items', ['variant_id' => sellableVariant()->public_id, 'quantity' => 1]);

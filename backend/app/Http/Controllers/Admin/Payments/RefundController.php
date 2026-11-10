@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Payments;
 
 use App\Domains\Orders\DTOs\OrderActor;
 use App\Domains\Orders\Models\Order;
+use App\Domains\Payments\Enums\RefundDestination;
 use App\Domains\Payments\Enums\RefundReason;
 use App\Domains\Payments\Services\RefundService;
 use App\Http\Controllers\Controller;
@@ -24,6 +25,7 @@ class RefundController extends Controller
             RefundReason::from($request->validated('reason')),
             OrderActor::staff($request->user()),
             $request->validated('note'),
+            RefundDestination::from($request->validated('destination', RefundDestination::OriginalMethod->value)),
         );
 
         return $this->success(RefundResource::make($refund->refresh())->resolve(), 'Refund requested.', status: 201);

@@ -3,6 +3,7 @@
 use App\Domains\Payments\Adapters\Paymob\PaymobPaymentGateway;
 use App\Domains\Payments\Adapters\PayPal\PayPalPaymentGateway;
 use App\Domains\Payments\Adapters\Stripe\StripePaymentGateway;
+use App\Domains\Payments\Adapters\Wallet\WalletPaymentGateway;
 
 return [
     /*
@@ -11,14 +12,15 @@ return [
     |--------------------------------------------------------------------------
     |
     | `payment_gateways.adapter_key` to adapter class. Every adapter here is tested
-    | with mocked HTTP only and is awaiting sandbox verification. `wallet` has no
-    | adapter until M11, so it is never eligible.
+    | with mocked HTTP only and is awaiting sandbox verification, except `wallet`
+    | (M11), which is internal: it debits our own ledger and calls no provider.
     |
     */
     'adapters' => [
         'stripe' => StripePaymentGateway::class,
         'paypal' => PayPalPaymentGateway::class,
         'paymob' => PaymobPaymentGateway::class,
+        'wallet' => WalletPaymentGateway::class,
     ],
 
     /*

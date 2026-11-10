@@ -13,11 +13,11 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M4 | Full schema | Complete |
 | M5 | Catalog and CMS services | Complete |
 | M6 | Currency and pricing | Complete |
-| M7 | Orders and checkout core | Complete (coupons fail closed until M11 binds its contract; payment currency bound at M10) |
+| M7 | Orders and checkout core | Complete (coupons bound at M11; payment currency bound at M10) |
 | M8 | Supplier engine and Reloadly | Complete (Reloadly mocked only, awaiting sandbox verification) |
 | M9 | Fulfilment and digital codes | Complete (reveal pages and account order list are M13) |
 | M10 | Payments | Complete (all three adapters mocked only, awaiting sandbox verification; Stripe also awaits BD1) |
-| M11 | Wallet, promotions, affiliates, reviews, support | Not started |
+| M11 | Wallet, promotions, affiliates, reviews, support | Complete (wallet is internal, no provider; affiliate payouts, guest tickets and admin screens not built) |
 | M12 | Storefront | Not started |
 | M13 | Customer account | Not started |
 | M14 | Admin core | Not started |
@@ -771,3 +771,83 @@ Gateway contract, registry and three adapters (Stripe, PayPal, Paymob), payment 
 
 M11: Wallet, promotions, affiliates, reviews, support. It must bind `CheckoutCoupons`, add the wallet gateway adapter (BD3) and reverse affiliate commission on refund (refunds now exist).
 
+
+---
+
+## M11: Wallet, promotions, coupons, affiliates, reviews, support
+
+Date completed: 2026-11-10
+Completed by: Senior Backend Engineer
+
+### Summary of completed work
+
+Real coupons behind the M7 `CheckoutCoupons` contract (now the binding), the wallet ledger and the wallet as an internal payment gateway (BD3: credits and refunds only, no top-up), wallet refunds linked to the M10 refund flow, affiliate clicks, attribution, commission accrual and reversal, verified-purchase reviews with moderation, support tickets for customers and staff with internal notes, refund requests, and admin JSON for coupons, promotions, affiliates, reviews, tickets, refund requests and customer wallets. Backend only; no new packages. The wallet calls no external provider.
+
+### Files created
+
+- `app/Domains/Wallet/`: `DTOs/WalletEntry`, `Exceptions/WalletOperationRefused`, `Repositories/WalletRepository`, `Services/{WalletLedger,WalletPaymentService,WalletRefundService,WalletService}`
+- `app/Domains/Payments/`: `Contracts/InternalLedgerGateway`, `Adapters/Wallet/WalletPaymentGateway`
+- `app/Domains/Promotions/`: `Services/{DatabaseCheckoutCoupons,CouponService,PromotionService}`, `Repositories/CouponRepository`, `Listeners/RedeemCouponWhenPaid`
+- `app/Domains/Affiliates/`: `Services/{AffiliateTracker,AffiliateCommissionService,AffiliateService}`, `Repositories/AffiliateRepository`, `Listeners/TrackAffiliateCommission`
+- `app/Domains/Reviews/`: `Services/ReviewService`, `Repositories/ReviewRepository`
+- `app/Domains/Support/`: `Services/{SupportTicketService,RefundRequestService}`, `Repositories/SupportTicketRepository`, `Notifications/SupportTicketReplied`, `Listeners/CompleteRefundRequests`
+- `app/Console/Commands/Wallet/VerifyWalletLedgerCommand` (`wallet:verify-ledger`, daily 03:30), `config/affiliates.php`
+- HTTP: `Controllers/Account/{WalletController,ReviewController,SupportTicketController,RefundRequestController}`, `Controllers/Storefront/{ProductReviewController,AffiliateController}`, `Controllers/Admin/{Promotions/{Coupon,Promotion}Controller,Affiliates/AffiliateController,Reviews/ReviewController,Support/{SupportTicket,RefundRequest}Controller,Customers/CustomerWalletController}`; 17 Form Requests; 17 API Resources
+- Tests: `tests/Feature/Wallet/{WalletLedgerTest,WalletPaymentTest,WalletConcurrencyTest}`, `tests/Feature/Promotions/{CouponTest,CouponConcurrencyTest,PromotionAdminTest}`, `tests/Feature/Affiliates/AffiliateTest`, `tests/Feature/Reviews/ReviewTest`, `tests/Feature/Support/SupportTicketTest`, `tests/Support/{M11Fixtures.php,Concurrency/m11_worker.php}`
+- Changed: `AppServiceProvider` (coupon binding, three listeners, `account` limiter), `OrderStateMachine` (release rule), `PaymentAttemptService` (internal-ledger branch), `PaymentEligibilityService` and `EligibilityContext`/`EligibilityContextFactory` (user id, wallet rules), `RefundService`, `RefundExecutor`, `CreateRefundRequest` and `RefundController` (refund destination), `CheckoutController` (affiliate attribution), `config/payments.php` (`wallet` adapter), `routes/{account,admin,api,checkout,console}.php`, `tests/Pest.php`
+
+### Migrations
+
+`2026_11_10_210001_add_wallet_and_coupon_limit_checks`: CHECK `chk_cw_balance_nonneg` (`customer_wallets.balance >= 0`) and `chk_c_usage` (`coupons.used_count <= usage_limit`). Rolled back and re-applied on `gaming-store_testing`. **Not applied to the app database `gaming-store`**; run `php artisan migrate`.
+
+### Features implemented
+
+- Coupons (`DatabaseCheckoutCoupons`): active window, minimum order, product/category/platform restriction (eligible lines only, ADR-025 allocation unchanged), first-order-only, global and per-buyer limits (per buyer = account or keyed email hash, so guest checkout cannot bypass a per-user limit), fixed coupons in another currency converted at the stored rate. `reserve` locks the coupon row inside the placement transaction and re-checks everything; `release` (expiry, cancel, failure of a never-paid order, including `manual_review` to `cancelled`) is idempotent; `paid` makes the use `redeemed`, which is never released. `UnavailableCheckoutCoupons` is kept, with its test.
+- Wallet ledger: see architecture 14 and ADR-030. Payment: place-order or retry-payment with `gateway: wallet` debits and marks paid in one transaction through `PaymentStateApplier`; a refusal (insufficient, frozen, unverified) marks the attempt failed and leaves the order `pending_payment` with no debit. Daily payment reconciliation re-reads the ledger.
+- Wallet refunds: a refund of a wallet payment credits the wallet; staff may send any refund to the wallet (`destination: wallet`, registered customers only) without calling the provider. Both are keyed `refund:{public_id}` and safe to re-send.
+- Affiliates: click endpoint and encrypted `aff_ref` cookie (token hashed at rest); last-click attribution after the order commits (never self-referral, 30-day window); `pending` commission at `completed` (percentage of the base total less succeeded refunds); full refund reverses it, partial refund reduces it; a paid-out commission is never changed and raises `affiliates.paid_commission_refunded`; admin CRUD with write-only payout details, commission list and approval.
+- Reviews: verified purchase = item of the customer's own paid order with a delivered unit, verified email, one per item; `pending` until approved; public list shows approved only with first name and initial; product rating from approved reviews, recomputed under the product lock; feature approved only; audited.
+- Support: customer open, list, show, reply; staff queue, view, reply, internal note, assign (to staff with `support.reply`), status and priority (audited); reply email has a link only. Refund requests: customer request (one open per paid order), staff approve through RefundService or reject; completed when the refund succeeds.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Ledger balance equals sum | Met | `WalletLedgerTest` (mixed movements, each `balance_after`, `isConsistent`, `wallet:verify-ledger` detecting a tampered balance); every wallet test asserts balance = sum, including after the races |
+| Concurrent debit test | Met, **separate processes** | `WalletConcurrencyTest`: two debits of 7 against 10 (3 rounds): one posted, one `wallet_insufficient_balance`, balance 3; two wallet orders against a balance for one (3 rounds): one paid, one failed, one debit. DB check also proven |
+| Idempotent credit | Met | Same key twice in process returns the first entry; same credit from two processes at once gives one entry; key reuse with another amount refused |
+| Coupon limits under concurrency | Met, **separate processes** | `CouponConcurrencyTest`: last use (3 rounds), once-per-customer (3 rounds), limit 2 with 3 buyers. Each worker calls `reserve` inside its own transaction, as placement does; a full two-process place-order race with a coupon was not added (the M7 placement races cover the rest of that path) |
+| Verified-purchase reviews | Met | `ReviewTest`: other customer's item, nothing delivered, unpaid, unknown item, unverified email, duplicate; moderation before publication |
+| Affiliate commission reversal on refund | Met | `AffiliateTest`: full refund reverses, partial reduces, paid-out unchanged with alert |
+| Ticket flows; internal notes hidden from customers | Met | `SupportTicketTest`: customer and staff flows; note absent from customer show, list and reply responses; **resource-level proof**: `Account\SupportTicketResource` given a ticket whose loaded relation holds the note still omits it, and the message resource resolves a note to `[]`; reply email carries no text |
+| Inherited 1: `CheckoutCoupons` bound, limits under concurrency, release on expire/fail/cancel | Met | Binding test; release on `orders:expire-unpaid`, failed, cancelled and `manual_review` to `cancelled`; never after paid |
+| Inherited 2: wallet adapter, no path to paid bypassing M10 | Met | Debit and paid commit together; a forced failure in `PaymentStateApplier` after the debit rolls the debit back; settling twice is refused; `/webhooks/wallet` rejected |
+| Inherited 3: affiliate accrual and reversal | Met | As above |
+| No N+1 on new listings | Met | Lazy loading throws in tests; agent queue query count is constant for 2 and 7 tickets |
+
+### Tests and results
+
+- Command: `php artisan test --compact` (MySQL `gaming-store_testing`)
+- Result: **1598 passed, 0 failed, 0 skipped (8929 assertions), 126.6 s**, up from 1463.
+- Separate processes and connections: wallet debit race, concurrent idempotent credit, wallet payment race, three coupon reservation races (`m11_worker.php`; concurrent creation of a wallet on first credit is exercised by the credit race).
+- In-process only: the debit-then-failure rollback (a test double throws inside the transaction), duplicate settle, wallet refunds and re-poll, coupon release and redemption, affiliate accrual and reversal, reviews, tickets, refund requests.
+- Existing tests changed: `CartTest` "refuses every code" now binds `UnavailableCheckoutCoupons` explicitly and is renamed, since the default binding is now real (same as M10 did for the currency resolver). `EligibilityAndCheckoutTest` "never offers the wallet, which has no adapter until M11" renamed to "... to a customer without a wallet balance"; its body is unchanged and still passes.
+
+### Outstanding requirements
+
+- The wallet gateway needs, in the database, `is_active` and an enabled `payment_gateway_currencies` row for the base currency (seeded inactive, like all gateways). It must cover the whole order: no split payment with a card. A wallet attempt that fails leaves the order to expire; the customer cannot switch gateway on the same order (M10 limitation).
+- Coupons: `stackable` is stored but only one coupon per cart exists (schema). A late verified payment on an order whose reservation was released (cancelled, then paid) does not re-reserve the use.
+- Affiliates: commission accrues on `completed` only (not on `partially_fulfilled`); payouts (`affiliate_payouts`) and the customer affiliate dashboard are not built.
+- Reviews have no permission of their own in `SECURITY.md` 4; moderation uses `catalog.manage`. Decide whether to add one (it changes the seeded roles and `RoleAccessTest`).
+- Support: guest tickets and attachments are not built; tickets have no SLA alerts (M17).
+- Admin screens are M14/M15; DataTables endpoints for these resources are not built.
+
+### Design changes made
+
+- `PROJECT_ARCHITECTURE.md`: 6.2 release rule, 9.4 lock order adds `coupons`, 14 what is built, ADR-030 (wallet as an internal-ledger gateway).
+- `DATABASE_DESIGN.md`: wallet keys and check constraint, coupon redemption rules and check constraint.
+- `API_DOCUMENTATION.md`: 2b, 3a coupon note, 3b wallet `next`, 4b, 5c refund destination, 5d, new error codes, `account` limiter.
+
+### Next milestone
+
+M12: Storefront. Risks it inherits: the checkout must handle `next.type: "wallet"` (already paid, no redirect) and a null `next` after a refused wallet attempt; coupon errors arrive as `message` on 422 `coupon_invalid`; the affiliate landing must call `POST /storefront/affiliates/click` (CSRF, cookie); product pages read reviews from `/catalog/products/{slug}/reviews`. M13 needs the 4b routes (wallet, reviews with `/reviews/eligible`, tickets, refund requests). M14/M15 must build screens on 5d.

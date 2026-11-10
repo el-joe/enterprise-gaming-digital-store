@@ -7,6 +7,7 @@ use App\Domains\Currency\Exceptions\ExchangeRateStale;
 use App\Domains\Currency\Services\CurrencyConverter;
 use App\Domains\Currency\Services\ExchangeRateRegistry;
 use App\Domains\Customers\Enums\CustomerRiskLevel;
+use App\Domains\Payments\Contracts\InternalLedgerGateway;
 use App\Domains\Payments\Contracts\PaymentGateway as GatewayAdapter;
 use App\Domains\Payments\DTOs\EligibilityContext;
 use App\Domains\Payments\DTOs\GatewayEligibility;
@@ -33,6 +34,9 @@ use Illuminate\Database\Eloquent\Collection;
  *
  * A gateway with `settings.charge_display_currency_only` (seeded for Paymob) is eligible only
  * when it can charge the display currency itself, never through a conversion.
+ *
+ * An internal-ledger gateway (the wallet) needs no credentials, but is offered only to a signed-in,
+ * verified, active customer whose wallet balance covers the payment amount (M11).
  */
 class PaymentEligibilityService
 {
@@ -67,7 +71,9 @@ class PaymentEligibilityService
             return $refuse('gateway_unavailable');
         }
 
-        if (! $this->hasCredentials($gateway)) {
+        $adapter = $this->registry->for($gateway);
+
+        if (! $adapter instanceof InternalLedgerGateway && ! $this->hasCredentials($gateway)) {
             return $refuse('gateway_unavailable');
         }
 
@@ -79,7 +85,6 @@ class PaymentEligibilityService
             return $refuse('product_excluded');
         }
 
-        $adapter = $this->registry->for($gateway);
         $currency = $this->paymentCurrency($gateway, $adapter, $context->displayCurrency);
 
         if ($currency === null) {
@@ -102,6 +107,10 @@ class PaymentEligibilityService
 
         if (! $this->rulesAllow($gateway->paymentEligibilityRules, $context, $currency)) {
             return $refuse('not_eligible');
+        }
+
+        if ($adapter instanceof InternalLedgerGateway && ! $adapter->canCover($context->userId, $amount)) {
+            return $refuse('insufficient_balance');
         }
 
         return new GatewayEligibility($gateway, $currency);
