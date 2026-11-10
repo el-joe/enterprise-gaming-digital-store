@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17); section 1b mobile authentication with customer bearer tokens (M-A2); section 1c stateless cart, checkout, account and locale for the app under `/api/v1/mobile` (M-A3); section 2c product detail, platforms, categories, countries and home and section 1d app config (M-A4). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17); section 1b mobile authentication with customer bearer tokens (M-A2); section 1c stateless cart, checkout, account and locale for the app under `/api/v1/mobile` (M-A3); section 2c product detail, platforms, categories, countries and home and section 1d app config (M-A4); section 4c account orders, guest order detail, profile, password, devices, notification inbox and preferences, and the sessionless email links of 1a (M-A5). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -10,14 +10,14 @@
 |---|---|---|---|
 | Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); reviews and affiliate clicks built (2b); product detail, platforms, categories, countries, home built (2c); newsletter planned |
 | App config | `/api/v1/app/config` (and `/api/v1/mobile/app/config`) | none, public, cached 60 s | built (M-A4, section 1d) |
-| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); wallet, reviews, tickets, refund requests built (4b); rest planned |
+| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); wallet, reviews, tickets, refund requests built (4b); orders, profile, password, devices, notifications and preferences built (4c, M-A5); digital-codes list and wishlist planned |
 | Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status, guest OTP (3a), guest code access (4a) and payment routes (3b) built |
 | Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a to 5d built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum bearer token of an `n8n` service account + HMAC signature, timestamp and nonce + scopes | built (M17, section 7) |
 | MCP | `/api/v1/mcp` | Sanctum bearer token of an `mcp` service account + scopes | built (M16, section 8) |
-| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); cart, checkout and account built (M-A3, section 1c); public storefront reads (2a, 2b reviews, 2c) and app config (1d) built (M-A4); rest planned (M-A5, M-A6) |
+| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); cart, checkout and account built (M-A3, section 1c); public storefront reads (2a, 2b reviews, 2c) and app config (1d) built (M-A4); account orders, profile, devices, notifications and guest order detail built (M-A5, section 4c); payment returns planned (M-A6) |
 
 Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 
@@ -68,12 +68,12 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 | 403 | `two_factor_required` | absent | Redirect to two-factor enrolment or challenge |
 | 404 | `not_found` | absent | SweetAlert2 error |
 | 403 | `margin_override_forbidden` | absent | SweetAlert2 error |
-| 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled`, `duplicate_code`, `review_exists`, `ticket_closed`, `refund_request_open`, `wallet_frozen`, `wallet_idempotency_mismatch` | absent | SweetAlert2 and reload row |
+| 409 | `current_device` (M-A5: revoke the calling device with logout instead), `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled`, `duplicate_code`, `review_exists`, `ticket_closed`, `refund_request_open`, `wallet_frozen`, `wallet_idempotency_mismatch` | absent | SweetAlert2 and reload row |
 | 423 | `recent_auth_required` | absent | Ask for the password (`POST /api/v1/account/confirm-password`), then retry |
 | 422 | `cart_empty`, `item_unavailable` (`errors.items.{cart_item_id}` or `errors.variant_id`), `order_total_invalid`, `otp_invalid` | optional | Message near the form |
 | 419 | `csrf_expired` | absent | Prompt to refresh |
 | 422 | `validation_failed` | object | Field-level display |
-| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired`, `payment_currency_below_margin`, `supplier_not_configured`, `wallet_insufficient_balance`, `wallet_unavailable`, `wallet_amount_invalid`, `review_not_eligible`, `refund_destination_unavailable` | optional | Message near the form |
+| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired`, `payment_currency_below_margin`, `supplier_not_configured`, `wallet_insufficient_balance`, `wallet_unavailable`, `wallet_amount_invalid`, `review_not_eligible`, `refund_destination_unavailable`, `notification_preference_mandatory` (M-A5) | optional | Message near the form |
 | 403 | `email_unverified` (reviews) | absent | Ask the customer to verify their email |
 | 403 | `reveal_denied` | absent | Generic message; the attempt is audited |
 | 429 | `rate_limited` | absent | Retry after `Retry-After` |
@@ -121,10 +121,10 @@ Session routes in the `web` middleware group (CSRF applies). Responses use the s
 | POST | `/two-factor-challenge` | `code` or `recovery_code` | `otp` | `{ user }`; signed in |
 | POST | `/logout` | | | Signed out |
 | POST | `/forgot-password` | `email` | `auth` | Identical response whether or not the email exists |
-| GET | `/reset-password/{token}` | | | `{ token, email }`, target of the reset email until the M12 page exists |
-| POST | `/reset-password` | `token`, `email`, `password`, `password_confirmation` | `auth` | Password reset |
-| GET | `/email/verify/{id}/{hash}` | Signed URL; session required | 6/min | Email verified |
-| POST | `/email/verification-notification` | Session required | 6/min | Link resent |
+| GET | `/reset-password/{token}` | | | Target of the reset email. With `auth.links.password_reset_url` (env `PASSWORD_RESET_URL`) set: 302 to that template with `{token}` and `{email}` URL-encoded (an app link, a custom scheme or the M12 page), `Cache-Control: no-store, private`, `Referrer-Policy: no-referrer`; unset: `{ token, email }` (M-A5) |
+| POST | `/reset-password` | `token`, `email`, `password`, `password_confirmation` | `auth` | Password reset; every mobile sign-in and browser session of the account is signed out (M-A5) |
+| GET | `/email/verify/{id}/{hash}` | Signed URL; **no session needed** (M-A5) | 6/min | Verifies the user of the link (signature, id and hash of the current address); signs nobody in. JSON: `{ status: verified \| already_verified }`, 403 for a bad signature, wrong hash or unknown user. Browser: 302 to `auth.links.email_verified_url` (env `EMAIL_VERIFIED_URL`, `{status}` = `verified`, `already_verified`, `invalid`), default `APP_URL/?email_verification={status}` |
+| POST | `/email/verification-notification` | Session required (bearer clients: `/api/v1/mobile/account/email/verification-notification`, M-A5) | 6/min | Link resent |
 
 Admin: `GET /admin/api/me` returns `{ user, roles, permissions }`. Two-factor enrolment is under `/api/v1/account/security/two-factor`.
 
@@ -391,21 +391,26 @@ Same group, middleware and `checkout` limiter as 3a. The order routes are visibl
 
 ## 4. Customer JSON
 
-| Method | Path |
-|---|---|
-| GET, PATCH | `/profile` |
-| GET | `/orders`, `/orders/{public_id}` |
-| POST | `/orders/{public_id}/units/{unit_public_id}/reveal`: requires recent auth, returns code, audited |
-| GET | `/digital-codes` (masked only) |
-| GET | `/wallet`, `/wallet/transactions` |
-| GET, POST, DELETE | `/wishlist` |
-| GET, POST | `/tickets`; POST `/tickets/{public_id}/messages` |
-| GET, POST | `/reviews` |
-| GET, PATCH | `/notifications`, `/notification-preferences` |
-| POST | `/refund-requests` |
-| GET, DELETE | `/sessions` |
-| POST, DELETE | `/security/two-factor` (built: POST starts enrolment and DELETE disables, both need `current_password`; DELETE is 403 for staff) |
-| POST | `/security/two-factor/confirm` (built: `code`; returns recovery codes once) |
+Base `/api/v1/account` (web session) and `/api/v1/mobile/account` (customer bearer token, section 1c): the same routes, controllers and rules. Other customers' records are always 404.
+
+| Method | Path | Status |
+|---|---|---|
+| GET | `/orders`, `/orders/{public_id}` | built (4c, M-A5) |
+| POST | `/orders/{public_id}/units/{unit_public_id}/reveal` | built (4a): requires recent auth, returns code, audited |
+| GET, PATCH | `/profile` | built (4c, M-A5) |
+| PUT | `/password` | built (4c, M-A5) |
+| GET, DELETE | `/devices`, `/devices/{id}` | built (4c, M-A5; replaces the planned `/sessions`) |
+| GET, POST | `/notifications`, `/notifications/unread-count`, `/notifications/{id}/read`, `/notifications/read-all` | built (4c, M-A5) |
+| GET, PATCH | `/notification-preferences` | built (4c, M-A5) |
+| POST | `/email/verification-notification` | built (4c, M-A5; the web route `POST /email/verification-notification` stays) |
+| GET | `/wallet`, `/wallet/transactions` | built (4b) |
+| GET, POST | `/tickets`; POST `/tickets/{public_id}/messages` | built (4b) |
+| GET, POST | `/reviews` | built (4b) |
+| GET, POST | `/refund-requests` | built (4b) |
+| POST, DELETE | `/security/two-factor` | built: POST starts enrolment and DELETE disables, both need `current_password`; DELETE is 403 for staff |
+| POST | `/security/two-factor/confirm` | built: `code`; returns recovery codes once |
+| GET | `/digital-codes` (masked only) | planned (the masked code is in the order detail) |
+| GET, POST, DELETE | `/wishlist` | planned (not in the app scope) |
 
 Reveal response: `{ code, pin, redemption_url, instructions }`, `Cache-Control: no-store`.
 
@@ -439,6 +444,73 @@ Base `/api/v1/account` (session, active account), `account` limiter. Lists take 
 | POST | `/refund-requests` | `order_public_id` (own, paid), `reason` (10 to 2000), `support_ticket_public_id?` | 201 `requested`. 409 `refund_request_open` (one open request per order), `refund_not_allowed` (unpaid) |
 
 Not built in M11: guest tickets (the schema allows `guest_email`), ticket attachments, a customer affiliate dashboard.
+
+### 4c. Built account routes (M-A5)
+
+Base `/api/v1/account` and `/api/v1/mobile/account` (gaps G4, G5, G6 inbox). Limiter `account` (60/min per user) unless noted. Lists take `page`, `per_page` (default 20, max 50) and carry `meta.current_page`, `per_page`, `total`, `last_page`. Design: `PROJECT_ARCHITECTURE.md` ADR-038.
+
+**Orders**
+
+| Method | Path | Query / body | Result |
+|---|---|---|---|
+| GET | `/orders` | `status` (an order status), `from`, `to` (`Y-m-d`, inclusive, placement date) | Newest first: `[{ public_id, number, status, payment_status, is_final, totals: { display: money, payment: money\|null }, item_count, thumbnail_url, created_at, paid_at }]`. `payment_status`: `unpaid`, `processing`, `paid`, `partially_refunded`, `refunded`. `thumbnail_url`: absolute URL of the first item's first product image, or null. 422 `validation_failed` for an unknown status, a bad date or `to` before `from` |
+| GET | `/orders/{public_id}` | | `{ order }`: the list fields plus `currency: { display, payment }`, `completed_at`, `items`, `payments`, `refunds`, `refund_state`, `timeline` (below). 404 for another customer's order, a guest order or an unknown id (`OrderPolicy`) |
+
+```json
+{
+  "items": [{
+    "id": 12, "name": "Steam Wallet - 20 USD", "product": { "slug": "steam-wallet" }, "delivery_type": "instant_code", "quantity": 2,
+    "unit_price": { "amount": "20.00", "currency": "USD", "formatted": "$20.00" }, "line_total": { "amount": "40.00", "currency": "USD", "formatted": "$40.00" },
+    "units": [{ "public_id": "01J...", "status": "delivered", "delivery_type": "instant_code", "revealable": true, "masked_code": "****7777",
+                "delivered_at": "...", "first_revealed_at": null, "refunded_at": null }]
+  }],
+  "payments": [{ "public_id": "01J...", "attempt": 1, "provider": "stripe", "method": "card", "status": "succeeded", "amount": { "amount": "40.00", "currency": "USD", "formatted": "$40.00" }, "failure_code": null, "created_at": "..." }],
+  "refunds": [{ "public_id": "01J...", "status": "succeeded", "destination": "wallet", "amount": { ... }, "created_at": "...", "completed_at": "..." }],
+  "refund_state": "none",
+  "timeline": [{ "status": "paid", "at": "..." }]
+}
+```
+
+- `revealable` is a hint: the order is paid and the unit is delivered with a code. The reveal route (4a) still checks the owner or guest proofs, verified email and recent authentication, and audits every attempt. Take the unit `public_id` from here.
+- Never in the detail: code, PIN, redemption URL (only `masked_code`, the stored masked form), provider ids, references or failure messages of payment attempts, the pricing breakdown (cost, floor, margin), delivery values, staff notes and order event messages. `timeline` lists status changes only (`order_events` with a `to_status`).
+- `refund_state`: `none`, `pending` (order `refund_pending` or a refund requested, pending or unknown), `partial` (order `partially_refunded`, or a succeeded refund on an order that is not fully refunded), `full` (order `refunded`).
+
+**Guest order detail** (`routes/checkout.php`, so `GET /api/v1/checkout/guest/orders/{public_id}` for the browser and `GET /api/v1/mobile/checkout/guest/orders/{public_id}` for the app; limiter `checkout`): the same `{ order }` shape for a guest order, `Cache-Control: no-store, private`, plus `meta.guest_access: { link_verified, otp_verified }`. Proof rule: the proof that opens the order for status and payment calls, which is smaller than the reveal proof: the browser session that placed the order or verified the email one-time code, or an `X-Guest-Order-Token` issued by place-order or OTP verify. A link-only token, another order's token, an expired token, no proof, and any order that belongs to a customer account get 404. A reveal still needs both the link and the OTP proof (4a, section 1c); `meta.guest_access` tells the client what it still has to do.
+
+**Profile and password**
+
+| Method | Path | Body | Result |
+|---|---|---|---|
+| GET | `/profile` | | `{ profile: { public_id, name, email, email_verified, phone, locale, display_currency, country_code, two_factor_enabled, created_at } }` |
+| PATCH | `/profile` | any of `name` (1 to 120), `locale` (`en`, `ar`, null), `display_currency` (an active currency, null), `country_code` (an active country, null), `phone` (E.164 after removing spaces, dashes, dots and brackets, e.g. `+201001234567`, null) | `{ profile }`. Only the keys sent change; null clears. Audited `account.profile_updated` (field names; locale, currency and country values; never the phone). The email address cannot be changed here (no verified change flow exists yet) |
+| PUT | `/password` | `current_password`, `password`, `password_confirmation` | Limiter `auth`. `{ signed_out: { mobile_families, web_sessions } }`. The new password follows the account's policy (customers 10+ characters, not breached; staff policy for staff) and must differ from the current one. Audited `account.password_changed` |
+
+Locale: a web session uses the saved `locale` for its next requests (`Content-Language` follows); a stateless client keeps using `Accept-Language` (the bearer token is authenticated after the locale is chosen), so the app reads `profile.locale` at sign-in and sends it as `Accept-Language`. `display_currency` is stored for the client; the web still uses the `currency` cookie and the app `X-Currency`.
+
+**Password change revocation.** Only the caller stays signed in. A bearer caller keeps its own sign-in (family and access token); a web caller keeps its session. Every other mobile sign-in is revoked (`revocation_reason = password_changed`: refresh tokens unusable, access tokens deleted), every other browser session is deleted when sessions are in the database (`SESSION_DRIVER=database`, the production default), and the remember-me token is rotated. A password reset by email link (`POST /reset-password`) now signs out every device and session (`password_reset`).
+
+**Devices**
+
+| Method | Path | Result |
+|---|---|---|
+| GET | `/devices` | `{ devices: [{ id, type, device_name, user_agent, ip, created_at, last_used_at, expires_at, current }] }`, `meta.web_sessions_listed`. `type` `mobile`: one per live sign-in (refresh-token family; `id` is the family id, `created_at` the sign-in, `last_used_at` the latest of the access token's last use and the last refresh, `expires_at` the family's absolute expiry). `type` `web`: browser sessions, only with the `database` session driver (`id` is an opaque `web_...` HMAC of the session id, never the id itself). `ip` is masked (`203.0.113.x`, `2001:0db8:0000:0000:x`). `current` marks the caller. Audited `account.devices_viewed` |
+| DELETE | `/devices/{id}` | Signs that device out (family revoked with `device_revoked`, or the session row deleted). 409 `current_device` for the caller's own device (use logout); 404 for an unknown id or another customer's device. Audited `account.device_revoked` |
+
+**Notifications (inbox; push is M-A18)**
+
+| Method | Path | Query / body | Result |
+|---|---|---|---|
+| GET | `/notifications` | `unread` (boolean) | Newest first: `[{ id, type, category, title, body, link, read_at, created_at }]`, `meta.unread_count` |
+| GET | `/notifications/unread-count` | | `{ unread_count }` |
+| POST | `/notifications/{id}/read` | | `{ notification }` (idempotent). 404 for another customer's notification |
+| POST | `/notifications/read-all` | | `{ marked_read, unread_count: 0 }` |
+| GET | `/notification-preferences` | | `{ preferences: [{ category, channel, enabled, mandatory }] }`, all 12 cells: categories `orders`, `support`, `marketing`, `security` x channels `mail`, `database` (the inbox), `sms` |
+| PATCH | `/notification-preferences` | `preferences: [{ category, channel, enabled }]` (1 to 12) | The full matrix. 422 `notification_preference_mandatory` (`errors.preferences.N.enabled`) when a mandatory cell is switched off; nothing of that request is saved. Audited |
+
+- `type`: `order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`, `support_ticket_replied`. `title` and `body` are rendered in the request language from the stored kind and number. `link`: `{ type: "order" \| "ticket", value: public_id, url }` (the ADR-037 shape; `url` is the web account page the emails link to).
+- Payloads hold identifiers and the order or ticket number only: never a code, PIN, redemption URL or message body.
+- Defaults without a saved row: `mail` and `database` on for orders, support and security; `sms` off (opt-in, ADR-034); marketing follows the latest marketing consent of the channel (email marketing for mail and the inbox, SMS marketing for SMS). Mandatory (always on, cannot be disabled): `orders.mail` (delivery link and failure notice, ADR-009) and `security.mail` (password reset and verification are always sent).
+- The customer notifications `OrderDelivered`, `OrderFulfilmentFailed` and `SupportTicketReplied` follow these preferences for `mail` and `database` (M-A5); guests get email only. `sms` remains the n8n channel read by `CustomerContactPolicy`.
 
 ## 5. Admin JSON
 

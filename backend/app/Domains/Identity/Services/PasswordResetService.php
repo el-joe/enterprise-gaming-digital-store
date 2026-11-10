@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Services;
 
 use App\Domains\Identity\DTOs\PasswordResetData;
+use App\Domains\Identity\Enums\TokenRevocationReason;
 use App\Domains\Identity\Enums\UserType;
 use App\Domains\Identity\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
@@ -13,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class PasswordResetService
 {
+    public function __construct(private AccountSessionService $sessions) {}
+
     /**
      * Send a reset link when the account exists. Callers respond identically either way.
      */
@@ -22,7 +25,7 @@ class PasswordResetService
     }
 
     /**
-     * Reset a password. The stricter staff policy is applied only after the token is proven valid,
+     * Reset a password and sign out every device (M-A5). The stricter staff policy is applied only after the token is proven valid,
      * so the response cannot reveal which addresses belong to staff.
      */
     public function reset(PasswordResetData $data): void
@@ -35,6 +38,9 @@ class PasswordResetService
                 }
 
                 $user->forceFill(['password' => $password, 'remember_token' => Str::random(60)])->save();
+
+                // M-A5: whoever held the old password is signed out of every app and browser.
+                $this->sessions->signOutEverywhere($user, TokenRevocationReason::PasswordReset);
 
                 event(new PasswordReset($user));
             },

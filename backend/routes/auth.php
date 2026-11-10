@@ -17,8 +17,9 @@ Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->
 Route::get('/reset-password/{token}', [NewPasswordController::class, 'show'])->name('password.reset');
 Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:auth')->name('password.update');
 
+// M-A5 (G10): no session needed; the controller checks the signature, the id and the hash.
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-    ->middleware(['auth', 'signed', 'throttle:6,1'])
+    ->middleware('throttle:6,1')
     ->name('verification.verify');
 Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])

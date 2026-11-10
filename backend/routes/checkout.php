@@ -30,6 +30,7 @@ Route::prefix('checkout')->name('checkout.')->group(function (): void {
         Route::post('/validate', [CheckoutController::class, 'check'])->name('validate');
         Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
         Route::get('/orders/{orderPublicId}/status', [CheckoutController::class, 'status'])->name('orders.status');
+        Route::get('/guest/orders/{orderPublicId}', [GuestOrderController::class, 'show'])->name('guest.orders.show');
         Route::get('/payment-options', [PaymentController::class, 'options'])->name('payment-options');
         Route::post('/orders/{orderPublicId}/retry-payment', [PaymentController::class, 'retry'])->name('orders.retry-payment');
         Route::post('/orders/{orderPublicId}/verify-payment', [PaymentController::class, 'verify'])->name('orders.verify-payment');

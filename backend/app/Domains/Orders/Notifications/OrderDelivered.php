@@ -2,6 +2,11 @@
 
 namespace App\Domains\Orders\Notifications;
 
+use App\Domains\Cms\Enums\LinkTargetType;
+use App\Domains\Notifications\Enums\InboxNotificationKind;
+use App\Domains\Notifications\Enums\NotificationPreferenceCategory;
+use App\Domains\Notifications\Enums\NotificationPreferenceChannel;
+use App\Domains\Notifications\Services\NotificationPreferenceService;
 use App\Domains\Orders\Enums\OrderStatus;
 use App\Domains\Orders\Models\Order;
 use Illuminate\Bus\Queueable;
@@ -29,12 +34,32 @@ class OrderDelivered extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return app(NotificationPreferenceService::class)->channelsFor($notifiable, NotificationPreferenceCategory::Orders, [NotificationPreferenceChannel::Mail, NotificationPreferenceChannel::Database]);
+    }
+
+    /**
+     * The inbox kind, stored as the notification type (M-A5).
+     */
+    public function databaseType(object $notifiable): string
+    {
+        return self::kind($this->order())->value;
+    }
+
+    /**
+     * The inbox entry (M-A5): identifiers and the number only, never a code (ADR-009).
+     *
+     * @return array{kind: string, params: array<string, string>, link: array{type: string, value: string}}
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        $order = $this->order();
+
+        return ['kind' => self::kind($order)->value, 'params' => ['number' => $order->order_number], 'link' => ['type' => LinkTargetType::Order->value, 'value' => $order->public_id]];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
-        $order = Order::query()->findOrFail($this->orderId);
+        $order = $this->order();
         $partial = $order->status === OrderStatus::PartiallyFulfilled;
 
         $mail = (new MailMessage)
@@ -45,6 +70,16 @@ class OrderDelivered extends Notification implements ShouldQueue
             ->line('For your security, codes are never sent by email. Open your order to view them.');
 
         return $mail->action('View your order', self::link($order));
+    }
+
+    private static function kind(Order $order): InboxNotificationKind
+    {
+        return $order->status === OrderStatus::PartiallyFulfilled ? InboxNotificationKind::OrderPartiallyDelivered : InboxNotificationKind::OrderDelivered;
+    }
+
+    private function order(): Order
+    {
+        return Order::query()->findOrFail($this->orderId);
     }
 
     public static function link(Order $order): string

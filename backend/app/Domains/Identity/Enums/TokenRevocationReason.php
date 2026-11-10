@@ -11,4 +11,7 @@ enum TokenRevocationReason: string
     case LogoutAll = 'logout_all';
     case Reuse = 'reuse';
     case AccountInactive = 'account_inactive';
+    case DeviceRevoked = 'device_revoked';
+    case PasswordChanged = 'password_changed';
+    case PasswordReset = 'password_reset';
 }

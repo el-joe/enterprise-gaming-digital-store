@@ -40,8 +40,8 @@ class CodeRevealService
             $context->actorType === Actor::Customer && ! $context->sessionVerified => 'recent_auth_required',
             $context->actorType === Actor::Guest && ($order->user_id !== null || $order->guest_email_verified_at === null || ! $context->sessionVerified) => 'guest_not_verified',
             $context->actorType === Actor::Staff => 'forbidden',
-            $order->primary_payment_id === null || $order->paid_at === null => 'unpaid',
-            $unit->status !== OrderItemUnitStatus::Delivered || $code === null => 'not_delivered',
+            ! self::orderIsPaid($order) => 'unpaid',
+            ! self::unitIsDelivered($unit, $code !== null) => 'not_delivered',
             default => null,
         };
 
@@ -50,6 +50,17 @@ class CodeRevealService
         }
 
         return $this->grant($code, $unit, $context);
+    }
+
+    /**
+     * Whether a reveal of this unit would pass the order and unit checks of `revealUnit` (paid
+     * order, delivered unit holding a code). The viewer checks (owner or guest proofs, verified
+     * email, recent authentication) are not part of it: this is the `revealable` hint of the
+     * order detail (M-A5), and `revealUnit` stays the only gate.
+     */
+    public static function isRevealable(Order $order, OrderItemUnit $unit, bool $hasCode): bool
+    {
+        return self::orderIsPaid($order) && self::unitIsDelivered($unit, $hasCode);
     }
 
     /**
@@ -78,6 +89,16 @@ class CodeRevealService
     public function instructionsFor(OrderItemUnit $unit): ?string
     {
         return OrderItemUnit::query()->whereKey($unit->id)->with('orderItem.product:id,instructions')->first()?->orderItem?->product?->instructions;
+    }
+
+    private static function orderIsPaid(Order $order): bool
+    {
+        return $order->primary_payment_id !== null && $order->paid_at !== null;
+    }
+
+    private static function unitIsDelivered(OrderItemUnit $unit, bool $hasCode): bool
+    {
+        return $unit->status === OrderItemUnitStatus::Delivered && $hasCode;
     }
 
     /**

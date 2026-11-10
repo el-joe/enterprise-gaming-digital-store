@@ -6,6 +6,7 @@ use App\Domains\Identity\Enums\TokenRevocationReason;
 use App\Domains\Identity\Models\MobileLoginChallenge;
 use App\Domains\Identity\Models\MobileRefreshToken;
 use App\Domains\Identity\Models\User;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
@@ -56,6 +57,66 @@ class MobileTokenRepository
             ->where('user_id', $user->id)
             ->whereNull('revoked_at')
             ->update(['revoked_at' => now(), 'revocation_reason' => $reason->value, 'updated_at' => now()]);
+    }
+
+    /**
+     * One row per signed-in device of the customer (M-A5): the live refresh token of each family
+     * (not used, not revoked, not expired), with the sign-in time of the family and the last use
+     * of its current access token.
+     *
+     * @return Collection<int, MobileRefreshToken>
+     */
+    public function liveFamiliesForUser(int $userId): Collection
+    {
+        return MobileRefreshToken::query()
+            ->from('mobile_refresh_tokens as live')
+            ->leftJoin('personal_access_tokens as pat', 'pat.id', '=', 'live.access_token_id')
+            ->where('live.user_id', $userId)
+            ->whereNull('live.revoked_at')
+            ->whereNull('live.used_at')
+            ->where('live.expires_at', '>', now())
+            ->select(['live.id', 'live.family_id', 'live.device_name', 'live.ip', 'live.access_token_id', 'live.created_at', 'live.expires_at', 'pat.last_used_at as access_token_last_used_at'])
+            ->selectSub(static fn ($family) => $family->from('mobile_refresh_tokens as f')->whereColumn('f.family_id', 'live.family_id')->selectRaw('MIN(f.created_at)'), 'signed_in_at')
+            ->orderByDesc('live.created_at')
+            ->get();
+    }
+
+    /**
+     * Whether the customer has a live (signed-in) family with this id.
+     */
+    public function hasLiveFamily(int $userId, string $familyId): bool
+    {
+        return MobileRefreshToken::query()
+            ->where('user_id', $userId)
+            ->where('family_id', $familyId)
+            ->whereNull('revoked_at')
+            ->whereNull('used_at')
+            ->where('expires_at', '>', now())
+            ->exists();
+    }
+
+    /**
+     * Revoke every family of the customer except one (the caller's), and delete every access
+     * token of the customer except one (the caller's). Returns the number of families revoked.
+     */
+    public function revokeAllForUserExcept(User $user, ?string $keptFamilyId, ?int $keptAccessTokenId, TokenRevocationReason $reason): int
+    {
+        $user->tokens()->when($keptAccessTokenId !== null, static fn ($tokens) => $tokens->whereKeyNot($keptAccessTokenId))->delete();
+
+        $families = MobileRefreshToken::query()
+            ->where('user_id', $user->id)
+            ->whereNull('revoked_at')
+            ->when($keptFamilyId !== null, static fn ($tokens) => $tokens->where('family_id', '!=', $keptFamilyId))
+            ->distinct()
+            ->pluck('family_id');
+
+        MobileRefreshToken::query()
+            ->where('user_id', $user->id)
+            ->whereIn('family_id', $families)
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => now(), 'revocation_reason' => $reason->value, 'updated_at' => now()]);
+
+        return $families->count();
     }
 
     public function findAccessToken(int $id): ?PersonalAccessToken

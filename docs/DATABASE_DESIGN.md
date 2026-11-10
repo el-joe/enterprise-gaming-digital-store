@@ -132,7 +132,7 @@ Index: `idx_cc_user_channel` (user_id, channel, created_at): latest consent per 
 | channel | enum | NN | `mail`, `database`, `sms` (M17) |
 | enabled | bool | NN | default true |
 
-Unique: `uq_np` (user_id, category, channel). M17: `sms` is the secondary channel of the n8n customer workflows and is opt-in: an order or support SMS needs an enabled row for that category; marketing SMS needs the latest `sms_marketing` consent to be a grant and no disabled marketing `sms` row (`CustomerContactPolicy`).
+Unique: `uq_np` (user_id, category, channel). M-A5: edited by the customer (`/account/notification-preferences`); without a row `mail` and `database` are on for orders, support and security, `sms` is off, marketing follows the latest marketing consent; `orders`+`mail` and `security`+`mail` are mandatory and cannot be stored disabled (`NotificationPreferenceService`). M17: `sms` is the secondary channel of the n8n customer workflows and is opt-in: an order or support SMS needs an enabled row for that category; marketing SMS needs the latest `sms_marketing` consent to be a grant and no disabled marketing `sms` row (`CustomerContactPolicy`).
 
 ### otp_challenges
 
@@ -160,7 +160,7 @@ Index: `idx_otp_lookup` (purpose, identifier_hash, expires_at): verification loo
 | expires_at | ts | NN | absolute family expiry, copied on rotation |
 | used_at | ts | Y | set when rotated; a second use revokes the family |
 | revoked_at | ts | Y | |
-| revocation_reason | enum | Y | `logout`, `logout_all`, `reuse`, `account_inactive` |
+| revocation_reason | enum | Y | `logout`, `logout_all`, `reuse`, `account_inactive`; M-A5 adds `device_revoked` (signed out from the device list), `password_changed`, `password_reset` (VARCHAR, ADR-005: no schema change) |
 
 Indexes: `idx_mrt_family` (family_id): family revocation. `idx_mrt_user_device` (user_id, device_name): new-device check. `idx_mrt_expires` (expires_at): prune. Rows are deleted by `auth:prune-mobile-tokens` once expired.
 
@@ -178,6 +178,10 @@ Indexes: `idx_mrt_family` (family_id): family revocation. `idx_mrt_user_device` 
 ### `notifications`, `sessions`, `password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`
 
 Laravel standard. Only `notifications` needs a new migration.
+
+`notifications` (M-A5, customer inbox, no schema change): written by the `database` channel of `OrderDelivered`, `OrderFulfilmentFailed` and `SupportTicketReplied` when the customer's preferences allow it. `type` is the inbox kind (`order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`, `support_ticket_replied`), `notifiable_type` the morph alias `user`, `data` `{ kind, params: { number }, link: { type: order|ticket, value: public_id } }`: identifiers and the order or ticket number only, never a code, PIN or message body. Title and body are rendered in the reader's language when listed. The inbox reads use the `notifiable` morph index.
+
+`sessions` (M-A5): with `SESSION_DRIVER=database` the account device list reads and deletes a customer's rows by `user_id`; the session id never leaves the server (shown as an HMAC).
 
 ---
 

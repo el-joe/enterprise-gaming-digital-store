@@ -60,7 +60,11 @@ class OrderStatusReader
         ];
     }
 
-    private function paymentStatus(Order $order): string
+    /**
+     * `processing`, `refunded`, `partially_refunded`, `paid` or `unpaid` (also used by the account
+     * order list and detail, M-A5).
+     */
+    public function paymentStatus(Order $order): string
     {
         return match (true) {
             $order->status === OrderStatus::PaymentProcessing => 'processing',

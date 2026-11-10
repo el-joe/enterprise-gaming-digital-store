@@ -69,6 +69,17 @@ class LinkTargetResolver
         return new LinkTarget($type, $slug, $this->webUrl($path));
     }
 
+    /**
+     * An account page of the customer (M-A5 inbox links): `order` or `ticket` with its public id.
+     * The URL is the web account page that the emails link to.
+     */
+    public function forAccount(LinkTargetType $type, string $publicId): LinkTarget
+    {
+        $path = $type === LinkTargetType::Ticket ? "/account/tickets/{$publicId}" : "/account/orders/{$publicId}";
+
+        return new LinkTarget($type, $publicId, $this->webUrl($path));
+    }
+
     private function webUrl(string $path): string
     {
         return rtrim((string) config('app.url'), '/').'/'.ltrim($path, '/');

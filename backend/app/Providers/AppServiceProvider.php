@@ -31,6 +31,7 @@ use App\Domains\Promotions\Services\DatabaseCheckoutCoupons;
 use App\Domains\Shared\Models\MorphMap;
 use App\Domains\Suppliers\Services\SupplierAdapterRegistry;
 use App\Domains\Support\Listeners\CompleteRefundRequests;
+use App\Policies\OrderPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
@@ -41,6 +42,7 @@ use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -80,6 +82,9 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap(MorphMap::aliases());
 
         $this->configureRateLimiting();
+
+        // M-A5: customer order ownership (another customer's order is 404).
+        Gate::policy(Order::class, OrderPolicy::class);
 
         Event::listen(OrderStatusChanged::class, StartFulfilmentWhenPaid::class);
         Event::listen(OrderStatusChanged::class, SendFulfilmentNotifications::class);

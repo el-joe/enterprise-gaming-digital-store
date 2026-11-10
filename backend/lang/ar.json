@@ -99,5 +99,21 @@
     "The login attempt has expired. Please sign in again.": "انتهت صلاحية محاولة الدخول. يرجى تسجيل الدخول مرة أخرى.",
     "The refresh token is invalid or has expired. Please sign in again.": "رمز التجديد غير صالح أو منتهي الصلاحية. يرجى تسجيل الدخول مرة أخرى.",
     "We are making improvements. Please try again shortly.": "نجري بعض التحسينات. يرجى المحاولة مرة أخرى بعد قليل.",
-    "The version must be a semantic version such as 1.4.0.": "يجب أن يكون الإصدار بصيغة الإصدار الدلالي مثل 1.4.0."
+    "The version must be a semantic version such as 1.4.0.": "يجب أن يكون الإصدار بصيغة الإصدار الدلالي مثل 1.4.0.",
+    "Order :number is ready": "الطلب :number جاهز",
+    "Part of order :number is ready": "جزء من الطلب :number جاهز",
+    "We could not complete order :number": "تعذر علينا إكمال الطلب :number",
+    "Update on your support request :number": "تحديث على طلب الدعم :number",
+    "Your order has been delivered. Open it to view your codes.": "تم تسليم طلبك. افتحه لعرض الأكواد.",
+    "Some items in your order are ready. Items we could not deliver will be refunded.": "بعض عناصر طلبك جاهزة. سيتم رد قيمة العناصر التي تعذر تسليمها.",
+    "We were unable to deliver your order. A refund is being prepared.": "تعذر علينا تسليم طلبك. يجري تجهيز استرداد المبلغ.",
+    "Our support team has replied to your request.": "رد فريق الدعم على طلبك.",
+    "Profile updated.": "تم تحديث الملف الشخصي.",
+    "Your password has been changed. Other devices were signed out.": "تم تغيير كلمة المرور. تم تسجيل الخروج من الأجهزة الأخرى.",
+    "The device was signed out.": "تم تسجيل خروج الجهاز.",
+    "This is the device you are using. Sign out instead.": "هذا هو الجهاز الذي تستخدمه. سجّل الخروج بدلاً من ذلك.",
+    "Preferences saved.": "تم حفظ التفضيلات.",
+    "This notification cannot be turned off.": "لا يمكن إيقاف هذا الإشعار.",
+    "The :attribute must be the code of an active currency.": "يجب أن يكون :attribute رمز عملة مفعّلة.",
+    "The phone number must be in international format, for example +201001234567.": "يجب أن يكون رقم الهاتف بالصيغة الدولية، مثل +201001234567."
 }

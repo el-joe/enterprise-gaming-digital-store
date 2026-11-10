@@ -124,4 +124,28 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email link landings (M-A5, gap G10)
+    |--------------------------------------------------------------------------
+    |
+    | Where a browser lands after the links in account emails. Both are templates set by the
+    | operator, never taken from a request.
+    |
+    | `password_reset_url`: GET /reset-password/{token} (the link in the reset email) redirects
+    | here with `{token}` and `{email}` replaced (URL-encoded): an app link such as
+    | https://boxcards.shop/app/reset-password?token={token}&email={email}, a custom scheme, or the
+    | web reset page once M12 builds it. Null keeps the JSON response `{ token, email }`.
+    |
+    | `email_verified_url`: GET /email/verify/{id}/{hash} opened in a browser (no JSON expected)
+    | redirects here with `{status}` replaced by `verified`, `already_verified` or `invalid`.
+    | Null uses the site root with `?email_verification={status}`.
+    |
+    */
+
+    'links' => [
+        'password_reset_url' => env('PASSWORD_RESET_URL') ?: null,
+        'email_verified_url' => env('EMAIL_VERIFIED_URL') ?: null,
+    ],
+
 ];
