@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 abstract class Controller
 {
@@ -20,5 +22,27 @@ abstract class Controller
             'data' => (object) $data,
             'meta' => (object) $meta,
         ], $status);
+    }
+
+    /**
+     * Build the success envelope for a page of results.
+     *
+     * @param  class-string<JsonResource>  $resource
+     * @param  array<string, mixed>  $meta
+     */
+    protected function paginated(LengthAwarePaginator $page, string $resource, array $meta = []): JsonResponse
+    {
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'OK',
+            'data' => $resource::collection($page->getCollection())->resolve(),
+            'meta' => (object) [
+                ...$meta,
+                'current_page' => $page->currentPage(),
+                'per_page' => $page->perPage(),
+                'total' => $page->total(),
+                'last_page' => $page->lastPage(),
+            ],
+        ]);
     }
 }

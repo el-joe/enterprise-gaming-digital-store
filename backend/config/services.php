@@ -28,6 +28,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'open_exchange_rates' => [
+        'app_id' => env('OPEN_EXCHANGE_RATES_APP_ID'),
+        'base_url' => env('OPEN_EXCHANGE_RATES_BASE_URL', 'https://openexchangerates.org/api/'),
+        'connect_timeout' => (int) env('OPEN_EXCHANGE_RATES_CONNECT_TIMEOUT', 5),
+        'timeout' => (int) env('OPEN_EXCHANGE_RATES_TIMEOUT', 15),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

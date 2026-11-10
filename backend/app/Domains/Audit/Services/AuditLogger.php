@@ -28,7 +28,7 @@ class AuditLogger
             'actor_id' => $actorId,
             'action' => $entry->action,
             'subject_type' => $entry->subject?->getMorphClass(),
-            'subject_id' => $entry->subject?->getKey(),
+            'subject_id' => is_numeric($entry->subject?->getKey()) ? $entry->subject->getKey() : null,
             'before' => $entry->before === null ? null : $this->redactor->redact($entry->before),
             'after' => $entry->after === null ? null : $this->redactor->redact($entry->after),
             'reason' => $entry->reason,

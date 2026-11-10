@@ -669,7 +669,7 @@ Current rate per quote currency; base is `settings.currency.base`.
 | source | str(64) | NN | |
 | fetched_at | ts | NN | |
 | pending_rate | rate | Y | held by spike guard |
-| pending_since | ts | Y | |
+| pending_since | ts | Y | provider timestamp of the held rate |
 
 Unique: `uq_er` (base_currency, quote_currency).
 
@@ -1734,7 +1734,7 @@ Order of operations for circular or late references:
 
 Required seeders (idempotent; values an admin can edit are written only on first run):
 
-`CurrencySeeder` (no rates), `CountrySeeder`, `RegionSeeder`, `RolePermissionSeeder`, `SettingsSeeder`, `PaymentGatewaySeeder` (inactive, no credentials, with default eligibility rules), `SupplierSeeder` (Reloadly inactive, internal stock, manual), `DeliveryFieldDefinitionSeeder`, `HomepageSectionSeeder`, `SeoTemplateSeeder`, `AutomationWorkflowSeeder`, `SuperAdminSeeder` (reads credentials from environment, refuses to run if they are empty). `SuperAdminSeeder` and `DemoCatalogSeeder` are run explicitly with `--class` and are not called by `DatabaseSeeder`, so `migrate:fresh --seed` needs no credentials. Sample catalog data is in `DemoCatalogSeeder`, which refuses to run when `APP_ENV=production`.
+`CurrencySeeder` (no rates), `CountrySeeder`, `RegionSeeder`, `RolePermissionSeeder`, `SettingsSeeder` (including `pricing.default_below_margin_policy`, `default_min_margin_pct`, `default_min_margin_fixed`, `default_gateway_fee_pct`, `default_gateway_fee_fixed`, `conversion_cost_pct`), `PaymentGatewaySeeder` (inactive, no credentials, with default eligibility rules), `SupplierSeeder` (Reloadly inactive, internal stock, manual), `DeliveryFieldDefinitionSeeder`, `HomepageSectionSeeder`, `SeoTemplateSeeder`, `AutomationWorkflowSeeder`, `SuperAdminSeeder` (reads credentials from environment, refuses to run if they are empty). `SuperAdminSeeder` and `DemoCatalogSeeder` are run explicitly with `--class` and are not called by `DatabaseSeeder`, so `migrate:fresh --seed` needs no credentials. Sample catalog data is in `DemoCatalogSeeder`, which refuses to run when `APP_ENV=production`.
 
 ## 17. Coverage of spec entities
 

@@ -11,8 +11,8 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M2 | Canva assets | Partial (hero banners only; blocked by Canva credit quota) |
 | M3 | Foundation | Complete |
 | M4 | Full schema | Complete |
-| M5 | Catalog and CMS services | Not started |
-| M6 | Currency and pricing | Not started |
+| M5 | Catalog and CMS services | Complete |
+| M6 | Currency and pricing | Complete |
 | M7 | Orders and checkout core | Not started |
 | M8 | Supplier engine and Reloadly | Not started |
 | M9 | Fulfilment and digital codes | Not started |
@@ -38,7 +38,7 @@ Status values: Not started, In progress, Blocked (state why), Complete.
 | Stripe | Not built | No | Awaiting credentials | No |
 | PayPal | Not built | No | Awaiting credentials | No |
 | Paymob | Not built | No | Awaiting credentials | No |
-| Open Exchange Rates | Not built | No | Awaiting credentials | No |
+| Open Exchange Rates | Built | Yes (`Http::fake` only) | Awaiting credentials; OXR has no sandbox | No |
 | GA4 Measurement Protocol | Not built | No | Awaiting credentials | No |
 | Google Search Console | Not built | No | Awaiting credentials | No |
 | n8n | Not built | No | Not installed on this machine | No |
@@ -332,3 +332,135 @@ Run against MySQL `gaming-store_testing` for tests and `gaming-store` for the ac
 ### Next milestone
 
 M5: Catalog and CMS services (Step 4), and M6 can start in parallel.
+
+---
+
+## M5: Catalog and CMS services
+
+Date completed: 2026-11-10
+Completed by: Senior Backend Engineer
+
+### Summary of completed work
+
+Services, repositories, Form Requests, API Resources and admin JSON endpoints for catalog, CMS, media and redirects; storefront listing and search read endpoints; the search index. Backend only: no Blade, frontend JS or Yajra classes.
+
+### Files created
+
+- `app/Domains/Shared/`: `Services/{CrudService,ListQueryApplier,HtmlSanitizer}`, `DTOs/ListQuery`, `ValueObjects/Rate`, `Rules/{DecimalString,SafeUrl,Slug,MorphTargetExists}`
+- `app/Domains/Catalog/`: `Services/{GamingPlatform,Category,Region,AttributeDefinition,DeliveryFieldDefinition,Product,ProductVariant,ProductImage,Search,StorefrontCatalog}Service`, `Services/{ProductPublicationService,SearchIndexer,DeliveryFieldValidator,ReservedSlugs}`, `Repositories/{ProductRepository,SearchRepository}`, `Rules/`, `DTOs/`, `Jobs/ReindexCatalogScope`
+- `app/Domains/Cms/Services/` (Page, BlogCategory, BlogPost, FaqGroup, Faq, Menu, MenuItem, HomepageSection, Banner, Media), `app/Domains/Seo/Services/RedirectService`
+- `app/Http/{Controllers,Requests,Resources}/Admin/{Catalog,Cms,Seo}`, `app/Http/{Controllers,Requests,Resources}/Storefront`, `app/Http/Requests/Admin/{AdminListRequest,AdminSaveRequest,ReorderRequest}`
+- `app/Console/Commands/Catalog/RebuildSearchIndexCommand`, `config/catalog.php`, `routes/admin.php` and `routes/api.php` filled in
+- `tests/Feature/Catalog/*`, `tests/Feature/Cms/CmsTest.php`
+- Changed: `Controller` (paginated envelope), `AuditLogger` (string-keyed subjects such as currencies are stored with a null `subject_id`), `SensitiveDataRedactor` (`app_id`), `AppServiceProvider` (limiters), `tests/Pest.php` (helpers)
+
+### Migrations
+
+None. The M4 schema was sufficient.
+
+### Features implemented
+
+- CRUD with permissions per `SECURITY.md` and audit entries for every write. Delete of a referenced record returns 409.
+- Product publishing owned by `ProductPublicationService`: `catalog.publish`, active variant required, required delivery field for top-ups.
+- Allow-list HTML sanitizer, built on `DOMDocument` because no sanitizer package is installed.
+- Media upload re-encoded to WebP (and AVIF where GD supports it) under random names. SVG is refused for everyone, which is stricter than `SECURITY.md`.
+- Storefront listing, variant offers, search suggest and popular.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| CRUD with permissions | Met | `AdminCrudPermissionsTest`: 15 resources for 401, 403 without permission, view-only, full CRUD with audit. Nested, media and publish routes in their own tests. |
+| Listing filter query under defined N queries | Met. N = 10 with a cold cache | `StorefrontListingTest`: same count at 2 and 32 products, all filters on |
+| Search by game, platform, product, SKU | Met, with a limit on "game" | `SearchTest`. There is no games table, so a game is found through the product name or an attribute value. Fulltext tests commit their data, as InnoDB fulltext ignores uncommitted rows. |
+| Delivery field validation | Met at service level | `SlugAndDeliveryFieldTest`. `DeliveryFieldValidator` has no HTTP caller until the M7 cart. Admin definitions are validated over HTTP. |
+| Slug reserved words | Met | Config list plus the first segment of every registered route |
+| Tests pass | Met | See below |
+
+### Tests and results
+
+- Command: `php artisan test --compact`
+- Result: **795 passed, 0 failed, 0 skipped (4809 assertions), 54.8 s**, up from 446. Of the 349 new tests, 331 are in `tests/Feature/{Catalog,Cms,Currency,Pricing}` (M5 and M6 together); 18 are arch test datasets that grew with the new domains.
+- Not tested, and why: query plans against production-sized data; rendering of stored images (no storefront); AVIF output beyond the GD capability check.
+
+### Outstanding requirements
+
+- `content_translations` are read by the search index but there is no admin endpoint to write them, so `ar` search rows hold English titles until M15 or a translation import.
+- Reorder exists only where a table has `sort_order`: regions, attributes and delivery fields have none, so the planned `POST reorder` for them was not built.
+- Redirect runtime lookup is M18; only the admin CRUD exists.
+- Stored paths are returned, not public URLs, until M12 decides URL generation.
+
+### Next milestone
+
+M6, then M7.
+
+---
+
+## M6: Currency and pricing
+
+Date completed: 2026-11-10
+Completed by: Senior Backend Engineer
+
+### Summary of completed work
+
+Exchange rate provider contract and Open Exchange Rates adapter, history, manual overrides, spike guard, staleness, rate cache, `PricingEngine` for all of section 11.5, margin guard, and the recalculation job. Adapter status: built, tested with `Http::fake` only, awaiting credentials.
+
+### Files created
+
+- `app/Domains/Currency/`: `Contracts/ExchangeRateProvider`, `Adapters/OpenExchangeRatesProvider`, `Services/{ExchangeRateRegistry,ExchangeRateUpdater,ExchangeRateWriter,ExchangeRateAdminService,CurrencyAdminService,CurrencyConverter,CurrencyRounder}`, `DTOs/`, `Exceptions/`, `Rules/RoundingRule`
+- `app/Domains/Pricing/`: `Services/{PricingEngine,PricingDataLoader,CostResolver,ExplicitPriceResolver,PricingRuleResolver,DiscountCalculator,MarginGuard,MarginAuthorizer,PricingRuleService,VariantPriceService,VariantPriceRecalculator,PricingDirtyMarker,PriceSimulator}`, `Repositories/PricingRuleRepository`, `Jobs/RecalculateDirtyPrices`, `DTOs/`, `Enums/PriceSource`, `Exceptions/MarginGuardRefused`
+- `app/Http/{Controllers,Requests,Resources}/Admin/{Currency,Pricing}`
+- `app/Console/Commands/Currency/FetchRatesCommand`, `app/Console/Commands/Pricing/RecalculateDirtyCommand`, both scheduled in `routes/console.php`
+- `tests/Feature/Currency/*`, `tests/Feature/Pricing/*`
+- Changed: `config/services.php`, `.env.example`, `SettingsSeeder` (`pricing.*` defaults)
+
+### Migrations
+
+None.
+
+### Features implemented
+
+- Rates parsed from the raw response as decimal text. No float enters a money path; the arch test covers the new DTOs and value objects.
+- Non-base currencies cannot be activated without a current rate. A fetch never activates one.
+- Display tolerates a stale rate with a flag. Checkout refuses it: `PricingContext(forCheckout: true)`, `CurrencyConverter::toCheckout` and `resolveCheckoutCurrency`, which falls back to base.
+- Recalculation uses `FOR UPDATE SKIP LOCKED`, and each dirty mark strictly advances `pricing_dirty_at`, so a variant re-marked mid-run stays dirty.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Each precedence level in 11.5 | Met for steps 1 to 8 | `PricingEngineTest`, one `describe` per step. Coupon input is a `CouponTerms` DTO; coupon validity and limits are M11. |
+| Explicit price beats markup | Met | `step 2` tests, including all three tiers |
+| Margin policy `floor`, `block`, `allow` | Met | `step 7` tests, including fees, conversion cost and exact floor |
+| Override needs permission and audit | Met | Rate overrides, margin overrides and the `allow` policy, with `pricing_overrides_log` |
+| Spike held | Met | `spike guard` tests, including approve, reject and duplicate approval |
+| Stale rate blocks checkout in that currency | Met at service level | No checkout exists until M7, which must use `forCheckout: true` |
+| No rate literals in code (grep test) | Met | Scans `app`, `database/seeders`, `config`; the patterns are themselves tested against bad samples |
+| OXR mocked | Met | `OpenExchangeRatesProviderTest`: `Http::fake`, including timeout and credential leak checks |
+| Historical orders never recomputed | Met | Order and item rows byte-identical after a rate change and recalculation |
+
+### Tests and results
+
+- Command: `php artisan test --compact`
+- Result: **795 passed, 0 failed, 0 skipped (4809 assertions), 54.8 s**
+- Concurrency: the `SKIP LOCKED` test uses a real second MySQL connection holding the row lock. Duplicate and re-marked recalculation are covered.
+- Not tested, and why: the live OXR API (no credentials; EGP, SAR and AED availability stay `UNVERIFIED`); two workers actually racing, beyond the held-lock test.
+
+### Outstanding requirements
+
+- `is_custom_amount` variants return `custom_amount_unsupported`: the documents do not define their cost. M7 and M8 must decide before range products can be sold.
+- Cost comes from a mapping override, the latest `supplier_product_prices` row, or `manual_cost_base`. `cost_map`, supplier fees and discounts are not applied, so M8's price sync must write the effective cost to that table.
+- `PaymentCurrencyResolver` is M10. M6 supplies the conversions it needs.
+- Settings changes to `pricing.*` and fee rule changes do not mark variants dirty; there is no settings API yet. Listing prices catch up on the next change, and checkout always re-evaluates.
+- `settings.automation.task_drivers` is not consulted by the two new schedule entries (M17).
+- New listings show no price until the next `pricing:recalculate-dirty`, up to 5 minutes.
+
+### Design changes made
+
+- `PROJECT_ARCHITECTURE.md` 11.4 and 11.5: held rates, override staleness, and how discounts interact with the margin floor.
+- `DATABASE_DESIGN.md`: `pending_since` meaning, `pricing.*` settings in section 16.
+- `INTEGRATIONS.md` section 5: adapter status. `API_DOCUMENTATION.md`: sections 2a and 5a.
+
+### Next milestone
+
+M7: Orders and checkout core.

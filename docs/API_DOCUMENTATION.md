@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the success and error envelopes are built (M3). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -8,10 +8,10 @@
 
 | Group | Prefix | Auth | Status |
 |---|---|---|---|
-| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | planned |
+| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart and newsletter planned |
 | Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor routes built; rest planned |
 | Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | planned |
-| Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me` built; rest planned |
+| Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me` and section 5a built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no CSRF | planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum token (`n8n`) + HMAC | planned |
@@ -59,13 +59,14 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 | 403 | `forbidden` | absent | SweetAlert2 error |
 | 403 | `two_factor_required` | absent | Redirect to two-factor enrolment or challenge |
 | 404 | `not_found` | absent | SweetAlert2 error |
+| 403 | `margin_override_forbidden` | absent | SweetAlert2 error |
 | 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled` | absent | SweetAlert2 and reload row |
 | 419 | `csrf_expired` | absent | Prompt to refresh |
 | 422 | `validation_failed` | object | Field-level display |
-| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `two_factor_invalid`, `two_factor_expired` | optional | Message near the form |
+| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired` | optional | Message near the form |
 | 429 | `rate_limited` | absent | Retry after `Retry-After` |
 | 500 | `server_error` | absent | Generic message, `request_id` shown. No stack traces or provider bodies. |
-| 503 | `maintenance` | absent | |
+| 503 | `maintenance`, `rates_provider_unavailable` | absent | |
 
 **Field mapping rule.** Keys in `errors` use Laravel dot notation. The shared admin module `resources/js/admin/forms/errors.js` maps `a.0.b` to `[name="a[0][b]"]`, renders the first message beside the field in a `[data-error-for="a.0.b"]` element or one it creates, sets `aria-invalid`, focuses the first invalid field, and shows unmatched keys in a form-level summary.
 
@@ -91,7 +92,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`. The others are planned with their route groups.
+Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`. The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -131,6 +132,23 @@ Admin: `GET /admin/api/me` returns `{ user, roles, permissions }`. Two-factor en
 | DELETE | `/cart/items/{id}` | Remove |
 | POST | `/cart/coupon` | Apply |
 | DELETE | `/cart/coupon` | Remove |
+
+### 2a. Built storefront routes (M5, M6)
+
+Base `/api/v1/storefront`, in the stateless `api` middleware group.
+
+| Method | Path | Query or body | Result |
+|---|---|---|---|
+| GET | `/catalog/products` | `page`, `per_page`, `category`, `platform`, `region`, `delivery_type`, `min_price`, `max_price` (decimal strings, in the display currency), `sort` (`popular`, `newest`, `price_asc`, `price_desc`, `name`) | Page of `{ public_id, name, slug, short_description, delivery_type, platform, category, image, price_from, price_may_vary, is_featured, rating_avg }`; `meta.display_currency` |
+| GET | `/catalog/products/{slug}/variants` | `country?` | `{ variants: [{ public_id, title, sku, region, denomination_value, denomination_currency, is_custom_amount, availability, purchasable, price, price_may_vary }] }`. 404 unless the product is active. Cost and margin are never returned. |
+| GET | `/currencies` | | Active currencies for the switcher |
+| POST | `/currency` | `{ currency }` | Sets the plain `currency` cookie and returns the currency actually used; an inactive or rateless choice returns the base currency. Not CSRF protected because it only changes a display preference. |
+| GET | `/search/suggest` | `q` (2 to 100 chars), `locale?`, `commit?` | `{ suggestions: [{ type, title, slug }] }`, matching title prefix, fulltext (name, platform, category, attribute values such as a game name) and product or variant SKU prefix. Send `commit=1` on submit to count the term as a search; plain keystrokes are not counted. |
+| GET | `/search/popular` | `locale?` | `{ terms: [...] }`, only terms that found something |
+
+Query budget: one listing page runs at most **10 queries** with a cold cache, whatever the number of rows.
+
+Not built in M5/M6: `/newsletter` and the cart routes in the table above (M7).
 
 ## 3. Checkout JSON
 
@@ -202,6 +220,47 @@ Pattern: RESTful per resource under `/admin/api`. Each route has a permission fr
 Tables under `/admin/api/tables/{table}`: `products`, `orders`, `payments`, `customers`, `suppliers`, `supplier-products`, `supplier-logs`, `webhook-logs`, `tickets`, `audit-logs`, and others per `IMPLEMENTATION_ROADMAP.md`.
 
 Bulk actions: `POST /admin/api/{resource}/bulk` with `{ action, ids[] }`, returning `{ processed, failed: [{ id, error }] }`.
+
+### 5a. Built admin routes (M5, M6)
+
+All use the list conventions (`page`, `per_page`, `sort`, `filter[..]`, `q`; unknown filters and sorts are ignored) and return API Resources in the standard envelope. `POST` requires the fields, `PATCH` takes any subset.
+
+| Resource | Routes | Read permission | Write permission |
+|---|---|---|---|
+| `platforms`, `categories` | CRUD, `POST reorder` | `catalog.view` | `catalog.manage` |
+| `regions`, `attributes`, `delivery-fields` | CRUD | `catalog.view` | `catalog.manage` |
+| `products` (by `public_id`) | CRUD, `POST bulk` | `catalog.view` | `catalog.manage`; bulk `activate` and `deactivate` need `catalog.publish` |
+| `products/{id}/activate`, `/deactivate` | `POST` | | `catalog.publish` |
+| `products/{id}/variants`, `products/{id}/images` | CRUD, scoped to the product | `catalog.view` | `catalog.manage` |
+| `pages` | CRUD | `content.pages` | `content.pages` |
+| `blog-categories`, `blog-posts` | CRUD | `content.blog` | `content.blog` |
+| `faq-groups`, `faqs` | CRUD, `POST reorder` | `content.faq` | `content.faq` |
+| `menus`, `menus/{id}/items` | CRUD | `content.menus` | `content.menus` |
+| `homepage-sections` | CRUD, `POST reorder`, `PUT {id}/items` | `content.homepage` | `content.homepage` |
+| `banners` | CRUD, `POST reorder` | `marketing.banners` | `marketing.banners` |
+| `redirects` | CRUD | `seo.redirects` | `seo.redirects` |
+| `media` (by `public_id`) | List, show, `POST` upload (multipart `file`, `alt?`, `folder?`, `license_note?`), `PATCH` details, `DELETE` | `content.media` | `content.media` |
+| `currencies` (by code) | List, show, `PATCH` (`markup_pct`, `rounding_rule`, `is_active`, `sort_order`) | `pricing.view` or `currency.manage` | `currency.manage` |
+| `exchange-rates` | List; `GET {code}/history` | `pricing.view` or `currency.manage` | |
+| `exchange-rates/fetch-now` | `POST` | | `currency.manage` |
+| `exchange-rates/{code}/override` | `POST { rate, expires_at?, reason }`, `DELETE { reason }` | | `currency.manage` |
+| `exchange-rates/{code}/approve-pending`, `/reject-pending` | `POST { reason }` | | `currency.manage` |
+| `pricing-rules` | CRUD | `pricing.view` | `pricing.manage`; policy `allow` also needs `pricing.override_margin` and `override_reason` |
+| `pricing-rules/simulate` | `POST { variant, country_code?, currency? }`: engine breakdown, changes nothing | `pricing.view` | |
+| `variant-prices` | CRUD | `pricing.view` | `pricing.manage`; a price below the margin floor, or with no known cost, also needs `pricing.override_margin` and `override_reason` |
+
+Rules worth knowing:
+
+- Money, rates and percentages must be sent as decimal **strings**. A JSON number is a 422.
+- `products.status` and publication are set only through activate, deactivate and bulk. Publishing needs an active variant, and `direct_topup` or `account_recharge` products also need a required delivery field.
+- Category slugs may not be a reserved word: the list in `config/catalog.php` plus the first segment of every registered route.
+- `description` and page and post `body` are sanitized against an allow-list on write.
+- Delivery field `options` are `[{ value, label }]`; `validation_regex` has no delimiters and must match the whole value.
+- Upload accepts JPEG, PNG, WebP and AVIF up to 8 MB and 8000 px, re-encoded to WebP under a random name. SVG is refused for everyone at present.
+- `rounding_rule` is `{ "mode": "step", "step": "0.05" }` or `{ "mode": "ends_with", "value": "0.99" }`, and may not be finer than the currency's exponent.
+- `conditions` on a dynamic rule take `availability` (list), `cost_min` and `cost_max`. Minimum margin cannot be set on a platform-scope rule.
+- A non-base currency cannot be activated without a current rate (`rate_missing`, `rate_stale`). The base currency cannot be deactivated or overridden. Currencies are seeded ISO reference data, so there is no create or delete route.
+- Exchange rate routes are keyed by currency code rather than the table's id, because an override can supply a currency's first rate.
 
 ## 6. Webhooks
 

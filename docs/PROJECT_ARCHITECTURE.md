@@ -172,7 +172,7 @@ Rules:
 | `suppliers:sync-catalog` | daily 03:00 UTC, per supplier setting |
 | `suppliers:sync-pricing` | every 6 hours |
 | `currency:fetch-rates` | hourly at minute 5 (provider publishes shortly after the hour) |
-| `pricing:recalculate-dirty` | every 5 min |
+| `pricing:recalculate-dirty` | every 5 min (also marks rules, explicit prices and promotions whose window started or ended) |
 | `analytics:rollup-daily` | hourly |
 | `analytics:dispatch-ga4` | every minute |
 | `analytics:sync-search-console` | daily 06:00 UTC |
@@ -560,6 +560,8 @@ Effective rate = `provider_rate * (1 + markup_pct)`, unless a manual override is
 | Spike guard | A change above `max_change_pct` (default 10%) from the previous rate is held pending approval; the old rate stays |
 | Staleness | Older than `max_age_minutes` (default 1440): display continues with a "may vary" note, **checkout in that currency is blocked**, falling back to the base currency |
 | No hardcoding | No rates in code or seeders (rule 6). Seeders create currencies without rates; first fetch or an admin override supplies them. |
+| Held rates | A held rate does not refresh `fetched_at`, so a rate left unapproved goes stale and blocks checkout. Held rates are recorded in `pending_rate` and the audit log, not in `exchange_rate_history`, because orders snapshot history rows. A repeat of the same provider timestamp is ignored. |
+| Manual overrides | An active override is never stale: it is a deliberate staff decision and the fallback when the provider is down. `manual_expires_at` passing ends it on next read or fetch, restoring the provider rate. |
 
 ### 11.5 Pricing rule precedence
 
@@ -575,6 +577,15 @@ Computed in the base currency by `PricingEngine`. Markup rules do not stack: the
 8. **Currency conversion** and per-currency rounding (`currencies.rounding_rule`).
 
 **Margin guard**: net margin is estimated after supplier cost, default gateway fee and conversion cost. If below `min_margin` (most specific of variant, product, category, global), behaviour follows `below_margin_policy`: `floor` (raise the price to the floor), `block` (not purchasable), or `allow`. `allow`, and any admin price below the floor, need `pricing.override_margin` and create an audit entry with a reason. A coupon may not take an item below the floor unless the coupon has `allow_below_margin`.
+
+Clarifications settled at M6:
+
+- Explicit prices skip the margin guard's floor, block and allow outcomes, but promotions and coupons on them still may not cross the floor. The price itself is never raised, only the discount limited.
+- On the markup path the guard runs after promotions and the coupon is clamped to the floor afterwards (unless `allow_below_margin`), so a large coupon limits itself rather than making the item unpurchasable under `block`.
+- Costs and explicit-price conversions use the rate without currency markup.
+- Minimum margin is not resolved at platform scope, so setting one on a platform rule is rejected rather than ignored. Variants with no minimum configured fall back to `settings.pricing.default_*`, whose default is break-even with policy `block`.
+- Where several gateway fee rules match, the most expensive is assumed; with none, `settings.pricing.default_gateway_fee_*` applies.
+- With a price whose cost is unknown, staff need `pricing.override_margin` because the margin cannot be verified.
 
 Listing price is stored on `product_variants.price_base` by `pricing:recalculate-dirty`, so listings and filters do not run the engine per row. The product page and checkout always re-evaluate.
 

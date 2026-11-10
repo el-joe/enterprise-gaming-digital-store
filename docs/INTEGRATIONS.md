@@ -298,6 +298,8 @@ Sources: `https://docs.openexchangerates.org/docs/latest-json`, `https://openexc
 
 Why: USD base matches our base currency, simple contract, hourly updates suffice for retail pricing with markup.
 
+**Status: adapter built (`App\Domains\Currency\Adapters\OpenExchangeRatesProvider`), tested with `Http::fake` only, awaiting credentials. It has never called the live API.** `app_id` is read from the encrypted setting `currency.oxr_app_id`, falling back to `OPEN_EXCHANGE_RATES_APP_ID`. Timeouts: connect 5 s, total 15 s. Rates are read from the raw body as decimal text, since `json_decode` would make them floats; provider errors carry no URL because the URL contains the `app_id`.
+
 Caveats: OXR says the rates are not for precise forex trades and gives no accuracy warranty. Hence markup, spike guard and manual overrides. EGP, SAR and AED availability is `UNVERIFIED` until `currencies.json` is checked with a key. Plan request quotas are `UNVERIFIED`.
 
 ---

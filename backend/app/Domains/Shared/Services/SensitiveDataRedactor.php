@@ -12,7 +12,7 @@ class SensitiveDataRedactor
 {
     public const string REPLACEMENT = '[REDACTED]';
 
-    private const string PATTERN = '/(password|passwd|token|secret|api_?key|authorization|cookie|ciphertext)'
+    private const string PATTERN = '/(password|passwd|token|secret|api_?key|app_?id|authorization|cookie|ciphertext)'
         .'|^card|^pin(_|$)|^redemption|^code$|^cvv|^otp'
         .'|(^|_)(digital|gift|recovery|voucher|activation)_codes?$/';
 

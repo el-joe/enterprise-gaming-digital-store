@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Domains\Audit\Enums\SecurityEventSeverity;
 use App\Domains\Audit\Services\SecurityEventRecorder;
+use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
+use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Shared\Models\MorphMap;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(ExchangeRateProvider::class, OpenExchangeRatesProvider::class);
     }
 
     /**
@@ -59,6 +61,8 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinutes(10, 5)->by('otp|'.$identifier);
         });
 
+        RateLimiter::for('storefront', static fn (Request $request): Limit => Limit::perMinute(120)->by('storefront|'.$request->ip()));
+        RateLimiter::for('search', static fn (Request $request): Limit => Limit::perMinute(60)->by('search|'.$request->ip()));
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }
