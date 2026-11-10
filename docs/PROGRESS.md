@@ -1052,7 +1052,8 @@ Plan and milestones: `MOBILE_APP_ROADMAP.md` (M-A1 to M-A20). Code: `application
 | M-A5 | Backend account orders, profile, devices, notifications, email links (G4, G5, G6 inbox, G10) | Complete (2026-11-10, not yet committed; awaiting PM verification) |
 | M-A6 | Backend mobile payment returns (G8) | Complete (2026-11-10, not yet committed; awaiting PM verification) |
 | M-A7 | Data layers and repositories (all features), contract fixtures (G11) | Complete (2026-11-10, not yet committed; awaiting PM verification) |
-| M-A8 to M-A20 | | Not started |
+| M-A8 | Figma mobile app design | Delivered for owner review (2026-11-10); M-A9 approval pending |
+| M-A9 to M-A20 | | Not started |
 
 ### M-A1: Flutter foundation
 
@@ -1150,4 +1151,16 @@ Date completed: 2026-11-10. Completed by: SFD with BEL.
 - Deviations: no Notifiers for cart, checkout or polling (the brief limited this milestone to presentation-agnostic providers; controllers come with the UI milestones). Search history (local) is not built: it is UI state with no API, deferred to M-A11. The app config model lives in `features/app_config` instead of `core/config/remote_config.dart`. Wallet statement amounts stay decimal strings (the API sends no currency per line). Faker is not deterministic across runs here, so the contract fixtures set every displayed value explicitly.
 - Outstanding: push device registration (M-A18); provider SDK launch (Stripe, PayPal, Paymob) is M-A13.
 - Next milestone: M-A8 (Figma mobile app design).
+
+### M-A8: Figma mobile app design
+
+Date delivered: 2026-11-10 (for review; M-A9 owner approval pending). Completed by: PM (product design), feasibility review by LFA and SFD outstanding.
+
+- Figma file `JkUUSR3WGBYC9ewy2qRFQO`, new pages **Mobile App — EN** (`74:14`), **Mobile App — AR (RTL)** (`74:15`) and **Mobile App — Components** (`74:13`). 97 frames per locale (194 total), 93 at 390x844 and 4 Android 360x800 checks (home, product detail, checkout, code reveal). Full screen list with EN/AR node ids, states, deviations and open questions: `MOBILE_APP_ROADMAP.md`, M-A8.
+- Sections per flow (EN / AR): 01 Launch & onboarding `79:306` / `79:589`; 02 Authentication `80:644` / `80:1105`; 02b Reset password `96:10783` / `96:10879`; 03 Home `82:1186` / `82:1898`; 04 Catalog & search `83:1884` / `83:2789`; 04b Browse tab `96:11237` / `96:11595`; 05 Product detail `85:2229` / `85:2780`; 06 Cart `86:2625` / `86:3216`; 07 Checkout & payment `87:2948` / `87:3462`; 08 Payment results `87:3762` / `87:4062`; 09 Orders `89:3448` / `89:4000`; 10 Code reveal `90:3744` / `90:4260`; 11 Guest order access `91:3890` / `91:4177`; 12 Wallet `92:3955` / `92:4129`; 13 Reviews `92:4346` / `92:4568`; 14 Support `93:4247` / `93:4516`; 15 Refund request `93:4645` / `93:4782`; 16 Notifications `94:4419` / `94:4633`; 17 Account & settings `94:5055` / `94:5481`; 18 Security & devices `95:5315` / `95:5996`; 19 Android 360x800 checks `96:5361` / `96:5854`.
+- 15 mobile components (app bar, bottom nav, sheet header, list tile, chip, OTP input, code reveal card, status banner, snackbar, skeleton, product tile, platform chip, status bar, home indicator, A11y note), directional ones with LTR/RTL variants. Existing variables, text and effect styles and library components reused; logo components used as supplied (never recoloured); no Canva, no generated imagery (original vector set reused).
+- States: empty, loading (skeleton), error and offline for data screens; results paid, processing, failed, expired; code reveal masked, re-auth sheet (423), wrong password, revealed with copy and clipboard note, capture-hidden, denied, rate limited; checkout guest and customer with country, PayPal/Paymob/Stripe/wallet options and notices, price changed and payment in progress.
+- Accessibility: native Figma annotations (semantics labels, 48 dp targets) and A11y sticky notes per flow (contrast ratios computed from the tokens, focus order, live regions).
+- Docs: `MOBILE_APP_ROADMAP.md` M-A8 (status, screen list, deviations, open questions). No repository code changed; nothing committed.
+- Next: LFA/SFD feasibility review and PM scope checklist, then M-A9 owner approval (open questions in the roadmap, store-policy question from section 5).
 

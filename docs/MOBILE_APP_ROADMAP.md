@@ -408,6 +408,135 @@ Order: design-independent work first (M-A1 to M-A7), then design and the approva
 - **Deliverables**: Figma pages, a screen list with node links appended to this document's M-A8 section, open questions for the owner.
 - **Acceptance**: every screen in 4.1 has EN and AR frames and its states; tokens and components only (no detached styles); no placeholder imagery (BD8: plain-text platform tiles and empty `Logo Slot` where rights are unconfirmed; sample reviews flagged "Sample content").
 - **Tests**: design review checklist signed by LFA (feasibility) and PM (scope).
+- **Status**: Delivered for owner review (2026-11-10); awaiting LFA/PM design review checklist and the M-A9 approval gate. Figma file `JkUUSR3WGBYC9ewy2qRFQO`: pages **Mobile App — EN** (`74:14`), **Mobile App — AR (RTL)** (`74:15`), **Mobile App — Components** (`74:13`). 97 frames per locale (194 total): 93 at 390x844 plus 4 Android 360x800 checks (home, product detail, checkout, code reveal), in 21 sections per page (one per flow, EN and AR sections share flow numbers). Every frame is dark, built from the `Theme` (Dark), `Layout` and `Primitives` variables, the existing text and effect styles, and library components (Button, Input, Compact Field, Choice, Option Tile, Badge, Order Status, Banner, Payment Option, Qty Stepper, Review Card, Logo, Logo Slot, Art / Vault Dial, icons) plus the new mobile components. Accessibility: native Figma annotations on interactive nodes (semantics labels, 48 dp targets) and an "A11y Note" sticky column per flow (contrast ratios, focus order, live regions). Sample reviews are flagged "Sample content".
+
+**Mobile components** (`74:13`, each directional one with `Dir=LTR|RTL`): Status Bar `75:45`, Home Indicator `75:48`, App Bar `75:137` (Root, Back, Close, Action), Bottom Nav `75:568` (5 tabs), Sheet Header `75:589`, List Tile `75:674`, Chip `75:694`, OTP Input `75:751`, Status Banner `75:836` (Info, Success, Warning, Danger, Offline), Snackbar `75:881`, Skeleton `76:324`, Product Tile `76:385`, Code Reveal Card `76:594` (Masked, Revealed, Capture hidden), Platform Chip `81:358`, A11y Note `75:890` (annotation only).
+
+**Frames worth showing first**: Home EN `82:468`, Home AR `82:1187`, Product detail EN `85:1681`, Checkout guest EN `87:2442`, Re-auth sheet EN `90:3297`, Code revealed EN `90:3478`.
+
+**Screen list** (EN and AR node ids; section ids per flow are in `PROGRESS.md`):
+
+| Screen | EN | AR | States covered |
+|---|---|---|---|
+| 01.1 Splash (config check) | `79:13` | `79:307` | loading (progress) |
+| 01.2 Splash, offline | `79:33` | `79:327` | offline, retry |
+| 01.3 Force update | `79:74` | `79:364` | update required (min version) |
+| 01.4 Maintenance | `79:108` | `79:398` | maintenance, retry, support |
+| 01.5 Onboarding, language | `79:168` | `79:454` | EN/AR selection |
+| 01.6 Onboarding, country and currency | `79:211` | `79:497` | country select, currency chips, charge-currency notice |
+| 02.1 Login | `80:172` | `80:645` | default, focus |
+| 02.2 Login, errors | `80:225` | `80:694` | invalid credentials (422), rate limited (429 countdown, disabled CTA) |
+| 02.3 2FA challenge | `80:286` | `80:751` | OTP filling, expiry countdown |
+| 02.4 2FA, recovery code and errors | `80:341` | `80:806` | recovery code, two_factor_invalid, two_factor_expired |
+| 02.5 Register | `80:391` | `80:856` | default, consents |
+| 02.6 Register, validation errors | `80:452` | `80:917` | form summary + field errors (422) |
+| 02.7 Verify email | `80:508` | `80:973` | sent toast, resend cooldown |
+| 02.8 Forgot password | `80:567` | `80:1028` | focus, sent confirmation |
+| 02.9 Reset password, new password | `96:10688` | `96:10784` | focus, mismatch error |
+| 02.10 Reset password, link expired | `96:10731` | `96:10827` | expired / invalid link |
+| 03.1 Home | `82:468` | `82:1187` | loaded (hero, platforms, categories, featured grid) |
+| 03.2 Home, loading | `82:742` | `82:1459` | skeleton |
+| 03.3 Home, error | `82:835` | `82:1552` | server error + request id, retry |
+| 03.4 Home, offline | `82:931` | `82:1644` | offline banner, retry |
+| 03.5 Currency switcher sheet | `82:1033` | `82:1745` | bottom sheet, radios |
+| 04.1 Platforms | `83:981` | `83:1885` | 3-column plain-text tiles (BD8) |
+| 04.2 Category listing | `83:1092` | `83:1999` | loaded, sold-out tile, next-page skeleton |
+| 04.3 Filters sheet | `83:1241` | `83:2152` | region, delivery, sort, price range |
+| 04.4 Listing, empty | `83:1454` | `83:2359` | no results for filters |
+| 04.5 Listing, loading and error | `83:1549` | `83:2454` | skeleton, load-more error snackbar |
+| 04.6 Search | `83:1652` | `83:2557` | suggestions, local history (clearable), popular |
+| 04.7 Search, no results | `83:1776` | `83:2681` | empty |
+| 04.8 Browse tab (categories and platforms) | `96:10880` | `96:11238` | loaded |
+| 05.1 Product detail | `85:1681` | `85:2230` | variants (region, amount, sold out), delivery field, qty, add to cart |
+| 05.2 Product detail, details and reviews | `85:1792` | `85:2341` | instructions, terms, reviews flagged "Sample content" |
+| 05.3 Product detail, errors | `85:1934` | `85:2483` | price_may_vary, delivery field error, not sold in country, disabled CTA |
+| 05.4 Product detail, added to cart | `85:2024` | `85:2575` | success snackbar |
+| 05.5 Product detail, loading | `85:2123` | `85:2676` | skeleton |
+| 05.6 Product detail, not found | `85:2157` | `85:2712` | 404 |
+| 06.1 Cart | `86:2025` | `86:2626` | lines, coupon applied, totals |
+| 06.2 Cart, blocked items and price change | `86:2204` | `86:2799` | rate_stale banner, block_reason, quantity limit, coupon_invalid, checkout disabled |
+| 06.3 Cart, empty | `86:2361` | `86:2952` | empty |
+| 06.4 Cart, loading | `86:2442` | `86:3033` | skeleton |
+| 06.5 Cart, error | `86:2515` | `86:3106` | error, retry |
+| 07.1 Checkout, guest | `87:2442` | `87:2949` | email, country, Paymob/PayPal/Stripe options, terms |
+| 07.2 Checkout, customer | `87:2527` | `87:3036` | account email, wallet option, summary |
+| 07.3 Checkout, payment notices | `87:2613` | `87:3122` | charged_in_payment_currency, wallet insufficient, option unavailable |
+| 07.4 Checkout, country sheet | `87:2685` | `87:3199` | searchable list |
+| 07.5 Checkout, price changed | `87:2750` | `87:3266` | price_changed dialog |
+| 07.6 Payment in progress | `87:2811` | `87:3323` | waiting for provider, resume, payment_processing |
+| 07.7 Checkout, loading and gateway error | `87:2867` | `87:3379` | skeleton, gateway_unavailable |
+| 08.1 Result, paid | `87:3463` | `87:3763` | paid |
+| 08.2 Result, processing | `87:3532` | `87:3836` | still processing (polling exhausted) |
+| 08.3 Result, failed | `87:3602` | `87:3902` | failed, retry-payment, attempts |
+| 08.4 Result, expired | `87:3674` | `87:3974` | order_expired |
+| 09.1 Orders list | `89:2899` | `89:3449` | status filter, statuses, next-page skeleton |
+| 09.2 Orders, empty | `89:3058` | `89:3612` | empty |
+| 09.3 Orders, loading and error | `89:3142` | `89:3692` | skeleton, refresh error |
+| 09.4 Order detail | `89:3235` | `89:3787` | items, units (masked), payment summary, help/refund |
+| 09.5 Order detail, partial and timeline | `89:3347` | `89:3897` | partially refunded, timeline |
+| 10.1 Code, masked | `90:3232` | `90:3745` | masked, secure note |
+| 10.2 Re-auth sheet (423) | `90:3297` | `90:3810` | password sheet |
+| 10.3 Re-auth, wrong password | `90:3393` | `90:3902` | error |
+| 10.4 Code, revealed and copied | `90:3478` | `90:3989` | revealed, copy, hide, redemption link, clipboard toast |
+| 10.5 Code, hidden (capture/background) | `90:3584` | `90:4095` | iOS capture detected |
+| 10.6 Reveal, denied, rate limit, device warning | `90:3629` | `90:4140` | email_unverified/reveal_denied, 429, rooted warning |
+| 11.1 Guest order, verify email | `91:3613` | `91:3891` | link verified, send OTP |
+| 11.2 Guest order, enter code | `91:3662` | `91:3941` | OTP filled, resend cooldown |
+| 11.3 Guest order, code error | `91:3707` | `91:3988` | otp_invalid, attempts left |
+| 11.4 Guest order, codes | `91:3754` | `91:4035` | code card, create-account prompt |
+| 11.5 Guest order, link expired | `91:3830` | `91:4117` | expired link |
+| 12.1 Wallet | `92:3782` | `92:3956` | balance, statement, pagination skeleton |
+| 12.2 Wallet, frozen | `92:3849` | `92:4025` | frozen |
+| 12.3 Wallet, empty | `92:3899` | `92:4073` | zero balance, no transactions |
+| 13.1 My reviews | `92:4130` | `92:4347` | eligible items, pending/published (Sample content) |
+| 13.2 Write a review | `92:4214` | `92:4431` | rating, title, body |
+| 13.3 Reviews, errors and empty | `92:4285` | `92:4502` | email_unverified, review_exists, empty |
+| 14.1 Support tickets | `93:3992` | `93:4248` | statuses |
+| 14.2 New ticket | `93:4062` | `93:4316` | category, order link, subject, message |
+| 14.3 Ticket thread | `93:4125` | `93:4385` | messages, composer |
+| 14.4 Tickets, closed and empty | `93:4177` | `93:4443` | ticket_closed, empty |
+| 15.1 Refund request | `93:4517` | `93:4646` | form |
+| 15.2 Refund requests, submitted and errors | `93:4574` | `93:4705` | submitted, refund_request_open, refund_not_allowed |
+| 16.1 Notifications | `94:4220` | `94:4420` | unread/read, mark all read |
+| 16.2 Notifications, empty and offline | `94:4285` | `94:4491` | offline, empty |
+| 16.3 Notification preferences | `94:4331` | `94:4540` | mandatory (disabled on), on, off, push "later" |
+| 17.1 Account tab | `94:4634` | `94:5056` | hub |
+| 17.2 Profile | `94:4826` | `94:5260` | disabled email, phone error |
+| 17.3 Settings | `94:4884` | `94:5318` | language, currency, legal, version, sign out |
+| 17.4 Sign out confirm | `94:4981` | `94:5411` | dialog |
+| 18.1 Security | `95:4638` | `95:5316` | 2FA off, password, devices |
+| 18.2 Turn on 2FA | `95:4705` | `95:5394` | QR + secret, confirm code |
+| 18.3 Recovery codes | `95:4987` | `95:5674` | shown once (secure) |
+| 18.4 Turn off 2FA | `95:5061` | `95:5746` | password sheet |
+| 18.5 Devices | `95:5133` | `95:5812` | current, other, sign out all |
+| 18.6 Revoke device | `95:5188` | `95:5867` | confirm dialog |
+| 18.7 Change password | `95:5236` | `95:5915` | current-password error |
+| 19.1 Home, Android 360x800 | `96:4914` | `96:5362` | 360 check |
+| 19.2 Product detail, Android 360x800 | `96:5103` | `96:5572` | 360 check |
+| 19.3 Checkout, Android 360x800 | `96:5192` | `96:5665` | 360 check |
+| 19.4 Code reveal, Android 360x800 | `96:5264` | `96:5743` | 360 check |
+
+Coverage against 4.1: every row has EN and AR frames. Provider UIs (Stripe PaymentSheet, PayPal and Paymob hosted pages) are not drawn: they are the providers' own screens; the app's side (payment in progress, verify, results) is. Push (M-A18) has no screens beyond the "coming later" note in preferences.
+
+**Deviations**:
+- Content uses the fictional catalog of the contract fixtures (Orbit, Nova, Pulse, Arcade, Zenith; order numbers `BX-…`, ticket `T-261110-…`) and fake codes, never real brands. Platform and product imagery are plain-text tiles with an empty `Logo Slot` (BD8); gateways are text labels only (no PayPal, Paymob or Stripe logos).
+- Hero, promo and category art reuse the original vector set (`61:629`, `61:61`, `61:164`, `61:214`, `61:267`; mirrored in RTL) as stand-ins for API images; empty states are clones of `62:32`–`62:101` (those are frames, not components, so they are clones). The cloned art keeps its own raw colours from the asset set; everything else is bound to variables (checked: no unbound solid paint and no unstyled text outside reused art).
+- Arabic uses the same text styles as English (no per-locale line-height override, which would detach styles); the Latin-only `overline` style is replaced by `label/sm` in Arabic. Prices use Latin digits in both locales (the formatter default) and an LRM before currency amounts inside Arabic sentences so `$31.50` is not reordered.
+- "Expired" result and order states reuse `Order Status` `cancelled` styling with the label "Expired" (no expired variant exists).
+- Status-bar icons are simplified shapes; scrolling screens show the first viewport only (content continues under the bottom nav).
+- RTL uses the `Script=Arabic` logo variant as supplied (never recoloured); the logo sits on dark surfaces only.
+- QR code in 2FA enrol is an original vector placeholder for the runtime QR.
+
+**Open questions for the owner**:
+1. Currency display for EGP, SAR and AED: symbol (the fixtures return the code, for example `EGP`; frames show `E£1530.00`) and whether to group thousands (`1,530.00`).
+2. Arabic-Indic digits (٠-٩) for prices and dates in Arabic, or Latin digits as drawn.
+3. If the store-policy review (section 5) disallows in-app purchases, should the app show a "buy on the web" state instead of checkout? Not drawn yet.
+4. Guest checkout in the app (open decision 5): drawn as supported (07.1, 11.x); confirm.
+5. Device integrity (open decision 6): drawn as an information banner on reveal (warn only); confirm or block.
+6. Biometric app unlock (open decision 11): not drawn; needs a settings toggle and a lock screen if approved.
+7. Reveal timeout: code auto-hides after 2 minutes and on background; confirm the duration.
+8. Home hero carousel: auto-advance off (drawn) or on with a pause control.
+9. Real platform names and logos once rights are confirmed (BD8): the empty `Logo Slot` and plain-text tiles stay until then.
 
 ### M-A9: Owner approval gate
 - **Owner**: PM.
