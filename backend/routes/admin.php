@@ -25,6 +25,8 @@ use App\Http\Controllers\Admin\Customers\CustomerWalletController;
 use App\Http\Controllers\Admin\Fulfillment\DigitalCodeController;
 use App\Http\Controllers\Admin\Fulfillment\ManualTaskController;
 use App\Http\Controllers\Admin\Fulfillment\OrderFulfilmentController;
+use App\Http\Controllers\Admin\Mcp\McpActionController;
+use App\Http\Controllers\Admin\Mcp\McpTokenController;
 use App\Http\Controllers\Admin\Payments\RefundController;
 use App\Http\Controllers\Admin\Pricing\PriceSimulationController;
 use App\Http\Controllers\Admin\Pricing\PricingRuleController;
@@ -197,4 +199,16 @@ Route::get('customers/{customer:public_id}/wallet/transactions', [CustomerWallet
 Route::middleware('permission:customers.wallet_adjust')->group(static function (): void {
     Route::post('customers/{customer:public_id}/wallet/adjustments', [CustomerWalletController::class, 'adjust'])->middleware('throttle:30,1')->name('customers.wallet.adjust');
     Route::post('customers/{customer:public_id}/wallet/status', [CustomerWalletController::class, 'status'])->name('customers.wallet.status');
+});
+
+// MCP (M16): token issuance and the out-of-band approval queue. Screens arrive in M15.
+Route::middleware('permission:service_accounts.manage')->group(static function (): void {
+    Route::get('mcp-tokens', [McpTokenController::class, 'index'])->name('mcp-tokens.index');
+    Route::post('mcp-tokens', [McpTokenController::class, 'store'])->middleware('throttle:10,1')->name('mcp-tokens.store');
+    Route::delete('mcp-tokens/{tokenId}', [McpTokenController::class, 'destroy'])->whereNumber('tokenId')->name('mcp-tokens.destroy');
+});
+Route::middleware('permission:mcp_actions.approve')->group(static function (): void {
+    Route::get('mcp-actions', [McpActionController::class, 'index'])->name('mcp-actions.index');
+    Route::post('mcp-actions/{mcpAction:public_id}/approve', [McpActionController::class, 'approve'])->name('mcp-actions.approve');
+    Route::post('mcp-actions/{mcpAction:public_id}/reject', [McpActionController::class, 'reject'])->name('mcp-actions.reject');
 });

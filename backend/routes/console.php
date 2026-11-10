@@ -28,3 +28,6 @@ Schedule::command('payments:reconcile-daily')->dailyAt('02:45')->withoutOverlapp
 
 // Wallet (M11)
 Schedule::command('wallet:verify-ledger')->dailyAt('03:30')->withoutOverlapping()->onOneServer();
+
+// MCP (M16)
+Schedule::command('mcp:expire-pending-actions')->everyFiveMinutes()->withoutOverlapping()->onOneServer();

@@ -17,6 +17,12 @@ use Illuminate\Support\Str;
  */
 class AuditLogger
 {
+    /**
+     * Hidden context key set by service-account authentication (MCP, n8n): `{id, kind}`. Used
+     * as the actor when no user is signed in.
+     */
+    public const string SERVICE_ACCOUNT_CONTEXT = 'audit.service_account';
+
     public function __construct(private SensitiveDataRedactor $redactor) {}
 
     public function record(AuditEntry $entry): AuditLog
@@ -51,6 +57,12 @@ class AuditLogger
 
         if ($user instanceof User) {
             return [$user->type === UserType::Staff ? AuditLogActorType::Staff : AuditLogActorType::Customer, $user->id];
+        }
+
+        $account = Context::getHidden(self::SERVICE_ACCOUNT_CONTEXT);
+
+        if (is_array($account) && isset($account['id'], $account['kind'])) {
+            return [$account['kind'] === 'n8n' ? AuditLogActorType::N8n : AuditLogActorType::Mcp, (int) $account['id']];
         }
 
         return [AuditLogActorType::System, null];

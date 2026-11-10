@@ -1,0 +1,29 @@
+{
+  "name": "egs-mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Model Context Protocol server for the Enterprise Gaming Digital Store. Calls the protected Laravel /api/v1/mcp API; has no database access and no provider credentials.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "egs-mcp-server": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "test": "tsc -p tsconfig.test.json && node --test --test-reporter=spec dist-test/test/",
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "typescript": "5.9.3"
+  }
+}

@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Table('mcp_audit_logs')]
-#[Fillable(['service_account_id', 'token_id', 'tool', 'arguments_redacted', 'outcome', 'http_status', 'duration_ms', 'ip'])]
+#[Fillable(['service_account_id', 'token_id', 'tool', 'arguments_redacted', 'outcome', 'error_code', 'http_status', 'duration_ms', 'ip', 'request_id'])]
 #[UseFactory(McpAuditLogFactory::class)]
 class McpAuditLog extends Model
 {

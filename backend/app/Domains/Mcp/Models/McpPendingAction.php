@@ -17,9 +17,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Table('mcp_pending_actions')]
-#[Fillable(['service_account_id', 'tool', 'arguments', 'arguments_hash', 'risk_tier', 'summary', 'approved_via', 'expires_at', 'executed_at', 'result'])]
+#[Fillable(['service_account_id', 'requested_token_id', 'tool', 'arguments', 'arguments_hash', 'risk_tier', 'summary', 'approved_via', 'expires_at', 'executed_at', 'result'])]
 #[UseFactory(McpPendingActionFactory::class)]
-#[Hidden(['arguments_hash'])]
+#[Hidden(['arguments_hash', 'confirmation_hash'])]
 class McpPendingAction extends Model
 {
     /** @use HasFactory<McpPendingActionFactory> */
@@ -57,8 +57,15 @@ class McpPendingAction extends Model
             'approved_via' => McpPendingActionApprovedVia::class,
             'expires_at' => 'datetime',
             'executed_at' => 'datetime',
+            'decided_at' => 'datetime',
+            'requested_token_id' => 'integer',
             'result' => 'array',
         ];
+    }
+
+    public function hasExpired(): bool
+    {
+        return $this->expires_at->isPast();
     }
 
     /**

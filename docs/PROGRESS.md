@@ -22,7 +22,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M13 | Customer account | Not started |
 | M14 | Admin core | Not started |
 | M15 | Admin remaining | Not started |
-| M16 | MCP server | Not started |
+| M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
 | M17 | n8n workflows | Not started |
 | M18 | SEO and analytics | Not started |
 | M19 | Full test pass | Not started |
@@ -851,3 +851,79 @@ Real coupons behind the M7 `CheckoutCoupons` contract (now the binding), the wal
 ### Next milestone
 
 M12: Storefront. Risks it inherits: the checkout must handle `next.type: "wallet"` (already paid, no redirect) and a null `next` after a refused wallet attempt; coupon errors arrive as `message` on 422 `coupon_invalid`; the affiliate landing must call `POST /storefront/affiliates/click` (CSRF, cookie); product pages read reviews from `/catalog/products/{slug}/reviews`. M13 needs the 4b routes (wallet, reviews with `/reviews/eligible`, tickets, refund requests). M14/M15 must build screens on 5d.
+
+---
+
+## M16: MCP server
+
+Date completed: 2026-11-10
+Completed by: AI Automation / MCP Engineer
+
+### Summary of completed work
+
+A dedicated MCP server (`mcp-server/`, TypeScript, official SDK, stdio) and the protected Laravel API it calls (`/api/v1/mcp`): 27 read tools, 6 write tools and `get_action_status`, token authentication with per-token scopes, per-account rate limiting, FormRequest validation, API Resources, one `mcp_audit_logs` row per call, the standard error envelope, PII masking, hard denials, and the two-step write confirmation (pending action, then admin approval or a single-use confirmation token behind MCP elicitation). Writes run through the existing services, so the margin guard, publication rules, coupon rules, the order state machine and the supplier gate all apply. No new composer packages.
+
+PM scope decision: M16 ran before M14/M15. Tokens are issued and revoked with `php artisan mcp:token` and `/admin/api/mcp-tokens` (`service_accounts.manage`); actions are approved through `/admin/api/mcp-actions` (`mcp_actions.approve`). No Blade or frontend JS; the screens are M15. Recorded in `IMPLEMENTATION_ROADMAP.md` under M16.
+
+### Files created
+
+- `backend/app/Domains/Mcp/`: `Enums/{McpScope,McpWriteTool}`; `DTOs/{McpCaller,PreparedAction}`; `Contracts/McpWriteAction`; `Actions/{UpdateProductPriceAction,ChangeProductStatusAction,ActivateProductAction,DeactivateProductAction,CreateCouponAction,TriggerCatalogSyncAction,RetryVerifiedFailedOrderAction}`; `Repositories/{McpCatalogRepository,McpOrderRepository,McpAnalyticsRepository,McpOperationsRepository,McpPricingRepository,McpPendingActionRepository}`; `Services/{McpPendingActionService,McpActionRegistry,McpTokenService,McpAuditRecorder,McpCatalogReader,McpAnalyticsReader,McpOperationsReader,PiiMasker,McpFormat}`
+- `backend/app/Http/`: `Middleware/Mcp/{RecordMcpCall,AuthenticateMcpToken,RequireMcpScope,RequireMcpWriteAccess}`; `Controllers/Mcp/{McpController,SessionController,ProductController,OrderController,AnalyticsController,OperationsController,ActionController}`; `Controllers/Admin/Mcp/{McpTokenController,McpActionController}`; 13 Form Requests under `Requests/Mcp` and `Requests/Admin/Mcp`; 7 Resources under `Resources/Mcp`
+- `backend/app/Console/Commands/Mcp/{McpTokenCommand,ExpirePendingActionsCommand}`, `backend/config/mcp.php`, `backend/routes/mcp.php`
+- Tests: `backend/tests/Feature/Mcp/{McpAuthTest,McpReadToolsTest,McpWriteActionsTest,McpTokenAndLimitsTest,McpCanaryTest}`, `backend/tests/Support/McpFixtures.php`
+- `mcp-server/`: `src/{index,config,laravel-client,errors,logger,rate-limiter,tools,server}.ts`, `test/{helpers,config.test,laravel-client.test,server.test}.ts`, `scripts/smoke.mjs`, `README.md`, `package.json`, `package-lock.json`, `tsconfig.json`, `tsconfig.test.json`, `.gitignore` (node_modules, dist, dist-test), `.env.example` (empty values)
+- Changed: `AuditLogger` (actor `mcp`/`n8n` from a hidden context key set by service-account authentication, when no user is signed in), `ServiceAccount` (`HasApiTokens`, `isUsable`), `McpPendingAction` and `McpAuditLog` (new columns), `CouponService::applyGuarded` (creator may be `mcp` when the caller passes it; admin input never carries it), `AppServiceProvider` (`mcp` limiter), `bootstrap/app.php` (route file, `mcp` middleware group, `mcp.scope` alias), `routes/{admin,console}.php`, `.env.example` (four empty `MCP_*` variables), `tests/Pest.php` (requires the fixtures file)
+- Docs: `MCP_SERVER.md` rewritten for what is built; `API_DOCUMENTATION.md` section 8 and status; `PROJECT_ARCHITECTURE.md` ADR-024 revisited, ADR-031, ADR-032; `DATABASE_DESIGN.md` MCP columns; `SECURITY.md` service-account paragraph; `IMPLEMENTATION_ROADMAP.md` scope decision
+
+### Migrations
+
+`2026_11_11_010001_add_confirmation_columns_to_mcp_tables`: `mcp_pending_actions.requested_token_id`, `confirmation_hash`, `decided_at`, `decision_note`; `mcp_audit_logs.error_code`, `request_id`. Rolled back and re-applied on `gaming-store_testing`. **Not applied to the app database `gaming-store`**; run `php artisan migrate`.
+
+### Features implemented
+
+- Tools and routes: see `MCP_SERVER.md` section 4. Read-only by default in two layers: the server registers write tools only with `MCP_READ_ONLY=false`, a writable account and the scope (it reads `GET /api/v1/mcp/session`); Laravel refuses writes for read-only accounts and missing scopes before validating arguments. New tokens are read-only unless writes are allowed explicitly; default lifetime 90 days.
+- `unavailable` results: visitor and cart conversion (no GA4 data until M18) and scheduler heartbeats (M17). The checkout-to-payment rate is real. Sales and profit come from `order_item_financials` (settled orders only, stated in the response).
+- Hard denials: no route for codes, credentials, refunds, settings, customer records or queries; masked email, phone and name; no IP, delivery values, code masks, provider ids, provider messages, sync error text or reconciliation details.
+- `retry_verified_failed_order`: only when the latest supplier attempt is `rejected` or `not_accepted_verified`; refused for `pending_verification`, `accepted`, `submitting`, `succeeded` or no attempt; re-checked under row locks at execution; always tier 2, executed as the approving staff member through `FulfilmentAdminService` and the state machine.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Tests in MCP_SERVER.md section 8 | Met | Laravel: no token, wrong scope (every read and write tool), read-only account, PII masking, audit written, pending-action lifecycle with expiry, argument tampering, reuse, another token, blocked retry for `pending_verification`. Server: schemas and error mapping with Laravel mocked |
+| All tools listed | Met | 27 read tools, 6 write tools, `get_action_status`; `tools/list` asserted in `server.test.ts` and the smoke test; one Laravel route each (`McpTokenAndLimitsTest` counts 36 routes) |
+| Read-only default proven in both layers | Met | Server: write tools absent with the default, with a read-only account and without the scope (unit and smoke). Laravel: `read_only` 403 with the scope on a read-only account; issued tokens read-only by default |
+| Setup docs with Desktop and Code config | Met | `mcp-server/README.md` and `MCP_SERVER.md` 7: Claude Desktop JSON, `claude mcp add`, `.mcp.json` with `${EGS_API_TOKEN}`; placeholder tokens only |
+| PM: versioned route group, token auth, scopes, rate limit, validation, Resources, audit, envelope, no Eloquent in controllers | Met | Architecture tests pass; `mcp_audit_logs` rows for ok, denied, invalid, confirmation_required and rate_limited |
+| PM: writes need write scope and two-step confirmation through existing services | Met | `McpWriteActionsTest` (36 tests) |
+| PM: rate limits | Met | Per account in Laravel (429, audited, other accounts unaffected, resets); token bucket in the server |
+| PM: canary | Met | `McpCanaryTest`: a code, PIN, redemption URL, its mask, supplier and payment credentials, webhook and HMAC secrets, a supplier transaction id, a player id and customer email, phone and name are absent from every read tool, a write tool, `get_action_status` and `mcp_audit_logs` (token with every scope) |
+
+### Tests and results
+
+- Command: `php artisan test --compact` (MySQL `gaming-store_testing`)
+- Result: **1697 passed, 0 failed, 0 skipped (10066 assertions), 131.0 s**, up from 1598 (95 new tests in `tests/Feature/Mcp`, 4 from architecture datasets over the new enums and DTOs).
+- Command: `cd mcp-server && npm test` (tsc, then node:test): **34 passed, 0 failed**. `npm run build`: clean. `npm run smoke`: passed (`dist/index.js` started over stdio twice against a local mock API: read-only lists 27 tools and calls `list_products`, `invalid_input` and `not_found` are structured; with writes enabled and `products:write` only, 31 tools).
+- Not tested, and why: the MCP server against a running Laravel instance (the smoke test uses a mock; the new migration is not applied to the app database and no app token exists); elicitation with real Claude Desktop or Claude Code clients (tested with the SDK client over an in-memory transport); queue workers (sync queue and `Queue::fake`).
+- Existing tests changed: none. `tests/Pest.php` gains one `require_once` for the MCP fixtures.
+
+### Outstanding requirements
+
+- Apply the migration to `gaming-store`, issue a token with `php artisan mcp:token issue`, and run the server once against the real API.
+- M15: admin screens for tokens (`/admin/api/mcp-tokens`) and the AI action approval queue (`/admin/api/mcp-actions`).
+- Streamable HTTP transport is not built (`MCP_TRANSPORT` accepts only `stdio`).
+- If a process dies between approval and execution the action stays `approved` (visible in the queue, never re-run automatically).
+- `get_low_margin_products` examines at most 5000 variants per call (`scan_truncated` reports it).
+- Conversion metrics and scheduler health stay `unavailable` until M18 and M17.
+
+### Design changes made
+
+- ADR-031: the server uses the SDK's low-level `Server` (marked for advanced use in SDK 1.x) so schema failures return structured `invalid_input` errors.
+- ADR-032: single-use, token-bound, hashed confirmation token for elicitation approval of tier 1 actions only.
+- ADR-024 revisited: SDK kept on 1.x, pinned at 1.32.2 with zod 4.6.7.
+- `MCP_SERVER.md`: `GET /session` added for server start-up; the confirmation flow describes the built endpoints; transports reduced to stdio.
+
+### Next milestone
+
+M12 (storefront) or M14 (admin core) as the PM schedules; M15 must add the MCP token and approval screens on the M16 JSON endpoints.
+

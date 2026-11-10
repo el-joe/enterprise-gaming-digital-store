@@ -107,7 +107,7 @@ Redaction: `RedactSensitiveLogData` Monolog processor removes keys including `pa
 
 ## 10. Service clients
 
-n8n and MCP: named `service_accounts` with Sanctum tokens, scopes, optional IP allow-list, per-account rate limit, and read-only by default. Tokens are shown once, and never logged. n8n requests additionally carry a timestamped HMAC; a 5-minute window and a Redis nonce (the signature) block replay. Laravel-to-n8n webhooks are signed the same way.
+n8n and MCP: named `service_accounts` with Sanctum tokens, scopes, optional IP allow-list, per-account rate limit, and read-only by default. Tokens are shown once, and never logged. MCP (built M16, `MCP_SERVER.md`): bearer tokens only (no session), exact `mcp:` abilities only (a `*` ability grants nothing), tokens expire after 90 days by default, every call is written to `mcp_audit_logs`, customer emails and phones are masked, and there is no route for codes, credentials, refunds, settings or queries. Writes are pending actions approved out of band (ADR-020, ADR-032). n8n requests additionally carry a timestamped HMAC; a 5-minute window and a Redis nonce (the signature) block replay. Laravel-to-n8n webhooks are signed the same way.
 
 ## 11. Suspicious transaction detection
 

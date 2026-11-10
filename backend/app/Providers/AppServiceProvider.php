@@ -9,6 +9,7 @@ use App\Domains\Audit\Services\SecurityEventRecorder;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
+use App\Domains\Mcp\DTOs\McpCaller;
 use App\Domains\Orders\Events\OrderStatusChanged;
 use App\Domains\Orders\Listeners\RecognizeOrderFinancials;
 use App\Domains\Orders\Listeners\SendFulfilmentNotifications;
@@ -115,6 +116,13 @@ class AppServiceProvider extends ServiceProvider
         });
         RateLimiter::for('webhooks', static fn (Request $request): Limit => Limit::perMinute(600)->by('webhooks|'.$request->ip()));
         RateLimiter::for('account', static fn (Request $request): Limit => Limit::perMinute(60)->by('account|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+        RateLimiter::for('mcp', static function (Request $request): Limit {
+            $caller = $request->attributes->get(McpCaller::REQUEST_ATTRIBUTE);
+
+            return $caller instanceof McpCaller
+                ? Limit::perMinute(max(1, $caller->account->rate_limit_per_minute))->by('mcp|account|'.$caller->account->id)
+                : Limit::perMinute(30)->by('mcp|ip|'.$request->ip());
+        });
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }

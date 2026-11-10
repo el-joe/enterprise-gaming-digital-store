@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -15,7 +15,7 @@
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum token (`n8n`) + HMAC | planned |
-| MCP | `/api/v1/mcp` | Sanctum token (`mcp`) + scopes | planned |
+| MCP | `/api/v1/mcp` | Sanctum bearer token of an `mcp` service account + scopes | built (M16, section 8) |
 
 Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 
@@ -97,7 +97,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `account` (M11), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
+Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `account` (M11), `mcp` (M16, per account, `service_accounts.rate_limit_per_minute`), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -289,7 +289,8 @@ Pattern: RESTful per resource under `/admin/api`. Each route has a permission fr
 | `users`, `roles` | CRUD, permissions |
 | `settings/{group}` | `GET`, `PATCH` |
 | `service-accounts` | CRUD, token issue and revoke (shown once) |
-| `mcp-actions` | List, `POST {id}/approve`, `POST {id}/reject` |
+| `mcp-actions` | Built (M16, section 8): list, `POST {id}/approve`, `POST {id}/reject` |
+| `mcp-tokens` | Built (M16, section 8): list, issue (shown once), revoke |
 | `ai-suggestions` | List, `POST {id}/approve`, `POST {id}/reject` |
 | `saved-filters` | CRUD by `table_key` |
 | `exports` | `POST`, `GET {id}` |
@@ -426,6 +427,24 @@ Responses carry `{ success, data, meta: { generated_at } }`.
 | POST | `/executions` (start, finish) |
 | POST | `/alerts` |
 
-## 8. MCP API
+## 8. MCP API (built, M16)
 
-One Laravel route per tool at `/api/v1/mcp/{tool-group}/...`; see `MCP_SERVER.md`. Writes return `202 { action_id, status: "pending_approval", summary }`.
+Prefix `/api/v1/mcp`, middleware group `mcp`: `RecordMcpCall` (one `mcp_audit_logs` row per call), `AuthenticateMcpToken` (bearer Sanctum token of an enabled `mcp` service account, IP allow-list), `throttle:mcp`. One route per tool; the route name after `mcp.` is the tool name. Full tool schemas, tiers and the confirmation flow are in `MCP_SERVER.md`. Responses use the standard envelopes and carry `Cache-Control: no-store`.
+
+| Method | Path | Tool | Scope |
+|---|---|---|---|
+| GET | `/session` | (server start-up: account, read-only flag, scopes) | any valid token |
+| GET | `/products`, `/products/search`, `/products/{id_or_sku}` | `list_products`, `search_products`, `get_product` | `products:read` |
+| GET | `/variants/{sku}/pricing`, `/variants/{sku}/availability` | `get_product_pricing`, `check_product_availability` | `products:read` |
+| GET | `/orders`, `/orders/search`, `/orders/{number}`, `/orders/{number}/status` | `list_orders`, `search_customer_orders`, `get_order_details`, `get_order_status` | `orders:read` |
+| GET | `/analytics/{sales-summary, profit-summary, top-selling-products, supplier-performance, failed-orders, conversion-metrics}` | `get_sales_summary` ... `get_conversion_metrics` | `analytics:read` |
+| GET | `/suppliers/{balances, status, sync-status}`, `/inventory/low-margin-products` | `get_supplier_balances`, `get_supplier_status`, `get_supplier_sync_status`, `get_low_margin_products` | `suppliers:read` |
+| GET | `/marketing/{best-selling-products, underperforming-products, coupon-performance, customer-purchase-trends}` | marketing tools | `marketing:read` |
+| GET | `/operations/{pending-orders, failed-transactions, pending-reconciliation, system-health}` | operations tools | `operations:read` |
+| POST | `/actions/{update-product-price, activate-product, deactivate-product, create-coupon, trigger-catalog-sync, retry-verified-failed-order}` | write tools: `202` pending action | the tool's write scope; account not read-only |
+| POST | `/actions/{action_id}/confirm` | (elicitation approval, `confirmation_token`) | `actions:confirm`, the requesting token |
+| GET | `/actions/{action_id}` | `get_action_status` | any write scope |
+
+Writes return `202 { action_id, tool, status: "pending_approval", risk_tier, summary, arguments, expires_at, approval: { admin_panel, elicitation }, confirmation_token? }`. New error codes: `scope_missing`, `read_only` (403); `duplicate_action`, `no_change`, `retry_not_allowed`, `supplier_inactive`, `action_not_pending` (409); `confirmation_invalid`, `admin_approval_required` (403); `confirmation_expired` (410).
+
+Admin (session, 2FA): `GET /admin/api/mcp-tokens`, `POST /admin/api/mcp-tokens` (`account`, `scopes[]`, `allow_writes`, `rate_limit_per_minute`, `allowed_ips[]`, `expires_in_days`; 201 with the token once; 10 per minute), `DELETE /admin/api/mcp-tokens/{id}` (`service_accounts.manage`); `GET /admin/api/mcp-actions?status=`, `POST /admin/api/mcp-actions/{id}/approve` (`note?`), `POST /admin/api/mcp-actions/{id}/reject` (`note`) (`mcp_actions.approve`, plus the tool's own permission to approve).

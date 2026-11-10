@@ -143,6 +143,7 @@ Accept: every module in spec Phase 9 exists and is tested; credentials are write
 
 Depends: M14. Scope: `MCP_SERVER.md`.
 Accept: tests in its section 8; all tools listed; read-only default proven in both layers; setup docs with Desktop and Code config.
+PM scope decision (2026-11-10): M16 runs before M14 and M15. MCP tokens are issued and revoked through `php artisan mcp:token` and a JSON endpoint behind `service_accounts.manage`, and MCP actions are approved through a JSON endpoint behind `mcp_actions.approve`. No Blade or frontend JS is built in M16; the admin screens for tokens and the AI action approval queue are part of M15.
 
 ### M17: n8n workflows (Step 10)
 

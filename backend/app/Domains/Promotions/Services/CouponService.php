@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Admin management of coupons (audited, SECURITY.md 9). Codes are stored upper case. `used_count`
  * is written only by the coupon contract under the coupon row lock; a global limit cannot be set
- * below the uses already held.
+ * below the uses already held. The creator is staff unless the caller passes a
+ * `CouponCreatedByType` instance as `created_by_type` (the MCP coupon action does); validated
+ * admin input never carries one.
  *
  * @extends CrudService<Coupon>
  */
@@ -68,7 +70,9 @@ class CouponService extends CrudService
     protected function applyGuarded(Model $model, array $data): void
     {
         if (! $model->exists) {
-            $model->forceFill(['created_by_type' => CouponCreatedByType::Staff]);
+            $creator = $data['created_by_type'] ?? null;
+
+            $model->forceFill(['created_by_type' => $creator instanceof CouponCreatedByType ? $creator : CouponCreatedByType::Staff]);
         }
     }
 }

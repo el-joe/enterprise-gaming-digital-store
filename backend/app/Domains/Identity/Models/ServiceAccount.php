@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Table('service_accounts')]
 #[Fillable(['name', 'kind', 'is_read_only', 'allowed_ips', 'rate_limit_per_minute', 'hmac_secret', 'last_used_at', 'disabled_at'])]
@@ -22,7 +23,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ServiceAccount extends Model
 {
     /** @use HasFactory<ServiceAccountFactory> */
-    use HasFactory, SoftDeletes;
+    use HasApiTokens, HasFactory, SoftDeletes;
+
+    public function isUsable(): bool
+    {
+        return $this->disabled_at === null && ! $this->trashed();
+    }
 
     /**
      * Get the attributes that should be cast.

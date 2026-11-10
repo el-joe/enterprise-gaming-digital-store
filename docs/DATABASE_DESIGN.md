@@ -1683,8 +1683,12 @@ Index: `idx_ais` (status, type, created_at): review queue. Approved does not aut
 | expires_at | ts | NN | |
 | executed_at | ts | Y | |
 | result | json | Y | |
+| requested_token_id | bigint unsigned | Y | M16: the Sanctum token that requested it; only that token may confirm it |
+| confirmation_hash | char(64) | Y | M16: SHA-256 of the single-use elicitation confirmation token (tier 1, `actions:confirm` only); cleared when used, rejected or expired; hidden from serialization |
+| decided_at | ts | Y | M16: when it was approved, confirmed or rejected |
+| decision_note | str(1000) | Y | M16: the staff note on approval or rejection |
 
-Index: `idx_mpa` (status, expires_at): admin queue, expiry. `idx_mpa_dedupe` (service_account_id, arguments_hash, status): the service rejects a second `pending` action with the same arguments. This is an index, not a unique key, because `status` changes over the row's life.
+`approved_by` holds the staff member who decided the action, approval or rejection. Index: `idx_mpa` (status, expires_at): admin queue, expiry. `idx_mpa_dedupe` (service_account_id, arguments_hash, status): the service rejects a second live `pending` action with the same arguments. This is an index, not a unique key, because `status` changes over the row's life. `arguments_hash` is SHA-256 over the tool name and the key-sorted JSON of the arguments; it is recomputed before execution.
 
 ### mcp_audit_logs [append]
 
@@ -1698,8 +1702,10 @@ Index: `idx_mpa` (status, expires_at): admin queue, expiry. `idx_mpa_dedupe` (se
 | http_status | smallint unsigned | Y | |
 | duration_ms | int unsigned | Y | |
 | ip | str(45) | Y | |
+| error_code | str(64) | Y | M16: `code` of the error envelope returned |
+| request_id | char(26) | Y | M16: request ULID, also in the response and logs |
 
-Indexes: `idx_mal_account` (service_account_id, created_at). `idx_mal_tool` (tool, outcome, created_at).
+`tool` is the route name (the MCP tool name, or `session` and `confirm_action`). Arguments are redacted by `SensitiveDataRedactor`, the confirmation token is dropped and email and phone values are masked. Indexes: `idx_mal_account` (service_account_id, created_at). `idx_mal_tool` (tool, outcome, created_at).
 
 ---
 
