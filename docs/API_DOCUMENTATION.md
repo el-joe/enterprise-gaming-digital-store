@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -8,9 +8,9 @@
 
 | Group | Prefix | Auth | Status |
 |---|---|---|---|
-| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart and newsletter planned |
+| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); newsletter planned |
 | Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor routes built; rest planned |
-| Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | planned |
+| Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status and guest OTP built (3a); payment routes planned (M10) |
 | Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me` and section 5a built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no CSRF | planned |
@@ -61,6 +61,7 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 | 404 | `not_found` | absent | SweetAlert2 error |
 | 403 | `margin_override_forbidden` | absent | SweetAlert2 error |
 | 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled` | absent | SweetAlert2 and reload row |
+| 422 | `cart_empty`, `item_unavailable` (`errors.items.{cart_item_id}` or `errors.variant_id`), `order_total_invalid`, `otp_invalid` | optional | Message near the form |
 | 419 | `csrf_expired` | absent | Prompt to refresh |
 | 422 | `validation_failed` | object | Field-level display |
 | 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `product_not_publishable`, `rate_missing`, `rate_stale`, `invalid_image`, `base_currency_rate`, `two_factor_invalid`, `two_factor_expired` | optional | Message near the form |
@@ -86,13 +87,13 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `search` | 60/min per IP |
 | `auth` | 5/min per email+IP |
 | `otp` | 5 per 10 min per identifier |
-| `checkout` | 20/min per session |
+| `checkout` | 20/min per session and 60/min per IP |
 | `code-reveal` | 10/hour per user or guest order |
 | `admin` | 300/min per user |
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`. The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
+Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`. The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -148,7 +149,7 @@ Base `/api/v1/storefront`, in the stateless `api` middleware group.
 
 Query budget: one listing page runs at most **10 queries** with a cold cache, whatever the number of rows.
 
-Not built in M5/M6: `/newsletter` and the cart routes in the table above (M7).
+Not built: `/newsletter`. The cart routes are built in M7, see 3a.
 
 ## 3. Checkout JSON
 
@@ -164,6 +165,28 @@ Not built in M5/M6: `/newsletter` and the cart routes in the table above (M7).
 | POST | `/guest/otp/verify` | `{ order_public_id, code }` | Guest order session |
 
 Place-order idempotency: same key and same body replays the stored response; same key with a different body returns 409 `idempotency_mismatch`; in-flight returns 409 `idempotency_in_progress`.
+
+### 3a. Built cart and checkout routes (M7)
+
+Registered in the `web` middleware group under `/api/v1` (session and CSRF on writes). A guest's cart is identified by the encrypted, HTTP-only `cart_token` cookie, set on the first `POST /storefront/cart/items`; a signed-in customer's cart by account, and a guest cart is adopted on sign-in when the customer has none. All amounts are in the display currency from the `currency` cookie (section 2a) and are money objects. Suspended accounts get 403.
+
+| Method | Path | Body | Limiter | Result |
+|---|---|---|---|---|
+| GET | `/storefront/cart` | | `storefront` | `{ cart }` or `{ cart: null }` |
+| POST | `/storefront/cart/items` | `variant_id` (variant `public_id`), `quantity` 1 to 10, `delivery_values?` `{ code: value }` | `storefront` | 201 `{ cart }`. Delivery values are validated against the product's fields (`errors.delivery_values.{code}`). Same variant and same values merge into one line. Refused: inactive, out of stock, custom amount (`custom_amount` is prohibited until a cost model exists), more than `max_quantity_per_order` per product, more than 20 lines. |
+| PATCH | `/storefront/cart/items/{id}` | `quantity` | `storefront` | `{ cart }`; 404 for an item not in the caller's cart |
+| DELETE | `/storefront/cart/items/{id}` | | `storefront` | `{ cart }`; 404 likewise |
+| POST | `/storefront/cart/coupon` | `code` | `checkout` | `{ cart }` or 422 `coupon_invalid`. **Until M11 every code is refused** (ADR-026). |
+| DELETE | `/storefront/cart/coupon` | | `storefront` | `{ cart }` |
+| POST | `/checkout/validate` | `country` (active ISO code), `email?` | `checkout` | `{ cart }` repriced with checkout rules, or 422: `rate_stale` / `rate_missing` for the display currency, `item_unavailable`, `validation_failed` with `errors.items.{id}.delivery_values.{code}`, `coupon_invalid`, `cart_empty` |
+| POST | `/checkout/place-order` | `email` (guests only; customers use their account email), `country`, `gateway`, `method?`, `currency` and `expected_total` (exactly what the customer was shown), `consents.terms` (must be accepted), `consents.marketing?`, `ga_client_id?`; header `Idempotency-Key` (8 to 128 of `A-Za-z0-9_-:.`) | `checkout` | 201 `{ order: { public_id, order_number, status, display_total, payment_total, expires_at }, next: null }`, `meta.duplicate: false`. 200 `{ order: { public_id, status } }`, `meta.duplicate: true` when the same buyer already has an open order with the same contents. A replay carries `Idempotency-Replayed: true`. Errors as for validate, plus `price_changed`, `gateway_not_eligible`, `order_total_invalid`, the idempotency 409s. **Until M10 binds a payment currency resolver every call returns `gateway_not_eligible` and creates nothing** (ADR-026). `next` is null until M10 creates payment attempts. |
+| GET | `/checkout/orders/{public_id}/status` | | `checkout` | `{ public_id, status, payment_status, is_final }`. Visible to the owning customer, or to the browser session that placed or verified a guest order; 404 otherwise. |
+| POST | `/checkout/guest/otp/send` | `order_public_id`, `email` | `otp` | Always 200 with the same message. Emails a 6-digit code only when the email matches the guest order; at most 5 codes per order per hour; a new code replaces the old. |
+| POST | `/checkout/guest/otp/verify` | `order_public_id`, `code` | `otp` | `{ order_public_id, email_verified: true }`, sets `orders.guest_email_verified_at` and opens the order to the session; or 422 `otp_invalid` (wrong, expired after 10 minutes, or 5 attempts used) |
+
+`cart` shape: `{ public_id, currency, country, items: [{ id, variant: { public_id, title, sku }, product: { name, slug, delivery_type }, quantity, delivery_values, purchasable, block_reason, unit_price, subtotal, total }], coupon: { code, applied, error, limited_by_margin } | null, totals: { subtotal, discount, total }, price_may_vary, checkout_ready }`. `block_reason` is one of `unavailable`, `out_of_stock`, `custom_amount_unsupported`, `quantity_limit`, `not_sold_in_country`, or a pricing reason (`rate_stale`, `rate_missing`, `below_margin`, `cost_unavailable`, ...). Cost, floor and margin are never returned.
+
+Not built in M7: `GET /payment-options`, PayPal capture and retry-payment (M10); a customer cancel endpoint (the state machine allows it).
 
 ## 4. Customer JSON
 

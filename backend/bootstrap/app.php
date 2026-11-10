@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('web')->group(base_path('routes/auth.php'));
             Route::middleware('account')->prefix('api/v1/account')->name('account.')->group(base_path('routes/account.php'));
             Route::middleware('admin')->prefix('admin/api')->name('admin.api.')->group(base_path('routes/admin.php'));
+            Route::middleware('web')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/checkout.php'));
             Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/api.php'));
             Route::prefix('webhooks')->name('webhooks.')->group(base_path('routes/webhooks.php'));
         },

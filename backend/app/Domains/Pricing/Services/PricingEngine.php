@@ -16,6 +16,7 @@ use App\Domains\Shared\ValueObjects\Money;
 use App\Domains\Shared\ValueObjects\Percentage;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use LogicException;
 
 /**
  * Computes the price of one unit of a variant following PROJECT_ARCHITECTURE.md section 11.5.
@@ -229,6 +230,24 @@ class PricingEngine
             promotionDiscount: $promotionDiscount,
             couponDiscount: $couponDiscount,
         );
+    }
+
+    /**
+     * The customer-facing amount of one unit whose base price was lowered by a cart-level
+     * discount, converted the same way the quote itself was: explicit prices without currency
+     * markup, markup prices with it. An undiscounted unit keeps the quoted amount exactly.
+     */
+    public function displayAmountFor(PriceQuote $quote, Money $netBase): Money
+    {
+        if ($quote->baseAmount === null || $quote->amount === null || $quote->rate === null) {
+            throw new LogicException('Only a purchasable quote can be repriced.');
+        }
+
+        if ($netBase->equals($quote->baseAmount)) {
+            return $quote->amount;
+        }
+
+        return $this->converter->convert($netBase, $quote->rate, withoutMarkup: $quote->source === PriceSource::Explicit)->money;
     }
 
     /**

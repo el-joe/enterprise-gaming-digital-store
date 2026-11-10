@@ -6,6 +6,10 @@ use App\Domains\Audit\Enums\SecurityEventSeverity;
 use App\Domains\Audit\Services\SecurityEventRecorder;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
+use App\Domains\Payments\Contracts\PaymentCurrencyResolver;
+use App\Domains\Payments\Services\UnavailablePaymentCurrencyResolver;
+use App\Domains\Promotions\Contracts\CheckoutCoupons;
+use App\Domains\Promotions\Services\UnavailableCheckoutCoupons;
 use App\Domains\Shared\Models\MorphMap;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ExchangeRateProvider::class, OpenExchangeRatesProvider::class);
+
+        // Fail-closed until M10 (payment currency and eligibility) and M11 (coupon limits) bind real implementations.
+        $this->app->bind(PaymentCurrencyResolver::class, UnavailablePaymentCurrencyResolver::class);
+        $this->app->bind(CheckoutCoupons::class, UnavailableCheckoutCoupons::class);
     }
 
     /**
@@ -63,6 +71,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('storefront', static fn (Request $request): Limit => Limit::perMinute(120)->by('storefront|'.$request->ip()));
         RateLimiter::for('search', static fn (Request $request): Limit => Limit::perMinute(60)->by('search|'.$request->ip()));
+        RateLimiter::for('checkout', static fn (Request $request): array => [
+            Limit::perMinute(20)->by('checkout|session|'.($request->hasSession() ? $request->session()->getId() : $request->ip())),
+            Limit::perMinute(60)->by('checkout|ip|'.$request->ip()),
+        ]);
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }

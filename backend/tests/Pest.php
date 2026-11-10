@@ -1,16 +1,27 @@
 <?php
 
+use App\Domains\Catalog\Enums\ProductStatus;
+use App\Domains\Catalog\Enums\ProductVariantAvailability;
+use App\Domains\Catalog\Models\Product;
 use App\Domains\Catalog\Models\ProductVariant;
 use App\Domains\Currency\Models\ExchangeRate;
 use App\Domains\Currency\Services\ExchangeRateWriter;
 use App\Domains\Identity\Enums\PermissionName;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\TwoFactorService;
+use App\Domains\Payments\Contracts\PaymentCurrencyResolver;
+use App\Domains\Payments\Models\PaymentGateway;
+use App\Domains\Pricing\DTOs\CouponTerms;
+use App\Domains\Promotions\Contracts\CheckoutCoupons;
+use App\Domains\Promotions\Models\Coupon;
 use Database\Factories\Currency\CurrencyFactory;
+use Database\Factories\Shared\CountryFactory;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
+use Tests\Support\FakeCheckoutCoupons;
+use Tests\Support\FakePaymentCurrencyResolver;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -118,4 +129,70 @@ function reopenTestTransaction(): void
 function allPermissionNames(): array
 {
     return array_map(static fn (PermissionName $name): string => $name->value, PermissionName::cases());
+}
+
+/**
+ * An active product with one in-stock variant at a manual base cost.
+ *
+ * @param  array<string, mixed>  $variant
+ * @param  array<string, mixed>  $product
+ */
+function sellableVariant(string $cost = '10', array $variant = [], array $product = []): ProductVariant
+{
+    CurrencyFactory::ensure('USD');
+    CountryFactory::ensure('US');
+
+    $owner = Product::factory()->create(['status' => ProductStatus::Active, ...$product]);
+
+    return ProductVariant::factory()->create([
+        'product_id' => $owner->id,
+        'manual_cost_base' => $cost,
+        'availability' => ProductVariantAvailability::InStock,
+        ...$variant,
+    ]);
+}
+
+/**
+ * Bind the M10 test double: gateway key `fakepay`, charging in `$currency` or the display currency.
+ */
+function fakePayments(?string $currency = null): FakePaymentCurrencyResolver
+{
+    $gateway = PaymentGateway::query()->where('key', 'fakepay')->first() ?? PaymentGateway::factory()->create(['key' => 'fakepay']);
+    $resolver = new FakePaymentCurrencyResolver($gateway->id, 'fakepay', $currency);
+
+    app()->instance(PaymentCurrencyResolver::class, $resolver);
+
+    return $resolver;
+}
+
+/**
+ * Bind the M11 test double with the given coupons.
+ *
+ * @param  array<string, array{coupon: Coupon, terms: CouponTerms, variants?: list<int>}>  $coupons
+ */
+function fakeCoupons(array $coupons = []): FakeCheckoutCoupons
+{
+    $fake = new FakeCheckoutCoupons($coupons);
+
+    app()->instance(CheckoutCoupons::class, $fake);
+
+    return $fake;
+}
+
+/**
+ * A place-order body; `expected_total` must match what the cart shows.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function placeOrderBody(string $expectedTotal, array $overrides = []): array
+{
+    return [
+        'country' => 'US',
+        'gateway' => 'fakepay',
+        'currency' => 'USD',
+        'expected_total' => $expectedTotal,
+        'consents' => ['terms' => true],
+        ...$overrides,
+    ];
 }

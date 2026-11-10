@@ -236,6 +236,14 @@ Additions to the spec's 11 suggested statuses, with reasons: `pending_verificati
 
 Terminal statuses: `refunded`. Effectively terminal unless a row above applies: `completed`, `partially_refunded`, `cancelled`, `failed`. Disputes do not change status; they set `orders.has_open_dispute` and raise an alert.
 
+Enforcement settled at M7 (`OrderTransitionTable`, `OrderStateMachine`):
+
+- The Actor column is enforced. "Webhook or poll job" rows accept `webhook` and `system`; "System", "Fulfilment" and "Risk engine" rows accept `system`; "Admin" rows accept `staff` only, and the staff user must hold the permission named in the row (`orders.review` where the row names none; `orders.reconcile` for `pending_verification` to `processing`). `n8n` and `mcp` actors are never accepted. Callers still authorize their own endpoints.
+- Rule 9: entering `paid`, `processing`, `supplier_pending`, `pending_verification`, `completed` or `partially_fulfilled` requires `orders.primary_payment_id`, so M10 sets the verified payment before transitioning. This also covers `manual_review` to `processing` for an order that reached review without payment.
+- Entering `paid` stamps `paid_at` once; `completed` stamps `completed_at`; any closed status clears `placement_hash`. Entering `cancelled` or `failed` from an unpaid status releases the coupon reservation through `CheckoutCoupons::release`.
+- Orders are created only by `OrderStateMachine::open` (status `pending_payment`, event `order.placed`). Saving a changed status through the model throws, and an arch test fails on any status write outside the machine.
+- The risk engine's `block` decision cannot refund from `paid` (no such row): `OrderRiskGate` moves both `review` and `block` to `manual_review`, and a human refunds from there.
+
 ### 6.3 Unit-level status
 
 Each purchased unit (quantity 3 means 3 rows in `order_item_units`) has its own status: `pending`, `queued`, `submitting`, `supplier_pending`, `pending_verification`, `manual_task`, `manual_review`, `delivered`, `failed`, `refund_pending`, `refunded`, `cancelled`.
@@ -480,7 +488,7 @@ Paymob has no event ID, so `provider_event_id = sha256(obj.id|success|pending|is
 
 **Double payment:** if a second payment on the same order succeeds, the unique `primary_payment_id` slot is already held. The second becomes `duplicate_capture`, an auto-refund is created, and finance is alerted.
 
-**Lock order, always:** `orders`, `payments`, `order_item_units`, `supplier_transactions`, `customer_wallets`. Deadlocks (MySQL 1213) are retried with `DB::transaction($fn, attempts: 3)`, only because those closures contain no external calls.
+**Lock order, always:** `carts` (placement only, before any order row exists), `orders`, `payments`, `order_item_units`, `supplier_transactions`, `customer_wallets`. Deadlocks (MySQL 1213) are retried with `DB::transaction($fn, attempts: 3)`, only because those closures contain no external calls.
 
 Redis locks are never a safety mechanism. They are used only to reduce contention (ADR-008).
 
@@ -548,6 +556,13 @@ Every order stores: `base_currency`, `subtotal_base`, `discount_base`, `tax_base
 
 Historical values are never recomputed. A retry with a different gateway updates the order's payment fields until `paid`; they are frozen from then on.
 
+How M7 takes the snapshot, once, inside the placement transaction:
+
+- The pricing engine is called with `forCheckout: true`. `PaymentCurrencyResolver` (contract in `Payments/Contracts`, implemented by M10) returns only the gateway and currency.
+- If the payment currency equals the display currency, `payment_rate` and `payment_total` are the display rate and the display total exactly. Otherwise `payment_total` is the base total converted once with a rate that passes the checkout freshness check.
+- `rate_source`, `rate_fetched_at` and `exchange_rate_history_id` describe the payment rate, or the display rate when the payment currency is the base currency. Both are base-identity (`base`, null, null) when everything is in the base currency. Each item's `pricing_breakdown` also keeps the display rate and its history id.
+- `total_base` is unrounded (six places); the display and payment totals are sums of per-unit amounts rounded by the currency's rule, so they are what the customer saw. The customer must confirm them: `place-order` takes `currency` and `expected_total` and refuses with `price_changed` if either no longer matches.
+
 ### 11.4 Rates
 
 Effective rate = `provider_rate * (1 + markup_pct)`, unless a manual override is active, which replaces it.
@@ -562,6 +577,7 @@ Effective rate = `provider_rate * (1 + markup_pct)`, unless a manual override is
 | No hardcoding | No rates in code or seeders (rule 6). Seeders create currencies without rates; first fetch or an admin override supplies them. |
 | Held rates | A held rate does not refresh `fetched_at`, so a rate left unapproved goes stale and blocks checkout. Held rates are recorded in `pending_rate` and the audit log, not in `exchange_rate_history`, because orders snapshot history rows. A repeat of the same provider timestamp is ignored. |
 | Manual overrides | An active override is never stale: it is a deliberate staff decision and the fallback when the provider is down. `manual_expires_at` passing ends it on next read or fetch, restoring the provider rate. |
+| Fallback at checkout (M7) | Checkout never switches currency silently. `POST /checkout/validate` and `place-order` refuse with `rate_stale` (or `rate_missing`); the cart shows `price_may_vary` and `checkout_ready: false`. The customer falls back by choosing the base currency, whose rate cannot be stale. A stale rate for a payment currency that differs from the display currency refuses placement the same way. |
 
 ### 11.5 Pricing rule precedence
 
@@ -572,7 +588,7 @@ Computed in the base currency by `PricingEngine`. Markup rules do not stack: the
 3. **Markup rule**, by scope: Variant > Product > Platform > Category > Global. Within a scope: rule with country and currency, then country, then currency, then neither. Then lower `priority` number. Then newest. Exactly one rule applies; it may be fixed, percentage, or both.
 4. **Dynamic rules** (type `dynamic`, conditions as JSON such as stock level or supplier cost band) are evaluated at their own scope position in step 3.
 5. **Promotion**: best single eligible promotion. Stacks only when `promotions.stackable` is true.
-6. **Coupon**: cart level, after promotions. At most one, unless `stackable`.
+6. **Coupon**: cart level, after promotions. At most one, unless `stackable`. Allocation over units: ADR-025.
 7. **Margin guard**: see below.
 8. **Currency conversion** and per-currency rounding (`currencies.rounding_rule`).
 
@@ -633,6 +649,8 @@ Country alone never grants eligibility. Eligibility is re-evaluated server-side 
 
 Cart prices are re-computed at each step; the customer sees a notice if a price changed. Guests must verify email by OTP before revealing codes; email is captured before payment.
 
+Built in M7: steps 1, 3 (order creation only; the payment attempt of step 4 is M10) and the status read of step 5, plus guest email verification by OTP. Step 2 (`payment-options`) needs eligibility and is M10. Place-order runs: idempotency claim; unlocked read of the cart for the placement hash; then one transaction that locks the cart, rejects a converted cart or an open order with the same placement hash, reprices with `forCheckout: true`, revalidates lines, delivery values and the coupon, checks the confirmed total, resolves the payment currency, opens the order, writes items, units and delivery values, reserves the coupon, converts the cart and stores the idempotent response.
+
 ---
 
 ## 14. Wallet
@@ -685,3 +703,8 @@ Mandatory scenarios for R1 and R2: read timeout then no retry; crash after submi
 | ADR-022 | Orders carry `tax_base` columns but there is no tax engine yet | Spec is silent on tax; adding columns later touches financial tables | Business decision required before EU or Egypt VAT obligations apply |
 | ADR-023 | Stripe API version pinned in config (`2026-10-28.endive` at time of writing) | Webhook and response shapes vary by version | Upgrades are deliberate |
 | ADR-024 | Base `@modelcontextprotocol/sdk` 1.x pinned for the MCP server | v2 scoped packages are new and the docs are split between eras | Revisit at M16 |
+| ADR-025 | Cart-level coupons are computed once on the cart and allocated over units | The engine prices one unit; a coupon is a cart promise. Per-unit coupon maths cannot honour a fixed amount off the cart, and rounding per unit makes totals drift | See the allocation rule below |
+| ADR-026 | Coupon validity (M11) and payment currency (M10) are consumed through narrow contracts, bound to fail-closed implementations until those milestones | Building a throwaway coupon system or currency resolver would be a fake integration; a contract lets M7 be complete and tested with doubles under `tests/` | Until M10 binds `PaymentCurrencyResolver`, every `place-order` returns `gateway_not_eligible`; until M11 binds `CheckoutCoupons`, every code returns `coupon_invalid` |
+| ADR-027 | Idempotency claims are committed before the work and fenced by their lock time; the response is stored inside the work's transaction | A claim inside the work's transaction is invisible to a concurrent request, which would then wait or duplicate; a response stored outside it could outlive a rolled-back order | A crashed request leaves a claim that blocks its key for 120 s, then any retry takes it over |
+
+**ADR-025 allocation rule.** (1) Quote each variant once without a coupon (`PricingContext.coupon` is null at checkout). (2) The coupon contract returns `CouponTerms` and, optionally, the eligible variants. (3) The discount D is computed once on the eligible subtotal by `DiscountCalculator::couponDiscount` (percent, or fixed in base currency, capped by `max_discount_base` and the subtotal) and rounded HALF_UP to the base currency's minor unit. (4) Each purchased unit is a slot: weight = its pre-coupon base price (zero if ineligible); room = `MarginGuard::discountRoom` = price minus floor, or the whole price when the coupon has `allow_below_margin` or the floor is unknown; never negative, and rounded down to the minor unit. (5) `CartDiscountAllocator` splits D proportionally to weight in whole minor units. A slot whose share reaches its room takes exactly its room and the rest is shared again over slots with room left; whatever no slot can take is forfeited and reported as `limited_by_margin`. (6) Remainders: each slot first takes the whole minor units of its share, then the leftover minor units go one at a time to the largest fractional parts, ties to the earliest slot. Slot order is cart item id, then unit index, so the same cart always allocates the same way and the allocations sum exactly to the discount placed. (7) Each unit's net base price is converted to the display currency on its own (explicit prices without currency markup, as in the engine), so the margin guard has evaluated the post-allocation unit price and no unit is below its floor unless the coupon allows it. Each unit's allocation is stored in `order_items.pricing_breakdown.units`.

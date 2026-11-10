@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 Schedule::command('currency:fetch-rates')->hourlyAt(5)->withoutOverlapping()->onOneServer();
 Schedule::command('pricing:recalculate-dirty')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('orders:expire-unpaid')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('orders:prune-idempotency-keys')->daily()->withoutOverlapping()->onOneServer();

@@ -13,7 +13,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M4 | Full schema | Complete |
 | M5 | Catalog and CMS services | Complete |
 | M6 | Currency and pricing | Complete |
-| M7 | Orders and checkout core | Not started |
+| M7 | Orders and checkout core | Complete (place-order and coupons fail closed until M10 and M11 bind their contracts) |
 | M8 | Supplier engine and Reloadly | Not started |
 | M9 | Fulfilment and digital codes | Not started |
 | M10 | Payments | Not started |
@@ -464,3 +464,88 @@ None.
 ### Next milestone
 
 M7: Orders and checkout core.
+
+---
+
+## M7: Orders and checkout core
+
+Date completed: 2026-11-10
+Completed by: Senior Backend Engineer
+
+### Summary of completed work
+
+Cart, checkout validation, place-order, order snapshots, the order state machine, the unit-status aggregator, order events, Idempotency-Key handling, duplicate-placement protection, the unpaid-order expiry job, the risk engine and guest email verification. Backend only: JSON endpoints, services and tests. No new packages.
+
+Coupon validity and limits (M11) and payment currency with eligibility (M10) are consumed through two contracts, `Promotions\Contracts\CheckoutCoupons` and `Payments\Contracts\PaymentCurrencyResolver`. Both are bound to fail-closed implementations: **every coupon code is refused and every `place-order` returns `gateway_not_eligible`, creating nothing, until M11 and M10 bind real implementations** (ADR-026). The full placement path is tested with test doubles under `tests/Support`.
+
+### Files created
+
+- `app/Domains/Orders/`: `Actions/PlaceOrderAction`; `Services/{OrderStateMachine,OrderTransitionTable,OrderStatusAggregator,CartService,CartLineValidator,CartPricingService,CheckoutService,CheckoutGuard,OrderItemWriter,IdempotencyStore,PlacementHasher,OrderExpiryService,RiskEngine,OrderRiskGate,GuestOrderAccessService,OrderStatusReader}`; `Repositories/OrderRepository`; `DTOs/{CartOwner,CartQuote,CartLineQuote,UnitPrice,OrderActor,PlaceOrderInput,PlaceOrderResult,IdempotencyClaim}`; `Events/OrderStatusChanged`; `Exceptions/*`; `Notifications/GuestOrderAccessCode`
+- `app/Domains/Pricing/`: `Services/CartDiscountAllocator`, `DTOs/DiscountSlot`
+- `app/Domains/Promotions/`: `Contracts/CheckoutCoupons`, `DTOs/{CouponLookup,ResolvedCoupon}`, `Exceptions/CouponInvalid`, `Services/UnavailableCheckoutCoupons`
+- `app/Domains/Payments/`: `Contracts/PaymentCurrencyResolver`, `DTOs/{PaymentCurrencyQuery,ResolvedPaymentCurrency}`, `Exceptions/PaymentGatewayNotEligible`, `Services/UnavailablePaymentCurrencyResolver`
+- `app/Http/Controllers/Storefront/{CartController,CheckoutController,GuestOrderController,Concerns/InteractsWithCart}`, seven Form Requests, `Resources/Storefront/CartResource`
+- `app/Console/Commands/Orders/{ExpireUnpaidOrdersCommand,PruneIdempotencyKeysCommand}`, `routes/checkout.php`, `config/orders.php`
+- Tests: `tests/Feature/Orders/*` (7 files), `tests/Unit/Pricing/CartDiscountAllocatorTest`, `tests/Support/{FakePaymentCurrencyResolver,FakeCheckoutCoupons,Concurrency/place_order_worker.php}`
+- Changed: `OrderStatus` (`isClosed`, `requiresVerifiedPayment`), `Order` (refuses status saves outside the machine), `PricingEngine::displayAmountFor`, `MarginGuard::discountRoom`, `DeliveryFieldValidator` (uses loaded relations), `AppServiceProvider` (bindings, `checkout` limiter), `bootstrap/app.php`, `routes/console.php`, `SettingsSeeder`, `tests/Pest.php`
+
+### Migrations
+
+`2026_11_10_190001_add_order_risk_velocity_indexes`: `idx_o_ip` on orders and `idx_pay_fingerprint` on payments, for the risk engine. Rolled back and re-applied on `gaming-store_testing`. **Not yet applied to the app database `gaming-store`** (`migrate:status` shows it pending); run `php artisan migrate`.
+
+### Features implemented
+
+- State machine: all 41 rows of architecture 6.2, actor types and staff permissions enforced, rule 9 (no paid or fulfilment status without `primary_payment_id`), one `order_events` row per transition, `OrderStatusChanged` after commit, alert log on illegal moves, model-level refusal of direct status writes.
+- Placement: idempotency claim committed first and fenced (ADR-027); cart row lock; converted-cart and placement-hash checks over two 10-minute buckets; unique `uq_o_placement` as the last barrier; pricing with `forCheckout: true`; confirmed `currency` and `expected_total`; snapshot taken once; items, units (with pre-generated public ids), encrypted delivery values; coupon reservation inside the transaction; no HTTP inside the transaction.
+- Cart-level coupon allocation over units within margin room, in whole minor units, deterministic remainders (ADR-025).
+- Guest checkout: guest email captured at placement; OTP verification sets `guest_email_verified_at` (needed by M9 reveal); status visible only to the placing or verifying session.
+- Risk engine: 11 weighted signals, thresholds in settings, assessment stored once; `OrderRiskGate` moves `paid` to `processing` or `manual_review`.
+- `orders:expire-unpaid` every 5 minutes with `SKIP LOCKED`; `orders:prune-idempotency-keys` daily.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Every row of the transition table, illegal ones throw | Met | `OrderStateMachineTest`: 41 allowed rows performed with event and dispatch; all 155 other pairs throw and change nothing; an unnamed actor refused on every row; staff without permission refused; rule 9 on every paid or fulfilment target |
+| Snapshot fields all populated | Met | `CheckoutTest` snapshots: all 15 columns of architecture 11.3 non-null for an EGP order, values checked, including the history id. For an all-base-currency order `rate_fetched_at` and `exchange_rate_history_id` are null by design (identity rate) |
+| A later rate change does not alter an order | Met | Order, item and unit rows identical after a rate change, a new markup rule, a cost change and `pricing:recalculate-dirty` |
+| Duplicate `Idempotency-Key`, all three cases | Met | In process: replay (`Idempotency-Replayed`), mismatch 409, key-order independence, owner scoping. Separate processes: in-flight 409 while the first holds the cart lock, mismatch 409, then replay of the stored 201 |
+| Duplicate placement prevented | Met | Same cart under a new key (`cart_empty`), same contents from a new cart (200, `duplicate`), two guest carts with one email, allowed again after the first order closes; two processes racing on one cart with different keys (3 rounds) and with the same key; two guest carts racing into the unique index |
+| Expiry job works | Met | `OrderLifecycleTest` and `CheckoutTest`: expired orders cancelled with event and coupon release; unexpired and `payment_processing` untouched; second run is a no-op; an order locked by another connection is skipped, then cancelled |
+| Inherited 1: `forCheckout: true`, proven over HTTP | Met | Stale EGP: cart shows `price_may_vary`, `checkout_ready: false`; validate and place-order return `rate_stale` and create nothing; base currency then succeeds; a stale payment-currency rate also refuses |
+| Inherited 2: delivery-field validator on the HTTP path | Met | Add to cart (missing, wrong type, pattern, unknown field), revalidation at validate and place-order after the definition changes, encrypted copy to `order_item_delivery_values` |
+| Inherited 3: cart-level coupon allocation | Met | ADR-025; allocator unit tests (exact sums, remainders, caps, forfeiture); over HTTP: 1.00 over three units is 0.34/0.33/0.33, a tight unit stops at its floor and the rest moves to the roomy unit, `allow_below_margin` crosses the floor |
+| Inherited 4: coupons through a contract M11 implements | Met as a contract; **no coupon can be used until M11** | `CheckoutCoupons` with `resolve`, `reserve`, `release`; default refuses every code (tested) |
+| Inherited 5: `PaymentCurrencyResolver` contract, snapshot once | Met as a contract; **no order can be placed until M10** | Contract returns gateway and currency only; order code converts once; default refuses (tested) |
+| No N+1 | Met | `GET /cart` runs the same number of queries for 2 and 6 lines; lazy loading throws in tests |
+
+### Tests and results
+
+- Command: `php artisan test --compact`
+- Result: **1179 passed, 0 failed, 0 skipped (6520 assertions), 70.4 s**, up from 795.
+- Concurrency with separate processes and connections (`CheckoutConcurrencyTest`, each request a separate PHP process via `tests/Support/Concurrency/place_order_worker.php` on committed data): in-flight, mismatch and replay with the cart lock held by a second connection; two simultaneous submits with different keys; two with the same key; two guest carts into the unique index; a process killed with SIGKILL after writing units leaves no partial order, its key returns `idempotency_in_progress` until stale, then a retry places exactly one order. Expiry `SKIP LOCKED` uses a real second connection.
+- Simulated, not real: the late failure inside one in-process transaction (a coupon double throws during `reserve`) and the abandoned-claim takeover in `IdempotencyStoreTest` (time travel).
+- Not tested, and why: real payment gateways and coupon rules (M10, M11); a real mail transport (Notification fake); race timing is real but not forced, so which loser outcome occurs (200 duplicate or 422 `cart_empty`) varies by run and both are accepted.
+
+### Outstanding requirements
+
+- M10 must bind `PaymentCurrencyResolver` (with eligibility) and create payment attempts; `next` in the place-order response is null until then. GeoIP is not resolved, so `orders.ip_country` is null and the country-mismatch risk signal cannot fire yet.
+- M11 must bind `CheckoutCoupons` with limits under concurrency; a fixed coupon's value must be given to the engine in the base currency.
+- Nothing calls `OrderRiskGate` yet: M10's paid transition or M8's `FulfillOrder` must. The `block` decision holds for review; automatic refund and customer flagging are M10 and M11.
+- The margin floor is evaluated for the display currency. When M10 charges a different currency, the conversion cost of that currency is not in the floor.
+- `OrderStatusChanged` has no listeners; the automation outbox is M17.
+- Custom-amount variants still cannot be bought (no cost model).
+- A signed-in customer who already has a cart does not merge a guest cart; the guest cart is kept separately.
+- No customer cancel endpoint; the state machine supports `pending_payment` to `cancelled` by a customer.
+- In local development with `MAIL_MAILER=log` the guest one-time code appears in the mail log. It is not a digital code, but the log should not be shared.
+
+### Design changes made
+
+- `PROJECT_ARCHITECTURE.md`: 6.2 enforcement notes; lock order adds `carts`; 11.3 how the snapshot is taken; 11.4 checkout fallback; 11.5 coupon allocation; 13 what is built; ADR-025, ADR-026, ADR-027.
+- `DATABASE_DESIGN.md`: `idempotency_keys` behaviour, placement hash definition, `pricing_breakdown.units`, two new indexes, new settings in section 16.
+- `API_DOCUMENTATION.md`: section 3a, new error codes, `checkout` limiter.
+
+### Next milestone
+
+M8: Supplier engine and Reloadly. M10 can start in parallel and should begin with `PaymentCurrencyResolver`.
+

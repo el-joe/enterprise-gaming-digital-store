@@ -50,6 +50,23 @@ class MarginGuard
     }
 
     /**
+     * The most discount one unit may take from a cart-level coupon: down to its floor, or to zero
+     * when the coupon allows going below margin or the floor is unknown (explicit price without a
+     * cost). A unit already below its floor takes none. The post-allocation unit price is
+     * therefore never below the floor unless the coupon says so.
+     */
+    public function discountRoom(Money $price, ?Money $floor, bool $allowBelowMargin): Money
+    {
+        if ($allowBelowMargin || $floor === null) {
+            return $price->isNegative() ? Money::zero($price->currency) : $price;
+        }
+
+        $room = $price->minus($floor);
+
+        return $room->isPositive() ? $room : Money::zero($price->currency);
+    }
+
+    /**
      * @return list<array{0: string, 1: string}> percent and fixed fee in base currency
      */
     private function fees(Collection $feeRules, ?string $country, string $currency): array

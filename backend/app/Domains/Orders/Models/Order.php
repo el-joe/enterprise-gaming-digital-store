@@ -9,6 +9,7 @@ use App\Domains\Currency\Models\Currency;
 use App\Domains\Currency\Models\ExchangeRateHistory;
 use App\Domains\Identity\Models\User;
 use App\Domains\Orders\Enums\OrderStatus;
+use App\Domains\Orders\Exceptions\IllegalOrderTransition;
 use App\Domains\Payments\Models\Payment;
 use App\Domains\Payments\Models\PaymentGateway;
 use App\Domains\Payments\Models\Refund;
@@ -37,6 +38,19 @@ class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
     use HasFactory, HasUlids;
+
+    /**
+     * Status changes go through OrderStateMachine, which writes with a query update. Saving a
+     * changed status through the model is refused so no code path can bypass the machine.
+     */
+    protected static function booted(): void
+    {
+        static::updating(static function (Order $order): void {
+            if ($order->isDirty('status')) {
+                throw IllegalOrderTransition::directWrite();
+            }
+        });
+    }
 
     /**
      * Get the columns that receive a ULID on creation.

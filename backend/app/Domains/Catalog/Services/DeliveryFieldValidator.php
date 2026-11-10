@@ -30,7 +30,7 @@ class DeliveryFieldValidator
      */
     public function validate(Product $product, array $values): array
     {
-        $fields = $product->productDeliveryFields()->with('deliveryFieldDefinition')->orderBy('sort_order')->get();
+        $fields = $product->loadMissing('productDeliveryFields.deliveryFieldDefinition')->productDeliveryFields->sortBy('sort_order')->values();
 
         $errors = [];
         $accepted = [];

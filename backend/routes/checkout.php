@@ -1,0 +1,33 @@
+<?php
+
+use App\Http\Controllers\Storefront\CartController;
+use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\GuestOrderController;
+use Illuminate\Support\Facades\Route;
+
+/**
+ * Cart and checkout JSON under /api/v1, in the `web` group: they need the session (signed-in
+ * customers, guest order access) and CSRF protection on writes. Guests are identified by the
+ * encrypted, HTTP-only `cart_token` cookie.
+ */
+Route::prefix('storefront/cart')->name('storefront.cart.')->middleware('throttle:storefront')->group(function (): void {
+    Route::get('/', [CartController::class, 'show'])->name('show');
+    Route::post('/items', [CartController::class, 'store'])->name('items.store');
+    Route::patch('/items/{cartItem}', [CartController::class, 'update'])->whereNumber('cartItem')->name('items.update');
+    Route::delete('/items/{cartItem}', [CartController::class, 'destroy'])->whereNumber('cartItem')->name('items.destroy');
+    Route::post('/coupon', [CartController::class, 'applyCoupon'])->middleware('throttle:checkout')->name('coupon.store');
+    Route::delete('/coupon', [CartController::class, 'removeCoupon'])->name('coupon.destroy');
+});
+
+Route::prefix('checkout')->name('checkout.')->group(function (): void {
+    Route::middleware('throttle:checkout')->group(function (): void {
+        Route::post('/validate', [CheckoutController::class, 'check'])->name('validate');
+        Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
+        Route::get('/orders/{orderPublicId}/status', [CheckoutController::class, 'status'])->name('orders.status');
+    });
+
+    Route::middleware('throttle:otp')->group(function (): void {
+        Route::post('/guest/otp/send', [GuestOrderController::class, 'send'])->name('guest.otp.send');
+        Route::post('/guest/otp/verify', [GuestOrderController::class, 'verify'])->name('guest.otp.verify');
+    });
+});

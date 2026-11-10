@@ -781,6 +781,8 @@ Unique: `uq_ci` (cart_id, product_variant_id, custom_amount).
 
 Unique: `uq_ik` (scope, key, owner_hash). Index: `idx_ik_expiry` (expires_at): prune.
 
+Behaviour (M7, `IdempotencyStore`): the claim row is committed on its own before the work starts, with `locked_at` as a fencing token; `response_status` and `response_body` are written inside the work's transaction, so they exist exactly when the work committed. A claim with no response older than 120 s is treated as abandoned and taken over by compare-and-set on `locked_at`. A failure that changed nothing deletes the claim. `owner_hash` is SHA-256 of `user:{id}` or `guest:{sha256(cart token)}`. Rows are kept 24 hours; `orders:prune-idempotency-keys` deletes them daily. MySQL's JSON type does not keep key order, so a replay returns the same content, not the same bytes.
+
 ### orders
 
 | Column | Type | Null | Notes |
@@ -837,8 +839,9 @@ Indexes:
 - `idx_o_paid` (paid_at, payment_gateway_id): revenue reports.
 - `idx_o_country` (country_code, paid_at): profit by country.
 - `idx_o_payment_currency` (payment_currency, paid_at): profit by currency.
+- `idx_o_ip` (ip_address, created_at): risk engine IP velocity (added in M7).
 
-`placement_hash` = HMAC of owner, sorted cart items and cart version, with a 10-minute time bucket. Cleared on terminal status, so the same cart can be bought again later.
+`placement_hash` = HMAC-SHA256 (app key) of the buyer (`user:{id}`, or the normalized guest email), the sorted cart lines (variant, quantity, custom amount, hash of delivery values) and the coupon code, with a 10-minute time bucket. Placement looks up the current and the previous bucket, so a double submit across a bucket edge is caught; the unique index stops two carts racing in the same bucket. Cleared when the order enters a closed status (`completed`, `partially_refunded`, `refunded`, `cancelled`, `failed`), so the same contents can be bought again.
 
 ### order_items
 
@@ -857,7 +860,7 @@ Indexes:
 | line_total_base | money | NN | |
 | estimated_unit_cost_base | money | Y | |
 | custom_amount | money | Y | |
-| pricing_breakdown | json | NN | rule IDs, markup, promotion, margin |
+| pricing_breakdown | json | NN | engine breakdown (rule IDs, markup, promotion, cost, floor, rate, history id), display amounts, coupon reference, and `units`: one entry per unit with `unit_public_id`, `gross_base`, `discount_base`, `net_base`, `net_display` (ADR-025) |
 
 Indexes: `idx_oi_order` (order_id). `idx_oi_product` (product_id, created_at): best sellers. `idx_oi_variant` (product_variant_id).
 
@@ -1115,7 +1118,7 @@ One row per attempt.
 | next_check_at | ts | Y | |
 | expires_at | ts | Y | |
 
-Unique: `uq_pay_attempt` (order_id, attempt_no). `uq_pay_provider` (payment_gateway_id, provider_payment_id): locate by webhook. `uq_pay_capture` (payment_gateway_id, provider_capture_id).
+Unique: `uq_pay_attempt` (order_id, attempt_no). `uq_pay_provider` (payment_gateway_id, provider_payment_id): locate by webhook. `uq_pay_capture` (payment_gateway_id, provider_capture_id). Index `idx_pay_fingerprint` (card_fingerprint_hash, created_at): risk engine card velocity (added in M7).
 
 Indexes: `idx_pay_reconcile` (status, next_check_at): `payments:reconcile-open`. `idx_pay_gw_time` (payment_gateway_id, status, created_at): gateway performance, failures. `idx_pay_order` (order_id, status).
 
@@ -1734,7 +1737,7 @@ Order of operations for circular or late references:
 
 Required seeders (idempotent; values an admin can edit are written only on first run):
 
-`CurrencySeeder` (no rates), `CountrySeeder`, `RegionSeeder`, `RolePermissionSeeder`, `SettingsSeeder` (including `pricing.default_below_margin_policy`, `default_min_margin_pct`, `default_min_margin_fixed`, `default_gateway_fee_pct`, `default_gateway_fee_fixed`, `conversion_cost_pct`), `PaymentGatewaySeeder` (inactive, no credentials, with default eligibility rules), `SupplierSeeder` (Reloadly inactive, internal stock, manual), `DeliveryFieldDefinitionSeeder`, `HomepageSectionSeeder`, `SeoTemplateSeeder`, `AutomationWorkflowSeeder`, `SuperAdminSeeder` (reads credentials from environment, refuses to run if they are empty). `SuperAdminSeeder` and `DemoCatalogSeeder` are run explicitly with `--class` and are not called by `DatabaseSeeder`, so `migrate:fresh --seed` needs no credentials. Sample catalog data is in `DemoCatalogSeeder`, which refuses to run when `APP_ENV=production`.
+`CurrencySeeder` (no rates), `CountrySeeder`, `RegionSeeder`, `RolePermissionSeeder`, `SettingsSeeder` (including `pricing.default_below_margin_policy`, `default_min_margin_pct`, `default_min_margin_fixed`, `default_gateway_fee_pct`, `default_gateway_fee_fixed`, `conversion_cost_pct`; `orders.quote_ttl_minutes`, `orders.max_payment_attempts`; `security.risk_review_score` 40, `security.risk_block_score` 80, `security.risk_first_order_amount_base` 100), `PaymentGatewaySeeder` (inactive, no credentials, with default eligibility rules), `SupplierSeeder` (Reloadly inactive, internal stock, manual), `DeliveryFieldDefinitionSeeder`, `HomepageSectionSeeder`, `SeoTemplateSeeder`, `AutomationWorkflowSeeder`, `SuperAdminSeeder` (reads credentials from environment, refuses to run if they are empty). `SuperAdminSeeder` and `DemoCatalogSeeder` are run explicitly with `--class` and are not called by `DatabaseSeeder`, so `migrate:fresh --seed` needs no credentials. Sample catalog data is in `DemoCatalogSeeder`, which refuses to run when `APP_ENV=production`.
 
 ## 17. Coverage of spec entities
 

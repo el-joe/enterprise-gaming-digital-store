@@ -26,6 +26,9 @@ class SettingsSeeder extends Seeder
             ['suppliers', 'selection_strategy', 'priority', SettingType::String],
             ['orders', 'quote_ttl_minutes', '30', SettingType::Int],
             ['orders', 'max_payment_attempts', '5', SettingType::Int],
+            ['security', 'risk_review_score', '40', SettingType::Int],
+            ['security', 'risk_block_score', '80', SettingType::Int],
+            ['security', 'risk_first_order_amount_base', '100', SettingType::Decimal],
             ['automation', 'task_drivers', '{}', SettingType::Json],
         ];
 
