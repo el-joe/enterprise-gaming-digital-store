@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Domains\Catalog\DTOs\DeliveryFieldSpec;
 use App\Domains\Catalog\DTOs\ProductCard;
 use App\Domains\Catalog\DTOs\ProductListingFilter;
 use App\Domains\Catalog\DTOs\VariantOffer;
+use App\Domains\Catalog\Models\DeliveryFieldDefinition;
 use App\Domains\Catalog\Models\Product;
 use App\Domains\Catalog\Models\ProductVariant;
 use App\Domains\Catalog\Services\ContentTranslator;
@@ -14,8 +16,10 @@ use App\Http\Controllers\Storefront\Concerns\ResolvesDisplayCurrency;
 use App\Http\Requests\Storefront\ProductListingRequest;
 use App\Http\Requests\Storefront\ProductVariantsRequest;
 use App\Http\Resources\Storefront\ProductCardResource;
+use App\Http\Resources\Storefront\ProductDetailResource;
 use App\Http\Resources\Storefront\VariantOfferResource;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CatalogController extends Controller
 {
@@ -43,6 +47,25 @@ class CatalogController extends Controller
         $this->translator->preload([...$products, ...$products->map->gamingPlatform, ...$products->map->primaryCategory], ['name', 'short_description']);
 
         return $this->paginated($page, ProductCardResource::class, ['display_currency' => $currency]);
+    }
+
+    public function show(Request $request, string $slug): JsonResponse
+    {
+        $currency = $this->displayCurrency($request);
+
+        $detail = $this->catalog->detail($slug, $currency);
+        $product = $detail->card->product;
+
+        $this->translator->preload([
+            $product,
+            $product->gamingPlatform,
+            $product->primaryCategory,
+            ...$product->regions,
+            ...$detail->variantRegions,
+            ...array_map(static fn (DeliveryFieldSpec $spec): DeliveryFieldDefinition => $spec->definition, $detail->deliveryFields),
+        ], ['name', 'short_description', 'description', 'instructions', 'terms', 'label', 'help_text']);
+
+        return $this->success(['product' => (new ProductDetailResource($detail))->resolve($request)], meta: ['display_currency' => $currency]);
     }
 
     public function variants(ProductVariantsRequest $request, Product $product): JsonResponse

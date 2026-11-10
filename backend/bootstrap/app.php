@@ -16,6 +16,7 @@ use App\Http\Middleware\Mcp\RequireMcpScope;
 use App\Http\Middleware\Mobile\AuthenticateOptionalCustomerToken;
 use App\Http\Middleware\Mobile\EnsureCustomerToken;
 use App\Http\Middleware\SetLocaleFromRequest;
+use App\Http\Middleware\Storefront\PublicCacheHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -41,6 +42,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('mcp')->prefix('api/v1/mcp')->name('mcp.')->group(base_path('routes/mcp.php'));
             Route::middleware('automation')->prefix('api/v1/automation')->name('automation.')->group(base_path('routes/automation.php'));
             Route::middleware('api')->prefix('api/v1/mobile')->name('mobile.')->group(base_path('routes/mobile.php'));
+            Route::middleware('api')->prefix('api/v1/mobile')->name('mobile.')->group(base_path('routes/storefront.php'));
+            Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/storefront.php'));
             Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/api.php'));
             Route::prefix('webhooks')->name('webhooks.')->group(base_path('routes/webhooks.php'));
         },
@@ -60,6 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'mcp.scope' => RequireMcpScope::class,
             'automation.scope' => RequireAutomationScope::class,
             'locale' => SetLocaleFromRequest::class,
+            'cache.public' => PublicCacheHeaders::class,
         ]);
 
         $middleware->appendToGroup('api', SetLocaleFromRequest::class);

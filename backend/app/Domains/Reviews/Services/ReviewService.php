@@ -10,6 +10,7 @@ use App\Domains\Reviews\Enums\ReviewStatus;
 use App\Domains\Reviews\Models\Review;
 use App\Domains\Reviews\Repositories\ReviewRepository;
 use App\Domains\Shared\Exceptions\ApplicationException;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
@@ -75,6 +76,16 @@ class ReviewService
         $this->audit->record(new AuditEntry(action: 'reviews.review.featured', subject: $review, after: ['is_featured' => $featured]));
 
         return $review->load(['product:id,name,slug', 'user:id,name,email']);
+    }
+
+    /**
+     * Featured approved reviews of active products, newest first (home page, M-A4).
+     *
+     * @return Collection<int, Review>
+     */
+    public function featuredForHome(int $limit): Collection
+    {
+        return $this->reviews->featuredApproved($limit);
     }
 
     public function delete(Review $review): void

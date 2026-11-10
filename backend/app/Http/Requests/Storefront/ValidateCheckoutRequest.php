@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Storefront;
 
+use App\Domains\Shared\Services\CountryDirectory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ValidateCheckoutRequest extends FormRequest
 {
@@ -14,7 +14,7 @@ class ValidateCheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'country' => ['required', 'string', 'size:2', Rule::exists('countries', 'code')->where('is_active', true)],
+            'country' => ['required', 'string', 'size:2', CountryDirectory::rule()],
             'email' => ['sometimes', 'nullable', 'email:rfc', 'max:190'],
         ];
     }

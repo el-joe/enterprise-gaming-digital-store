@@ -24,6 +24,19 @@ return [
     ],
 
     /*
+    | Public (publishable) credential per adapter (M-A4, GET /api/v1/app/config). The value is kept
+    | in the gateway's encrypted credentials for its mode, next to the secret keys, and only this
+    | named field is ever read back for publication. `prefixes` are required per mode; a value
+    | that does not match (for example a live key on a sandbox gateway) is published as null.
+    | Adapters not listed (wallet) have no public credential.
+    */
+    'public_credentials' => [
+        'stripe' => ['field' => 'publishable_key', 'prefixes' => ['sandbox' => 'pk_test_', 'production' => 'pk_live_']],
+        'paypal' => ['field' => 'client_id', 'prefixes' => []],
+        'paymob' => ['field' => 'public_key', 'prefixes' => []],
+    ],
+
+    /*
     | Where the customer's browser is sent after the provider's page. The page
     | (M12) only shows a "checking" state and asks the server to verify; it never
     | marks anything paid. `{order}` is replaced by the order public id.

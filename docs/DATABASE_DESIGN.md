@@ -1070,6 +1070,8 @@ Indexes: `idx_oif_recognized` (recognized_at). `idx_oif_product` (product_id, re
 
 Columns: payment_gateway_id fk cascade NN, mode enum NN, credentials enc NN, webhook_secret enc Y, rotated_at ts Y. Unique: `uq_pgc` (payment_gateway_id, mode).
 
+`credentials` is an encrypted JSON object per adapter (Stripe `secret_key`; PayPal `client_id`, `client_secret`; Paymob `secret_key`, `public_key`, ...). Since M-A4 it may also hold the adapter's publishable identifier (`payments.public_credentials`: Stripe `publishable_key`); only that field is ever read back for publication (`GET /api/v1/app/config`, ADR-037). No schema change.
+
 ### payment_gateway_currencies
 
 Merchant-account capability; admin-maintained.
@@ -1539,6 +1541,8 @@ Columns: menu_id fk cascade NN, parent_id fk:menu_items null Y, label str(120) N
 
 Columns: homepage_section_id fk cascade NN, item_type str(64) NN, item_id bigint unsigned NN, sort_order int NN default 0. Unique (homepage_section_id, item_type, item_id).
 
+`homepage_sections.settings` read by the storefront home (M-A4, `API_DOCUMENTATION.md` 2c) for `auto` sections: `rule` (`best_sellers`, `newest`, `trending`, `featured`, `reviews`, `faqs`; default from the key), `limit` (1 to 24, default 12), and for product rules `category`, `platform`, `delivery_type`.
+
 ### banners [sd]
 
 Columns: placement enum NN (`hero`,`home_promo`,`category`,`platform`), title str(190) Y, subtitle str(255) Y, cta_label str(64) Y, cta_url str(500) Y, media_id fk:media NN, mobile_media_id fk:media null Y, starts_at ts Y, ends_at ts Y, is_active bool NN, sort_order int NN default 0. Index (placement, is_active, starts_at, ends_at).
@@ -1573,6 +1577,8 @@ Index: `idx_ns_status` (status, confirmed_at).
 | updated_by | fk:users null | Y | |
 
 Unique: `uq_s` (group, key). Cached in Redis, cleared on save. Critical settings require `settings.manage_critical`.
+
+Group `app` (M-A4, public, never encrypted; published by `GET /api/v1/app/config`; defaults in `config/mobile.php`): `android_min_version`, `android_latest_version`, `ios_min_version`, `ios_latest_version` (string, SemVer), `maintenance` (bool), `maintenance_message` (json, locale to text), `checkout_enabled`, `guest_checkout_enabled`, `wallet_enabled`, `reviews_enabled`, `support_enabled` (bool), `support_url`, `terms_url`, `privacy_url`, `refund_url` (string). Rows are created on first `php artisan mobile:app-config set`.
 
 ### saved_filters
 

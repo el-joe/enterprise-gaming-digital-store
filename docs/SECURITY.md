@@ -72,6 +72,12 @@ Customer data access is object-level: Policies check ownership on orders, ticket
 
 Frontend receives only publishable identifiers: Stripe publishable key, PayPal client ID, GTM and GA measurement IDs, Paymob public key.
 
+**App config is public data only (M-A4, ADR-037).** `GET /api/v1/app/config` (and its `/api/v1/mobile` twin) is anonymous and publicly cacheable, so everything in it is treated as published to the world: versions, maintenance flag and message, feature flags, locales, currencies, the media base URL, support and legal URLs, and for each active gateway its publishable identifier only. Rules:
+- Its sources are the settings group `app` (never encrypted; `AppConfigSetting` lists every key) and `config('mobile.app')`. No secret may be stored there; a secret belongs in an encrypted setting or the gateway credentials.
+- Publishable identifiers are stored in the gateway's encrypted credentials for the mode, but read for publication only by `PaymentPublicCredentials`, which returns the one allow-listed field per adapter (`payments.public_credentials`) and nothing else from the decrypted blob. Values shaped like secrets (`sk_`, `rk_`, `whsec_`) are refused on write and never published; a Stripe key whose prefix does not match the gateway mode (`pk_test_` for sandbox, `pk_live_` for production) is published as null.
+- `AppConfigTest` asserts that configured secret values (gateway secret keys, webhook secrets, encrypted settings, `APP_KEY`) and secret field names (`secret`, `password`, `api_key`, `webhook`, `credential`, `token`) never appear in the response.
+- The storefront discovery endpoints (`API_DOCUMENTATION.md` 2c) use the same public caching and return no personal data, cost, margin or supplier fields.
+
 `APP_KEY` rotation uses `APP_PREVIOUS_KEYS`. Code keys use the keyring.
 
 ## 6. Payments and webhooks

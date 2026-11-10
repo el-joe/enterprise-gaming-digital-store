@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Storefront;
 
 use App\Domains\Shared\Rules\DecimalString;
+use App\Domains\Shared\Services\CountryDirectory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,7 +26,7 @@ class PlaceOrderRequest extends FormRequest
         return [
             'idempotency_key' => ['required', 'string', 'regex:/^[A-Za-z0-9_\-:.]{8,128}$/'],
             'email' => [Rule::requiredIf($this->user() === null), 'nullable', 'email:rfc', 'max:190'],
-            'country' => ['required', 'string', 'size:2', Rule::exists('countries', 'code')->where('is_active', true)],
+            'country' => ['required', 'string', 'size:2', CountryDirectory::rule()],
             'gateway' => ['required', 'string', 'max:32', 'alpha_dash:ascii'],
             'method' => ['sometimes', 'nullable', 'string', 'max:64', 'alpha_dash:ascii'],
             'currency' => ['required', 'string', 'size:3', 'alpha:ascii'],

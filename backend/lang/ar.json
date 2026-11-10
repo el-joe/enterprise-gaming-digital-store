@@ -97,5 +97,7 @@
     "Two-factor authentication is required.": "المصادقة الثنائية مطلوبة.",
     "The authentication code is invalid.": "رمز المصادقة غير صالح.",
     "The login attempt has expired. Please sign in again.": "انتهت صلاحية محاولة الدخول. يرجى تسجيل الدخول مرة أخرى.",
-    "The refresh token is invalid or has expired. Please sign in again.": "رمز التجديد غير صالح أو منتهي الصلاحية. يرجى تسجيل الدخول مرة أخرى."
+    "The refresh token is invalid or has expired. Please sign in again.": "رمز التجديد غير صالح أو منتهي الصلاحية. يرجى تسجيل الدخول مرة أخرى.",
+    "We are making improvements. Please try again shortly.": "نجري بعض التحسينات. يرجى المحاولة مرة أخرى بعد قليل.",
+    "The version must be a semantic version such as 1.4.0.": "يجب أن يكون الإصدار بصيغة الإصدار الدلالي مثل 1.4.0."
 }

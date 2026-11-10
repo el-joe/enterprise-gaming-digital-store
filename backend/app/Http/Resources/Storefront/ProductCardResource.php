@@ -5,6 +5,7 @@ namespace App\Http\Resources\Storefront;
 use App\Domains\Catalog\DTOs\ProductCard;
 use App\Domains\Catalog\Models\ProductImage;
 use App\Domains\Catalog\Services\ContentTranslator;
+use App\Domains\Cms\Services\MediaUrls;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,7 +16,8 @@ class ProductCardResource extends JsonResource
 {
     /**
      * Transform the resource into an array. Names and the short description are in the request
-     * locale, with the English base column as the fallback (ContentTranslator).
+     * locale, with the English base column as the fallback (ContentTranslator). `image.path` is
+     * kept for existing clients; `image.url` is absolute (M-A4, MediaUrls).
      *
      * @return array<string, mixed>
      */
@@ -35,7 +37,7 @@ class ProductCardResource extends JsonResource
             'delivery_type' => $product->delivery_type->value,
             'platform' => ['name' => $translator->text($product->gamingPlatform, 'name'), 'slug' => $product->gamingPlatform?->slug],
             'category' => ['name' => $translator->text($product->primaryCategory, 'name'), 'slug' => $product->primaryCategory?->slug],
-            'image' => $image?->media === null ? null : ['path' => $image->media->path, 'alt' => $image->alt ?? $image->media->alt],
+            'image' => $image?->media === null ? null : app(MediaUrls::class)->image($image->media, $image->alt),
             'price_from' => $this->resource->priceFrom,
             'price_may_vary' => $this->resource->priceMayVary,
             'is_featured' => $product->is_featured,

@@ -13,6 +13,8 @@ use App\Domains\Shared\DTOs\ListQuery;
 use App\Domains\Shared\Services\ListQueryApplier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ProductRepository
 {
@@ -33,22 +35,133 @@ class ProductRepository
     }
 
     /**
+     * Relations a storefront product card reads (ProductCardResource).
+     *
+     * @return array<int|string, mixed>
+     */
+    public static function cardRelations(): array
+    {
+        return [
+            'gamingPlatform:id,name,slug',
+            'primaryCategory:id,name,slug',
+            'productImages' => static fn ($images) => $images->orderBy('sort_order'),
+            'productImages.media',
+        ];
+    }
+
+    /**
      * Storefront product listing. Runs a count, the page, and one query per eager load, whatever
      * the number of rows.
      */
     public function storefrontPage(ProductListingFilter $filter): LengthAwarePaginator
     {
-        $query = Product::query()
+        return $this->storefrontQuery($filter)->with(self::cardRelations())->paginate($filter->perPage, ['*'], 'page', $filter->page);
+    }
+
+    /**
+     * The first products of a listing, without a count or eager loads (home carousels: the
+     * caller loads card relations once for every carousel).
+     *
+     * @return Collection<int, Product>
+     */
+    public function storefrontTop(ProductListingFilter $filter, int $limit): Collection
+    {
+        return $this->storefrontQuery($filter)->limit($limit)->get();
+    }
+
+    /**
+     * Listed products among these ids (same visibility as the listing), keyed by id, without
+     * eager loads.
+     *
+     * @param  list<int>  $ids
+     * @return Collection<int, Product>
+     */
+    public function storefrontByIds(array $ids): Collection
+    {
+        if ($ids === []) {
+            return new Collection;
+        }
+
+        return $this->listed(ProductListingFilter::all())->whereIn('products.id', $ids)->get()->keyBy('id');
+    }
+
+    /**
+     * An active product by slug with its lowest active base price (`price_from_base`), whether
+     * or not a variant is priced yet; null when unknown, not active or deleted.
+     */
+    public function storefrontDetail(string $slug): ?Product
+    {
+        return Product::query()
             ->select('products.*')
             ->selectSub($this->lowestActivePrice(), 'price_from_base')
+            ->where('slug', $slug)
             ->where('status', ProductStatus::Active)
-            ->whereExists($this->matchingVariants($filter))
             ->with([
-                'gamingPlatform:id,name,slug',
-                'primaryCategory:id,name,slug',
-                'productImages' => static fn ($images) => $images->orderBy('sort_order'),
-                'productImages.media',
-            ]);
+                ...self::cardRelations(),
+                'regions:id,code,name',
+                'productDeliveryFields.deliveryFieldDefinition',
+                'productVariants' => static fn ($variants) => $variants->where('is_active', true)->with('region:id,code,name')->orderBy('sort_order'),
+            ])
+            ->first();
+    }
+
+    /**
+     * Listed products per category id (primary or secondary), as the category filter counts them.
+     *
+     * @param  list<int>  $categoryIds
+     * @return array<int, int>
+     */
+    public function listedCountsByCategory(array $categoryIds): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        $primary = $this->listed(ProductListingFilter::all())->select(['products.id', 'products.primary_category_id as category_id'])->whereIn('primary_category_id', $categoryIds);
+        $secondary = $this->listed(ProductListingFilter::all())
+            ->select(['products.id', 'category_product.category_id'])
+            ->join('category_product', 'category_product.product_id', '=', 'products.id')
+            ->whereIn('category_product.category_id', $categoryIds);
+
+        return DB::query()
+            ->fromSub($primary->union($secondary), 'listed')
+            ->selectRaw('category_id, COUNT(DISTINCT id) AS aggregate')
+            ->groupBy('category_id')
+            ->pluck('aggregate', 'category_id')
+            ->map(static fn (mixed $count): int => (int) $count)
+            ->all();
+    }
+
+    /**
+     * Listed products per gaming platform id.
+     *
+     * @param  list<int>  $platformIds
+     * @return array<int, int>
+     */
+    public function listedCountsByPlatform(array $platformIds): array
+    {
+        if ($platformIds === []) {
+            return [];
+        }
+
+        return $this->listed(ProductListingFilter::all())
+            ->select('gaming_platform_id')
+            ->selectRaw('COUNT(*) AS aggregate')
+            ->whereIn('gaming_platform_id', $platformIds)
+            ->groupBy('gaming_platform_id')
+            ->pluck('aggregate', 'gaming_platform_id')
+            ->map(static fn (mixed $count): int => (int) $count)
+            ->all();
+    }
+
+    /**
+     * @return Builder<Product>
+     */
+    private function storefrontQuery(ProductListingFilter $filter): Builder
+    {
+        $query = $this->listed($filter)
+            ->select('products.*')
+            ->selectSub($this->lowestActivePrice(), 'price_from_base');
 
         if ($filter->category !== null) {
             $categoryIds = Category::query()->select('id')->where('slug', $filter->category);
@@ -67,6 +180,12 @@ class ProductRepository
             $query->where('delivery_type', $filter->deliveryType);
         }
 
+        if ($filter->flag === 'featured') {
+            $query->where('is_featured', true);
+        } elseif ($filter->flag === 'trending') {
+            $query->where('is_trending', true);
+        }
+
         match ($filter->sort) {
             'newest' => $query->orderByDesc('published_at'),
             'price_asc' => $query->orderBy('price_from_base'),
@@ -75,7 +194,20 @@ class ProductRepository
             default => $query->orderByDesc('sales_count'),
         };
 
-        return $query->orderBy('id')->paginate($filter->perPage, ['*'], 'page', $filter->page);
+        return $query->orderBy('id');
+    }
+
+    /**
+     * What the storefront lists: active products with an active, priced variant matching the
+     * variant-level filters (region and price).
+     *
+     * @return Builder<Product>
+     */
+    private function listed(ProductListingFilter $filter): Builder
+    {
+        return Product::query()
+            ->where('status', ProductStatus::Active)
+            ->whereExists($this->matchingVariants($filter));
     }
 
     /**

@@ -2,8 +2,8 @@
 
 namespace App\Domains\Catalog\Services;
 
+use App\Domains\Catalog\DTOs\DeliveryFieldSpec;
 use App\Domains\Catalog\Enums\DeliveryFieldDefinitionInputType;
-use App\Domains\Catalog\Models\DeliveryFieldDefinition;
 use App\Domains\Catalog\Models\Product;
 use App\Domains\Catalog\Models\ProductDeliveryField;
 use Illuminate\Validation\ValidationException;
@@ -23,6 +23,34 @@ class DeliveryFieldValidator
     }
 
     /**
+     * The product's delivery fields in display order, as validated by validate(). The storefront
+     * publishes exactly these (M-A4), so a client's checks equal the server's.
+     *
+     * @return list<DeliveryFieldSpec>
+     */
+    public function specsFor(Product $product): array
+    {
+        return $product->loadMissing('productDeliveryFields.deliveryFieldDefinition')->productDeliveryFields
+            ->sortBy('sort_order')
+            ->values()
+            ->map(static function (ProductDeliveryField $field): DeliveryFieldSpec {
+                $definition = $field->deliveryFieldDefinition;
+
+                return new DeliveryFieldSpec(
+                    definition: $definition,
+                    code: $definition->code,
+                    label: $definition->label,
+                    type: $definition->input_type,
+                    required: $field->is_required,
+                    pattern: $definition->validation_regex,
+                    options: $definition->input_type === DeliveryFieldDefinitionInputType::Select ? self::options($definition->options) : [],
+                    maxLength: self::MAX_VALUE_LENGTH,
+                );
+            })
+            ->all();
+    }
+
+    /**
      * @param  array<string, mixed>  $values  keyed by delivery field code
      * @return array<string, string> the accepted values, normalized and keyed by code
      *
@@ -30,37 +58,35 @@ class DeliveryFieldValidator
      */
     public function validate(Product $product, array $values): array
     {
-        $fields = $product->loadMissing('productDeliveryFields.deliveryFieldDefinition')->productDeliveryFields->sortBy('sort_order')->values();
+        $specs = $this->specsFor($product);
 
         $errors = [];
         $accepted = [];
 
-        foreach ($fields as $field) {
-            /** @var ProductDeliveryField $field */
-            $definition = $field->deliveryFieldDefinition;
-            $value = $values[$definition->code] ?? null;
+        foreach ($specs as $spec) {
+            $value = $values[$spec->code] ?? null;
             $value = is_string($value) ? trim($value) : $value;
 
             if ($value === null || $value === '') {
-                if ($field->is_required) {
-                    $errors["delivery_values.{$definition->code}"] = ["{$definition->label} is required."];
+                if ($spec->required) {
+                    $errors["delivery_values.{$spec->code}"] = ["{$spec->label} is required."];
                 }
 
                 continue;
             }
 
-            $error = $this->errorFor($definition, $value);
+            $error = $this->errorFor($spec, $value);
 
             if ($error !== null) {
-                $errors["delivery_values.{$definition->code}"] = [$error];
+                $errors["delivery_values.{$spec->code}"] = [$error];
 
                 continue;
             }
 
-            $accepted[$definition->code] = $value;
+            $accepted[$spec->code] = $value;
         }
 
-        $known = $fields->map(static fn (ProductDeliveryField $field): string => $field->deliveryFieldDefinition->code)->all();
+        $known = array_map(static fn (DeliveryFieldSpec $spec): string => $spec->code, $specs);
 
         foreach (array_diff(array_keys($values), $known) as $unknown) {
             $errors["delivery_values.{$unknown}"] = ['This field is not accepted for this product.'];
@@ -73,28 +99,47 @@ class DeliveryFieldValidator
         return $accepted;
     }
 
-    private function errorFor(DeliveryFieldDefinition $definition, mixed $value): ?string
+    private function errorFor(DeliveryFieldSpec $spec, mixed $value): ?string
     {
-        if (! is_string($value) || mb_strlen($value) > self::MAX_VALUE_LENGTH) {
-            return "{$definition->label} is not valid.";
+        if (! is_string($value) || mb_strlen($value) > $spec->maxLength) {
+            return "{$spec->label} is not valid.";
         }
 
-        $typeIsValid = match ($definition->input_type) {
+        $typeIsValid = match ($spec->type) {
             DeliveryFieldDefinitionInputType::Number => preg_match('/^\d+$/', $value) === 1,
             DeliveryFieldDefinitionInputType::Email => filter_var($value, FILTER_VALIDATE_EMAIL) !== false,
-            DeliveryFieldDefinitionInputType::Select => in_array($value, array_column($definition->options ?? [], 'value'), true),
+            DeliveryFieldDefinitionInputType::Select => in_array($value, array_column($spec->options, 'value'), true),
             DeliveryFieldDefinitionInputType::Text => true,
         };
 
         if (! $typeIsValid) {
-            return "{$definition->label} is not valid.";
+            return "{$spec->label} is not valid.";
         }
 
-        if ($definition->validation_regex !== null && @preg_match(self::pattern($definition->validation_regex), $value) !== 1) {
-            return "{$definition->label} has an invalid format.";
+        if ($spec->pattern !== null && @preg_match(self::pattern($spec->pattern), $value) !== 1) {
+            return "{$spec->label} has an invalid format.";
         }
 
         return null;
+    }
+
+    /**
+     * Select options as stored (`[{value, label}]`); entries without a string value are dropped,
+     * because validate() could never accept them.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private static function options(mixed $options): array
+    {
+        $normalized = [];
+
+        foreach (is_array($options) ? $options : [] as $option) {
+            if (is_array($option) && is_string($option['value'] ?? null)) {
+                $normalized[] = ['value' => $option['value'], 'label' => is_string($option['label'] ?? null) ? $option['label'] : $option['value']];
+            }
+        }
+
+        return $normalized;
     }
 
     /**

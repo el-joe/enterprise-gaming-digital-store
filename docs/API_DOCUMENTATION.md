@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17); section 1b mobile authentication with customer bearer tokens (M-A2); section 1c stateless cart, checkout, account and locale for the app under `/api/v1/mobile` (M-A3). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10); section 2b product reviews and affiliate clicks, section 4b customer wallet, reviews, tickets and refund requests, section 5d admin coupons, promotions, affiliates, reviews, support and customer wallets, real coupons in 3a and the wallet gateway in 3b (M11); section 8 MCP API with admin MCP tokens and action approval (M16); section 7 automation API for n8n with admin automation credentials (M17); section 1b mobile authentication with customer bearer tokens (M-A2); section 1c stateless cart, checkout, account and locale for the app under `/api/v1/mobile` (M-A3); section 2c product detail, platforms, categories, countries and home and section 1d app config (M-A4). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -8,7 +8,8 @@
 
 | Group | Prefix | Auth | Status |
 |---|---|---|---|
-| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); reviews and affiliate clicks built (2b); newsletter planned |
+| Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); reviews and affiliate clicks built (2b); product detail, platforms, categories, countries, home built (2c); newsletter planned |
+| App config | `/api/v1/app/config` (and `/api/v1/mobile/app/config`) | none, public, cached 60 s | built (M-A4, section 1d) |
 | Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); wallet, reviews, tickets, refund requests built (4b); rest planned |
 | Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status, guest OTP (3a), guest code access (4a) and payment routes (3b) built |
 | Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a to 5d built; rest planned |
@@ -16,7 +17,7 @@
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum bearer token of an `n8n` service account + HMAC signature, timestamp and nonce + scopes | built (M17, section 7) |
 | MCP | `/api/v1/mcp` | Sanctum bearer token of an `mcp` service account + scopes | built (M16, section 8) |
-| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); cart, checkout and account built (M-A3, section 1c); rest planned (M-A4 to M-A6) |
+| Mobile app | `/api/v1/mobile` | Stateless (`api` group, no session, no CSRF); signed-in routes need a customer Sanctum bearer token with the `customer` ability | auth built (M-A2, section 1b); cart, checkout and account built (M-A3, section 1c); public storefront reads (2a, 2b reviews, 2c) and app config (1d) built (M-A4); rest planned (M-A5, M-A6) |
 
 Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 
@@ -179,7 +180,7 @@ Design: `PROJECT_ARCHITECTURE.md` ADR-036. The same route files, controllers and
 | `/api/v1/storefront/cart...` (3a) | `/api/v1/mobile/storefront/cart...` | guest (`X-Cart-Token`) or customer bearer |
 | `/api/v1/checkout/...` (3a, 3b, 4a guest routes) | `/api/v1/mobile/checkout/...` | guest (`X-Cart-Token`, `X-Guest-Order-Token`) or customer bearer |
 | `/api/v1/account/...` (4, 4a, 4b) | `/api/v1/mobile/account/...` | customer bearer, active account |
-| `/api/v1/storefront/catalog/...`, `/currencies`, `/search/...` (2a, 2b) | same paths (already stateless) | none; `X-Currency` and `Accept-Language` apply |
+| `/api/v1/storefront/catalog/...`, `/currencies`, `/search/...`, `/home`, `/platforms`, `/categories`, `/countries` (2a, 2b, 2c) | `/api/v1/mobile/storefront/...` since M-A4 (the `/api/v1/storefront` paths are stateless too and stay valid) | none; `X-Currency` and `Accept-Language` apply |
 
 Not duplicated: `POST /api/v1/storefront/currency` (sets a cookie; the app sends `X-Currency` instead) and `POST /api/v1/storefront/affiliates/click` (browser cookie).
 
@@ -205,6 +206,39 @@ App flow for a guest: place-order (keep the token) -> pay -> verify-payment / st
 
 **Locale.** `Accept-Language` sets the locale of every `/api/v1` JSON route (also the web checkout and account routes). Order: a request with a session (web) uses the signed-in customer's saved `users.locale`, then `Accept-Language`, then `en`; a stateless request uses `Accept-Language`, then `en`. The response carries `Content-Language`. Storefront content (catalog `name`, `short_description`, platform and category names, variant `title`, cart product names and variant titles) comes from `content_translations` for `ar`, falling back to the English column when there is no translation; search suggest and popular default to the request locale when `locale` is not given; reviews are shown as written. Envelope `message` values, domain error messages and validation messages are localized (`lang/ar.json`, `lang/ar/validation.php`); `code` values and `errors` keys never change. Place-order stores the request locale on the order.
 
+## 1d. App config (built, M-A4)
+
+`GET /api/v1/app/config` and its twin `GET /api/v1/mobile/app/config`: public, no auth, `storefront` limiter, `Cache-Control: public, max-age=60`, ETag (304 on `If-None-Match`), `Vary: Accept-Language`. Design: `PROJECT_ARCHITECTURE.md` ADR-037. **Public data only** (`SECURITY.md` section 5): nothing here is a secret, and a test asserts that configured secret values and secret field names never appear.
+
+Query (optional, both or neither): `platform` (`android` or `ios`) and `version` (the installed version, Semantic Versioning 2.0.0, e.g. `1.4.0` or `1.4.0-rc.1+42`); 422 `validation_failed` otherwise. With them the response carries `update`.
+
+```json
+{
+  "config": {
+    "versions": {
+      "android": { "min_supported_version": "1.4.0", "latest_version": "1.6.0" },
+      "ios": { "min_supported_version": "1.4.0", "latest_version": "1.6.0" }
+    },
+    "update": { "platform": "android", "version": "1.3.9", "required": true, "available": true },
+    "maintenance": { "enabled": false, "message": null },
+    "features": { "checkout_enabled": true, "guest_checkout_enabled": true, "wallet_enabled": true, "reviews_enabled": true, "support_enabled": true },
+    "locales": { "supported": ["en", "ar"], "default": "en" },
+    "currencies": { "base": "USD", "supported": [{ "code": "USD", "name": "US Dollar", "symbol": "$", "exponent": 2 }] },
+    "media": { "base_url": "https://boxcards.shop/storage" },
+    "links": { "support": "https://...", "terms": "https://...", "privacy": null, "refund": null },
+    "payment_gateways": { "stripe": { "publishable_key": "pk_live_..." }, "paypal": { "client_id": "A..." }, "wallet": {} }
+  }
+}
+```
+
+- `update.required`: the installed version is **strictly below** `min_supported_version` (force update); `update.available`: strictly below `latest_version`. Comparison is SemVer precedence (`1.10.0 > 1.9.0`, `1.4.0-rc.1 < 1.4.0`, build metadata ignored). The app should compare the same way if it does not send its version.
+- `maintenance.message` is in the request language (custom text per locale, else a translated default), null when maintenance is off.
+- `features` are advisory for the app (what to offer); they do not disable server routes.
+- `payment_gateways`: one entry per **active** gateway, keyed by gateway key, holding only its public identifier (`stripe.publishable_key`, `paypal.client_id`, `paymob.public_key`; the wallet has none). The value is null when not configured, or when it does not match the gateway's mode (a `pk_live_` key on a sandbox gateway). The app treats Stripe as unavailable when `publishable_key` is null or `stripe` is absent.
+- `media.base_url` is the prefix of media URLs (`MEDIA_BASE_URL` CDN when set, else the public disk). Every storefront image is already returned as an absolute URL.
+
+Sources and how to change them without a deploy: settings group `app` (keys `android_min_version`, `android_latest_version`, `ios_min_version`, `ios_latest_version`, `maintenance`, `maintenance_message` (JSON `{ "en": "...", "ar": "..." }`), `checkout_enabled`, `guest_checkout_enabled`, `wallet_enabled`, `reviews_enabled`, `support_enabled`, `support_url`, `terms_url`, `privacy_url`, `refund_url`) through `php artisan mobile:app-config set <key> <value>` (validated: SemVer, booleans, http(s) URL or site path); defaults in `config/mobile.php` `app` (env `MOBILE_*`). Public payment identifiers: `php artisan payments:public-key <gateway> <value> --mode=sandbox|production` (or `--clear`), stored in that mode's encrypted gateway credentials. Clients see a change within the 60 s cache.
+
 ---
 
 ## 2. Storefront JSON
@@ -214,6 +248,7 @@ App flow for a guest: place-order (keep the token) -> pay -> verify-payment / st
 | GET | `/search/suggest?q=` | Instant suggestions: games, platforms, products, SKU |
 | GET | `/search/popular` | Popular searches |
 | GET | `/catalog/products` | Listing with filters: `category`, `platform`, `region`, `delivery_type`, `min_price`, `max_price`, `sort` |
+| GET | `/catalog/products/{slug}` | Product page (built, 2c) |
 | GET | `/catalog/products/{slug}/variants` | Variant matrix with prices in display currency |
 | POST | `/currency` | `{ currency }`, sets cookie |
 | POST | `/newsletter` | Subscribe (double opt-in) |
@@ -230,7 +265,7 @@ Base `/api/v1/storefront`, in the stateless `api` middleware group.
 
 | Method | Path | Query or body | Result |
 |---|---|---|---|
-| GET | `/catalog/products` | `page`, `per_page`, `category`, `platform`, `region`, `delivery_type`, `min_price`, `max_price` (decimal strings, in the display currency), `sort` (`popular`, `newest`, `price_asc`, `price_desc`, `name`) | Page of `{ public_id, name, slug, short_description, delivery_type, platform, category, image, price_from, price_may_vary, is_featured, rating_avg }`; `meta.display_currency` |
+| GET | `/catalog/products` | `page`, `per_page`, `category`, `platform`, `region`, `delivery_type`, `min_price`, `max_price` (decimal strings, in the display currency), `sort` (`popular`, `newest`, `price_asc`, `price_desc`, `name`) | Page of `{ public_id, name, slug, short_description, delivery_type, platform, category, image, price_from, price_may_vary, is_featured, rating_avg }`; `meta.display_currency`. `image` is null or an image object (section 2c); `image.path` is the stored path kept for existing clients, `image.url` the absolute URL (M-A4) |
 | GET | `/catalog/products/{slug}/variants` | `country?` | `{ variants: [{ public_id, title, sku, region, denomination_value, denomination_currency, is_custom_amount, availability, purchasable, price, price_may_vary }] }`. 404 unless the product is active. Cost and margin are never returned. |
 | GET | `/currencies` | | Active currencies for the switcher |
 | POST | `/currency` | `{ currency }` | Sets the plain `currency` cookie and returns the currency actually used; an inactive or rateless choice returns the base currency. Not CSRF protected because it only changes a display preference. |
@@ -240,6 +275,62 @@ Base `/api/v1/storefront`, in the stateless `api` middleware group.
 Query budget: one listing page runs at most **10 queries** with a cold cache, whatever the number of rows.
 
 Not built: `/newsletter`. The cart routes are built in M7, see 3a.
+
+### 2c. Built catalog discovery routes (M-A4)
+
+Base `/api/v1/storefront` and, with the same controllers, `/api/v1/mobile/storefront` (`routes/storefront.php`, registered twice in the stateless `api` group). `storefront` limiter. Localized by `Accept-Language` (`content_translations` with the English column as fallback, ADR-036); prices in the display currency (`X-Currency`, else the web `currency` cookie) through the listing's pricing path. Public caching: `Cache-Control: public, max-age=N`, an ETag (304 on `If-None-Match`) and `Vary: Accept-Language` (plus `X-Currency, Cookie` where prices appear). Nothing personal is returned or cached. Cost, margin, supplier and secret fields never appear.
+
+| Method | Path | Cache | Result |
+|---|---|---|---|
+| GET | `/catalog/products/{slug}` | 60 s, varies by currency | `{ product }`, `meta.display_currency`. 404 `not_found` unless the product is `active` (draft, inactive and deleted are hidden) |
+| GET | `/platforms` | 300 s | `{ platforms: [{ name, slug, description, product_count, is_featured, logo, banner }] }`, active only, by `sort_order` then name |
+| GET | `/categories` | 300 s | `{ categories: [{ name, slug, description, product_count, parent, banner }] }`, active categories whose parent (if any) is active, parents first, by `sort_order` then name; `parent` is the parent slug |
+| GET | `/countries` | 3600 s | `{ countries: [{ code, name, dial_code, default_currency }] }`: exactly the countries `checkout/validate`, `payment-options` and `place-order` accept (one definition, `CountryDirectory`), sorted by localized name. Names: the stored English name, or the ICU (intl) name of the ISO code in Arabic |
+| GET | `/home` | 60 s, varies by currency | `{ sections: [...], banners: { hero: [...], home_promo: [...] } }`, `meta.display_currency` |
+
+`product_count` is the number of products the listing filter for that platform or category returns (active, with a priced active variant; categories count primary and secondary assignments).
+
+**Image object** (listing `image`, product `images[]`, platform `logo`/`banner`, category `banner`, banner `image.desktop`/`image.mobile`): `{ path, url, alt, width, height, formats: { webp, avif? } }`. `url` and `formats.*` are absolute: `MEDIA_BASE_URL` (CDN) when configured, otherwise the media disk URL made absolute with `APP_URL`. Media has format conversions (WebP, AVIF when the server's GD supports it), no resized variants; `width` and `height` are the original's. Platform and category images are the admin's own uploads (null when not set); the API adds no logos, and BD8 (no official brand logos until rights are confirmed) governs what admins upload.
+
+**Product** = the listing card fields plus:
+
+```json
+{
+  "sku": "ORB-CARD", "description": "<p>HTML</p>", "instructions": "plain text", "terms": "plain text",
+  "delivery_time_minutes": 5, "max_quantity_per_order": 10,
+  "images": [{ "path": "...", "url": "https://...", "alt": "...", "width": 1200, "height": 600, "formats": { "webp": "https://..." } }],
+  "regions": [{ "code": "US", "name": "United States" }],
+  "rating": { "average": "4.50", "count": 8 },
+  "availability": "in_stock",
+  "variants_summary": { "count": 3, "regions": [{ "code": "US", "name": "United States" }], "has_custom_amount": false },
+  "delivery_fields": [{ "key": "player_id", "label": "Player ID", "help_text": null, "type": "text", "required": true, "max_length": 255, "pattern": "[0-9]{6,10}", "options": null }],
+  "seo": { "title": "...", "description": "...", "robots": null, "image": "https://..." }
+}
+```
+
+- `description` is HTML limited to the sanitizer allow-list (`p`, `br`, headings, lists, `a`, `strong`, `em`, tables, `img` and similar; sanitized again on output); render it as HTML. `instructions` and `terms` are plain text with line breaks; render them escaped.
+- `availability`: the best availability of the active variants (`in_stock`, `limited`, `out_of_stock`), null without active variants. Prices and per-variant purchasability stay in `/variants` (unchanged).
+- `seo`: the product's `seo_metadata` in the request locale, else English, else the product name and short description.
+- **`delivery_fields` are exactly what `POST /cart/items` validates `delivery_values` against**: both are built from one `DeliveryFieldSpec` list (`DeliveryFieldValidator::specsFor`), so they cannot drift. Rules: send `delivery_values` as `{ key: value }`; values are trimmed and an empty value counts as missing; `required` fields must be present; at most `max_length` characters; `type` `number` means digits only (`^\d+$`), `email` a valid email, `select` one of `options[].value`, `text` anything; `pattern`, when set, must match the **whole** trimmed value (PCRE with the `u` flag, anchored by the server as `^(?:pattern)$`); any key not listed is refused. Errors come back as `errors.delivery_values.{key}`. `label` and `help_text` are localized.
+
+**Home section**: `{ key, title, subtitle, source, rule, items: [{ type, data }] }`, active sections by `sort_order`. `type` and `data`:
+
+| type | data |
+|---|---|
+| `product` | the listing card plus `link` |
+| `platform` | `{ name, slug, logo, banner, link }` |
+| `category` | `{ name, slug, banner, link }` |
+| `banner` | a banner (below) |
+| `faq` | `{ id, question, answer }` (plain text) |
+| `review` | the review shape of 2b plus `product: { name, slug, link }` |
+
+`manual` sections show their admin-chosen items in order; an item that is no longer visible (inactive or unpublished product, inactive platform, category or FAQ, banner out of schedule) is dropped. `auto` sections follow `settings.rule` or, without one, the section key: `best_sellers` (keys `best_sellers`, `popular_gift_cards`: listing sort `popular`), `newest` (`recently_added`), `trending` (`trending_games`: `is_trending`), `featured` (`recommended`: `is_featured`), `reviews` (`customer_reviews`: featured approved reviews of active products), `faqs` (`faq`: active FAQs shown on the homepage). Product rules accept `settings.category`, `settings.platform`, `settings.delivery_type` (slugs or values as in the listing). `settings.limit` 1 to 24, default 12. Other auto keys (for example `trust_indicators`, `newsletter`) return no items; the app renders its own content for them. Every product is priced by the listing's path in one batch, so carousel prices equal listing prices in any currency.
+
+**Banner**: `{ id, placement, title, subtitle, cta_label, link, image: { desktop, mobile }, starts_at, ends_at }`. Only active banners inside their schedule (`starts_at` <= now < `ends_at`, either may be null) are returned; `banners` holds the `hero` and `home_promo` placements in `sort_order`.
+
+**Link target** (`link`): `{ type, value, url }` with `type` `product`, `category`, `platform` (value: slug), `search` (value: the text) or `url` (value: absolute URL); `url` is always the absolute web URL. A banner's stored `cta_url` maps as follows: an optional `/{locale}` prefix is ignored; `/products/{slug}` product; `/gaming/{slug}` platform; `/search?q=...` search; `/{slug}` category when the segment is not reserved (`catalog.reserved_slugs` and route prefixes); anything else, and any URL on another host, is `url`. Null when the banner has no `cta_url`.
+
+Query budgets with a cold cache (tests enforce them; none grows with the number of rows): product detail 15, platforms 6, categories 6, countries 3, home 30, app config 8.
 
 ## 3. Checkout JSON
 

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Reviews\Repositories;
 
+use App\Domains\Catalog\Enums\ProductStatus;
 use App\Domains\Orders\Enums\OrderItemUnitStatus;
 use App\Domains\Orders\Models\OrderItem;
 use App\Domains\Reviews\Enums\ReviewStatus;
@@ -57,6 +58,24 @@ class ReviewRepository
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Featured approved reviews of active products, newest first (idx_r_featured), for the home
+     * page (M-A4).
+     *
+     * @return Collection<int, Review>
+     */
+    public function featuredApproved(int $limit): Collection
+    {
+        return Review::query()->with(['user:id,name', 'product:id,name,slug'])
+            ->where('status', ReviewStatus::Approved->value)
+            ->where('is_featured', true)
+            ->whereHas('product', static fn ($product) => $product->where('status', ProductStatus::Active))
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
     }
 
     public function adminPage(ListQuery $list): LengthAwarePaginator

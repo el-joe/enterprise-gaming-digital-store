@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Mobile\AppConfigController;
 use App\Http\Controllers\Mobile\Auth\LoginController;
 use App\Http\Controllers\Mobile\Auth\MeController;
 use App\Http\Controllers\Mobile\Auth\RegisterController;
@@ -23,3 +24,6 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
         Route::post('/logout-all', [TokenController::class, 'destroyAll'])->name('logout-all');
     });
 });
+
+// M-A4: the same public app configuration as GET /api/v1/app/config, under the app's base path.
+Route::get('/app/config', [AppConfigController::class, 'show'])->middleware(['throttle:storefront', 'cache.public:60'])->name('app.config');
