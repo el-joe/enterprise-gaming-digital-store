@@ -2,7 +2,9 @@
 
 Figma file: https://www.figma.com/design/JkUUSR3WGBYC9ewy2qRFQO
 
-Source of truth is the Figma file: variable collections `Primitives`, `Theme` (modes `Dark`, `Admin Light`), `Layout`; text and effect styles. Names below map 1:1 to Tailwind 4 `@theme` keys (`color/surface/raised` is `--color-surface-raised`, utility `bg-surface-raised`). Working brand: PLAYVAULT (replaceable before launch).
+Source of truth is the Figma file: variable collections `Primitives`, `Theme` (modes `Dark`, `Admin Light`), `Layout`; text and effect styles. Names below map 1:1 to Tailwind 4 `@theme` keys (`color/surface/raised` is `--color-surface-raised`, utility `bg-surface-raised`). Brand: boxcards.shop (replaces the working name PLAYVAULT).
+
+Logo rules: Figma components `Logo / boxcards.shop` (full logo, box + wordmark; Size S 28 / M 36 / L 64 px high) and `Logo / boxcards.shop mark` (box only; S 24 / M 32 / L 64). Both use the supplied raster masters (`backend/resources/assets/images/brand/logo-master.png` 1885x424, `mark-master.png` 538x538). Keep the aspect ratio and never recolour, stretch or redraw. Use the full logo in headers and footers; use the mark in the collapsed admin rail, favicon and app icon. On light or white surfaces (Admin Light, emails) place the logo on an ink-950 `#07080B` chip with the key-cut corner (`Tone=Chip` / `Surface=Light` variants), because the white "box" text and volt green fail contrast on light backgrounds. The logo green matches volt-500, so colour tokens are unchanged. The logo artwork contains third-party platform symbols; trademark clearance is pending with the owner.
 
 ## Fonts (Google Fonts, Latin + Arabic where noted)
 
@@ -66,3 +68,35 @@ Breakpoints: sm 375, md 768, lg 1280 (design canvas 1440). Margins 16 / 32 / 80;
 RTL: `dir="rtl"`, logical utilities only; do not mirror logos, currency values, SKUs, digital codes (full rules on the Foundations page). Motion: fast 120ms, base 200ms, slow 360ms, `cubic-bezier(.2,.8,.2,1)`, honour `prefers-reduced-motion`. Chart.js defaults: series order volt, ultra, ember, aqua; grid ink-700; 2px lines; always a legend at 2+ series; one y axis. Palette validator: CVD and contrast pass on `#12151C`; bright volt and aqua fall outside the suggested lightness band, a deliberate brand decision offset by legends and labels.
 
 BD8: platforms use a plain-text tile and an empty `Logo Slot` until rights are confirmed. Reviews in frames are flagged "Sample content".
+
+## Phase 2 screens
+
+Added to the Figma file on the existing pages, in a grid of rows (`Row / Phase 2 — …` headings, 1560 px column pitch). All frames reuse the library components and bind to `Theme`/`Layout` variables and the text styles. Admin frames clone the approved admin shell (sidebar + top bar); account frames clone the approved account shell. Mobile account frames are 390 wide as briefed (the Phase 1 mobile frames are 375).
+
+| Page | Frame | Node ID |
+|---|---|---|
+| Admin | Admin / Customers / List | 30:5569 |
+| Admin | Admin / Customers / List — Loading (skeleton) | 32:6521 |
+| Admin | Admin / Customers / Detail | 31:5980 |
+| Admin | Admin / Customers / Detail — Block confirm (Alert Dialog, Error) | 32:6259 |
+| Admin | Admin / Marketing / Coupons | 33:6812 |
+| Admin | Admin / Marketing / Coupon Edit — Validation error | 33:7565 |
+| Admin | Admin / Marketing / Affiliates | 34:7346 |
+| Admin | Admin / Marketing / Affiliate Detail | 34:8035 |
+| Admin | Admin / Content / Pages | 35:7897 |
+| Admin | Admin / Content / Page Editor (EN/AR, SEO) | 35:8621 |
+| Admin | Admin / Content / Homepage Banners | 37:8407 |
+| Admin | Admin / Content / FAQ | 37:9095 |
+| Admin | Admin / Support / Tickets | 41:8775 |
+| Admin | Admin / Support / Ticket Thread | 41:9540 |
+| Admin | Admin / Reviews / Moderation Queue | 42:9280 |
+| Admin | Admin / Reviews / Moderation Queue — Empty | 42:10182 |
+| Account | Account / Profile & Security — Desktop 1440 / Mobile 390 | 44:2703 / 44:3164 |
+| Account | Account / My Reviews — Desktop 1440 / Mobile 390 | 45:3130 / 45:3648 |
+| Account | Account / Notifications — Desktop 1440 / Mobile 390 | 46:3573 / 46:4018 |
+| Account | Account / Digital Codes — Desktop 1440 / Mobile 390 | 47:3962 / 47:4439 |
+| RTL | Account / Digital Codes — Mobile 390 (AR, RTL), key-cut corner mirrored | 48:3306 |
+
+Library additions: `Logo / boxcards.shop mark` (38:10186, Size S/M/L × Surface Dark/Light); `Logo / boxcards.shop` (4:388) rebuilt from the supplied masters with `Tone=Volt|Chip` (Chip replaces the old Mono tone). The admin rail (tablet) now starts with the mark. Admin sidebars in new frames add a `Reviews` nav item; account navs add `My reviews` and `Notifications` and rename `Security` to `Profile & security`.
+
+Derived or not-yet-stored data shown in Phase 2 frames: ticket SLA (computed from priority, created_at and status; no column), canned replies (no table yet), review reject/hide reason (written to `audit_logs.reason`; hide = soft delete), phone verification (no column; the UI says it is not available).

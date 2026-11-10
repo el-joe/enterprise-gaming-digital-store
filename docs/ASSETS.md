@@ -51,8 +51,8 @@ These remain in the folder and are not in the project.
 | 4 | Promotional banners (3, textless) | Not produced (quota). |
 | 5 | Empty states: empty cart, no search results, no orders, empty wishlist, no tickets, 404 | Not produced (quota). |
 | 6 | Marketing and campaign graphics, social templates (square and story, English and Arabic) | Not produced (quota). No English or Arabic text-bearing asset exists. |
-| 7 | Default Open Graph share image | Not produced (quota). |
-| 7 | Favicon and logo exports from the PLAYVAULT wordmark | Not produced. Work stopped at the quota limit. |
+| 7 | Default Open Graph share image | Done: `og-default.jpg` 1200x630 (see the favicon and logo row). |
+| 7 | Favicon and logo exports (boxcards.shop) | Done. AVIF + WebP logo at 320/640/1280w and mark at 64/128/256 in `backend/public/images/brand`; `favicon.ico`, `favicon-96`, `icon-180/192/512`, `site.webmanifest`, `logo-email.png` (baked on a dark chip), `og-default.jpg` 1200x630; masters in `backend/resources/assets/images/brand`; Blade components `<x-brand.logo variant="full\|mark" surface="dark\|light" :height="36" eager />` and `<x-brand.head-icons />`; brand config in `config/brand.php`. |
 
 Also not produced from spec Phase 3: product promotional visuals, which were not in the M2 task list.
 
