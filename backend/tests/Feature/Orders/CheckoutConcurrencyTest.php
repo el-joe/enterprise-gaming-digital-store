@@ -63,6 +63,8 @@ function startWorker(array $payload): Process
         'QUEUE_CONNECTION' => 'sync',
         'MAIL_MAILER' => 'array',
         'BCRYPT_ROUNDS' => '4',
+        // M12: web guest checkout is off by default (owner decision 4); these races test guest placement.
+        'STOREFRONT_GUEST_CHECKOUT' => 'true',
     ], null, 60);
     $process->start();
 

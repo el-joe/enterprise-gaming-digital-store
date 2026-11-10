@@ -115,5 +115,6 @@
     "Preferences saved.": "تم حفظ التفضيلات.",
     "This notification cannot be turned off.": "لا يمكن إيقاف هذا الإشعار.",
     "The :attribute must be the code of an active currency.": "يجب أن يكون :attribute رمز عملة مفعّلة.",
-    "The phone number must be in international format, for example +201001234567.": "يجب أن يكون رقم الهاتف بالصيغة الدولية، مثل +201001234567."
+    "The phone number must be in international format, for example +201001234567.": "يجب أن يكون رقم الهاتف بالصيغة الدولية، مثل +201001234567.",
+    "Please sign in or create an account to check out.": "يُرجى تسجيل الدخول أو إنشاء حساب لإتمام الطلب."
 }

@@ -2,6 +2,7 @@
 
 use App\Domains\Shared\Exceptions\ApplicationException;
 use App\Domains\Shared\Exceptions\JsonExceptionRenderer;
+use App\Http\Controllers\Web\CheckoutReturnController;
 use App\Http\Middleware\Account\EnsureAccountActive;
 use App\Http\Middleware\Admin\EnforceIdleTimeout;
 use App\Http\Middleware\Admin\EnsureStaff;
@@ -16,7 +17,10 @@ use App\Http\Middleware\Mcp\RequireMcpScope;
 use App\Http\Middleware\Mobile\AuthenticateOptionalCustomerToken;
 use App\Http\Middleware\Mobile\EnsureCustomerToken;
 use App\Http\Middleware\SetLocaleFromRequest;
+use App\Http\Middleware\Storefront\ContentSecurityPolicy;
 use App\Http\Middleware\Storefront\PublicCacheHeaders;
+use App\Http\Middleware\Storefront\SetStorefrontLocale;
+use App\Http\Support\LocalizedRoutes;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -48,6 +52,15 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::prefix('webhooks')->name('webhooks.')->group(base_path('routes/webhooks.php'));
             // M-A6: app link association files and payment return links, outside every group.
             Route::group([], base_path('routes/app_links.php'));
+            // M12: storefront pages, last because the category route catches one top-level segment.
+            // The payment return page has no localized twin (its URL is configured for providers).
+            Route::middleware(['storefront', 'storefront.locale:session', 'throttle:storefront'])
+                ->get('/checkout/orders/{orderPublicId}/return', [CheckoutReturnController::class, 'show'])
+                ->name('storefront.checkout.return');
+            foreach (LocalizedRoutes::prefixedLocales() as $locale) {
+                Route::middleware(['storefront', 'storefront.locale:'.$locale])->prefix($locale)->name($locale.'.')->group(base_path('routes/storefront_pages.php'));
+            }
+            Route::middleware(['storefront', 'storefront.locale:'.LocalizedRoutes::defaultLocale()])->group(base_path('routes/storefront_pages.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -66,11 +79,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'automation.scope' => RequireAutomationScope::class,
             'locale' => SetLocaleFromRequest::class,
             'cache.public' => PublicCacheHeaders::class,
+            'storefront.locale' => SetStorefrontLocale::class,
         ]);
 
         $middleware->appendToGroup('api', SetLocaleFromRequest::class);
 
         $middleware->group('account', ['web', 'auth', 'account.active', 'locale']);
+        // M12: storefront pages (Blade): session, CSRF and the Content Security Policy nonce.
+        $middleware->group('storefront', ['web', ContentSecurityPolicy::class]);
+        $middleware->redirectGuestsTo(fn (Request $request): string => LocalizedRoutes::url('storefront.login', locale: LocalizedRoutes::localeOfPath($request->path())));
         $middleware->group('admin', ['web', 'auth', 'staff', 'two_factor', 'admin.idle', 'throttle:admin']);
         $middleware->group('mcp', [RecordMcpCall::class, AuthenticateMcpToken::class, 'throttle:mcp']);
         $middleware->group('mobile.customer', ['auth:sanctum', EnsureCustomerToken::class, 'account.active', 'throttle:account']);

@@ -390,6 +390,7 @@ describe('duplicate placement', function (): void {
     });
 
     it('treats two guest carts with the same email and contents as one placement', function (): void {
+        config(['storefront.guest_checkout' => true]); // M12: web guest checkout is off by default (owner decision 4).
         $body = placeOrderBody('10.00', ['email' => 'Guest@Example.com']);
         $tokenA = cartFor(null, $this->variant)->getCookie('cart_token')->getValue();
         $this->withCredentials()->withCookie('cart_token', $tokenA);
@@ -406,6 +407,7 @@ describe('duplicate placement', function (): void {
 
 describe('guest orders', function (): void {
     it('places a guest order and shows its status only to the session that placed it', function (): void {
+        config(['storefront.guest_checkout' => true]); // M12: web guest checkout is off by default (owner decision 4).
         fakePayments();
         $token = cartFor(null, sellableVariant('5'))->getCookie('cart_token')->getValue();
         $this->withCredentials()->withCookie('cart_token', $token);

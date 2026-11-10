@@ -12,7 +12,10 @@ use App\Domains\Orders\Services\GuestOrderTokenService;
 use App\Http\Controllers\Account\OrderCodeController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storefront\Concerns\InteractsWithGuestOrderToken;
+use App\Http\Middleware\Storefront\SetStorefrontLocale;
+use App\Http\Support\LocalizedRoutes;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -31,10 +34,20 @@ class GuestOrderCodeController extends Controller
 
     public function __construct(private GuestOrderTokenService $tokens) {}
 
-    public function access(Request $request, string $orderPublicId): JsonResponse
+    /**
+     * A browser opening the delivery email link (M12) is sent on to the guest order page, which
+     * asks for the email one-time code; JSON clients get the envelope as before.
+     */
+    public function access(Request $request, string $orderPublicId): JsonResponse|RedirectResponse
     {
         if ($request->hasSession()) {
             $request->session()->push(self::LINK_SESSION_KEY, $orderPublicId);
+
+            if (! $request->expectsJson()) {
+                return redirect()->to(LocalizedRoutes::url('storefront.orders.show', ['orderPublicId' => $orderPublicId], $request->session()->get(SetStorefrontLocale::SESSION_KEY)))
+                    ->header('Cache-Control', 'no-store, private')
+                    ->header('Referrer-Policy', 'no-referrer');
+            }
 
             return $this->success(['order_public_id' => $orderPublicId, 'otp_required' => ! in_array($orderPublicId, $request->session()->get(self::OTP_SESSION_KEY, []), true)], 'Link accepted. Verify your email to view codes.');
         }

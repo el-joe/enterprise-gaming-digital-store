@@ -43,7 +43,6 @@
             @if ($eager) fetchpriority="high" @else loading="lazy" @endif
             decoding="async"
             class="block h-auto max-w-full"
-            style="height: {{ $height }}px; width: auto;"
         >
     </picture>
 </span>

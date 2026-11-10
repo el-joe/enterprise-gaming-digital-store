@@ -32,6 +32,7 @@ require_once __DIR__.'/Support/AutomationFixtures.php';
 require_once __DIR__.'/Support/MobileFixtures.php';
 require_once __DIR__.'/Support/AccountFixtures.php';
 require_once __DIR__.'/Support/ContractFixtures.php';
+require_once __DIR__.'/Support/StorefrontFixtures.php';
 
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)

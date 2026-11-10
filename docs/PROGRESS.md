@@ -18,7 +18,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M9 | Fulfilment and digital codes | Complete (reveal pages and account order list are M13) |
 | M10 | Payments | Complete (all three adapters mocked only, awaiting sandbox verification; Stripe also awaits BD1) |
 | M11 | Wallet, promotions, affiliates, reviews, support | Complete (wallet is internal, no provider; affiliate payouts, guest tickets and admin screens not built) |
-| M12 | Storefront | Not started |
+| M12 | Storefront | Complete (Blade pages EN/AR; web checkout requires sign-in by owner decision 4, flag `storefront.guest_checkout`; payments mocked only; newsletter, wishlist and account area not built) |
 | M13 | Customer account | Not started |
 | M14 | Admin core | Not started |
 | M15 | Admin remaining | Not started |
@@ -851,6 +851,93 @@ Real coupons behind the M7 `CheckoutCoupons` contract (now the binding), the wal
 ### Next milestone
 
 M12: Storefront. Risks it inherits: the checkout must handle `next.type: "wallet"` (already paid, no redirect) and a null `next` after a refused wallet attempt; coupon errors arrive as `message` on 422 `coupon_invalid`; the affiliate landing must call `POST /storefront/affiliates/click` (CSRF, cookie); product pages read reviews from `/catalog/products/{slug}/reviews`. M13 needs the 4b routes (wallet, reviews with `/reviews/eligible`, tickets, refund requests). M14/M15 must build screens on 5d.
+
+---
+
+## M12: Storefront
+
+Date completed: 2026-11-11
+Completed by: Senior Laravel Frontend Developer
+
+### Summary of completed work
+
+Every spec Phase 4 storefront page as server-rendered Blade with Tailwind 4 and plain JavaScript modules through Vite (no Livewire, no framework), in English (LTR, unprefixed) and Arabic (RTL, `/ar/...`), from the approved Figma file `JkUUSR3WGBYC9ewy2qRFQO` (pages Storefront, Checkout, RTL). Pages read through the existing services and API resources (the same arrays the JSON returns) and every write goes through the existing JSON routes with CSRF; errors show beside fields from the envelope. Money is only ever rendered from server `formatted` strings; the JavaScript does no money arithmetic. Owner decisions of 2026-11-10 applied: hero carousel (decision 8), Western digits with isolated LTR amounts in Arabic (2), checkout shows the display amount and the exact charged amount from the payment-options and place-order responses (3), web checkout requires sign-in behind one flag (4).
+
+### Files created
+
+- Routes: `routes/storefront_pages.php` (registered per language in `bootstrap/app.php`, last, after every other group); payment return `GET /checkout/orders/{order}/return` (`storefront.checkout.return`, the configured `payments.return_url`).
+- Controllers `app/Http/Controllers/Web/`: `HomeController`, `PlatformController`, `CategoryController`, `ProductController`, `SearchController`, `CartController`, `CheckoutController`, `CheckoutReturnController`, `OrderController`, `PageController`, `AuthPageController`, `AccountController`, `Concerns/RendersProductListing`. Requests `app/Http/Requests/Web/{ListingPageRequest,SearchPageRequest}`.
+- Support: `app/Http/Support/{LocalizedRoutes,StorefrontRequest}`, `app/View/Composers/StorefrontLayoutComposer`, `app/Providers/StorefrontServiceProvider` (`url()->localized()`), middleware `Storefront/{ContentSecurityPolicy,SetStorefrontLocale}`, `config/storefront.php`, `app/Domains/Cms/Services/HomeTranslations` (shared by the home JSON and page), `app/Domains/Orders/Exceptions/GuestCheckoutDisabled`.
+- Views: `layouts/{storefront,auth}`, `components/store/*` (header, footer, region-switcher, product-card, tile, dial, icon, section-head, breadcrumbs, empty-state, art, stars, field), `storefront/*` (home, category, platforms/index|show, product, search, cart, checkout, checkout-return, orders/show|access, pages/show, account, auth/login|register|two-factor|forgot-password|reset-password|verify-email, partials/*), `errors/{404,500,503,minimal}`.
+- Front end: `resources/css/app.css` (tokens from DESIGN_TOKENS.md as `@theme`, key-cut utilities, logical RTL), `resources/js/app.js`, `lib/{config,http,forms,payment}.js`, `modules/{menu,popover,currency,search,hero,tabs,filters,product,cart,checkout,payment-return,retry-payment,reveal,guest-access,auth-form,logout}.js`; `vite.config.js` (self-hosted Google fonts Changa, Readex Pro, IBM Plex Mono through `laravel-vite-plugin/fonts`; banner art as build inputs so `Vite::asset` resolves). `package-lock.json` (npm).
+- Translations: `lang/en/storefront.php`, `lang/ar/storefront.php` (same keys), one string in `lang/ar.json`.
+- Tests: `tests/Feature/Storefront/{StorefrontPagesTest,CheckoutPagesTest,AuthPagesTest}.php`, `tests/Support/StorefrontFixtures.php`.
+- Changed: `bootstrap/app.php`, `bootstrap/providers.php`, `routes/web.php` (welcome route and view removed), `routes/auth.php` (reset page middleware), `Storefront/CheckoutController` (guest refusal), `Storefront/HomeController` (shared preload), `Storefront/GuestOrderCodeController` (browser redirect), `Storefront/Auth/NewPasswordController` (browser page), `CartService::unitCount`, `SearchService::results`, `PageService::findPublished`, `AuthenticationService::PENDING_KEY` (now public), `components/brand/logo.blade.php` (inline style removed for the CSP; size comes from the width and height attributes).
+
+### Pages and routes
+
+| Page | EN / AR URL | Notes |
+|---|---|---|
+| Home | `/`, `/ar` | Admin sections and banners (home JSON service); hero carousel; trust; newsletter band |
+| Platforms | `/gaming`, `/gaming/{slug}` | BD8 neutral tiles; logo slot hidden unless an admin uploaded one; platform art by index |
+| Category | `/{slug}` | Filters (platform, delivery, price in the display currency), sort, pagination; noindex with 2+ filters; canonical to the unfiltered page |
+| Product | `/products/{slug}` | Region and amount selection, delivery fields exactly as the cart validates, reviews, related, sticky mobile buy bar |
+| Search | `/search?q=` | Instant suggestions (header and page), popular, recent searches in localStorage only; noindex |
+| Bag | `/cart` | Quantity, remove, coupon via JSON; server fragment refresh |
+| Checkout | `/checkout` | Sign-in required by default; country, display currency, payment options; "What you will be charged" box; Stripe Payment Element, PayPal and Paymob redirects, wallet |
+| Payment return | `/checkout/orders/{id}/return` | verify-payment or PayPal capture, then status polling; never marks paid |
+| Order result / guest access | `/orders/{id}` | Owner or session; signed email link leads to the email one-time code form; reveal with re-auth (customer) or link + OTP (guest); code hidden after 60 s or on tab switch |
+| Content / legal | `/pages/{slug}` | Published CMS page, else built-in summaries for about, contact, terms, privacy, refund-policy |
+| Auth | `/login`, `/register`, `/two-factor-challenge`, `/forgot-password`, `/reset-password/{token}`, `/email/verify` | Replace the JSON landing pages for browsers |
+| Account | `/account` | Placeholder until M13 |
+| Errors | 404 (storefront chrome, language from the path), 500/503/419/429/403 (minimal, no database) | |
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Every page responsive at 375, 768, 1280 | Met | Headless Chrome screenshots of home, platforms, category, product (EN and AR), search, login, bag and checkout at the three widths during the build; mobile-first Tailwind with logical utilities |
+| Feature tests per page, both locales where it matters | Met | 49 tests, 368 assertions (see below) |
+| No console errors | Met for the pages checked | Headless Chrome console on home, `/ar`, `/gaming`, `/login`, `/cart`, `/search` at three widths: no errors or CSP violations. The Stripe Payment Element was not loaded (no publishable key) |
+| Matches Figma | Met with the deviations below | |
+| Checkout shows display and payment amounts | Met | Charge box and Pay button use `display_amount`, `payment_amount` and `payment_currency` from payment-options; order page shows display total, payment amount and currency |
+| Guest checkout end to end with mocks | Replaced by owner decision 4 | Customer checkout end to end with mocked Stripe (product page, bag, checkout, payment-options, place-order, return page, verify-payment, paid order page) plus: guest redirected to sign-in and back; place-order refuses a browser guest (401 `guest_checkout_disabled`) with the flag off and accepts one with it on |
+| Prices only from server money values | Met | Templates print `formatted`; JS inserts response strings only |
+| No inline scripts or styles beyond CSP-nonced data | Met | Strict CSP header (nonce, no `unsafe-inline`); test asserts every script has `src` or the nonce, every style block the nonce, no `style=` or inline handlers |
+
+### Tests and results
+
+- New: `StorefrontPagesTest` (28), `CheckoutPagesTest` (13), `AuthPagesTest` (8): home EN/AR with prices, hero controls, hreflang and CSP; display currency cookie; email-verification banner; platforms index and detail EN/AR, 404; category filters, sort, empty filters, invalid filter redirect, noindex, reserved slugs not shadowed; product variants, delivery fields, sanitized description, related, AR, draft 404; search results, popular counting, empty states; built-in and CMS pages; 404 EN/AR, 500 without chrome; language switch URLs; `/` and `/ar` serve the home pages with no country redirect (`/eg` is 404); every banner image in the Vite manifest; bag empty and filled, fragment; checkout access by flag in both directions, Arabic refusal message; customer E2E with mocked Stripe; retry offer; order 404 for strangers; return page without disclosure; guest email link, code form, order; JSON link answer kept; auth pages EN/AR, redirects, 2FA pending gate, reset page vs JSON echo, reset page language.
+- Full suite: `php artisan test --compact` (sequential, MySQL) **2265 passed, 0 failed, 15964 assertions, 154 s** (2216 after M-A7; +49 M12 tests). `vendor/bin/pint`: passed. `npm run build`: passed.
+- Existing tests changed (adaptation, not weakening): `Orders/CheckoutTest` "treats two guest carts…" and "places a guest order…" and the worker environment of `Orders/CheckoutConcurrencyTest` switch `storefront.guest_checkout` on, because they test guest placement and web guest checkout is now off by default.
+- Tests render without a Vite build (`storefrontWithoutBuild()`); `public/build` is not committed.
+
+### Deviations from Figma
+
+- No wishlist heart in the header (wishlist is planned, not built). Newsletter band shows "sign-up opens soon" instead of a form (`/newsletter` is not built).
+- Checkout has no pre-payment email one-time code (no backend for it; signed-in customers only by owner decision). The guest one-time code is on the guest order access page (M9).
+- Listing filters: platform is single choice (the listing takes one platform); no region filter (no storefront region list) and no "in stock only" toggle (no listing filter). Sort control sits above the grid.
+- Product cards link to the product page; the bag button on a card is visual (a card has no variant to add).
+- Platform and product tiles use original vector dials drawn in SVG from the design (not the Figma raster exports); Logo Slot hidden unless an admin uploaded an image (component note).
+- Legal pages are short built-in summaries until the owner publishes the full texts in the CMS.
+- Footer platform column links to all platforms and search instead of a fixed brand list.
+
+### Outstanding requirements
+
+- M13: account dashboard, orders list and detail pages, digital codes, wallet, reviews, tickets, notifications, security (`/account` is a placeholder; links in emails to `/account/orders/{id}` need M13 pages, the result page `/orders/{id}` already works for owners); a full code-reveal UX (basic reveal with password re-auth and auto-hide is on the order page).
+- M18: JSON-LD (Product, BreadcrumbList, Organization), sitemaps, redirects table middleware, GA4/GTM, Lighthouse run. Canonical, robots and hreflang tags are in place.
+- OD-1 (backend, after M12): payment currency per gateway and GeoIP display currency; the page already renders whatever payment-options and place-order return.
+- Stripe Payment Element is untested against a real key (sandbox verification pending); the CSP allows js.stripe.com, api.stripe.com and hooks.stripe.com.
+- The stateless `/api/v1/mobile` place-order still accepts guests; the app's no-guest rule is M-A13.
+- Product structured content (images, descriptions, Arabic translations) needs catalog data entry (M15).
+
+### Design changes made
+
+- `API_DOCUMENTATION.md`: web pages note, place-order 401 `guest_checkout_disabled`, browser reset page, browser guest link redirect.
+
+### Next milestone
+
+M13: Customer account.
 
 ---
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Domains\Affiliates\Services\AffiliateTracker;
 use App\Domains\Orders\Actions\PlaceOrderAction;
 use App\Domains\Orders\DTOs\PlaceOrderInput;
+use App\Domains\Orders\Exceptions\GuestCheckoutDisabled;
 use App\Domains\Orders\Services\CheckoutService;
 use App\Domains\Orders\Services\GuestOrderTokenService;
 use App\Domains\Orders\Services\OrderStatusReader;
@@ -50,9 +51,16 @@ class CheckoutController extends Controller
      * A stateless guest (ADR-036) receives `guest_order_token` instead of the session order list,
      * also on a replay (the stored body never holds a token, so a client whose first response was
      * lost can still follow its order).
+     *
+     * M12 (owner decision 4): a browser guest is refused with 401 `guest_checkout_disabled` while
+     * `storefront.guest_checkout` is off. The stateless app route is not affected here.
      */
     public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action, GeoIpResolver $geoIp, CheckoutPaymentService $payments, AffiliateTracker $affiliates, GuestOrderTokenService $guestTokens): JsonResponse
     {
+        if ($request->hasSession() && $request->user() === null && ! config('storefront.guest_checkout')) {
+            throw new GuestCheckoutDisabled;
+        }
+
         $result = $action->handle(new PlaceOrderInput(
             owner: $this->cartOwner($request),
             idempotencyKey: $request->validated('idempotency_key'),

@@ -58,6 +58,14 @@ class CartService
         return $cart->load(self::RELATIONS);
     }
 
+    /**
+     * Units in the owner's active cart, for the storefront header (M12). One query, no pricing.
+     */
+    public function unitCount(CartOwner $owner): int
+    {
+        return (int) $this->find($owner)?->cartItems()->sum('quantity');
+    }
+
     public function quote(Cart $cart, ?string $country = null): CartQuote
     {
         return $this->pricing->price($cart, $cart->display_currency, $country ?? $cart->country_code, forCheckout: false);

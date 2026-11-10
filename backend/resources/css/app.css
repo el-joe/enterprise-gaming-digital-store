@@ -2,8 +2,343 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views';
+@source '../js';
 
+/*
+ * Design tokens (docs/DESIGN_TOKENS.md, Figma `Primitives` and `Theme / Dark`). Names map 1:1 to
+ * the Figma variables: `color/surface/raised` is `--color-surface-raised`, utility
+ * `bg-surface-raised`. The storefront uses the Dark theme only.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: var(--font-readex-pro), 'Readex Pro', ui-sans-serif, system-ui, sans-serif;
+    --font-display: var(--font-changa), 'Changa', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: var(--font-ibm-plex-mono), 'IBM Plex Mono', ui-monospace, monospace;
+
+    --color-ink-950: #07080b;
+    --color-ink-900: #0c0e13;
+    --color-ink-850: #12151c;
+    --color-ink-800: #191d26;
+    --color-ink-700: #252a35;
+    --color-ink-600: #383f4d;
+    --color-ink-500: #5a6374;
+    --color-ink-400: #8791a3;
+    --color-ink-300: #b3bbc9;
+    --color-ink-200: #d7dbe3;
+    --color-ink-100: #eceef2;
+    --color-ink-50: #f6f7f9;
+
+    --color-volt-300: #e4ff85;
+    --color-volt-500: #c8ff2e;
+    --color-volt-600: #a6db10;
+    --color-volt-800: #4a6404;
+    --color-volt-900: #222e05;
+    --color-ember-400: #ff7a52;
+    --color-ember-500: #ff5a2b;
+    --color-ember-900: #3b1408;
+    --color-ultra-400: #7c7eff;
+    --color-ultra-500: #5a50ff;
+    --color-ultra-900: #1b1754;
+    --color-aqua-500: #12c4ab;
+    --color-flux-500: #eb2fa8;
+    --color-sun-500: #f5a800;
+
+    --color-surface-canvas: #07080b;
+    --color-surface-base: #0c0e13;
+    --color-surface-raised: #12151c;
+    --color-surface-overlay: #191d26;
+    --color-surface-sunken: #07080b;
+    --color-line-subtle: #191d26;
+    --color-line-default: #252a35;
+    --color-line-strong: #383f4d;
+    --color-content-primary: #f6f7f9;
+    --color-content-secondary: #b3bbc9;
+    --color-content-muted: #8791a3;
+    --color-content-on-accent: #07080b;
+    --color-accent-primary: #c8ff2e;
+    --color-accent-hover: #e4ff85;
+    --color-accent-tint: #222e05;
+    --color-accent-text: #c8ff2e;
+    --color-accent-ember: #ff5a2b;
+    --color-accent-ember-tint: #3b1408;
+    --color-accent-ember-text: #ff7a52;
+    --color-accent-ultra: #7c7eff;
+    --color-focus-ring: #7c7eff;
+    --color-status-success: #4ee39b;
+    --color-status-warning: #ffc53d;
+    --color-status-danger: #ff6b7a;
+    --color-status-info: #5cb2ff;
+    --color-status-success-tint: #0d3322;
+    --color-status-warning-tint: #3a2a05;
+    --color-status-danger-tint: #3d0d14;
+    --color-status-info-tint: #0b2742;
+    --color-field-volt: #222e05;
+    --color-field-ember: #3b1408;
+    --color-field-ultra: #1b1754;
+    --color-field-aqua: #053a33;
+    --color-field-flux: #3d0c2c;
+    --color-field-sun: #3a2a05;
+    --color-field-ink: #191d26;
+
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-key: 28px;
+
+    --shadow-card: 0 8px 24px rgb(0 0 0 / 0.35);
+    --shadow-raised: 0 16px 40px rgb(0 0 0 / 0.45);
+    --shadow-overlay: 0 32px 80px rgb(0 0 0 / 0.6);
+    --shadow-glow-volt: 0 0 28px rgb(200 255 46 / 0.28);
+    --shadow-glow-ember: 0 0 28px rgb(255 90 43 / 0.3);
+
+    --ease-brand: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@layer base {
+    html {
+        color-scheme: dark;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-surface-canvas font-sans text-content-primary antialiased;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-focus-ring);
+        outline-offset: 2px;
+    }
+
+    [hidden] {
+        display: none !important;
+    }
+
+    /* Arabic: no letter spacing, no uppercase, roomier line height (DESIGN_TOKENS.md). */
+    [dir='rtl'] .overline,
+    [dir='rtl'] .tracking-wide,
+    [dir='rtl'] .uppercase {
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    [dir='rtl'] .font-display {
+        line-height: 1.25;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 1ms !important;
+            transition-duration: 1ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+@utility container-page {
+    @apply mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-20;
+}
+
+@utility overline {
+    @apply font-display text-xs leading-4 font-semibold tracking-[0.12em] uppercase;
+}
+
+/* Key-cut silhouette, mirrored by logical corners in RTL. */
+@utility keycut {
+    border-start-start-radius: var(--radius-sm);
+    border-start-end-radius: var(--radius-key);
+    border-end-end-radius: var(--radius-sm);
+    border-end-start-radius: var(--radius-sm);
+}
+
+@utility keycut-btn {
+    border-start-start-radius: var(--radius-sm);
+    border-start-end-radius: var(--radius-lg);
+    border-end-end-radius: var(--radius-sm);
+    border-end-start-radius: var(--radius-sm);
+}
+
+@utility keycut-sm {
+    border-start-start-radius: var(--radius-xs);
+    border-start-end-radius: var(--radius-md);
+    border-end-end-radius: var(--radius-xs);
+    border-end-start-radius: var(--radius-xs);
+}
+
+@utility btn {
+    @apply keycut-btn inline-flex min-h-11 items-center justify-center gap-2 px-5 text-sm font-semibold transition duration-200 ease-(--ease-brand) disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+    @apply btn bg-accent-primary text-content-on-accent hover:bg-accent-hover;
+}
+
+@utility btn-secondary {
+    @apply btn border border-line-default bg-surface-overlay text-content-primary hover:border-line-strong;
+}
+
+@utility btn-ghost {
+    @apply btn text-content-secondary hover:text-content-primary;
+}
+
+@utility btn-lg {
+    @apply min-h-13 px-6 text-base;
+}
+
+@utility field-label {
+    @apply mb-1.5 block text-xs leading-4 font-medium text-content-secondary;
+}
+
+@utility field-input {
+    @apply block min-h-11 w-full rounded-md border border-line-default bg-surface-sunken px-3.5 text-sm text-content-primary placeholder:text-content-muted transition duration-200 hover:border-line-strong focus:border-focus-ring focus:outline-none aria-invalid:border-status-danger;
+}
+
+@utility field-error {
+    @apply mt-1.5 text-xs leading-4 text-status-danger;
+}
+
+@utility field-help {
+    @apply mt-1.5 text-xs leading-4 text-content-muted;
+}
+
+@utility card {
+    @apply keycut border border-line-subtle bg-surface-raised;
+}
+
+@utility panel {
+    @apply rounded-xl border border-line-subtle bg-surface-raised;
+}
+
+@utility chip {
+    @apply inline-flex items-center gap-1 rounded-xs bg-surface-overlay px-2 py-0.5 text-xs font-medium text-content-secondary;
+}
+
+@utility alert {
+    @apply flex gap-3 rounded-md border px-4 py-3 text-sm;
+}
+
+@utility alert-info {
+    @apply alert border-status-info/60 bg-status-info-tint text-content-primary;
+}
+
+@utility alert-warning {
+    @apply alert border-status-warning/60 bg-status-warning-tint text-content-primary;
+}
+
+@utility alert-danger {
+    @apply alert border-status-danger/60 bg-status-danger-tint text-content-primary;
+}
+
+@utility alert-success {
+    @apply alert border-status-success/60 bg-status-success-tint text-content-primary;
+}
+
+@layer components {
+    /* Colour fields for BD8-neutral platform tiles, with the corner light of the Figma tile. */
+    .tile-field {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+    }
+
+    .tile-field::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: radial-gradient(
+            ellipse 65% 75% at 85% 10%,
+            rgb(var(--tile-light) / 0.55) 0%,
+            rgb(var(--tile-light) / 0.12) 55%,
+            rgb(var(--tile-light) / 0) 100%
+        );
+    }
+
+    [dir='rtl'] .tile-field::before {
+        background: radial-gradient(
+            ellipse 65% 75% at 15% 10%,
+            rgb(var(--tile-light) / 0.55) 0%,
+            rgb(var(--tile-light) / 0.12) 55%,
+            rgb(var(--tile-light) / 0) 100%
+        );
+    }
+
+    .tile-volt {
+        --tile-light: 200 255 46;
+        @apply bg-field-volt text-volt-500;
+    }
+
+    .tile-ember {
+        --tile-light: 255 90 43;
+        @apply bg-field-ember text-ember-500;
+    }
+
+    .tile-ultra {
+        --tile-light: 124 126 255;
+        @apply bg-field-ultra text-ultra-400;
+    }
+
+    .tile-aqua {
+        --tile-light: 18 196 171;
+        @apply bg-field-aqua text-aqua-500;
+    }
+
+    .tile-flux {
+        --tile-light: 255 92 200;
+        @apply bg-field-flux text-flux-500;
+    }
+
+    .tile-sun {
+        --tile-light: 245 168 0;
+        @apply bg-field-sun text-sun-500;
+    }
+
+    .hero-scrim {
+        background: linear-gradient(to top, var(--color-surface-canvas) 30%, rgb(7 8 11 / 0.6) 60%, rgb(7 8 11 / 0) 100%);
+    }
+
+    @media (min-width: 768px) {
+        .hero-scrim {
+            background: linear-gradient(to right, var(--color-surface-canvas) 30%, rgb(7 8 11 / 0.5) 60%, rgb(7 8 11 / 0) 100%);
+        }
+
+        [dir='rtl'] .hero-scrim {
+            background: linear-gradient(to left, var(--color-surface-canvas) 30%, rgb(7 8 11 / 0.5) 60%, rgb(7 8 11 / 0) 100%);
+        }
+    }
+
+    .prose-store {
+        @apply text-sm leading-6 text-content-secondary;
+    }
+
+    .prose-store :where(h2, h3, h4) {
+        @apply mt-6 mb-2 font-display font-bold text-content-primary;
+    }
+
+    .prose-store :where(h2) {
+        @apply text-xl;
+    }
+
+    .prose-store :where(p, ul, ol, table) {
+        @apply mb-3;
+    }
+
+    .prose-store :where(ul) {
+        @apply list-disc ps-5;
+    }
+
+    .prose-store :where(ol) {
+        @apply list-decimal ps-5;
+    }
+
+    .prose-store :where(a) {
+        @apply text-accent-text underline underline-offset-2;
+    }
+
+    .prose-store :where(strong) {
+        @apply text-content-primary;
+    }
 }

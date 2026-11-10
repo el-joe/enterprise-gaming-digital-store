@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthenticationService
 {
-    private const string PENDING_KEY = 'auth.two_factor.pending';
+    public const string PENDING_KEY = 'auth.two_factor.pending';
 
     private const int PENDING_TTL_SECONDS = 300;
 

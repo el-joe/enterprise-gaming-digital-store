@@ -21,6 +21,14 @@ class PageService extends CrudService
         parent::__construct($lists, $audit);
     }
 
+    /**
+     * A published page by slug for the storefront (M12), or null.
+     */
+    public function findPublished(string $slug): ?Page
+    {
+        return Page::query()->where('slug', $slug)->where('status', PageStatus::Published)->first();
+    }
+
     protected function model(): string
     {
         return Page::class;
