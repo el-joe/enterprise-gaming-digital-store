@@ -539,6 +539,7 @@ Coverage against 4.1: every row has EN and AR frames. Provider UIs (Stripe Payme
 9. Real platform names and logos once rights are confirmed (BD8): the empty `Logo Slot` and plain-text tiles stay until then.
 
 ### M-A9: Owner approval gate
+- **Status**: Approved by the owner 2026-11-10 (web and mobile designs together). Open questions are built as drawn; see `PROGRESS.md`.
 - **Owner**: PM.
 - **Scope**: present M-A8 to the owner; record approval or change requests with date in `PROGRESS.md`; iterate M-A8 until approved.
 - **Acceptance**: written owner approval of the app designs. **No feature UI milestone (M-A10 onwards) starts before this.** The store policy question (section 5) is raised at this gate.

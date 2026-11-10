@@ -7,8 +7,8 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | Milestone | Name | Status |
 |---|---|---|
 | M0 | Discovery and architecture | Complete |
-| M1 | Figma design | In progress (delivered, awaiting review) |
-| M2 | Canva assets | Partial (hero banners only; blocked by Canva credit quota) |
+| M1 | Figma design | Complete (web Phase 1 and Phase 2 approved by the owner 2026-11-10) |
+| M2 | Canva assets | Complete (6 Canva heroes kept as is; Canva then dropped by owner decision 2026-11-10, remaining assets made as original vectors) |
 | M3 | Foundation | Complete |
 | M4 | Full schema | Complete |
 | M5 | Catalog and CMS services | Complete |
@@ -1164,3 +1164,22 @@ Date delivered: 2026-11-10 (for review; M-A9 owner approval pending). Completed 
 - Docs: `MOBILE_APP_ROADMAP.md` M-A8 (status, screen list, deviations, open questions). No repository code changed; nothing committed.
 - Next: LFA/SFD feasibility review and PM scope checklist, then M-A9 owner approval (open questions in the roadmap, store-policy question from section 5).
 
+
+## Design approval gate (M1 and M-A9), 2026-11-10
+
+The owner approved both designs in the Figma file `JkUUSR3WGBYC9ewy2qRFQO` ("Approve both"):
+- the web design, Phase 1 and Phase 2 (storefront, account, admin and RTL pages);
+- the mobile app design from M-A8 (pages `74:14` EN, `74:15` AR, `74:13` components).
+
+This unblocks M12 to M15, M18 and M-A10 to M-A17.
+
+**Open design questions** (M-A8 list) were not answered at the gate. They are built as drawn, and the owner can change them later:
+- Latin digits in Arabic, and currency code formatting until symbols are confirmed;
+- guest checkout in the app;
+- a warning, not a block, on rooted devices;
+- no biometric unlock;
+- codes auto-hide after 2 minutes or when the app goes to the background;
+- the hero carousel advances only when swiped;
+- a "buy on the web" state only if the store-policy review requires it.
+
+**Build order** (one agent at a time, owner rule): M12, M13, M14, M15, M18, then M-A10 to M-A19, then M19. M20 and M-A20 need credentials, servers and developer accounts.
