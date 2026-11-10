@@ -11,7 +11,7 @@ Wording: **must** is a requirement that a test has to prove. "Planned" means not
 | Area | Finding | Consequence |
 |---|---|---|
 | Codebase | `backend/` is a pristine Laravel 13 skeleton (framework constraint `^13.17`, installed 13.40), PHP 8.3, Pest 4, Tailwind 4, Vite 8, Pint, Boost. Only `User` model and three default migrations. | Nothing to preserve beyond `users`, `sessions`, `cache`, `jobs`, `job_batches`, `failed_jobs`, `password_reset_tokens`. Extend `users` with a new migration; do not edit the originals. |
-| PHP extensions | bcmath gd intl mbstring mysqli mysqlnd PDO pdo_mysql redis zip. No pdo_sqlite. No pcntl reported. | Tests run on MySQL (`backend_testing`). Laravel Horizon is excluded (ADR-012). bcmath is available for Money. |
+| PHP extensions | bcmath gd intl mbstring mysqli mysqlnd PDO pdo_mysql redis zip. No pdo_sqlite. No pcntl reported. | Tests run on MySQL (`gaming-store_testing`). Laravel Horizon is excluded (ADR-012). bcmath is available for Money. |
 | Runtime | MySQL 8.0.46, Redis 7.0.15, Node 20.20.2 | Generated columns, `SKIP LOCKED`, functional checks are available. |
 | Not installed | nginx, supervisor, n8n | Configs and workflow JSON are authored and statically validated, not executed here. |
 | Credentials | No supplier or gateway credentials exist. App DB login pending (user is fixing `.env`). | All provider adapters ship complete with mocked tests and are labelled "awaiting credentials / sandbox verification". |
@@ -69,7 +69,7 @@ The spec's 22 suggested domains are consolidated as follows. Each domain owns it
 
 | Domain | Covers spec domains | Responsibility |
 |---|---|---|
-| `Shared` | - | `Money`, `Percentage`, `CountryCode` value objects, base exceptions. Reason for this refinement: value objects are used by every domain and belong to none. |
+| `Shared` | - | `Money`, `Percentage`, `CountryCode` value objects (`ValueObjects/`), base exceptions and the JSON error renderer, log redaction (`Services/`), `Country` reference model, `AppendOnly` model concern, morph map. Reason for this refinement: these are used by every domain and belong to none. |
 | `Identity` | - | Users, staff, roles and permissions, 2FA, service accounts |
 | `Customers` | Customers | Profiles, consents, risk flags, notes |
 | `Catalog` | Catalog, Gaming Platforms, Digital Products | Platforms, categories, products, variants, regions, attributes, delivery field definitions, search |
@@ -118,7 +118,7 @@ Yajra DataTable classes own their admin list queries; they do not go through rep
 
 ## 4. Packages
 
-Planned additions. Nothing is installed in Phase 1. Boost guidelines require approval for dependency changes; this list is that request and is approved by the PM's stack decision unless marked.
+Installed at M3: Sanctum, Permission, DataTables, Stripe, Image, Google2FA. `geoip2/geoip2` is added when its first consumer lands (M10 eligibility); the npm packages at M14. Boost guidelines require approval for dependency changes; this list is that request and is approved by the PM's stack decision unless marked.
 
 | Package | Purpose |
 |---|---|
@@ -640,7 +640,7 @@ Laravel sends all customer transactional notifications. Domain events are additi
 
 ## 17. Testing approach
 
-Details per milestone are in `IMPLEMENTATION_ROADMAP.md`. Tests run on MySQL database `backend_testing`, because pdo_sqlite is unavailable and because locking and generated columns must be exercised for real. Provider calls use `Http::fake()` with fixtures taken from official spec examples. Every provider test file states "mocked; awaiting sandbox verification". `Http::preventStrayRequests()` is global.
+Details per milestone are in `IMPLEMENTATION_ROADMAP.md`. Tests run on MySQL database `gaming-store_testing`, because pdo_sqlite is unavailable and because locking and generated columns must be exercised for real. Provider calls use `Http::fake()` with fixtures taken from official spec examples. Every provider test file states "mocked; awaiting sandbox verification". `Http::preventStrayRequests()` is global.
 
 Mandatory scenarios for R1 and R2: read timeout then no retry; crash after submit; redelivered job; concurrent submit (two connections); duplicate and out-of-order webhooks; webhook with bad signature; amount mismatch; late payment on a cancelled order; deliverable fetch failure after purchase; refund timeout.
 

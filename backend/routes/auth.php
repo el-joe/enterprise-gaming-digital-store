@@ -1,0 +1,25 @@
+<?php
+
+use App\Http\Controllers\Storefront\Auth\EmailVerificationController;
+use App\Http\Controllers\Storefront\Auth\LoginController;
+use App\Http\Controllers\Storefront\Auth\NewPasswordController;
+use App\Http\Controllers\Storefront\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Storefront\Auth\RegisterController;
+use App\Http\Controllers\Storefront\Auth\TwoFactorChallengeController;
+use Illuminate\Support\Facades\Route;
+
+Route::post('/register', [RegisterController::class, 'store'])->middleware('throttle:auth')->name('register');
+Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:auth')->name('login');
+Route::post('/two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:otp')->name('two-factor.challenge');
+Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->middleware('throttle:auth')->name('password.email');
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'show'])->name('password.reset');
+Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:auth')->name('password.update');
+
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['auth', 'signed', 'throttle:6,1'])
+    ->name('verification.verify');
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('verification.send');

@@ -56,7 +56,7 @@ Accept: assets exported as WebP or AVIF in `backend/resources/assets/` or media 
 ### M3: Foundation (Step 4)
 
 Depends: M0, DB login fixed.
-Scope: install packages from architecture section 4 (Sanctum, Permission, DataTables, Stripe SDK, Image). `backend_testing` database and `phpunit.xml`. Domain skeleton, `Money` VO, JSON exception envelope, `Http::preventStrayRequests`, audit writer, settings service, redaction processor, roles and permissions seed, auth (register, login, verify, reset, 2FA for staff), route files.
+Scope: install packages from architecture section 4 (Sanctum, Permission, DataTables, Stripe SDK, Image). `gaming-store_testing` database and `phpunit.xml`. Domain skeleton, `Money` VO, JSON exception envelope, `Http::preventStrayRequests`, audit writer, settings service, redaction processor, roles and permissions seed, auth (register, login, verify, reset, 2FA for staff), route files.
 Accept:
 - Tests: Money arithmetic and rounding; envelope shape for 401, 403, 404, 422, 429, 500; auth flows; staff without 2FA denied; each role only reaches its permissions; canary redaction in logs.
 - Arch tests: no floats in Money DTOs; controllers do not use Eloquent directly; domain repository isolation.

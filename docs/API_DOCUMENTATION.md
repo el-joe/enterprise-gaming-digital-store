@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status: everything in this document is planned. Nothing is built yet.** Update the status column per route group as milestones land.
+**Status:** the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the success and error envelopes are built (M3). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -9,9 +9,9 @@
 | Group | Prefix | Auth | Status |
 |---|---|---|---|
 | Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | planned |
-| Customer JSON | `/api/v1/account` | Session, verified email where noted | planned |
+| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor routes built; rest planned |
 | Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | planned |
-| Admin JSON | `/admin/api` | Session, `type=staff`, permission per route, CSRF | planned |
+| Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me` built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
 | Provider webhooks | `/webhooks/{provider}` | Signature only, no CSRF | planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum token (`n8n`) + HMAC | planned |
@@ -57,11 +57,12 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 |---|---|---|---|
 | 401 | `unauthenticated` | absent | Redirect to login |
 | 403 | `forbidden` | absent | SweetAlert2 error |
+| 403 | `two_factor_required` | absent | Redirect to two-factor enrolment or challenge |
 | 404 | `not_found` | absent | SweetAlert2 error |
-| 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch` | absent | SweetAlert2 and reload row |
+| 409 | `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled` | absent | SweetAlert2 and reload row |
 | 419 | `csrf_expired` | absent | Prompt to refresh |
 | 422 | `validation_failed` | object | Field-level display |
-| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin` | optional | Message near the form |
+| 422 | Domain codes such as `coupon_invalid`, `price_changed`, `gateway_not_eligible`, `below_margin`, `two_factor_invalid`, `two_factor_expired` | optional | Message near the form |
 | 429 | `rate_limited` | absent | Retry after `Retry-After` |
 | 500 | `server_error` | absent | Generic message, `request_id` shown. No stack traces or provider bodies. |
 | 503 | `maintenance` | absent | |
@@ -89,6 +90,28 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `admin` | 300/min per user |
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
+
+Built limiters: `auth`, `otp`, `admin`. The others are planned with their route groups.
+
+---
+
+## 1a. Authentication (built, M3)
+
+Session routes in the `web` middleware group (CSRF applies). Responses use the standard envelopes. Blade pages for these flows arrive in M12.
+
+| Method | Path | Body | Limiter | Result |
+|---|---|---|---|---|
+| POST | `/register` | `name`, `email`, `password`, `password_confirmation` | `auth` | 201 `{ user }`; signed in; verification email sent |
+| POST | `/login` | `email`, `password`, `remember?` | `auth` | `{ two_factor_required, two_factor_enrollment_required, user }`; `user` is null while a challenge is pending |
+| POST | `/two-factor-challenge` | `code` or `recovery_code` | `otp` | `{ user }`; signed in |
+| POST | `/logout` | | | Signed out |
+| POST | `/forgot-password` | `email` | `auth` | Identical response whether or not the email exists |
+| GET | `/reset-password/{token}` | | | `{ token, email }`, target of the reset email until the M12 page exists |
+| POST | `/reset-password` | `token`, `email`, `password`, `password_confirmation` | `auth` | Password reset |
+| GET | `/email/verify/{id}/{hash}` | Signed URL; session required | 6/min | Email verified |
+| POST | `/email/verification-notification` | Session required | 6/min | Link resent |
+
+Admin: `GET /admin/api/me` returns `{ user, roles, permissions }`. Two-factor enrolment is under `/api/v1/account/security/two-factor`.
 
 ---
 
@@ -139,7 +162,8 @@ Place-order idempotency: same key and same body replays the stored response; sam
 | GET, PATCH | `/notifications`, `/notification-preferences` |
 | POST | `/refund-requests` |
 | GET, DELETE | `/sessions` |
-| POST, DELETE | `/security/two-factor` |
+| POST, DELETE | `/security/two-factor` (built: POST starts enrolment and DELETE disables, both need `current_password`; DELETE is 403 for staff) |
+| POST | `/security/two-factor/confirm` (built: `code`; returns recovery codes once) |
 
 Reveal response: `{ code, pin, redemption_url, instructions }`, `Cache-Control: no-store`.
 

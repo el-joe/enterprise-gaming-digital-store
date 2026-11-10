@@ -1531,7 +1531,7 @@ Columns: user_id fk cascade NN, table_key str(64) NN, name str(120) NN, payload 
 
 ### export_jobs
 
-Columns: user_id fk NN, table_key str(64) NN, filters json Y, status enum NN, media_path str(500) Y, row_count int unsigned Y, expires_at ts Y, error str(255) Y. Index (user_id, created_at).
+Columns: user_id fk NN, table_key str(64) NN, filters json Y, status enum NN (`pending`,`running`,`completed`,`failed`), media_path str(500) Y, row_count int unsigned Y, expires_at ts Y, error str(255) Y. Index (user_id, created_at).
 
 ### audit_logs [append]
 
@@ -1553,11 +1553,11 @@ Indexes: `idx_al_subject` (subject_type, subject_id, id): entity history. `idx_a
 
 ### security_events [append]
 
-Columns: type str(64) NN, severity enum NN, ip str(45) Y, user_id fk:users null Y, context json Y. Index (type, created_at); (severity, created_at).
+Columns: type str(64) NN, severity enum NN (`info`,`warning`,`critical`), ip str(45) Y, user_id fk:users null Y, context json Y. Index (type, created_at); (severity, created_at).
 
 ### scheduled_task_runs
 
-Columns: command str(120) NN, started_at ts NN, finished_at ts Y, status enum NN, duration_ms int unsigned Y, error str(500) Y. Index (command, started_at).
+Columns: command str(120) NN, started_at ts NN, finished_at ts Y, status enum NN (`running`,`completed`,`failed`), duration_ms int unsigned Y, error str(500) Y. Index (command, started_at).
 
 ### notification_templates
 
@@ -1732,9 +1732,9 @@ Order of operations for circular or late references:
 
 ## 16. Seeders
 
-Required seeders (idempotent `updateOrCreate`):
+Required seeders (idempotent; values an admin can edit are written only on first run):
 
-`CurrencySeeder` (no rates), `CountrySeeder`, `RegionSeeder`, `RolePermissionSeeder`, `SettingsSeeder`, `PaymentGatewaySeeder` (inactive, no credentials, with default eligibility rules), `SupplierSeeder` (Reloadly inactive, internal stock, manual), `DeliveryFieldDefinitionSeeder`, `HomepageSectionSeeder`, `SeoTemplateSeeder`, `AutomationWorkflowSeeder`, `SuperAdminSeeder` (reads credentials from environment, refuses to run if they are empty). Sample catalog data is in `DemoCatalogSeeder`, which refuses to run when `APP_ENV=production`.
+`CurrencySeeder` (no rates), `CountrySeeder`, `RegionSeeder`, `RolePermissionSeeder`, `SettingsSeeder`, `PaymentGatewaySeeder` (inactive, no credentials, with default eligibility rules), `SupplierSeeder` (Reloadly inactive, internal stock, manual), `DeliveryFieldDefinitionSeeder`, `HomepageSectionSeeder`, `SeoTemplateSeeder`, `AutomationWorkflowSeeder`, `SuperAdminSeeder` (reads credentials from environment, refuses to run if they are empty). `SuperAdminSeeder` and `DemoCatalogSeeder` are run explicitly with `--class` and are not called by `DatabaseSeeder`, so `migrate:fresh --seed` needs no credentials. Sample catalog data is in `DemoCatalogSeeder`, which refuses to run when `APP_ENV=production`.
 
 ## 17. Coverage of spec entities
 

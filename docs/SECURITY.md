@@ -1,6 +1,6 @@
 # Security
 
-Scope: application and operational security requirements. Each **must** has a test or a deployment check. Status: planned.
+Scope: application and operational security requirements. Each **must** has a test or a deployment check. Status: sections 1 (except customer session revocation) and 4, plus log redaction in section 9, are built and tested at M3; the rest is planned.
 
 ## 1. Authentication
 
@@ -48,7 +48,7 @@ Spatie roles and permissions, checked in routes and Policies. Admin routes requi
 | Role | Grants |
 |---|---|
 | Super Admin | All except (E), which are explicit grants |
-| Admin | All operational permissions, no `users.manage`, no credentials, no critical settings |
+| Admin | All operational permissions, no `users.manage`, no `roles.manage` (a role editor could grant itself anything), no credentials, no critical settings |
 | Operations Manager | `dashboard.view`, orders.*, `suppliers.view`, `suppliers.sync`, `suppliers.logs`, `mappings.manage`, `digital_codes.import`, `refunds.view`, `customers.view` |
 | Finance Manager | `dashboard.view`, reports.*, `payments.view`, `payments.webhook_logs`, refunds.*, `pricing.view`, `orders.view` |
 | Support Agent | support.*, `orders.view`, `customers.view`, `customers.view_pii`, `refunds.view` |
