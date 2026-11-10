@@ -1,7 +1,11 @@
 import 'package:application/core/storage/secure_store.dart';
 import 'package:dio/dio.dart';
 
-/// Sends the guest `X-Cart-Token` (gap G2) from secure storage when one is stored.
+/// Guest cart token (API_DOCUMENTATION.md 1c).
+///
+/// Sends `X-Cart-Token` from secure storage when one is stored, and captures the token the server
+/// issues once, in the `X-Cart-Token` response header of the first guest add-to-cart, into secure
+/// storage.
 class CartTokenInterceptor extends Interceptor {
   CartTokenInterceptor(this._store);
 
@@ -19,5 +23,17 @@ class CartTokenInterceptor extends Interceptor {
       options.headers[header] = token;
     }
     handler.next(options);
+  }
+
+  @override
+  Future<void> onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    final issued = response.headers.value(header);
+    if (issued != null && issued.isNotEmpty) {
+      await _store.writeCartToken(issued);
+    }
+    handler.next(response);
   }
 }

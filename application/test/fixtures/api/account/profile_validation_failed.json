@@ -1,0 +1,25 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "locale": [
+                "The selected locale is invalid."
+            ],
+            "phone": [
+                "The phone number must be in international format, for example +201001234567."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/account/profile"
+    },
+    "status": 422
+}

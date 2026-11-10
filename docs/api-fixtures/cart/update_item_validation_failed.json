@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "quantity": [
+                "The quantity field must not be greater than 10."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/storefront/cart/items/1"
+    },
+    "status": 422
+}

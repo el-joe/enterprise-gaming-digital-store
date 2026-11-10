@@ -1,0 +1,22 @@
+{
+    "body": {
+        "data": {
+            "is_final": false,
+            "payment_status": "paid",
+            "public_id": "01jf0000000000000000000001",
+            "status": "paid"
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/orders/01jf0000000000000000000001/paypal/capture"
+    },
+    "status": 200
+}

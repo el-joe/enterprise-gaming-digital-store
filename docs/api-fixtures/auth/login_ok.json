@@ -1,0 +1,35 @@
+{
+    "body": {
+        "data": {
+            "challenge": null,
+            "tokens": {
+                "access_token": "fixture-access-token",
+                "access_token_expires_at": "2026-11-10T12:00:00+00:00",
+                "refresh_token": "fixture-refresh-token",
+                "refresh_token_expires_at": "2026-11-10T12:00:00+00:00",
+                "token_type": "Bearer"
+            },
+            "two_factor_required": false,
+            "user": {
+                "email": "sara@example.com",
+                "email_verified": true,
+                "name": "Sara Customer",
+                "public_id": "01jf0000000000000000000001",
+                "two_factor_enabled": false,
+                "type": "customer"
+            }
+        },
+        "message": "Signed in.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/login"
+    },
+    "status": 200
+}

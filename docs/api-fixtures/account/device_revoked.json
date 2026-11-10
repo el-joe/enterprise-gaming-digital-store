@@ -1,0 +1,17 @@
+{
+    "body": {
+        "data": {},
+        "message": "The device was signed out.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "DELETE",
+        "path": "/api/v1/mobile/account/devices/01JF0000000000000000000001"
+    },
+    "status": 200
+}

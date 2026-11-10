@@ -1,0 +1,39 @@
+{
+    "body": {
+        "data": {
+            "options": [
+                {
+                    "available": true,
+                    "display_amount": {
+                        "amount": "10.00",
+                        "currency": "USD",
+                        "formatted": "USD10.00"
+                    },
+                    "display_currency": "USD",
+                    "gateway": "stripe",
+                    "label": "Stripe",
+                    "methods": [],
+                    "notice": null,
+                    "payment_amount": {
+                        "amount": "10.00",
+                        "currency": "USD",
+                        "formatted": "USD10.00"
+                    },
+                    "payment_currency": "USD"
+                }
+            ]
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/checkout/payment-options?country=US&email=guest%40example.com"
+    },
+    "status": 200
+}

@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "rate_limited",
+        "message": "Too many requests. Please try again later.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "retry-after": "60"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/login"
+    },
+    "status": 429
+}

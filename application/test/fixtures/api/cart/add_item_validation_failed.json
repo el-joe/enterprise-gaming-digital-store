@@ -1,0 +1,25 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "quantity": [
+                "The quantity field must be at least 1."
+            ],
+            "variant_id": [
+                "The variant id field is required."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/storefront/cart/items"
+    },
+    "status": 422
+}

@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "refund_request_open",
+        "message": "A refund request for this order is already open.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/refund-requests"
+    },
+    "status": 409
+}

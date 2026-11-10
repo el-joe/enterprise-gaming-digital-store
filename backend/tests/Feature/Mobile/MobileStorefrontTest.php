@@ -57,6 +57,12 @@ describe('guest cart by header', function (): void {
             ->assertJsonCount(2, 'data.cart.items');
     });
 
+    it('keeps empty JSON objects as objects in the response that issues the token', function (): void {
+        $response = statelessCall('POST', CART_ITEMS, ['variant_id' => sellableVariant('10')->public_id, 'quantity' => 1])->assertCreated();
+
+        expect($response->getContent())->toContain('"delivery_values":{}')->not->toContain('"delivery_values":[]');
+    });
+
     it('updates, removes and applies a coupon with the header only', function (): void {
         $token = mobileGuestCart(sellableVariant('10'));
         $itemId = statelessCall('GET', 'api/v1/mobile/storefront/cart', headers: ['X-Cart-Token' => $token])->assertOk()->json('data.cart.items.0.id');

@@ -1,0 +1,22 @@
+{
+    "body": {
+        "data": {
+            "code": "FIXTURE-CODE-0000",
+            "instructions": null,
+            "pin": "FIXTURE-PIN-0000",
+            "redemption_url": "https://redeem.example.com/fixture"
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/orders/01jf0000000000000000000001/units/01JF0000000000000000000002/reveal"
+    },
+    "status": 200
+}

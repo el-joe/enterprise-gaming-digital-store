@@ -1,0 +1,25 @@
+{
+    "body": {
+        "data": {
+            "tokens": {
+                "access_token": "fixture-access-token",
+                "access_token_expires_at": "2026-11-10T12:00:00+00:00",
+                "refresh_token": "fixture-refresh-token",
+                "refresh_token_expires_at": "2026-11-10T12:00:00+00:00",
+                "token_type": "Bearer"
+            }
+        },
+        "message": "Tokens refreshed.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/refresh"
+    },
+    "status": 200
+}

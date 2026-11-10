@@ -1,0 +1,43 @@
+{
+    "body": {
+        "data": [
+            {
+                "body": "Worked fine.",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": 1,
+                "rating": 4,
+                "reviewer": "Customer",
+                "title": "Good",
+                "verified_purchase": false
+            },
+            {
+                "body": "Code arrived in a minute.",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": 2,
+                "rating": 5,
+                "reviewer": "Customer",
+                "title": "Instant",
+                "verified_purchase": false
+            }
+        ],
+        "message": "OK",
+        "meta": {
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 10,
+            "rating_avg": "4.50",
+            "rating_count": 2,
+            "total": 2
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/catalog/products/orbit-card/reviews?per_page=10"
+    },
+    "status": 200
+}

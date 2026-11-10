@@ -1,0 +1,20 @@
+{
+    "body": {
+        "data": {
+            "otpauth_uri": "otpauth://totp/boxcards.shop:customer%40example.com?secret=fixture-secret&issuer=boxcards.shop",
+            "secret": "fixture-secret"
+        },
+        "message": "Scan the code, then confirm with a generated code.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/security/two-factor"
+    },
+    "status": 200
+}

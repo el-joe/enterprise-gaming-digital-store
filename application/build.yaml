@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # API keys are snake_case (Laravel API Resources); Dart fields are camelCase.
+          field_rename: snake
+          explicit_to_json: true

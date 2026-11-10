@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "q": [
+                "The q field must be at least 2 characters."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/search/suggest?q=o"
+    },
+    "status": 422
+}

@@ -1,0 +1,20 @@
+{
+    "body": {
+        "data": {
+            "marked_read": 1,
+            "unread_count": 0
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/notifications/read-all"
+    },
+    "status": 200
+}

@@ -1,0 +1,17 @@
+{
+    "body": {
+        "data": {},
+        "message": "If the details match an order, a code has been sent.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/guest/otp/send"
+    },
+    "status": 200
+}

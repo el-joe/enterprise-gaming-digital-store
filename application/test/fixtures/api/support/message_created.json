@@ -1,0 +1,45 @@
+{
+    "body": {
+        "data": {
+            "ticket": {
+                "category": "order",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "last_activity_at": "2026-11-10T12:00:00+00:00",
+                "messages": [
+                    {
+                        "body": "Nothing arrived.",
+                        "created_at": "2026-11-10T12:00:00+00:00",
+                        "from": "customer",
+                        "id": 1
+                    },
+                    {
+                        "body": "Any news?",
+                        "created_at": "2026-11-10T12:00:00+00:00",
+                        "from": "customer",
+                        "id": 2
+                    }
+                ],
+                "order": {
+                    "order_number": "FIXTURE-0002",
+                    "public_id": "01jf0000000000000000000002"
+                },
+                "public_id": "01jf0000000000000000000001",
+                "status": "pending_staff",
+                "subject": "Code missing",
+                "ticket_number": "FIXTURE-0001"
+            }
+        },
+        "message": "Message sent.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/tickets/01jf0000000000000000000001/messages"
+    },
+    "status": 201
+}

@@ -1,0 +1,28 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "body": [
+                "The body field is required."
+            ],
+            "category": [
+                "The selected category is invalid."
+            ],
+            "subject": [
+                "The subject field is required."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/tickets"
+    },
+    "status": 422
+}

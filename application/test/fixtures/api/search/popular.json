@@ -1,0 +1,22 @@
+{
+    "body": {
+        "data": {
+            "terms": [
+                "orbit",
+                "nova points"
+            ]
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/search/popular"
+    },
+    "status": 200
+}

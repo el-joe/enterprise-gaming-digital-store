@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "two_factor_already_enabled",
+        "message": "Two-factor authentication is already enabled.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/security/two-factor"
+    },
+    "status": 409
+}

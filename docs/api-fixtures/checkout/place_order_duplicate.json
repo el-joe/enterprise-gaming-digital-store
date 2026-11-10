@@ -1,0 +1,25 @@
+{
+    "body": {
+        "data": {
+            "next": null,
+            "order": {
+                "public_id": "01jf0000000000000000000001",
+                "status": "pending_payment"
+            }
+        },
+        "message": "This order was already placed.",
+        "meta": {
+            "duplicate": true
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/place-order"
+    },
+    "status": 200
+}

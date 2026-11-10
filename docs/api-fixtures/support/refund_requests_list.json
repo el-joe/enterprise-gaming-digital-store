@@ -1,0 +1,34 @@
+{
+    "body": {
+        "data": [
+            {
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": 1,
+                "order": {
+                    "order_number": "FIXTURE-0001",
+                    "public_id": "01jf0000000000000000000001"
+                },
+                "reason": "The code was already redeemed.",
+                "refund": null,
+                "status": "requested"
+            }
+        ],
+        "message": "OK",
+        "meta": {
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 20,
+            "total": 1
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/account/refund-requests"
+    },
+    "status": 200
+}

@@ -1,0 +1,17 @@
+{
+    "body": {
+        "data": {},
+        "message": "Signed out of all devices.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/logout-all"
+    },
+    "status": 200
+}

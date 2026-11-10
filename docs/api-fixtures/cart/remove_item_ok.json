@@ -1,0 +1,44 @@
+{
+    "body": {
+        "data": {
+            "cart": {
+                "checkout_ready": false,
+                "country": null,
+                "coupon": null,
+                "currency": "USD",
+                "items": [],
+                "price_may_vary": false,
+                "public_id": "01jf0000000000000000000001",
+                "totals": {
+                    "discount": {
+                        "amount": "0.00",
+                        "currency": "USD",
+                        "formatted": "USD0.00"
+                    },
+                    "subtotal": {
+                        "amount": "0.00",
+                        "currency": "USD",
+                        "formatted": "USD0.00"
+                    },
+                    "total": {
+                        "amount": "0.00",
+                        "currency": "USD",
+                        "formatted": "USD0.00"
+                    }
+                }
+            }
+        },
+        "message": "Item removed.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "DELETE",
+        "path": "/api/v1/mobile/storefront/cart/items/1"
+    },
+    "status": 200
+}

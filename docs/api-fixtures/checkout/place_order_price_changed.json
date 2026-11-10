@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "price_changed",
+        "errors": {
+            "expected_total": [
+                "The order total is now 10.00 USD. Please review it before paying."
+            ]
+        },
+        "message": "The order total is now 10.00 USD. Please review it before paying.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/place-order"
+    },
+    "status": 422
+}

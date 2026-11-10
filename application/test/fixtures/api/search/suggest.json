@@ -1,0 +1,30 @@
+{
+    "body": {
+        "data": {
+            "suggestions": [
+                {
+                    "slug": "orbit",
+                    "title": "Orbit",
+                    "type": "gaming_platform"
+                },
+                {
+                    "slug": "orbit-card",
+                    "title": "Orbit Card",
+                    "type": "product"
+                }
+            ]
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/search/suggest?q=orb"
+    },
+    "status": 200
+}

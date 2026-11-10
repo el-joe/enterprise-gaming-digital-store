@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "not_found",
+        "message": "The requested resource was not found.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/notifications/00000000-0000-4000-8000-000000000001/read"
+    },
+    "status": 404
+}

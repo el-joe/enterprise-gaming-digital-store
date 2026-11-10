@@ -1,0 +1,29 @@
+{
+    "body": {
+        "data": {
+            "refund_request": {
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": 1,
+                "order": {
+                    "order_number": "FIXTURE-0001",
+                    "public_id": "01jf0000000000000000000001"
+                },
+                "reason": "The code was already redeemed.",
+                "refund": null,
+                "status": "requested"
+            }
+        },
+        "message": "Refund request received.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/refund-requests"
+    },
+    "status": 201
+}

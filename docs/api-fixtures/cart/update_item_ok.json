@@ -1,0 +1,77 @@
+{
+    "body": {
+        "data": {
+            "cart": {
+                "checkout_ready": true,
+                "country": null,
+                "coupon": null,
+                "currency": "USD",
+                "items": [
+                    {
+                        "block_reason": null,
+                        "delivery_values": {},
+                        "id": 1,
+                        "product": {
+                            "delivery_type": "instant_code",
+                            "name": "Orbit Card",
+                            "slug": "orbit-card"
+                        },
+                        "purchasable": true,
+                        "quantity": 2,
+                        "subtotal": {
+                            "amount": "20.00",
+                            "currency": "USD",
+                            "formatted": "USD20.00"
+                        },
+                        "total": {
+                            "amount": "20.00",
+                            "currency": "USD",
+                            "formatted": "USD20.00"
+                        },
+                        "unit_price": {
+                            "amount": "10.00",
+                            "currency": "USD",
+                            "formatted": "USD10.00"
+                        },
+                        "variant": {
+                            "public_id": "01jf0000000000000000000002",
+                            "sku": "ORB-10-US",
+                            "title": "10 USD"
+                        }
+                    }
+                ],
+                "price_may_vary": false,
+                "public_id": "01jf0000000000000000000001",
+                "totals": {
+                    "discount": {
+                        "amount": "0.00",
+                        "currency": "USD",
+                        "formatted": "USD0.00"
+                    },
+                    "subtotal": {
+                        "amount": "20.00",
+                        "currency": "USD",
+                        "formatted": "USD20.00"
+                    },
+                    "total": {
+                        "amount": "20.00",
+                        "currency": "USD",
+                        "formatted": "USD20.00"
+                    }
+                }
+            }
+        },
+        "message": "Cart updated.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/storefront/cart/items/1"
+    },
+    "status": 200
+}

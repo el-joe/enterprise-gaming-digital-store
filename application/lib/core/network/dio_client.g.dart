@@ -8,23 +8,61 @@ part of 'dio_client.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Refresh-token exchange. The mobile refresh endpoint does not exist yet (gap G1, M-A2), so the
-/// foundation refuses every refresh: a 401 signs the user out. M-A7 overrides this provider with
-/// the data source call to `POST /api/v1/mobile/auth/refresh`.
+
+@ProviderFor(refreshClient)
+final refreshClientProvider = RefreshClientProvider._();
+
+final class RefreshClientProvider extends $FunctionalProvider<Dio, Dio, Dio>
+    with $Provider<Dio> {
+  RefreshClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'refreshClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$refreshClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<Dio> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Dio create(Ref ref) {
+    return refreshClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Dio value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Dio>(value),
+    );
+  }
+}
+
+String _$refreshClientHash() => r'3d7b6d72bbf758b2373953d80ad8da108cfd374f';
+
+/// Refresh-token exchange: `POST /api/v1/mobile/auth/refresh` (M-A7). Returns null when the
+/// server refuses the refresh token (expired, revoked or reused), which signs the user out.
 
 @ProviderFor(tokenRefresher)
 final tokenRefresherProvider = TokenRefresherProvider._();
 
-/// Refresh-token exchange. The mobile refresh endpoint does not exist yet (gap G1, M-A2), so the
-/// foundation refuses every refresh: a 401 signs the user out. M-A7 overrides this provider with
-/// the data source call to `POST /api/v1/mobile/auth/refresh`.
+/// Refresh-token exchange: `POST /api/v1/mobile/auth/refresh` (M-A7). Returns null when the
+/// server refuses the refresh token (expired, revoked or reused), which signs the user out.
 
 final class TokenRefresherProvider
     extends $FunctionalProvider<TokenRefresher, TokenRefresher, TokenRefresher>
     with $Provider<TokenRefresher> {
-  /// Refresh-token exchange. The mobile refresh endpoint does not exist yet (gap G1, M-A2), so the
-  /// foundation refuses every refresh: a 401 signs the user out. M-A7 overrides this provider with
-  /// the data source call to `POST /api/v1/mobile/auth/refresh`.
+  /// Refresh-token exchange: `POST /api/v1/mobile/auth/refresh` (M-A7). Returns null when the
+  /// server refuses the refresh token (expired, revoked or reused), which signs the user out.
   TokenRefresherProvider._()
     : super(
         from: null,
@@ -58,7 +96,7 @@ final class TokenRefresherProvider
   }
 }
 
-String _$tokenRefresherHash() => r'a217b058ca1ce22a82d47920e83c888e496dce7c';
+String _$tokenRefresherHash() => r'd7273a6499e6027bc1977edd4f4b8157276a4cf4';
 
 @ProviderFor(apiClient)
 final apiClientProvider = ApiClientProvider._();

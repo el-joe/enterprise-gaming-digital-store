@@ -1,0 +1,26 @@
+{
+    "body": {
+        "data": {
+            "user": {
+                "email": "sara@example.com",
+                "email_verified": true,
+                "name": "Sara Customer",
+                "public_id": "01jf0000000000000000000001",
+                "two_factor_enabled": false,
+                "type": "customer"
+            }
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/auth/me"
+    },
+    "status": 200
+}

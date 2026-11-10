@@ -1,0 +1,25 @@
+{
+    "body": {
+        "data": {
+            "next": {
+                "approve_url": "https://www.sandbox.paypal.com/checkoutnow?token=PAYPAL-ORDER-1",
+                "gateway": "paypal",
+                "payment_public_id": "01jf0000000000000000000002",
+                "provider_order_id": "PAYPAL-ORDER-1",
+                "type": "paypal"
+            }
+        },
+        "message": "Payment started.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/orders/01jf0000000000000000000001/retry-payment"
+    },
+    "status": 201
+}

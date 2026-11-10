@@ -59,8 +59,9 @@ trait InteractsWithCart
             return $response->withCookie(cookie(self::$cartCookie, $owner->guestToken, self::$cartCookieMinutes, secure: $request->isSecure(), httpOnly: true, sameSite: 'lax'));
         }
 
-        $body = $response->getData(true);
-        $body['meta'] = (object) [...(array) ($body['meta'] ?? []), 'cart_token' => $owner->guestToken];
+        // Decoded as objects so empty JSON objects (such as an item's `delivery_values`) stay `{}`.
+        $body = $response->getData();
+        $body->meta = (object) [...(array) ($body->meta ?? []), 'cart_token' => $owner->guestToken];
 
         return $response->setData($body)
             ->header(self::$cartHeader, $owner->guestToken)

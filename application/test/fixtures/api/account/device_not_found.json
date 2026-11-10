@@ -1,0 +1,16 @@
+{
+    "body": {
+        "code": "not_found",
+        "message": "The requested resource was not found.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private"
+    },
+    "request": {
+        "method": "DELETE",
+        "path": "/api/v1/mobile/account/devices/unknown-device"
+    },
+    "status": 404
+}

@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "currency": [
+                "The X-Currency header must be the code of an active currency."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/catalog/products"
+    },
+    "status": 422
+}

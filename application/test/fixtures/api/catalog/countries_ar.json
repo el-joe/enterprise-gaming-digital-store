@@ -1,0 +1,26 @@
+{
+    "body": {
+        "data": {
+            "countries": [
+                {
+                    "code": "US",
+                    "default_currency": null,
+                    "dial_code": null,
+                    "name": "الولايات المتحدة"
+                }
+            ]
+        },
+        "message": "تم",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "max-age=3600, public",
+        "content-language": "ar"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/countries"
+    },
+    "status": 200
+}

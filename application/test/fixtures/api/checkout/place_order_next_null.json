@@ -1,0 +1,42 @@
+{
+    "body": {
+        "data": {
+            "guest_order_token": {
+                "expires_at": "2026-11-10T12:00:00+00:00",
+                "order_public_id": "01jf0000000000000000000001",
+                "token": "fixture-token"
+            },
+            "next": null,
+            "order": {
+                "display_total": {
+                    "amount": "10.00",
+                    "currency": "USD",
+                    "formatted": "USD10.00"
+                },
+                "expires_at": "2026-11-10T12:00:00+00:00",
+                "order_number": "FIXTURE-0001",
+                "payment_total": {
+                    "amount": "10.00",
+                    "currency": "USD",
+                    "formatted": "USD10.00"
+                },
+                "public_id": "01jf0000000000000000000001",
+                "status": "pending_payment"
+            }
+        },
+        "message": "Order placed.",
+        "meta": {
+            "duplicate": false
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/place-order"
+    },
+    "status": 201
+}

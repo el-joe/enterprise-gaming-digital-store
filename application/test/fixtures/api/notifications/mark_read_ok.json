@@ -1,0 +1,32 @@
+{
+    "body": {
+        "data": {
+            "notification": {
+                "body": "Our support team has replied to your request.",
+                "category": "support",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": "00000000-0000-4000-8000-000000000001",
+                "link": {
+                    "type": "ticket",
+                    "url": "https://boxcards.test/account/tickets/01jf0000000000000000000001",
+                    "value": "01jf0000000000000000000001"
+                },
+                "read_at": "2026-11-10T12:00:00+00:00",
+                "title": "Update on your support request T-261110-FIXTURE1",
+                "type": "support_ticket_replied"
+            }
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/notifications/00000000-0000-4000-8000-000000000001/read"
+    },
+    "status": 200
+}

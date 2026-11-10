@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "ticket_closed",
+        "message": "This ticket is closed. Please open a new one.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/tickets/01jf0000000000000000000001/messages"
+    },
+    "status": 409
+}

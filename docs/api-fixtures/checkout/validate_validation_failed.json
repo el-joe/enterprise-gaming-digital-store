@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "country": [
+                "The selected country is invalid."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/validate"
+    },
+    "status": 422
+}

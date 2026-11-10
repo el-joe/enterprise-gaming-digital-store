@@ -1,0 +1,56 @@
+{
+    "body": {
+        "data": {
+            "variants": [
+                {
+                    "availability": "in_stock",
+                    "denomination_currency": "USD",
+                    "denomination_value": "10.000000",
+                    "is_custom_amount": false,
+                    "price": {
+                        "amount": "10.00",
+                        "currency": "USD",
+                        "formatted": "USD10.00"
+                    },
+                    "price_may_vary": false,
+                    "public_id": "01jf0000000000000000000001",
+                    "purchasable": true,
+                    "region": "US",
+                    "sku": "ORB-10-US",
+                    "title": "10 دولار"
+                },
+                {
+                    "availability": "limited",
+                    "denomination_currency": "USD",
+                    "denomination_value": "25.000000",
+                    "is_custom_amount": false,
+                    "price": {
+                        "amount": "25.50",
+                        "currency": "USD",
+                        "formatted": "USD25.50"
+                    },
+                    "price_may_vary": false,
+                    "public_id": "01jf0000000000000000000002",
+                    "purchasable": true,
+                    "region": "GL",
+                    "sku": "ORB-25-GL",
+                    "title": "25 USD"
+                }
+            ]
+        },
+        "message": "تم",
+        "meta": {
+            "display_currency": "USD"
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "ar"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/catalog/products/orbit-card/variants?country=US"
+    },
+    "status": 200
+}

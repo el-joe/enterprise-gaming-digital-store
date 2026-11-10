@@ -1,0 +1,19 @@
+{
+    "body": {
+        "data": {
+            "unread_count": 2
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/account/notifications/unread-count"
+    },
+    "status": 200
+}

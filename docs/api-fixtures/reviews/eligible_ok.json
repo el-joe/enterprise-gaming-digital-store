@@ -1,0 +1,31 @@
+{
+    "body": {
+        "data": {
+            "items": [
+                {
+                    "order": {
+                        "order_number": "FIXTURE-0001",
+                        "public_id": "01jf0000000000000000000001"
+                    },
+                    "order_item_id": 1,
+                    "product": {
+                        "name": "Orbit Card",
+                        "slug": "orbit-card"
+                    }
+                }
+            ]
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/account/reviews/eligible"
+    },
+    "status": 200
+}

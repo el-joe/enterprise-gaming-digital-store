@@ -1,0 +1,81 @@
+{
+    "body": {
+        "data": [
+            {
+                "category": {
+                    "name": "بطاقات الهدايا",
+                    "slug": "gift-cards"
+                },
+                "delivery_type": "instant_code",
+                "image": {
+                    "alt": "Orbit Card front",
+                    "formats": {
+                        "webp": "https://media.boxcards.test/media/2026/11/orbit-card.webp"
+                    },
+                    "height": 600,
+                    "path": "media/2026/11/orbit-card.webp",
+                    "url": "https://media.boxcards.test/media/2026/11/orbit-card.webp",
+                    "width": 1200
+                },
+                "is_featured": true,
+                "name": "بطاقة أوربت",
+                "platform": {
+                    "name": "أوربت",
+                    "slug": "orbit"
+                },
+                "price_from": {
+                    "amount": "10.00",
+                    "currency": "USD",
+                    "formatted": "USD10.00"
+                },
+                "price_may_vary": false,
+                "public_id": "01jf0000000000000000000001",
+                "rating_avg": "4.50",
+                "short_description": "اشحن أوربت",
+                "slug": "orbit-card"
+            },
+            {
+                "category": {
+                    "name": "Top-ups",
+                    "slug": "top-ups"
+                },
+                "delivery_type": "instant_code",
+                "image": null,
+                "is_featured": false,
+                "name": "Nova Points",
+                "platform": {
+                    "name": "Nova",
+                    "slug": "nova"
+                },
+                "price_from": {
+                    "amount": "5.00",
+                    "currency": "USD",
+                    "formatted": "USD5.00"
+                },
+                "price_may_vary": false,
+                "public_id": "01jf0000000000000000000002",
+                "rating_avg": "0.00",
+                "short_description": "Points for Nova",
+                "slug": "nova-points"
+            }
+        ],
+        "message": "OK",
+        "meta": {
+            "current_page": 1,
+            "display_currency": "USD",
+            "last_page": 1,
+            "per_page": 20,
+            "total": 2
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "ar"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/catalog/products?per_page=20&sort=popular"
+    },
+    "status": 200
+}

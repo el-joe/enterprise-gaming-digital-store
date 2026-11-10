@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "current_device",
+        "message": "This is the device you are using. Sign out instead.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "DELETE",
+        "path": "/api/v1/mobile/account/devices/01JF0000000000000000000001"
+    },
+    "status": 409
+}

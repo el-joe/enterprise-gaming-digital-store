@@ -1,0 +1,32 @@
+{
+    "body": {
+        "data": {
+            "currencies": [
+                {
+                    "code": "EGP",
+                    "exponent": 2,
+                    "name": "EGP",
+                    "symbol": "EGP"
+                },
+                {
+                    "code": "USD",
+                    "exponent": 2,
+                    "name": "USD",
+                    "symbol": "USD"
+                }
+            ]
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/currencies"
+    },
+    "status": 200
+}

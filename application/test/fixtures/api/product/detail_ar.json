@@ -1,0 +1,118 @@
+{
+    "body": {
+        "data": {
+            "product": {
+                "availability": "in_stock",
+                "category": {
+                    "name": "بطاقات الهدايا",
+                    "slug": "gift-cards"
+                },
+                "delivery_fields": [
+                    {
+                        "help_text": null,
+                        "key": "player_id",
+                        "label": "معرف اللاعب",
+                        "max_length": 255,
+                        "options": null,
+                        "pattern": null,
+                        "required": true,
+                        "type": "text"
+                    }
+                ],
+                "delivery_time_minutes": 5,
+                "delivery_type": "instant_code",
+                "description": "<p>اشحن <strong>محفظتك</strong>.</p>",
+                "image": {
+                    "alt": "Orbit Card front",
+                    "formats": {
+                        "webp": "https://media.boxcards.test/media/2026/11/orbit-card.webp"
+                    },
+                    "height": 600,
+                    "path": "media/2026/11/orbit-card.webp",
+                    "url": "https://media.boxcards.test/media/2026/11/orbit-card.webp",
+                    "width": 1200
+                },
+                "images": [
+                    {
+                        "alt": "Orbit Card front",
+                        "formats": {
+                            "webp": "https://media.boxcards.test/media/2026/11/orbit-card.webp"
+                        },
+                        "height": 600,
+                        "path": "media/2026/11/orbit-card.webp",
+                        "url": "https://media.boxcards.test/media/2026/11/orbit-card.webp",
+                        "width": 1200
+                    }
+                ],
+                "instructions": "Open Orbit.\nEnter the code.",
+                "is_featured": true,
+                "max_quantity_per_order": 10,
+                "name": "بطاقة أوربت",
+                "platform": {
+                    "name": "أوربت",
+                    "slug": "orbit"
+                },
+                "price_from": {
+                    "amount": "10.00",
+                    "currency": "USD",
+                    "formatted": "USD10.00"
+                },
+                "price_may_vary": false,
+                "public_id": "01jf0000000000000000000001",
+                "rating": {
+                    "average": "4.50",
+                    "count": 2
+                },
+                "rating_avg": "4.50",
+                "regions": [
+                    {
+                        "code": "US",
+                        "name": "United States"
+                    },
+                    {
+                        "code": "GL",
+                        "name": "Global"
+                    }
+                ],
+                "seo": {
+                    "description": "Instant delivery",
+                    "image": null,
+                    "robots": null,
+                    "title": "Buy Orbit Card"
+                },
+                "short_description": "اشحن أوربت",
+                "sku": "ORB-CARD",
+                "slug": "orbit-card",
+                "terms": "Non-refundable once revealed.",
+                "variants_summary": {
+                    "count": 2,
+                    "has_custom_amount": false,
+                    "regions": [
+                        {
+                            "code": "US",
+                            "name": "United States"
+                        },
+                        {
+                            "code": "GL",
+                            "name": "Global"
+                        }
+                    ]
+                }
+            }
+        },
+        "message": "تم",
+        "meta": {
+            "display_currency": "USD"
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "max-age=60, public",
+        "content-language": "ar"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/catalog/products/orbit-card"
+    },
+    "status": 200
+}

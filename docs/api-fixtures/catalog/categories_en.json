@@ -1,0 +1,36 @@
+{
+    "body": {
+        "data": {
+            "categories": [
+                {
+                    "banner": null,
+                    "description": "Store credit",
+                    "name": "Gift Cards",
+                    "parent": null,
+                    "product_count": 1,
+                    "slug": "gift-cards"
+                },
+                {
+                    "banner": null,
+                    "description": null,
+                    "name": "Top-ups",
+                    "parent": "gift-cards",
+                    "product_count": 1,
+                    "slug": "top-ups"
+                }
+            ]
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "max-age=300, public",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/categories"
+    },
+    "status": 200
+}

@@ -23,6 +23,19 @@ if [ "$before" != "$after" ]; then
   exit 1
 fi
 
+echo "==> contract fixtures in sync with docs/api-fixtures"
+if [ -d ../docs/api-fixtures ]; then
+  bash tool/sync_fixtures.sh --check
+else
+  echo "No ../docs/api-fixtures (app-only checkout): using the committed test/fixtures/api."
+fi
+
+echo "==> no double in data models or entities"
+if grep -rnE '\bdouble\b' lib/features lib/shared/data lib/shared/domain --include='*.dart' --exclude='*.g.dart' --exclude='*.freezed.dart'; then
+  echo "A feature model uses double; money and amounts must be Money/Decimal or String." >&2
+  exit 1
+fi
+
 echo "==> format"
 dart format --output=none --set-exit-if-changed lib test
 

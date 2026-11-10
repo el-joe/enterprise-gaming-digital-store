@@ -1,0 +1,25 @@
+{
+    "body": {
+        "data": {
+            "guest_order_token": {
+                "expires_at": "2026-11-10T12:00:00+00:00",
+                "order_public_id": "01jf0000000000000000000001",
+                "token": "fixture-token"
+            },
+            "order_public_id": "01jf0000000000000000000001",
+            "otp_required": true
+        },
+        "message": "Link accepted. Verify your email to view codes.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/checkout/guest/orders/01jf0000000000000000000001/access?expires=fixture-expires&signature=fixture-signature"
+    },
+    "status": 200
+}

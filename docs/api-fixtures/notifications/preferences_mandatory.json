@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "notification_preference_mandatory",
+        "errors": {
+            "preferences.0.enabled": [
+                "This notification cannot be turned off."
+            ]
+        },
+        "message": "This notification cannot be turned off.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/account/notification-preferences"
+    },
+    "status": 422
+}

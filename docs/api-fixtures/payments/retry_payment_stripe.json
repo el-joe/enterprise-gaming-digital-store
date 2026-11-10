@@ -1,0 +1,25 @@
+{
+    "body": {
+        "data": {
+            "next": {
+                "client_secret": "fixture-client-secret",
+                "gateway": "stripe",
+                "payment_public_id": "01jf0000000000000000000002",
+                "return_url": "https://boxcards.test/app/payments/return/01jf0000000000000000000001?attempt=01jf0000000000000000000002",
+                "type": "stripe"
+            }
+        },
+        "message": "Payment started.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/orders/01jf0000000000000000000001/retry-payment"
+    },
+    "status": 201
+}

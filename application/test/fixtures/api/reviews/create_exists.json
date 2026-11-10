@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "review_exists",
+        "message": "You have already reviewed this item.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/reviews"
+    },
+    "status": 409
+}

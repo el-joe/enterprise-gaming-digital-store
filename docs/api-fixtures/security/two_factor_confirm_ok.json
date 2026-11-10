@@ -1,0 +1,28 @@
+{
+    "body": {
+        "data": {
+            "recovery_codes": [
+                "fixture-recovery-code-1",
+                "fixture-recovery-code-2",
+                "fixture-recovery-code-3",
+                "fixture-recovery-code-4",
+                "fixture-recovery-code-5",
+                "fixture-recovery-code-6",
+                "fixture-recovery-code-7",
+                "fixture-recovery-code-8"
+            ]
+        },
+        "message": "Two-factor authentication enabled.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/security/two-factor/confirm"
+    },
+    "status": 200
+}

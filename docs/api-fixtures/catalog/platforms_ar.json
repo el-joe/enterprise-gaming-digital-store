@@ -1,0 +1,47 @@
+{
+    "body": {
+        "data": {
+            "platforms": [
+                {
+                    "banner": null,
+                    "description": "Orbit consoles",
+                    "is_featured": true,
+                    "logo": {
+                        "alt": null,
+                        "formats": {
+                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                        },
+                        "height": 600,
+                        "path": "media/2026/11/orbit-logo.webp",
+                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                        "width": 1200
+                    },
+                    "name": "أوربت",
+                    "product_count": 1,
+                    "slug": "orbit"
+                },
+                {
+                    "banner": null,
+                    "description": null,
+                    "is_featured": false,
+                    "logo": null,
+                    "name": "Nova",
+                    "product_count": 1,
+                    "slug": "nova"
+                }
+            ]
+        },
+        "message": "تم",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "max-age=300, public",
+        "content-language": "ar"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/platforms"
+    },
+    "status": 200
+}

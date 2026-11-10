@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "reveal_denied",
+        "message": "This code cannot be revealed.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/guest/orders/01jf0000000000000000000001/units/01JF0000000000000000000002/reveal"
+    },
+    "status": 403
+}

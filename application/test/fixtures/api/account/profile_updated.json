@@ -1,0 +1,30 @@
+{
+    "body": {
+        "data": {
+            "profile": {
+                "country_code": null,
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "display_currency": null,
+                "email": "sara@example.com",
+                "email_verified": true,
+                "locale": "ar",
+                "name": "Sara C.",
+                "phone": "+201001234567",
+                "public_id": "01jf0000000000000000000001",
+                "two_factor_enabled": false
+            }
+        },
+        "message": "Profile updated.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/account/profile"
+    },
+    "status": 200
+}

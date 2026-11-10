@@ -1,0 +1,25 @@
+{
+    "body": {
+        "code": "validation_failed",
+        "errors": {
+            "platform": [
+                "The selected platform is invalid."
+            ],
+            "version": [
+                "The version must be a semantic version such as 1.4.0."
+            ]
+        },
+        "message": "The given data was invalid.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/app/config?platform=windows&version=1"
+    },
+    "status": 422
+}

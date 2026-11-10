@@ -1,6 +1,6 @@
 /// Typed failures (MOBILE_APP_ROADMAP.md section 2.3). Presentation maps each to a localized
 /// message; the server's `message` is kept only for logs and domain messages it owns.
-sealed class Failure {
+sealed class Failure implements Exception {
   const Failure({this.requestId});
 
   /// `request_id` from the error envelope or the `X-Request-Id` header, when known.

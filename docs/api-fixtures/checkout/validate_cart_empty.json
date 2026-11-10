@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "cart_empty",
+        "message": "Your cart is empty.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/validate"
+    },
+    "status": 422
+}

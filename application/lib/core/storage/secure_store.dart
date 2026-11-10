@@ -26,6 +26,7 @@ class SecureStore {
   static const refreshTokenKey = 'auth.refresh_token';
   static const cartTokenKey = 'cart.token';
   static const guestOrderTokenPrefix = 'guest_order.token.';
+  static const pendingCheckoutKey = 'checkout.pending';
 
   final FlutterSecureStorage _storage;
 
@@ -69,6 +70,17 @@ class SecureStore {
 
   Future<void> deleteGuestOrderToken(String orderPublicId) =>
       _storage.delete(key: '$guestOrderTokenPrefix$orderPublicId');
+
+  /// The pending checkout (idempotency key, body hash, order id; no secret) as JSON, so the app
+  /// can resume after a restart (MOBILE_APP_ROADMAP.md 5).
+  Future<String?> readPendingCheckout() =>
+      _storage.read(key: pendingCheckoutKey);
+
+  Future<void> writePendingCheckout(String json) =>
+      _storage.write(key: pendingCheckoutKey, value: json);
+
+  Future<void> deletePendingCheckout() =>
+      _storage.delete(key: pendingCheckoutKey);
 
   /// Removes everything this app stored (sign out of the device).
   Future<void> wipe() => _storage.deleteAll();

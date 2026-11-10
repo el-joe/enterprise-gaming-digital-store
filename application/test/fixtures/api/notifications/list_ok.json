@@ -1,0 +1,52 @@
+{
+    "body": {
+        "data": [
+            {
+                "body": "Our support team has replied to your request.",
+                "category": "support",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": "00000000-0000-4000-8000-000000000001",
+                "link": {
+                    "type": "ticket",
+                    "url": "https://boxcards.test/account/tickets/01jf0000000000000000000001",
+                    "value": "01jf0000000000000000000001"
+                },
+                "read_at": null,
+                "title": "Update on your support request T-261110-FIXTURE1",
+                "type": "support_ticket_replied"
+            },
+            {
+                "body": "Your order has been delivered. Open it to view your codes.",
+                "category": "orders",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": "00000000-0000-4000-8000-000000000002",
+                "link": {
+                    "type": "order",
+                    "url": "https://boxcards.test/account/orders/01jf0000000000000000000002",
+                    "value": "01jf0000000000000000000002"
+                },
+                "read_at": null,
+                "title": "Order BX-1001 is ready",
+                "type": "order_delivered"
+            }
+        ],
+        "message": "OK",
+        "meta": {
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 20,
+            "total": 2,
+            "unread_count": 2
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/account/notifications"
+    },
+    "status": 200
+}

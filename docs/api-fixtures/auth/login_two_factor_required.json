@@ -1,0 +1,25 @@
+{
+    "body": {
+        "data": {
+            "challenge": {
+                "expires_at": "2026-11-10T12:00:00+00:00",
+                "token": "fixture-token"
+            },
+            "tokens": null,
+            "two_factor_required": true,
+            "user": null
+        },
+        "message": "Two-factor authentication required.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/login"
+    },
+    "status": 200
+}

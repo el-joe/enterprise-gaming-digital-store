@@ -1,0 +1,17 @@
+{
+    "body": {
+        "data": {},
+        "message": "Two-factor authentication disabled.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "DELETE",
+        "path": "/api/v1/mobile/account/security/two-factor"
+    },
+    "status": 200
+}

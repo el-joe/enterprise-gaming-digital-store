@@ -1,0 +1,92 @@
+{
+    "body": {
+        "data": {
+            "preferences": [
+                {
+                    "category": "orders",
+                    "channel": "mail",
+                    "enabled": true,
+                    "mandatory": true
+                },
+                {
+                    "category": "orders",
+                    "channel": "database",
+                    "enabled": true,
+                    "mandatory": false
+                },
+                {
+                    "category": "orders",
+                    "channel": "sms",
+                    "enabled": true,
+                    "mandatory": false
+                },
+                {
+                    "category": "support",
+                    "channel": "mail",
+                    "enabled": true,
+                    "mandatory": false
+                },
+                {
+                    "category": "support",
+                    "channel": "database",
+                    "enabled": true,
+                    "mandatory": false
+                },
+                {
+                    "category": "support",
+                    "channel": "sms",
+                    "enabled": false,
+                    "mandatory": false
+                },
+                {
+                    "category": "marketing",
+                    "channel": "mail",
+                    "enabled": true,
+                    "mandatory": false
+                },
+                {
+                    "category": "marketing",
+                    "channel": "database",
+                    "enabled": false,
+                    "mandatory": false
+                },
+                {
+                    "category": "marketing",
+                    "channel": "sms",
+                    "enabled": false,
+                    "mandatory": false
+                },
+                {
+                    "category": "security",
+                    "channel": "mail",
+                    "enabled": true,
+                    "mandatory": true
+                },
+                {
+                    "category": "security",
+                    "channel": "database",
+                    "enabled": true,
+                    "mandatory": false
+                },
+                {
+                    "category": "security",
+                    "channel": "sms",
+                    "enabled": false,
+                    "mandatory": false
+                }
+            ]
+        },
+        "message": "Preferences saved.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/account/notification-preferences"
+    },
+    "status": 200
+}

@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "otp_invalid",
+        "errors": {
+            "code": [
+                "The code is invalid or has expired."
+            ]
+        },
+        "message": "The code is invalid or has expired.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/guest/otp/verify"
+    },
+    "status": 422
+}

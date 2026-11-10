@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "refresh_token_invalid",
+        "message": "The refresh token is invalid or has expired. Please sign in again.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/refresh"
+    },
+    "status": 401
+}

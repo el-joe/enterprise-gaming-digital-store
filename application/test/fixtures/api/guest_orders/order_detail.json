@@ -1,0 +1,99 @@
+{
+    "body": {
+        "data": {
+            "order": {
+                "completed_at": null,
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "currency": {
+                    "display": "USD",
+                    "payment": "USD"
+                },
+                "is_final": false,
+                "item_count": 1,
+                "items": [
+                    {
+                        "delivery_type": "instant_code",
+                        "id": 1,
+                        "line_total": {
+                            "amount": "10.00",
+                            "currency": "USD",
+                            "formatted": "USD10.00"
+                        },
+                        "name": "Orbit Card - 10 USD",
+                        "product": {
+                            "slug": "orbit-card"
+                        },
+                        "quantity": 1,
+                        "unit_price": {
+                            "amount": "10.00",
+                            "currency": "USD",
+                            "formatted": "USD10.00"
+                        },
+                        "units": [
+                            {
+                                "delivered_at": "2026-11-10T12:00:00+00:00",
+                                "delivery_type": "instant_code",
+                                "first_revealed_at": null,
+                                "masked_code": "****0000",
+                                "public_id": "01JF0000000000000000000002",
+                                "refunded_at": null,
+                                "revealable": true,
+                                "status": "delivered"
+                            }
+                        ]
+                    }
+                ],
+                "number": "FIXTURE-0001",
+                "paid_at": "2026-11-10T12:00:00+00:00",
+                "payment_status": "paid",
+                "payments": [
+                    {
+                        "amount": {
+                            "amount": "10.00",
+                            "currency": "USD",
+                            "formatted": "USD10.00"
+                        },
+                        "attempt": 1,
+                        "created_at": "2026-11-10T12:00:00+00:00",
+                        "failure_code": null,
+                        "method": null,
+                        "provider": "stripe",
+                        "public_id": "01jf0000000000000000000003",
+                        "status": "succeeded"
+                    }
+                ],
+                "public_id": "01jf0000000000000000000001",
+                "refund_state": "none",
+                "refunds": [],
+                "status": "paid",
+                "thumbnail_url": null,
+                "timeline": [],
+                "totals": {
+                    "display": {
+                        "amount": "10.00",
+                        "currency": "USD",
+                        "formatted": "USD10.00"
+                    },
+                    "payment": null
+                }
+            }
+        },
+        "message": "OK",
+        "meta": {
+            "guest_access": {
+                "link_verified": true,
+                "otp_verified": true
+            }
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/checkout/guest/orders/01jf0000000000000000000001"
+    },
+    "status": 200
+}

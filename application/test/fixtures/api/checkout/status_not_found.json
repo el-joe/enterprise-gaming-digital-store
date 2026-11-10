@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "not_found",
+        "message": "The requested resource was not found.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/checkout/orders/01jf0000000000000000000001/status"
+    },
+    "status": 404
+}

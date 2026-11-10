@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "capability_not_supported",
+        "message": "stripe does not support capture.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/orders/01jf0000000000000000000001/paypal/capture"
+    },
+    "status": 422
+}

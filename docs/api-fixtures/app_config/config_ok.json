@@ -1,0 +1,79 @@
+{
+    "body": {
+        "data": {
+            "config": {
+                "currencies": {
+                    "base": "USD",
+                    "supported": [
+                        {
+                            "code": "USD",
+                            "exponent": 2,
+                            "name": "USD",
+                            "symbol": "USD"
+                        }
+                    ]
+                },
+                "features": {
+                    "checkout_enabled": true,
+                    "guest_checkout_enabled": true,
+                    "reviews_enabled": true,
+                    "support_enabled": true,
+                    "wallet_enabled": true
+                },
+                "links": {
+                    "privacy": null,
+                    "refund": null,
+                    "support": "https://help.boxcards.test",
+                    "terms": "https://boxcards.test/pages/terms"
+                },
+                "locales": {
+                    "default": "en",
+                    "supported": [
+                        "en",
+                        "ar"
+                    ]
+                },
+                "maintenance": {
+                    "enabled": false,
+                    "message": null
+                },
+                "media": {
+                    "base_url": "https://media.boxcards.test"
+                },
+                "payment_gateways": {
+                    "stripe": {
+                        "publishable_key": "pk_test_fixture"
+                    }
+                },
+                "update": {
+                    "available": true,
+                    "platform": "android",
+                    "required": true,
+                    "version": "1.1.0"
+                },
+                "versions": {
+                    "android": {
+                        "latest_version": "1.4.0",
+                        "min_supported_version": "1.2.0"
+                    },
+                    "ios": {
+                        "latest_version": "1.0.0",
+                        "min_supported_version": "1.0.0"
+                    }
+                }
+            }
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "max-age=60, public",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/app/config?platform=android&version=1.1.0"
+    },
+    "status": 200
+}

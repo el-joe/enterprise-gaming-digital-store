@@ -1,0 +1,25 @@
+{
+    "body": {
+        "data": {
+            "email_verified": true,
+            "guest_order_token": {
+                "expires_at": "2026-11-10T12:00:00+00:00",
+                "order_public_id": "01jf0000000000000000000001",
+                "token": "fixture-token"
+            },
+            "order_public_id": "01jf0000000000000000000001"
+        },
+        "message": "Email verified.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-store, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/guest/otp/verify"
+    },
+    "status": 200
+}

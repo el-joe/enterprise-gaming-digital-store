@@ -3,8 +3,9 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A1 Flutter foundation** (2026-11-10). The app boots to a token-styled shell; there are no
-feature screens yet (feature UI waits for the approved designs, M-A9).
+Status: **M-A7 data layers and repositories** (2026-11-10) on the **M-A1 foundation**. The app boots to
+a token-styled shell; every feature has its data and domain layer, tested against the backend's
+contract fixtures; there are no feature screens yet (feature UI waits for the approved designs, M-A9).
 
 ## Requirements
 
@@ -64,8 +65,24 @@ test/                            core tests, helpers, goldens (en LTR and ar RTL
 tool/ci.sh                       CI gate
 ```
 
-Feature folders (`lib/features/<feature>/{data,domain,presentation}`) are created by the milestone
-that builds each feature.
+```
+lib/features/<feature>/          app_config, auth, home, catalog, search, product, cart, checkout,
+                                 payments, orders, code_reveal, wallet, reviews, support,
+                                 notifications, account, security
+  data/models/                   freezed + json_serializable DTOs, one per API Resource shape
+  data/datasources/              <feature>_remote_data_source.dart: Dio calls on /mobile/... paths
+  data/repositories/             <feature>_repository_impl.dart: Result<T>, DTO -> entity
+  domain/entities/               freezed entities, no JSON
+  domain/repositories/           abstract contracts
+  domain/usecases/               only where logic spans repositories
+  <feature>_providers.dart       Riverpod (generated) wiring: data source, repository, use cases
+lib/shared/data/models/          DTOs used by several features (cart, payment `next`, product card)
+lib/shared/domain/entities/      matching entities (Cart, PaymentNext, OrderPaymentStatus, ProductCard)
+test/fixtures/api/               committed copy of docs/api-fixtures (backend contract fixtures)
+tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
+```
+
+`presentation/` folders arrive with the UI milestones (M-A10 onwards).
 
 ## Conventions
 
@@ -77,6 +94,44 @@ that builds each feature.
 - Only directional geometry (`EdgeInsetsDirectional`, `AlignmentDirectional`,
   `BorderRadiusDirectional`). Logos, amounts and codes are LTR islands.
 - Tokens are never logged; debug logging goes through `RedactingLogInterceptor`.
+
+## Data layer conventions (M-A7)
+
+- **Paths**: data sources call the stateless twins under `/api/v1/mobile` (base URL `.../api/v1`, so
+  paths start with `/mobile/`). Every response goes through `decodeEnvelope` (`core/network/api_decoding.dart`),
+  which turns any decode error (missing key, wrong type, money as a number) into a `DecodingFailure`.
+- **Repositories** return `Result<T>` through `guardRequest`; failures are the typed `Failure`s of roadmap
+  2.3 (`Failure` implements `Exception`). Entities never carry JSON.
+- **Money**: `Money` (Decimal, `amountText` kept) through `MoneyConverter`/`NullableMoneyConverter`;
+  wallet ledger lines stay decimal strings. A test and `tool/ci.sh` fail on any `double` in
+  `lib/features`, `lib/shared/data` and `lib/shared/domain`.
+- **Tokens**: `AuthRepository` writes the token pair to `SecureStore` on register, login and the 2FA
+  challenge, and wipes secure storage on logout. The auth interceptor refreshes through
+  `MobileTokenRefresher` (`POST /mobile/auth/refresh` on a separate client without the auth
+  interceptor), single flight; a refused or reused refresh token (401 `refresh_token_invalid`) clears the
+  tokens and signs out; a transport error keeps the session. `CartTokenInterceptor` captures the
+  `X-Cart-Token` response header and sends it back; the cart repository drops it after a signed-in call
+  (the server adopted the guest cart). `GuestOrderTokenInterceptor` attaches the per-order
+  `X-Guest-Order-Token` (secure storage key `guest_order.token.<order>`) to the order routes; the checkout
+  repository stores every token the server issues (place-order, OTP verify, delivery link).
+- **Place order** (`checkout/domain/usecases/place_order.dart`): one ULID key per body (FNV-1a hash of the
+  canonical JSON), stored with the hash in the pending checkout (secure storage) before sending, so retries
+  and restarts re-send the same key and body; a changed body gets a new key; `meta.duplicate` routes to
+  the existing order; `next: null` calls retry-payment once; `pendingOrder()` resumes after a restart.
+- **Payment resolution** (`payments/domain/usecases/resolve_payment.dart`): capture (PayPal), nothing
+  (wallet) or verify, then status after 2 s, 3 s, 5 s and every 10 s up to 2 minutes; only
+  `payment_status: paid` from the server is "paid".
+- **Reveal** (`code_reveal/domain/usecases/reveal_code.dart`): 423 -> password callback ->
+  confirm-password -> one retry; 429 and every other failure are returned, never retried. Reveal requests
+  are `sensitive` and `noRetry`; the revealed code is a plain class with a redacted `toString`, held by no
+  provider (all code-reveal providers are auto-disposed) and never written to storage.
+- **Fixtures**: `test/fixtures/api` is a committed copy of `docs/api-fixtures`, so Flutter CI needs no PHP.
+  After a backend contract change: `cd backend && UPDATE_API_FIXTURES=1 php artisan test --compact
+  tests/Feature/MobileContract`, then `bash application/tool/sync_fixtures.sh`. `tool/ci.sh` runs
+  `sync_fixtures.sh --check` when `../docs/api-fixtures` exists. `test/helpers/fixtures.dart` loads a
+  fixture and `test/helpers/repo_harness.dart` serves it through the real API client, checking the
+  recorded method, path and query.
+- `build.yaml` sets `field_rename: snake` and `explicit_to_json` for json_serializable.
 
 ## Generated code
 
@@ -97,7 +152,9 @@ default.) `tool/ci.sh` regenerates and fails when the committed output is stale.
 ```sh
 flutter test                      # unit, widget and golden tests
 flutter test --update-goldens test/goldens   # after an intended visual change
-bash tool/ci.sh                   # pub get, generated-code check, format, both analyzers, tests + coverage
+bash tool/ci.sh                   # pub get, generated-code check, fixture sync check, no-double check,
+                                  # format, both analyzers, tests + coverage
+bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/api
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.

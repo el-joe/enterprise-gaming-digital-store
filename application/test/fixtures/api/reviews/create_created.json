@@ -1,0 +1,31 @@
+{
+    "body": {
+        "data": {
+            "review": {
+                "body": "Code arrived in a minute.",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": 1,
+                "order_item_id": 2,
+                "product": {
+                    "name": "Orbit Card",
+                    "slug": "orbit-card"
+                },
+                "rating": 5,
+                "status": "pending",
+                "title": "Instant"
+            }
+        },
+        "message": "Thank you. Your review will appear once it is approved.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/reviews"
+    },
+    "status": 201
+}

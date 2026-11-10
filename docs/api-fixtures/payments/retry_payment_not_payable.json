@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "order_not_payable",
+        "message": "This order is not awaiting payment.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/orders/01jf0000000000000000000001/retry-payment"
+    },
+    "status": 409
+}

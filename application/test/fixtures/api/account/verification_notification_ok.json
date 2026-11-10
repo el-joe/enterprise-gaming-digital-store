@@ -1,0 +1,17 @@
+{
+    "body": {
+        "data": {},
+        "message": "Verification link sent.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/email/verification-notification"
+    },
+    "status": 200
+}

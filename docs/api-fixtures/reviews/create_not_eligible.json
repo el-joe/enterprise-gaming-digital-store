@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "review_not_eligible",
+        "errors": {
+            "order_item_id": [
+                "Only items you bought and received can be reviewed."
+            ]
+        },
+        "message": "Only items you bought and received can be reviewed.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/account/reviews"
+    },
+    "status": 422
+}

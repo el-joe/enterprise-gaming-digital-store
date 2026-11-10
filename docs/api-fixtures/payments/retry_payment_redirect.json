@@ -1,0 +1,24 @@
+{
+    "body": {
+        "data": {
+            "next": {
+                "gateway": "paymob",
+                "payment_public_id": "01jf0000000000000000000002",
+                "redirect_url": "https://accept.paymob.com/unifiedcheckout/?publicKey=egy_pk_test_fixture&clientSecret=egy_csk_test_fixture",
+                "type": "redirect"
+            }
+        },
+        "message": "Payment started.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/orders/01jf0000000000000000000001/retry-payment"
+    },
+    "status": 201
+}

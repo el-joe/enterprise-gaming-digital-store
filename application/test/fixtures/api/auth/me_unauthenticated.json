@@ -1,0 +1,16 @@
+{
+    "body": {
+        "code": "unauthenticated",
+        "message": "Unauthenticated.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/auth/me"
+    },
+    "status": 401
+}

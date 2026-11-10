@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "not_found",
+        "message": "The requested resource was not found.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/storefront/cart/items/999999"
+    },
+    "status": 404
+}
