@@ -1,6 +1,6 @@
 # Mobile App Roadmap (boxcards.shop customer app)
 
-Status: plan only (2026-11-10). Nothing in this document is built yet. Flutter project: `application/` (default template, Flutter 3.47.9, Dart SDK ^3.13, package `application`, Android `applicationId` still `com.example.application`). Backend facts below were checked against the code on this date; file paths are given as evidence.
+Status: plan (2026-11-10). M-A1 (Flutter foundation) is done; every later milestone is not started. Flutter project: `application/` (Flutter 3.47.9, Dart SDK ^3.13, package `application`, Android `applicationId` `shop.boxcards.app` as proposed in open decision 2, still changeable before the first store upload). Backend facts below were checked against the code on this date; file paths are given as evidence.
 
 Related documents: `API_DOCUMENTATION.md` (contract), `PROJECT_ARCHITECTURE.md` (ADRs), `SECURITY.md`, `DESIGN_TOKENS.md`, `IMPLEMENTATION_ROADMAP.md` (BD1 to BD9, brand decision), `INTEGRATIONS.md` (payment providers).
 
@@ -351,6 +351,7 @@ Root/jailbreak detection is a signal, not a control (it is bypassable). Default 
 Order: design-independent work first (M-A1 to M-A7), then design and the approval gate (M-A8, M-A9), then UI (M-A10 to M-A17), then push and release. Backend milestones may run in parallel with M-A1 and M-A7 as long as M-A7's data sources for a gap are only merged after that gap closes.
 
 ### M-A1: Flutter foundation
+- **Status**: Done (2026-11-10). `flutter analyze` and `dart analyze` (riverpod_lint) clean, 119 tests passing (goldens in LTR and RTL), dev debug APK builds; details and deviations in `PROGRESS.md` (Mobile app, M-A1) and `application/README.md`.
 - **Owner**: LFA (SFD supports).
 - **Scope**: directory tree of 2.1; flavors (`dev`, `staging`, `prod`) with Android `productFlavors` and `env_*.json`; set `applicationId` per the owner's decision (open decision 2); packages of section 3 that the foundation needs; `analysis_options.yaml` strict rules and `riverpod_lint`; theme tokens transcribed from `DESIGN_TOKENS.md` (colours, semantic dark theme, spacing, radii incl. directional key-cut shape, type scale, effects, motion); bundled fonts; brand assets copied from `backend/resources/assets/images/brand/`; launcher icon from `mark-master.png`; gen-l10n with `app_en.arb` and `app_ar.arb` and RTL switching; Dio client, all interceptors, envelope, error mapper, `Result`, `Failure`; `Money`; secure store; go_router skeleton with guards and deep-link parser; `tool/ci.sh`.
 - **Deliverables**: app boots per flavor to a token-styled shell (no feature screens); `tool/ci.sh`.

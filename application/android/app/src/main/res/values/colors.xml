@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ink-950 from docs/DESIGN_TOKENS.md: launcher icon background and launch window. -->
+    <color name="ic_launcher_background">#07080B</color>
+    <color name="ink_950">#07080B</color>
+</resources>

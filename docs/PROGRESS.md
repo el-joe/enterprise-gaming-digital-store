@@ -1036,3 +1036,25 @@ Rolled back and re-applied on `gaming-store_testing`. **Not applied to the app d
 ### Next milestone
 
 M12 (storefront) or M14 (admin core) as the PM schedules. M15 must add the automation credential and AI review screens; M13 must let customers set SMS preferences and consent.
+
+---
+
+## Mobile app
+
+Plan and milestones: `MOBILE_APP_ROADMAP.md` (M-A1 to M-A20). Code: `application/` (see `application/README.md`).
+
+| Milestone | Name | Status |
+|---|---|---|
+| M-A1 | Flutter foundation | Complete (2026-11-10, not yet committed; awaiting PM verification) |
+| M-A2 to M-A20 | | Not started |
+
+### M-A1: Flutter foundation
+
+Date completed: 2026-11-10. Completed by: LFA with SFD.
+
+- Built: flavors `dev`/`staging`/`prod` (Android `productFlavors`, ids `shop.boxcards.app[.dev|.staging]`, `env_*.json` with non-secret values, cleartext only in dev, `allowBackup=false`); strict `analysis_options.yaml` with `riverpod_lint`; tokens transcribed from `DESIGN_TOKENS.md` and the Figma variables (colours, dark semantic theme, spacing, radii and the directional key-cut shape, type scale with Arabic rules, effects, motion with reduced motion); dark-first `ThemeData` with `AppColors` and `AppTypography` extensions; bundled OFL fonts (Changa, Readex Pro, IBM Plex Mono) with licences and source URLs; brand assets and launcher icons from `mark-master.png` on ink-950 (Android legacy and adaptive, iOS); gen-l10n `en` and `ar` with RTL switching; Dio client with request id, locale, currency, cart token, idempotency, auth (single-flight refresh), retry and redacting log interceptors; `ApiEnvelope`, `PageMeta`, `ApiError`, sealed `Failure`, error mapper for every row of roadmap 2.3, `Result`; `Money` on `decimal` (JSON numbers rejected) and a string-based formatter; secure and preferences stores; go_router with guards (auth, verified email, maintenance, update required) and a deep-link parser; `FLAG_SECURE` and sensitive clipboard through an in-app Android method channel; `tool/ci.sh`.
+- Tests: `flutter test`: 119 passed, 0 failed (money, error mapper, envelope, auth/idempotency/retry interceptors, redaction, client headers, guards, deep links, router widget tests incl. RTL switch, secure and preferences stores, tokens, security channel, env files, ULID, four goldens: home and not-found in LTR and RTL). `flutter analyze` and `dart analyze --fatal-infos`: no issues. `flutter build apk --flavor dev -t lib/main_dev.dart --dart-define-from-file=lib/core/config/env_dev.json --debug`: built. `bash tool/ci.sh`: passed.
+- Not tested, and why: the Kotlin channel on a device (no emulator run here; the Dart side is tested against a mocked channel); iOS (no macOS host).
+- Deviations: `custom_lint` not added (riverpod_lint 3 is an analysis-server plugin and conflicts with it; `flutter analyze` does not run plugins, so CI also runs `dart analyze`); `go_router_builder` and `app_links` deferred (three routes; no verified app-link host until G8, so the link listener and intent filters come with M-A13); `remote_config.dart` not created (G9 does not exist; an `Availability` provider drives the guards meanwhile); `device_integrity.dart` not created (open decision 6, no plugin chosen); unused utils (`debouncer`, `date_format`, `validators`) not created; the template's web and desktop platform folders removed (Android and iOS only); the token refresher refuses every refresh until G1/M-A7, so a 401 signs out; colour values missing from `DESIGN_TOKENS.md` (for example `ember-600` and the status `-900` tints) were read from the Figma `Primitives`/`Theme` variables; the money formatter matches the backend's `bcadd` truncation.
+- Outstanding: owner confirmation of the application id (open decision 2) and the staging host (`staging.boxcards.shop` is a placeholder); iOS schemes per flavor (macOS host); release signing (M-A20).
+- Next milestone: M-A2 (backend mobile authentication) and M-A7 data layers as scheduled.

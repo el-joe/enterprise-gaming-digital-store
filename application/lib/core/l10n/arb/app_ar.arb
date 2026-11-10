@@ -1,0 +1,18 @@
+{
+  "@@locale": "ar",
+  "appTitle": "boxcards.shop",
+  "brandLogoLabel": "boxcards.shop",
+  "environmentBadge": "{flavor, select, dev{التطوير} staging{التجريب} other{الإنتاج}}",
+  "homeOverline": "المتجر",
+  "homeTitle": "مرحبًا بك في boxcards.shop",
+  "homeBody": "بطاقات الهدايا وشحن الألعاب. يصل المتجر الكامل في الإصدارات القادمة من التطبيق.",
+  "switchLanguage": "English",
+  "switchLanguageHint": "تغيير لغة التطبيق إلى الإنجليزية",
+  "maintenanceTitle": "سنعود قريبًا",
+  "maintenanceBody": "المتجر قيد الصيانة. يُرجى المحاولة مجددًا بعد بضع دقائق.",
+  "updateRequiredTitle": "التحديث مطلوب",
+  "updateRequiredBody": "لم يعد هذا الإصدار من التطبيق مدعومًا. يُرجى تحديثه من متجر التطبيقات.",
+  "notFoundTitle": "الصفحة غير موجودة",
+  "notFoundBody": "الصفحة التي فتحتها غير موجودة.",
+  "backToHome": "العودة إلى الرئيسية"
+}

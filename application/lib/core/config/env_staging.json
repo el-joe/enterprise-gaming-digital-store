@@ -1,0 +1,5 @@
+{
+  "FLAVOR": "staging",
+  "API_BASE_URL": "https://staging.boxcards.shop",
+  "APP_LINK_HOST": "staging.boxcards.shop"
+}
