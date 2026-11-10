@@ -33,6 +33,8 @@ Rule: backend milestones (M3 to M10) do not depend on the visual design and may 
 
 BD9 remains open and blocks only M17 and M20.
 
+Brand (2026-11-10): the store is **boxcards.shop**. The owner supplied the logo and chose to keep it as supplied, including the PlayStation, Steam and Xbox symbols on the cards. This is a deliberate exception to BD8 for the brand mark only. The trademark risk (implied endorsement) was raised and accepted by the owner. BD8 still applies to catalog, product and platform imagery.
+
 ## Definition of done (every milestone)
 
 Migrations reversible where practical. Pint clean. Pest passing for the milestone's scope on MySQL `gaming-store_testing`. No N+1 on new listings (`Model::preventLazyLoading()` in tests). No TODOs. Docs updated. `PROGRESS.md` section added. External integrations labelled honestly.
