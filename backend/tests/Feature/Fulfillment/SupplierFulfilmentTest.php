@@ -19,6 +19,7 @@ use App\Domains\Fulfillment\Services\SupplierSubmissionGate;
 use App\Domains\Orders\Enums\OrderItemUnitStatus as Unit;
 use App\Domains\Orders\Enums\OrderStatus;
 use App\Domains\Orders\Models\Order;
+use App\Domains\Orders\Models\OrderEvent;
 use App\Domains\Orders\Models\OrderItemUnit;
 use App\Domains\Orders\Notifications\OrderDelivered;
 use App\Domains\Orders\Notifications\OrderFulfilmentFailed;
@@ -292,14 +293,15 @@ it('skips a supplier whose cached balance does not cover the cost', function ():
     expect(reloadlyOrderPosts())->toBeEmpty();
 });
 
-it('settles a multi-unit order as partially fulfilled when one unit is refused', function (): void {
+it('settles a multi-unit order as partially fulfilled when one unit is refused, then moves it to refund_pending (M10)', function (): void {
     $this->reloadly->forceFill(['fallback_enabled' => false])->save();
     fakeReloadly(Http::sequence()->push(reloadlyTransaction('SUCCESSFUL', '501'))->push(reloadlyTransaction('REFUNDED', '502')));
 
     $order = fulfil(paidOrderFor($this->variant, 2));
 
     expect(unitStatuses($order))->toBe([Unit::Delivered, Unit::Failed])
-        ->and($order->status)->toBe(OrderStatus::PartiallyFulfilled)
+        ->and(OrderEvent::query()->where('order_id', $order->id)->where('to_status', OrderStatus::PartiallyFulfilled)->exists())->toBeTrue()
+        ->and($order->status)->toBe(OrderStatus::RefundPending)
         ->and(reloadlyOrderPosts())->toHaveCount(2);
 });
 

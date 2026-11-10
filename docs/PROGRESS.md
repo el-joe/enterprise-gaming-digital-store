@@ -13,10 +13,10 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M4 | Full schema | Complete |
 | M5 | Catalog and CMS services | Complete |
 | M6 | Currency and pricing | Complete |
-| M7 | Orders and checkout core | Complete (place-order and coupons fail closed until M10 and M11 bind their contracts) |
+| M7 | Orders and checkout core | Complete (coupons fail closed until M11 binds its contract; payment currency bound at M10) |
 | M8 | Supplier engine and Reloadly | Complete (Reloadly mocked only, awaiting sandbox verification) |
 | M9 | Fulfilment and digital codes | Complete (reveal pages and account order list are M13) |
-| M10 | Payments | Not started |
+| M10 | Payments | Complete (all three adapters mocked only, awaiting sandbox verification; Stripe also awaits BD1) |
 | M11 | Wallet, promotions, affiliates, reviews, support | Not started |
 | M12 | Storefront | Not started |
 | M13 | Customer account | Not started |
@@ -35,13 +35,14 @@ Status values: Not started, In progress, Blocked (state why), Complete.
 | Integration | Adapter | Mock tests | Sandbox verified | Production |
 |---|---|---|---|---|
 | Reloadly Gift Cards | Built (`ReloadlyGiftCardAdapter`) | Yes (`Http::fake` only) | **Awaiting sandbox verification**; no credentials; never called live | No |
-| Stripe | Not built | No | Awaiting credentials | No |
-| PayPal | Not built | No | Awaiting credentials | No |
-| Paymob | Not built | No | Awaiting credentials | No |
+| Stripe | Built (`StripePaymentGateway`, official SDK on Laravel HTTP) | Yes (`Http::fake` only) | **Awaiting sandbox verification**; no credentials; never called live; merchant entity (BD1) open | No |
+| PayPal | Built (`PayPalPaymentGateway`) | Yes (`Http::fake` only) | **Awaiting sandbox verification**; no credentials; never called live | No |
+| Paymob | Built (`PaymobPaymentGateway`) | Yes (`Http::fake` only) | **Awaiting sandbox verification**; no credentials; never called live | No |
 | Open Exchange Rates | Built | Yes (`Http::fake` only) | Awaiting credentials; OXR has no sandbox | No |
-| GA4 Measurement Protocol | Not built | No | Awaiting credentials | No |
+| GA4 Measurement Protocol | Not built (M10 queues the `purchase` row once; sending is M18) | No | Awaiting credentials | No |
 | Google Search Console | Not built | No | Awaiting credentials | No |
 | n8n | Not built | No | Not installed on this machine | No |
+| GeoIP | Contract built; `null` (default) and trusted-header drivers. GeoLite2 not built: needs `geoip2/geoip2` and a MaxMind database (BD9) | Yes (header parsing) | Not applicable | No |
 
 ## Business decisions
 
@@ -686,3 +687,87 @@ See M8 (shared run): **1344 passed, 0 failed (7422 assertions)**.
 ### Next milestone
 
 M10: Payments. It must bind `PaymentCurrencyResolver`, mark orders paid only through verified webhooks or re-reads (which now starts fulfilment automatically), and pass the payment currency into pricing for `payment-options`.
+
+---
+
+## M10: Payments
+
+Date completed: 2026-11-10
+Completed by: Senior Payments Engineer
+
+### Summary of completed work
+
+Gateway contract, registry and three adapters (Stripe, PayPal, Paymob), payment eligibility and the real `PaymentCurrencyResolver`, payment options with the payment currency in pricing, payment attempts, webhook intake and processing, server-side verification and PayPal capture, the payment state applier (the only path to `paid`), refunds with `refund_pending` handling (BD4), disputes, reconciliation, `order_item_financials`, the GA4 purchase queue row, and the GeoIP contract. Backend only; no new packages. **Every adapter is tested with mocked HTTP only, has never called a live API, and is awaiting sandbox verification.**
+
+### Files created
+
+- `app/Domains/Payments/`: `Contracts/{PaymentGateway,GeoIpResolver}`; `Adapters/AbstractPaymentGateway`, `Adapters/Stripe/{StripePaymentGateway,LaravelStripeHttpClient}`, `Adapters/PayPal/PayPalPaymentGateway`, `Adapters/Paymob/{PaymobPaymentGateway,PaymobHmac}`; 12 DTOs (`GatewayCapabilities`, `CreatePaymentRequest`, `CreatePaymentResult`, `VerifiedPaymentState`, `WebhookRequestData`, `VerifiedWebhook`, `GatewayEvent`, `DisputeData`, `RefundResult`, `EligibilityContext`, `GatewayEligibility`, `PaymentSession`); `Enums/{ProviderPaymentStatus,GatewayEventKind}`; `Exceptions/{InvalidWebhookSignature,GatewayRequestFailed,GatewayNotConfigured,GatewayCapabilityNotSupported,PaymentAttemptRefused,RefundRefused}`; `Services/{PaymentGatewayRegistry,PaymentEligibilityService,EligibilityContextFactory,EligiblePaymentCurrencyResolver,PaymentOptionsService,PaymentAttemptService,CheckoutPaymentService,PaymentVerifier,PaymentStateApplier,GatewayFeeEstimator,WebhookIntake,WebhookProcessor,DisputeRecorder,RefundService,RefundExecutor,RefundStateApplier,PaymentReconciler,NullGeoIpResolver,HeaderGeoIpResolver}`; `Jobs/{ProcessPaymentWebhook,ExecuteRefund}`; `Listeners/RefundUndeliveredUnits`
+- `app/Domains/Orders/Services/OrderFinancialsWriter`, `Orders/Listeners/RecognizeOrderFinancials`, `Analytics/Listeners/RecordPurchaseEvent`
+- `app/Http/Controllers/Storefront/PaymentController`, `Webhooks/PaymentWebhookController`, `Admin/Payments/RefundController`; `Requests/Storefront/{PaymentOptionsRequest,RetryPaymentRequest}`, `Requests/Admin/Payments/CreateRefundRequest`; `Resources/Admin/Payments/RefundResource`
+- `app/Console/Commands/Payments/{ReconcileOpenPaymentsCommand,ReconcileDailyPaymentsCommand}`, `config/payments.php`
+- Tests: `tests/Feature/Payments/{StripePaymentTest,PayPalPaymentTest,PaymobPaymentTest,RefundTest,EligibilityAndCheckoutTest,PaymentConcurrencyTest}`, `tests/Support/{PaymentFixtures.php,Concurrency/payment_race_worker.php}`
+- Changed: `AppServiceProvider` (resolver binding, registry, GeoIP binding, three listeners, `webhooks` limiter), `CheckoutController` (GeoIP, first attempt after placement), `PlaceOrderInput` and `PlaceOrderAction` (`ip_country`), `OrderStatusReader` (`viewableOrder`, `describe`), `routes/{webhooks,checkout,admin,console}.php`, `PaymentGatewaySeeder` (Paymob `charge_display_currency_only`), `.env.example`, `tests/Pest.php`
+- Tests changed: `CheckoutTest` (the fail-closed test now binds `UnavailablePaymentCurrencyResolver` explicitly, since the default binding is now real); `SupplierFulfilmentTest` (a partially fulfilled order now moves on to `refund_pending`, per architecture 6.2 and BD4); `SupplierConcurrencyTest` (cleanup list gains the tables M10 listeners write)
+
+### Migrations
+
+`2026_11_10_200001_add_payment_provider_order_index`: `idx_pay_provider_order` (payment_gateway_id, provider_order_id) on `payments`, for Paymob callbacks. Rolled back and re-applied on `gaming-store_testing`. **Not applied to the app database `gaming-store`**; run `php artisan migrate`. The seeder change applies on the next `db:seed --class=PaymentGatewaySeeder`.
+
+### Features implemented
+
+- Contract per architecture 9.2. Stripe through the official SDK on a Laravel HTTP transport (ADR-029); PayPal and Paymob on Laravel HTTP. Credentials decrypted only inside adapters, never logged or returned; Stripe keys must match the gateway mode (`sk_test_`/`sk_live_`).
+- Eligibility (architecture 12, default deny) bound as `PaymentCurrencyResolver`; payment currency = display currency when the provider and merchant both support it, else the gateway default. PayPal's adapter refuses EGP, SAR and AED outright. Paymob is EGP only and display-currency only.
+- Paid only through `PaymentStateApplier`, fed by a server-side read: amount and currency must equal the attempt's snapshot; mismatches, late payments on closed orders and success on unexpected statuses go to `manual_review` or an alert; a second success is `duplicate_capture` with an automatic full refund. Entering `paid` starts fulfilment (M8 listener) and queues the GA4 `purchase` row once.
+- Idempotency keys: `pay_create:`, `pay_capture:`, `refund:` (Stripe, PayPal). Paymob has none: a lost create expires the attempt; a lost refund is resolved by re-read and never re-sent.
+- Refunds (BD4): failed units refunded automatically when the order enters `refund_pending` (and `partially_fulfilled` moves there); staff refund chosen units, delivered too, with `refunds.create`. One refund per unit (`uq_ru_unit`), never beyond the remaining amount, Paymob one in flight. `order_item_financials` written once when the order settles and corrected on refund; supplier cost of a unit whose attempt did not deliver (including `FAILED`, `cost_reversal_pending`) is not booked.
+- `payments:reconcile-open` (every 5 minutes: open attempts, refunds, failed webhooks) and `payments:reconcile-daily` (48-hour comparison into `reconciliation_items`).
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Each gateway: create, verify, webhook good and bad signature, duplicate, out-of-order, refund, failed payment, timeout | Met (mocked) | Stripe, PayPal, Paymob test files: each has create, re-read on webhook, valid/invalid/missing signature, duplicate delivery, failure after success, refund, declined payment, and a provider timeout (Stripe read, PayPal read and verification API, Paymob read and refund) |
+| Browser return alone never marks paid | Met | `verify-payment` with the provider saying `requires_action` leaves the order unpaid; with no webhook at all it is paid only because the server read says succeeded; another session gets 404 |
+| Amount or currency mismatch goes to `manual_review` | Met | Stripe amount and currency mismatch; Paymob amount mismatch; no fulfilment dispatched |
+| Late payment on a cancelled order goes to `manual_review` | Met | Stripe test |
+| Double payment yields `duplicate_capture` and a refund | Met | Second attempt refunded in full with `refund:{id}` key; primary slot unchanged |
+| PayPal `COMPLETED` order with `PENDING` capture is not paid | Met | PayPal test: `payment_processing`, `paid_at` null |
+| Paymob HMAC: boolean formatting and exact 20-field order | Met | Literal concatenation fixture; `1` for `true` rejected; tampered field rejected; body or query `hmac` |
+| Eligibility: Paymob only EG + EGP; currency never charged if unsupported; PayPal never EGP, SAR, AED; default deny | Met | `EligibilityAndCheckoutTest`: seeded rules, five Paymob refusals (declared US, IP US, IP unknown, Tor, USD display), place-order refusal; PayPal charges USD for EGP/SAR/AED shoppers and the attempt is refused even if a merchant row enables them; inactive, no rule, no credentials, wrong mode, disabled currency, amount cap, product exclusion, wallet |
+| GA4 purchase dispatched once | Partly met | One `analytics_event_dispatches` row per order however often paid is applied; **sending to GA4 is M18** |
+| Inherited 1: resolver bound | Met | Real place-order end to end with Stripe: order, snapshot, `ip_country`, attempt and `next.client_secret` |
+| Inherited 2: payment currency in `payment-options` | Met | A gateway whose currency would cross the margin floor is listed `available: false` with `payment_currency_below_margin` |
+| Inherited 3: only verified paths to paid | Met | See above; webhook body claiming success while the provider says processing gives `payment_processing` |
+| Inherited 4: refunds and supplier cost reversal | Met | `RefundTest`: partial, full, double refused, provider refusal to review, timeout resolved without a second create, permissions, validation |
+| Inherited 5: `order_item_financials` | Met | Revenue, supplier cost, fee, FX, gross, net checked; FAILED attempt books no cost; written once and corrected on refund |
+| Inherited 6: GeoIP | Met as contract | Null and header drivers tested; GeoLite2 not built (needs a package and database) |
+
+### Tests and results
+
+- Command: `php artisan test --compact` (MySQL `gaming-store_testing`)
+- Result: **1463 passed, 0 failed, 0 skipped (8070 assertions), 97.6 s**, up from 1344.
+- Separate processes and connections (`PaymentConcurrencyTest`): a webhook worker and a return-page status-check worker racing on the same payment, 3 rounds (one paid transition, one ledger row, one GA4 row each time); the same signed event received by two workers at once (one stored row).
+- In-process only: duplicate and out-of-order webhooks, duplicate capture, refund double-submit and the refund unit unique index, Paymob single in-flight refund, reconciliation, timeouts (faked connection failures).
+- Not tested, and why: every live provider API (no credentials); Stripe EGP/SAR presentment and fee expansion, PayPal create/capture key retention, Paymob callback `hmac` location and retry policy (all `UNVERIFIED`); real queue workers (sync queue in tests); CSRF on webhooks cannot be observed in tests (Laravel skips it under test), the routes are simply outside the `web` group.
+
+### Outstanding requirements
+
+- Sandbox verification of every adapter and each `UNVERIFIED` item in `INTEGRATIONS.md` 2 to 4; BD1 before Stripe goes live.
+- Gateways are seeded inactive with no credentials or merchant currencies, so nothing is eligible until they are configured in the database. Admin screens and write-only credential routes are M15.
+- Retry-payment cannot switch gateway (`gateway_change_unsupported`): the customer places the order again. Architecture 11.3 allows switching before paid; it needs re-pricing in the new currency.
+- A replayed place-order returns `next: null`; the client must call retry-payment.
+- Wallet gateway and wallet refunds are M11 (BD3). `orders:expire-unpaid` does not cancel provider intents; a late payment goes to review.
+- GeoLite2 needs `geoip2/geoip2` and a MaxMind licence key and database (BD9); not installed. The header driver is safe only behind Cloudflare with the origin locked down.
+- GA4 sending is M18. The risk engine's `block` still holds for review; automatic refund on `block` was not added.
+- Supplier cost reversals flagged `cost_reversal_pending` are excluded from cost but not yet reconciled against the supplier's later `REFUNDED` status.
+
+### Design changes made
+
+- `PROJECT_ARCHITECTURE.md` 9.4 and 12 (what is built and settled), ADR-028 (PayPal postback verification, replacing the M0 offline decision), ADR-029 (Stripe SDK on Laravel HTTP).
+- `INTEGRATIONS.md` 2 to 4: adapter status and conservative handling of `UNVERIFIED` items.
+- `API_DOCUMENTATION.md` 3a, 3b, 5c, 6, limiters.
+
+### Next milestone
+
+M11: Wallet, promotions, affiliates, reviews, support. It must bind `CheckoutCoupons`, add the wallet gateway adapter (BD3) and reverse affiliate commission on refund (refunds now exist).
+

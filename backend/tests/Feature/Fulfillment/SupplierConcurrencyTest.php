@@ -24,6 +24,7 @@ use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Symfony\Component\Process\Process;
 
 const GATE_WORKER_TABLES = [
+    'order_item_financials', 'analytics_event_dispatches', 'refund_units', 'refunds', 'payment_transactions',
     'digital_code_accesses', 'digital_codes', 'supplier_api_logs', 'supplier_transactions', 'manual_fulfillment_tasks', 'order_events',
     'order_item_units', 'order_items', 'risk_assessments', 'payments', 'orders', 'supplier_product_prices', 'supplier_product_mappings',
     'supplier_products', 'supplier_credentials', 'suppliers', 'product_variants', 'category_product', 'products', 'gaming_platforms',

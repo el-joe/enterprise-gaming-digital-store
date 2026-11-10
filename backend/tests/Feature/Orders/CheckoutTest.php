@@ -21,6 +21,7 @@ use App\Domains\Orders\Models\OrderItem;
 use App\Domains\Orders\Models\OrderItemDeliveryValue;
 use App\Domains\Orders\Models\OrderItemUnit;
 use App\Domains\Orders\Services\OrderStateMachine;
+use App\Domains\Payments\Contracts\PaymentCurrencyResolver;
 use App\Domains\Payments\Services\UnavailablePaymentCurrencyResolver;
 use App\Domains\Pricing\DTOs\CouponTerms;
 use App\Domains\Pricing\Enums\PricingRuleScope;
@@ -228,7 +229,8 @@ describe('stale rates over HTTP', function (): void {
 });
 
 describe('refusals that change nothing', function (): void {
-    it('refuses placement until M10 binds a payment currency resolver', function (): void {
+    it('refuses placement with the fail-closed resolver bound', function (): void {
+        app()->bind(PaymentCurrencyResolver::class, UnavailablePaymentCurrencyResolver::class);
         $user = User::factory()->create();
         cartFor($user, sellableVariant('10'));
 

@@ -25,6 +25,7 @@ use Tests\Support\FakePaymentCurrencyResolver;
 use Tests\TestCase;
 
 require_once __DIR__.'/Support/FulfilmentFixtures.php';
+require_once __DIR__.'/Support/PaymentFixtures.php';
 
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)

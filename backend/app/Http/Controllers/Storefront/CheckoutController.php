@@ -6,6 +6,8 @@ use App\Domains\Orders\Actions\PlaceOrderAction;
 use App\Domains\Orders\DTOs\PlaceOrderInput;
 use App\Domains\Orders\Services\CheckoutService;
 use App\Domains\Orders\Services\OrderStatusReader;
+use App\Domains\Payments\Contracts\GeoIpResolver;
+use App\Domains\Payments\Services\CheckoutPaymentService;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Storefront\Concerns\InteractsWithCart;
 use App\Http\Requests\Storefront\PlaceOrderRequest;
@@ -33,7 +35,13 @@ class CheckoutController extends Controller
         return $this->success(['cart' => (new CartResource($result['quote']))->resolve()], 'Ready for checkout.');
     }
 
-    public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action): JsonResponse
+    /**
+     * Step 3, then step 4: once the order has committed, the first payment attempt is created
+     * at the provider (outside the placement transaction) and returned as `next`. A replay
+     * returns the stored placement response, whose `next` is null, as is `next` when the first
+     * attempt could not be started; the client then uses retry-payment.
+     */
+    public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action, GeoIpResolver $geoIp, CheckoutPaymentService $payments): JsonResponse
     {
         $result = $action->handle(new PlaceOrderInput(
             owner: $this->cartOwner($request),
@@ -51,15 +59,26 @@ class CheckoutController extends Controller
             ip: $request->ip(),
             userAgent: $request->userAgent(),
             locale: app()->getLocale(),
+            ipCountry: $geoIp->countryFor($request),
         ));
 
         $placed = $result->body['meta']['duplicate'] === false ? ($result->body['data']['order']['public_id'] ?? null) : null;
+
+        $body = $result->body;
 
         if (is_string($placed)) {
             $request->session()->push(OrderStatusReader::SESSION_KEY, $placed);
         }
 
-        $response = new JsonResponse($result->body, $result->status);
+        if (is_string($placed) && ! $result->replayed && $result->createdOrderPublicId !== null) {
+            $session = $payments->startAfterPlacement($placed, $request->validated('method'))['session'];
+
+            if ($session !== null) {
+                $body['data']['next'] = $session->toArray();
+            }
+        }
+
+        $response = new JsonResponse($body, $result->status);
 
         return $result->replayed ? $response->header('Idempotency-Replayed', 'true') : $response;
     }

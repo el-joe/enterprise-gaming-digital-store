@@ -42,6 +42,8 @@ class PaymentGatewaySeeder extends Seeder
                 'mode' => EnvironmentMode::Sandbox,
                 'default_currency' => $defaultCurrency,
                 'sort_order' => $sortOrder,
+                // Paymob is only for transactions configured in EGP: never reached by converting another display currency.
+                'settings' => $key === 'paymob' ? ['charge_display_currency_only' => true] : null,
             ]);
 
             foreach ($rules as [$priority, $effect, $conditions]) {

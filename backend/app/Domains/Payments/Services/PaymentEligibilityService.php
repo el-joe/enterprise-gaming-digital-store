@@ -1,0 +1,200 @@
+<?php
+
+namespace App\Domains\Payments\Services;
+
+use App\Domains\Currency\Exceptions\ExchangeRateMissing;
+use App\Domains\Currency\Exceptions\ExchangeRateStale;
+use App\Domains\Currency\Services\CurrencyConverter;
+use App\Domains\Currency\Services\ExchangeRateRegistry;
+use App\Domains\Customers\Enums\CustomerRiskLevel;
+use App\Domains\Payments\Contracts\PaymentGateway as GatewayAdapter;
+use App\Domains\Payments\DTOs\EligibilityContext;
+use App\Domains\Payments\DTOs\GatewayEligibility;
+use App\Domains\Payments\Enums\PaymentEligibilityRuleEffect;
+use App\Domains\Payments\Models\PaymentEligibilityRule;
+use App\Domains\Payments\Models\PaymentGateway;
+use App\Domains\Payments\Models\PaymentGatewayCredential;
+use App\Domains\Payments\Models\PaymentGatewayCurrency;
+use App\Domains\Shared\ValueObjects\Money;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+
+/**
+ * PROJECT_ARCHITECTURE.md 12. A gateway is offered only when every check passes: active, an
+ * adapter exists, credentials exist for its mode, a payment currency both the provider and the
+ * merchant account support (with a fresh rate), the amount is within that currency's limits, no
+ * cart product excludes it, and the first matching eligibility rule (by priority) allows it.
+ * No matching rule means deny. Country alone never grants eligibility.
+ *
+ * Rule conditions: `countries` (declared country), `ip_countries` (an unknown IP country never
+ * matches), `require_ip_match` (IP country equals declared country), `currencies` (the payment
+ * currency), base amount bounds, `allow_guest` (false: the rule applies to signed-in customers
+ * only) and `max_risk_level`.
+ *
+ * A gateway with `settings.charge_display_currency_only` (seeded for Paymob) is eligible only
+ * when it can charge the display currency itself, never through a conversion.
+ */
+class PaymentEligibilityService
+{
+    private const array RISK_ORDER = ['low' => 0, 'medium' => 1, 'high' => 2, 'blocked' => 3];
+
+    public function __construct(
+        private PaymentGatewayRegistry $registry,
+        private CurrencyConverter $converter,
+        private ExchangeRateRegistry $rates,
+    ) {}
+
+    /**
+     * @return list<GatewayEligibility>
+     */
+    public function evaluateAll(EligibilityContext $context): array
+    {
+        return $this->gateways($context)->map(fn (PaymentGateway $gateway): GatewayEligibility => $this->evaluate($gateway, $context))->values()->all();
+    }
+
+    public function forKey(string $key, EligibilityContext $context): ?GatewayEligibility
+    {
+        $gateway = $this->gateways($context, $key)->first();
+
+        return $gateway === null ? null : $this->evaluate($gateway, $context);
+    }
+
+    private function evaluate(PaymentGateway $gateway, EligibilityContext $context): GatewayEligibility
+    {
+        $refuse = static fn (string $reason): GatewayEligibility => new GatewayEligibility($gateway, null, $reason);
+
+        if (! $this->registry->has($gateway->adapter_key)) {
+            return $refuse('gateway_unavailable');
+        }
+
+        if (! $this->hasCredentials($gateway)) {
+            return $refuse('gateway_unavailable');
+        }
+
+        if ($context->riskLevel === CustomerRiskLevel::Blocked) {
+            return $refuse('not_eligible');
+        }
+
+        if ((int) $gateway->getAttribute('excluded_products_count') > 0) {
+            return $refuse('product_excluded');
+        }
+
+        $adapter = $this->registry->for($gateway);
+        $currency = $this->paymentCurrency($gateway, $adapter, $context->displayCurrency);
+
+        if ($currency === null) {
+            return $refuse('currency_not_supported');
+        }
+
+        $amount = $this->paymentAmount($context->totalBase, $currency);
+
+        if ($amount === null) {
+            return $refuse('rate_unavailable');
+        }
+
+        /** @var PaymentGatewayCurrency $row */
+        $row = $gateway->paymentGatewayCurrencies->firstWhere('currency', $currency);
+
+        if (($row->min_amount !== null && bccomp($amount->amount, $row->min_amount, Money::SCALE) < 0)
+            || ($row->max_amount !== null && bccomp($amount->amount, $row->max_amount, Money::SCALE) > 0)) {
+            return $refuse('amount_out_of_range');
+        }
+
+        if (! $this->rulesAllow($gateway->paymentEligibilityRules, $context, $currency)) {
+            return $refuse('not_eligible');
+        }
+
+        return new GatewayEligibility($gateway, $currency);
+    }
+
+    /**
+     * The display currency when both the provider and the merchant account can charge it;
+     * otherwise the gateway's default currency under the same two checks (architecture 11.2).
+     */
+    private function paymentCurrency(PaymentGateway $gateway, GatewayAdapter $adapter, string $displayCurrency): ?string
+    {
+        $enabled = $gateway->paymentGatewayCurrencies->where('is_enabled', true)->keyBy('currency');
+        $usable = static fn (string $currency): bool => $enabled->has($currency) && $adapter->supportsCurrency($currency);
+
+        if ($usable($displayCurrency)) {
+            return $displayCurrency;
+        }
+
+        if (($gateway->settings['charge_display_currency_only'] ?? false) === true) {
+            return null;
+        }
+
+        return $usable($gateway->default_currency) ? $gateway->default_currency : null;
+    }
+
+    private function paymentAmount(Money $totalBase, string $currency): ?Money
+    {
+        if ($currency === $this->rates->baseCurrency()) {
+            return $this->converter->roundForCurrency($totalBase);
+        }
+
+        try {
+            return $this->converter->toCheckout($totalBase, $currency)->money;
+        } catch (ExchangeRateMissing|ExchangeRateStale) {
+            return null;
+        }
+    }
+
+    /**
+     * @param  Collection<int, PaymentEligibilityRule>  $rules
+     */
+    private function rulesAllow(Collection $rules, EligibilityContext $context, string $paymentCurrency): bool
+    {
+        foreach ($rules as $rule) {
+            if ($this->matches($rule, $context, $paymentCurrency)) {
+                return $rule->effect === PaymentEligibilityRuleEffect::Allow;
+            }
+        }
+
+        return false;
+    }
+
+    private function matches(PaymentEligibilityRule $rule, EligibilityContext $context, string $paymentCurrency): bool
+    {
+        $upper = static fn (?array $values): array => array_map('strtoupper', $values ?? []);
+        $ip = $context->ipCountry === null ? null : strtoupper($context->ipCountry);
+
+        return match (true) {
+            $rule->countries !== null && $rule->countries !== [] && ! in_array($context->countryCode, $upper($rule->countries), true) => false,
+            $rule->ip_countries !== null && $rule->ip_countries !== [] && ($ip === null || ! in_array($ip, $upper($rule->ip_countries), true)) => false,
+            $rule->require_ip_match && $ip !== $context->countryCode => false,
+            $rule->currencies !== null && $rule->currencies !== [] && ! in_array($paymentCurrency, $upper($rule->currencies), true) => false,
+            $rule->min_amount_base !== null && bccomp($context->totalBase->amount, $rule->min_amount_base, Money::SCALE) < 0 => false,
+            $rule->max_amount_base !== null && bccomp($context->totalBase->amount, $rule->max_amount_base, Money::SCALE) > 0 => false,
+            ! $rule->allow_guest && $context->isGuest => false,
+            $rule->max_risk_level !== null && self::RISK_ORDER[$context->riskLevel->value] > self::RISK_ORDER[$rule->max_risk_level->value] => false,
+            default => true,
+        };
+    }
+
+    private function hasCredentials(PaymentGateway $gateway): bool
+    {
+        return $gateway->paymentGatewayCredentials->contains(
+            static fn (PaymentGatewayCredential $row): bool => $row->mode === $gateway->mode && (string) $row->getRawOriginal('credentials') !== '',
+        );
+    }
+
+    /**
+     * @return Collection<int, PaymentGateway>
+     */
+    private function gateways(EligibilityContext $context, ?string $key = null): Collection
+    {
+        return PaymentGateway::query()
+            ->where('is_active', true)
+            ->when($key !== null, static fn (Builder $query) => $query->where('key', $key))
+            ->with([
+                'paymentGatewayCurrencies',
+                'paymentGatewayCredentials',
+                'paymentEligibilityRules' => static fn ($query) => $query->where('is_active', true)->orderBy('priority')->orderBy('id'),
+            ])
+            ->withCount(['excludedProducts' => static fn (Builder $query) => $query->whereIn('products.id', $context->productIds === [] ? [0] : $context->productIds)])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+    }
+}

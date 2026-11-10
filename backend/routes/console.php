@@ -21,3 +21,7 @@ Schedule::command('suppliers:refresh-balances')->everyFifteenMinutes()->withoutO
 Schedule::command('suppliers:health-check')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('suppliers:sync-catalog')->dailyAt('03:00')->withoutOverlapping()->onOneServer();
 Schedule::command('suppliers:sync-pricing')->everySixHours()->withoutOverlapping()->onOneServer();
+
+// Payments (PROJECT_ARCHITECTURE.md 9.5)
+Schedule::command('payments:reconcile-open')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('payments:reconcile-daily')->dailyAt('02:45')->withoutOverlapping()->onOneServer();

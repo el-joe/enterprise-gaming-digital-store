@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\Currency\ExchangeRateController;
 use App\Http\Controllers\Admin\Fulfillment\DigitalCodeController;
 use App\Http\Controllers\Admin\Fulfillment\ManualTaskController;
 use App\Http\Controllers\Admin\Fulfillment\OrderFulfilmentController;
+use App\Http\Controllers\Admin\Payments\RefundController;
 use App\Http\Controllers\Admin\Pricing\PriceSimulationController;
 use App\Http\Controllers\Admin\Pricing\PricingRuleController;
 use App\Http\Controllers\Admin\Pricing\VariantPriceController;
@@ -149,3 +150,6 @@ Route::middleware('permission:orders.fulfill_manual')->group(static function ():
 
 Route::post('digital-codes/import', [DigitalCodeController::class, 'import'])->middleware('permission:digital_codes.import')->name('digital-codes.import');
 Route::post('digital-codes/{digitalCode}/reveal', [DigitalCodeController::class, 'reveal'])->middleware(['permission:digital_codes.reveal', 'throttle:code-reveal'])->name('digital-codes.reveal');
+
+// Payments (M10)
+Route::post('orders/{order}/refunds', [RefundController::class, 'store'])->middleware(['permission:refunds.create', 'throttle:30,1'])->name('orders.refunds.store');

@@ -22,6 +22,17 @@ class OrderStatusReader
      */
     public function forViewer(string $publicId, ?User $user, array $sessionOrderIds): array
     {
+        return $this->describe($this->viewableOrder($publicId, $user, $sessionOrderIds));
+    }
+
+    /**
+     * The order, when the viewer is its customer or the browser session that placed or verified
+     * it as a guest; otherwise not found, so the order's existence is not revealed.
+     *
+     * @param  list<string>  $sessionOrderIds
+     */
+    public function viewableOrder(string $publicId, ?User $user, array $sessionOrderIds): Order
+    {
         $order = Order::query()->where('public_id', $publicId)->first();
 
         $allowed = $order !== null && (
@@ -33,6 +44,14 @@ class OrderStatusReader
             throw (new ModelNotFoundException)->setModel(Order::class);
         }
 
+        return $order;
+    }
+
+    /**
+     * @return array{public_id: string, status: string, payment_status: string, is_final: bool}
+     */
+    public function describe(Order $order): array
+    {
         return [
             'public_id' => $order->public_id,
             'status' => $order->status->value,

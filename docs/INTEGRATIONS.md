@@ -198,6 +198,10 @@ Events subscribed: `payment_intent.succeeded`, `payment_intent.processing`, `pay
 
 ---
 
+**Adapter status (M10):** `StripePaymentGateway` built; mocked tests only (SDK on a faked transport); awaiting sandbox verification and BD1. Fees are estimated from fee rules because the balance-transaction expansion is `UNVERIFIED`. ISK, UGX, HUF and TWD are refused until their special cases are verified.
+
+---
+
 ## 3. PayPal Orders v2
 
 Sources: `https://developer.paypal.com/api/rest/requests/`, `/api/rest/authentication/`, `https://developer.paypal.com/api/orders/v2/schema.json`, `/docs/api/payments/v2/`, `/api/payments/v2/captures-refund`, `/api/rest/webhooks/rest/`, `/api/rest/webhooks/event-names/`, `/docs/reports/reference/paypal-supported-currencies/`.
@@ -231,7 +235,7 @@ Sources: `https://developer.paypal.com/api/rest/requests/`, `/api/rest/authentic
 - Postback: `POST /v1/notifications/verify-webhook-signature` with `transmission_id`, `transmission_time`, `cert_url`, `auth_algo` (SHA256withRSA), `transmission_sig`, `webhook_id`, `webhook_event` (passed exactly as received; re-serializing can fail).
 - Offline: verify signature over `transmissionId|timeStamp|webhookId|crc32` where `crc32` is the decimal CRC32 of the raw body, using the certificate's public key. Docs recommend offline.
 
-Decision: offline, with the `cert_url` host allow-listed to PayPal domains and certificates cached. Postback does not work for mock events.
+Decision at M0: offline, with the `cert_url` host allow-listed to PayPal domains and certificates cached. **Changed at M10 (ADR-028): postback through `verify-webhook-signature`**, with the raw body passed unmodified. Postback does not work for mock events.
 
 Retries: up to 25 times over 3 days on non-2xx.
 
@@ -246,6 +250,10 @@ Retries: up to 25 times over 3 days on non-2xx.
 Merchant eligibility of an Egyptian entity is `UNVERIFIED` and must be confirmed with PayPal.
 
 **Not supported:** Charging EGP, SAR or AED.
+
+---
+
+**Adapter status (M10):** `PayPalPaymentGateway` built; mocked tests only; awaiting sandbox verification. `UNVERIFIED` and handled conservatively: capture-refund `up` link parsing, dispute status mapping, create and capture key retention (re-send capped at 12 hours). The provider fee is read from `seller_receivable_breakdown.paypal_fee`.
 
 ---
 
@@ -299,6 +307,10 @@ Fields to read: `obj.id`, `obj.success`, `obj.pending`, `obj.amount_cents`, `obj
 **Currency and methods:** Currency must match the integration ID. Which methods apply (cards, wallets, kiosk, BNPL) depends on the merchant account. PayMe works in live mode only.
 
 **Not supported:** Multi-region accounts; idempotency keys; automatic fee reporting (use `payment_gateway_fee_rules`).
+
+---
+
+**Adapter status (M10):** `PaymobPaymentGateway` built; mocked tests only; awaiting sandbox verification. EGP only. `UNVERIFIED` and handled conservatively: `hmac` location (query string, then body), empty-string for missing HMAC fields, `NA` placeholders for missing billing name and phone, `special_reference` uniqueness, `merchant_commission` as fee (not used). A timed-out refund is never re-sent; it stays `unknown` until the transaction's `refunded_amount_cents` shows it, or fails for staff after 24 hours.
 
 ---
 

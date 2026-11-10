@@ -23,5 +23,6 @@ final readonly class PlaceOrderInput
         public ?string $ip,
         public ?string $userAgent,
         public string $locale,
+        public ?string $ipCountry = null,
     ) {}
 }

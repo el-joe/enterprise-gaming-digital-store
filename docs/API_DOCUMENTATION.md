@@ -1,6 +1,6 @@
 # API Documentation
 
-**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9). Everything else is planned. Update the status column per route group as milestones land.
+**Status:** built so far: the authentication routes in section 1a, the two-factor routes in section 4, `GET /admin/api/me` and the envelopes (M3); section 2a storefront catalog, search and currency (M5, M6); section 5a admin catalog, content, media, currency and pricing (M5, M6); section 3a cart, checkout and guest verification (M7); section 4a code reveal and section 5b suppliers, mappings, fulfilment, manual tasks and digital codes (M8, M9); section 3b payment options, attempts, verification and PayPal capture, section 5c staff refunds and section 6 payment webhooks (M10). Everything else is planned. Update the status column per route group as milestones land.
 
 ## 1. Conventions
 
@@ -10,10 +10,10 @@
 |---|---|---|---|
 | Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); newsletter planned |
 | Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); rest planned |
-| Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status, guest OTP (3a) and guest code access (4a) built; payment routes planned (M10) |
+| Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status, guest OTP (3a), guest code access (4a) and payment routes (3b) built |
 | Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a and 5b built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
-| Provider webhooks | `/webhooks/{provider}` | Signature only, no CSRF | planned |
+| Provider webhooks | `/webhooks/{provider}` | Signature only, no session, no CSRF, `webhooks` limiter | payment gateways built (6); suppliers planned |
 | Automation (n8n) | `/api/v1/automation` | Sanctum token (`n8n`) + HMAC | planned |
 | MCP | `/api/v1/mcp` | Sanctum token (`mcp`) + scopes | planned |
 
@@ -26,7 +26,7 @@ Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2.
 | `Accept: application/json` | Required for JSON behaviour |
 | `X-CSRF-TOKEN` | Session writes |
 | `X-Request-Id` | Accepted or generated (ULID); echoed; logged |
-| `Idempotency-Key` | Required on `POST /api/v1/checkout/place-order` and refund creation |
+| `Idempotency-Key` | Required on `POST /api/v1/checkout/place-order`. Refund creation is protected by `uq_ru_unit` and the remaining-amount check instead; provider calls carry their own keys (architecture 9.3) |
 
 ### Standard success envelope
 
@@ -95,7 +95,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `automation`, `mcp` | `service_accounts.rate_limit_per_minute` |
 | `webhooks` | 600/min per IP |
 
-Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
+Built limiters: `auth`, `otp`, `admin`, `storefront`, `search`, `checkout`, `webhooks` (M10), `code-reveal` (`fulfillment.reveal_per_hour`, default 10, per user or guest order). The others are planned with their route groups. `POST /admin/api/exchange-rates/fetch-now` is also limited to 6 per minute.
 
 ---
 
@@ -181,14 +181,27 @@ Registered in the `web` middleware group under `/api/v1` (session and CSRF on wr
 | POST | `/storefront/cart/coupon` | `code` | `checkout` | `{ cart }` or 422 `coupon_invalid`. **Until M11 every code is refused** (ADR-026). |
 | DELETE | `/storefront/cart/coupon` | | `storefront` | `{ cart }` |
 | POST | `/checkout/validate` | `country` (active ISO code), `email?` | `checkout` | `{ cart }` repriced with checkout rules, or 422: `rate_stale` / `rate_missing` for the display currency, `item_unavailable`, `validation_failed` with `errors.items.{id}.delivery_values.{code}`, `coupon_invalid`, `cart_empty` |
-| POST | `/checkout/place-order` | `email` (guests only; customers use their account email), `country`, `gateway`, `method?`, `currency` and `expected_total` (exactly what the customer was shown), `consents.terms` (must be accepted), `consents.marketing?`, `ga_client_id?`; header `Idempotency-Key` (8 to 128 of `A-Za-z0-9_-:.`) | `checkout` | 201 `{ order: { public_id, order_number, status, display_total, payment_total, expires_at }, next: null }`, `meta.duplicate: false`. 200 `{ order: { public_id, status } }`, `meta.duplicate: true` when the same buyer already has an open order with the same contents. A replay carries `Idempotency-Replayed: true`. Errors as for validate, plus `price_changed`, `gateway_not_eligible`, `order_total_invalid`, the idempotency 409s. **Until M10 binds a payment currency resolver every call returns `gateway_not_eligible` and creates nothing** (ADR-026). `next` is null until M10 creates payment attempts. |
+| POST | `/checkout/place-order` | `email` (guests only; customers use their account email), `country`, `gateway`, `method?`, `currency` and `expected_total` (exactly what the customer was shown), `consents.terms` (must be accepted), `consents.marketing?`, `ga_client_id?`; header `Idempotency-Key` (8 to 128 of `A-Za-z0-9_-:.`) | `checkout` | 201 `{ order: { public_id, order_number, status, display_total, payment_total, expires_at }, next }` (`next`: section 3b, or null), `meta.duplicate: false`. 200 `{ order: { public_id, status } }`, `meta.duplicate: true` when the same buyer already has an open order with the same contents. A replay carries `Idempotency-Replayed: true`. Errors as for validate, plus `price_changed`, `gateway_not_eligible`, `order_total_invalid`, the idempotency 409s. `gateway_not_eligible` whenever the chosen gateway fails eligibility (M10, default deny). |
 | GET | `/checkout/orders/{public_id}/status` | | `checkout` | `{ public_id, status, payment_status, is_final }`. Visible to the owning customer, or to the browser session that placed or verified a guest order; 404 otherwise. |
 | POST | `/checkout/guest/otp/send` | `order_public_id`, `email` | `otp` | Always 200 with the same message. Emails a 6-digit code only when the email matches the guest order; at most 5 codes per order per hour; a new code replaces the old. |
 | POST | `/checkout/guest/otp/verify` | `order_public_id`, `code` | `otp` | `{ order_public_id, email_verified: true }`, sets `orders.guest_email_verified_at` and opens the order to the session; or 422 `otp_invalid` (wrong, expired after 10 minutes, or 5 attempts used) |
 
 `cart` shape: `{ public_id, currency, country, items: [{ id, variant: { public_id, title, sku }, product: { name, slug, delivery_type }, quantity, delivery_values, purchasable, block_reason, unit_price, subtotal, total }], coupon: { code, applied, error, limited_by_margin } | null, totals: { subtotal, discount, total }, price_may_vary, checkout_ready }`. `block_reason` is one of `unavailable`, `out_of_stock`, `custom_amount_unsupported`, `quantity_limit`, `not_sold_in_country`, or a pricing reason (`rate_stale`, `rate_missing`, `below_margin`, `cost_unavailable`, ...). Cost, floor and margin are never returned.
 
-Not built in M7: `GET /payment-options`, PayPal capture and retry-payment (M10); a customer cancel endpoint (the state machine allows it).
+Not built in M7: a customer cancel endpoint (the state machine allows it). M10 changes to place-order: the gateway is checked by the real eligibility resolver (default deny), `orders.ip_country` comes from the GeoIP resolver, and on a 201 the first payment attempt is created at the provider after the order commits; its session is returned as `next` (section 3b). A replay returns the stored response, whose `next` is null, as it is when the first attempt could not be started; the client then calls retry-payment.
+
+### 3b. Built payment routes (M10)
+
+Same group, middleware and `checkout` limiter as 3a. The order routes are visible to the owning customer or the browser session that placed or verified a guest order; 404 otherwise. None of them can mark an order paid by itself: only a verified webhook or a server-side provider read whose amount and currency match the attempt does (architecture 9.1).
+
+| Method | Path | Body | Result |
+|---|---|---|---|
+| GET | `/checkout/payment-options` | `country`, `email?` | `{ options: [{ gateway, label, methods: [{ code, label }], available, payment_currency, payment_amount, display_currency, display_amount, notice }] }`. Only eligible gateways are listed. `notice`: null, `charged_in_payment_currency` (the gateway charges another currency than the display currency, for example PayPal for an EGP, SAR or AED shopper), or `payment_currency_below_margin` with `available: false`. Errors as for validate. Advisory: place-order re-checks everything. |
+| POST | `/checkout/orders/{public_id}/retry-payment` | `gateway?`, `method?` | 201 `{ next }`. A new attempt on the order's gateway with the frozen snapshot. 409 `order_not_payable` (not `pending_payment`, or already paid), `order_expired`, `payment_attempts_exhausted` (`orders.max_payment_attempts`, default 5); 422 `gateway_change_unsupported` (another gateway: place the order again), `gateway_not_eligible`; 503 `gateway_unavailable` when the provider could not create it. |
+| POST | `/checkout/orders/{public_id}/verify-payment` | | `{ public_id, status, payment_status, is_final }` after a server-side read of the latest attempt. For the return page. |
+| POST | `/checkout/orders/{public_id}/paypal/capture` | | Same shape. Server capture of an approved PayPal order (`PayPal-Request-Id: pay_capture:{payment}`); paid only on capture `COMPLETED`. 422 `capability_not_supported` for other gateways. |
+
+`next` shapes: Stripe `{ payment_public_id, gateway, type: "stripe", client_secret }`; PayPal `{ ..., type: "paypal", provider_order_id, approve_url }`; Paymob `{ ..., type: "redirect", redirect_url }` (Unified Checkout with the public key and the intention's client secret). Publishable values only.
 
 ## 4. Customer JSON
 
@@ -319,19 +332,26 @@ Rules worth knowing:
 | `digital-codes/import` | `POST { product_variant_id, codes: [{ code, pin?, redemption_url?, expires_at? }] }` up to 1000. Duplicates are rejected by position (`rejected: [{ index, reason }]`), never echoed | `digital_codes.import` |
 | `digital-codes/{public_id}/reveal` | `POST { reason }`: staff reveal, audited, `no-store` | `digital_codes.reveal` (explicit grant) |
 
+### 5c. Built payment admin routes (M10)
+
+| Resource | Routes | Permission |
+|---|---|---|
+| `orders/{public_id}/refunds` | `POST { unit_ids: [unit public ids], reason: undelivered/customer_request/fraud/admin, note }`, 30 per minute. Staff refund of chosen units (BD4 admin discretion; failed or delivered units). The order enters `refund_pending` through the state machine (from `completed`, `partially_refunded` or `manual_review`). 201 `{ public_id, status, reason, destination, amount: { amount, currency }, amount_base, failure_reason, note, created_at, completed_at }`; the refund is then sent to the provider (`refund:{public_id}` key). 409 `refund_duplicate` (a unit already refunded), `refund_not_allowed`, `refund_in_progress` (Paymob, one at a time), `refund_exceeds_payment`; 422 `refund_units_invalid`, `refund_not_supported` | `refunds.create` |
+
+Undelivered units are refunded automatically by the system (BD4 default); there is no route for that. Gateway configuration and write-only credential routes are M15; until then gateways are configured in the database (seeded inactive, so nothing is eligible).
+
 Not built: `GET supplier-mappings/suggestions`, `POST supplier-mappings/bulk` (M14), and `POST /webhooks/suppliers/{key}`: Reloadly's webhook signature is `UNVERIFIED`, so polling is the only path.
 
 ## 6. Webhooks
 
 | Path | Verification | Response |
 |---|---|---|
-| `POST /webhooks/stripe` | `Stripe-Signature` | 200 on stored or duplicate, 400 on bad signature |
-| `POST /webhooks/paypal` | Offline certificate verification | Same |
-| `POST /webhooks/paymob` | HMAC-SHA512 | Same |
-| `GET /payments/paymob/return` | HMAC, display only | Redirect to status page |
-| `POST /webhooks/suppliers/{key}` | Per adapter; advisory only | 200 |
+| `POST /webhooks/stripe` | `Stripe-Signature` over the raw body (SDK, 5-minute tolerance, rotated secrets) | 200 `{ success, duplicate }` on stored or duplicate, 400 `invalid_signature` on a bad or missing signature |
+| `POST /webhooks/paypal` | `POST /v1/notifications/verify-webhook-signature` with the raw event | Same; 503 `verification_unavailable` when PayPal's verification API cannot be reached, so PayPal retries |
+| `POST /webhooks/paymob` | HMAC-SHA512 over the 20 fields; `hmac` from the query string, else the body | Same |
+| `POST /webhooks/suppliers/{key}` | Per adapter; advisory only | Not built |
 
-All excluded from CSRF. Raw body preserved. No sessions.
+Built in M10 (payment rows). Outside the `web` group: no session, cookies or CSRF; `webhooks` limiter (600/min per IP). A valid event is stored once in `payment_webhooks` (unique per gateway and event id; payload encrypted; signature headers not kept), then processed on the `webhooks` queue: the payment is found by provider reference and re-read from the provider before anything changes. A bad signature is not stored; it is recorded in `security_events`. Not built: `GET /payments/paymob/return` (the provider redirects to the M12 return page at `PAYMENTS_RETURN_URL`, which calls verify-payment).
 
 ## 7. Automation API
 

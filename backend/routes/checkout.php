@@ -4,6 +4,7 @@ use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\GuestOrderCodeController;
 use App\Http\Controllers\Storefront\GuestOrderController;
+use App\Http\Controllers\Storefront\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -25,6 +26,10 @@ Route::prefix('checkout')->name('checkout.')->group(function (): void {
         Route::post('/validate', [CheckoutController::class, 'check'])->name('validate');
         Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('place-order');
         Route::get('/orders/{orderPublicId}/status', [CheckoutController::class, 'status'])->name('orders.status');
+        Route::get('/payment-options', [PaymentController::class, 'options'])->name('payment-options');
+        Route::post('/orders/{orderPublicId}/retry-payment', [PaymentController::class, 'retry'])->name('orders.retry-payment');
+        Route::post('/orders/{orderPublicId}/verify-payment', [PaymentController::class, 'verify'])->name('orders.verify-payment');
+        Route::post('/orders/{orderPublicId}/paypal/capture', [PaymentController::class, 'capture'])->name('orders.paypal.capture');
     });
 
     Route::get('/guest/orders/{orderPublicId}/access', [GuestOrderCodeController::class, 'access'])

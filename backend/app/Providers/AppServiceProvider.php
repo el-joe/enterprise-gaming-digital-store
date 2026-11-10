@@ -2,16 +2,23 @@
 
 namespace App\Providers;
 
+use App\Domains\Analytics\Listeners\RecordPurchaseEvent;
 use App\Domains\Audit\Enums\SecurityEventSeverity;
 use App\Domains\Audit\Services\SecurityEventRecorder;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
 use App\Domains\Orders\Events\OrderStatusChanged;
+use App\Domains\Orders\Listeners\RecognizeOrderFinancials;
 use App\Domains\Orders\Listeners\SendFulfilmentNotifications;
 use App\Domains\Orders\Models\Order;
+use App\Domains\Payments\Contracts\GeoIpResolver;
 use App\Domains\Payments\Contracts\PaymentCurrencyResolver;
-use App\Domains\Payments\Services\UnavailablePaymentCurrencyResolver;
+use App\Domains\Payments\Listeners\RefundUndeliveredUnits;
+use App\Domains\Payments\Services\EligiblePaymentCurrencyResolver;
+use App\Domains\Payments\Services\HeaderGeoIpResolver;
+use App\Domains\Payments\Services\NullGeoIpResolver;
+use App\Domains\Payments\Services\PaymentGatewayRegistry;
 use App\Domains\Promotions\Contracts\CheckoutCoupons;
 use App\Domains\Promotions\Services\UnavailableCheckoutCoupons;
 use App\Domains\Shared\Models\MorphMap;
@@ -34,9 +41,13 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(ExchangeRateProvider::class, OpenExchangeRatesProvider::class);
 
-        // Fail-closed until M10 (payment currency and eligibility) and M11 (coupon limits) bind real implementations.
-        $this->app->bind(PaymentCurrencyResolver::class, UnavailablePaymentCurrencyResolver::class);
+        // M10: payment currency through eligibility (default deny). Coupons stay fail-closed until M11.
+        $this->app->bind(PaymentCurrencyResolver::class, EligiblePaymentCurrencyResolver::class);
         $this->app->bind(CheckoutCoupons::class, UnavailableCheckoutCoupons::class);
+        $this->app->singleton(PaymentGatewayRegistry::class);
+        $this->app->bind(GeoIpResolver::class, static fn (): GeoIpResolver => config('payments.geoip.driver') === 'header'
+            ? new HeaderGeoIpResolver((string) config('payments.geoip.header'))
+            : new NullGeoIpResolver);
 
         $this->app->singleton(SupplierAdapterRegistry::class);
     }
@@ -53,6 +64,9 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(OrderStatusChanged::class, StartFulfilmentWhenPaid::class);
         Event::listen(OrderStatusChanged::class, SendFulfilmentNotifications::class);
+        Event::listen(OrderStatusChanged::class, RefundUndeliveredUnits::class);
+        Event::listen(OrderStatusChanged::class, RecognizeOrderFinancials::class);
+        Event::listen(OrderStatusChanged::class, RecordPurchaseEvent::class);
     }
 
     private function configureRateLimiting(): void
@@ -92,6 +106,7 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perHour((int) config('fulfillment.reveal_per_hour'))->by('code-reveal|'.$viewer);
         });
+        RateLimiter::for('webhooks', static fn (Request $request): Limit => Limit::perMinute(600)->by('webhooks|'.$request->ip()));
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }
