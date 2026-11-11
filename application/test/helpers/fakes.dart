@@ -85,6 +85,7 @@ class FakeAuthRepository implements AuthRepository {
   final twoFactorCalls = <({String token, String? code, String? recovery})>[];
   final registerCalls = <Map<String, String>>[];
   int logoutCalls = 0;
+  int logoutAllCalls = 0;
   int meCalls = 0;
 
   Result<T> _signIn<T>(Result<T> result) {
@@ -154,7 +155,11 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Result<void>> logoutAll() => logout();
+  Future<Result<void>> logoutAll() async {
+    logoutAllCalls++;
+    onSignedOut?.call();
+    return logoutResult;
+  }
 
   @override
   Future<Result<void>> refresh() async => const Ok(null);

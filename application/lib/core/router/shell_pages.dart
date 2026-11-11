@@ -1,17 +1,10 @@
-import 'dart:async';
-
 import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/router/routes.dart';
-import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
-import 'package:application/features/auth/presentation/widgets/account_card.dart';
 import 'package:application/features/cart/cart_providers.dart';
-import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
-import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/widgets/app_bottom_nav.dart';
 import 'package:application/shared/widgets/app_button.dart';
-import 'package:application/shared/widgets/app_list_tile.dart';
 import 'package:application/shared/widgets/brand_logo.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:application/shared/widgets/state_views.dart';
@@ -71,7 +64,7 @@ class MainShell extends ConsumerWidget {
   }
 }
 
-/// A screen whose milestone is still to come (the refund request form, M-A17): its title and a "coming in the next update" note. No fake data.
+/// A screen whose milestone is still to come (refund request, notifications and support, M-A17): its title and a "coming in the next update" note. No fake data.
 class ComingSoonPage extends StatelessWidget {
   const ComingSoonPage({required this.title, this.root = true, super.key});
 
@@ -101,76 +94,6 @@ class ComingSoonPage extends StatelessWidget {
             body: l10n.comingSoonBody,
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Account tab until M-A16: the account card (sign in, biometric unlock switch, sign out), the
-/// wallet (M-A15, hidden when `features.wallet_enabled` is off), the display currency (03.5),
-/// guest order access (M-A14) and the language.
-class AccountTabPage extends ConsumerWidget {
-  const AccountTabPage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final currency = ref.watch(displayCurrencyProvider);
-    final walletEnabled = ref.watch(walletEnabledProvider);
-    final arabic = AppLocales.isRtl(Localizations.localeOf(context));
-    return Scaffold(
-      appBar: MobileAppBar(
-        title: l10n.accountTitle,
-        leading: AppBarLeading.none,
-      ),
-      body: ListView(
-        padding: EdgeInsetsDirectional.all(
-          LayoutTokens.marginFor(MediaQuery.sizeOf(context).width),
-        ),
-        children: [
-          const AccountCard(),
-          const SizedBox(height: Spacing.s4),
-          if (walletEnabled)
-            AppListTile(
-              key: const ValueKey('account-wallet'),
-              title: l10n.walletTitle,
-              subtitle: l10n.walletAccountSubtitle,
-              icon: Icons.account_balance_wallet_outlined,
-              showChevron: true,
-              onTap: () => unawaited(context.push(Routes.wallet.path)),
-            ),
-          AppListTile(
-            title: l10n.displayCurrencyLabel,
-            icon: Icons.payments_outlined,
-            value: currency,
-            showChevron: true,
-            onTap: () => unawaited(showCurrencySheet(context)),
-          ),
-          AppListTile(
-            title: l10n.guestAccessEntry,
-            subtitle: l10n.guestAccessEntryBody,
-            icon: Icons.mark_email_read_outlined,
-            showChevron: true,
-            onTap: () => unawaited(context.push(Routes.guestAccess.path)),
-          ),
-          AppListTile(
-            title: l10n.languageSetting,
-            icon: Icons.language,
-            value: arabic ? l10n.languageArabic : l10n.languageEnglish,
-          ),
-          const SizedBox(height: Spacing.s3),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: AppButton(
-              label: l10n.switchLanguage,
-              semanticsHint: l10n.switchLanguageHint,
-              variant: AppButtonVariant.secondary,
-              onPressed: () => ref
-                  .read(appLocaleProvider.notifier)
-                  .select(arabic ? AppLocales.english : AppLocales.arabic),
-            ),
-          ),
-        ],
       ),
     );
   }

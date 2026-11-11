@@ -56,7 +56,8 @@ final class ProfileUpdate {
   };
 }
 
-/// Sign-ins revoked by a password change (the caller stays signed in).
+/// Sign-ins revoked by a password change or by "sign out other devices" (the caller stays
+/// signed in).
 @freezed
 abstract class PasswordChangeResult with _$PasswordChangeResult {
   const factory PasswordChangeResult({

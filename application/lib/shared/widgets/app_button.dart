@@ -1,6 +1,9 @@
+import 'package:application/core/theme/theme_extensions.dart';
 import 'package:flutter/material.dart';
 
-enum AppButtonVariant { primary, secondary, ghost }
+/// [danger] is the destructive filled button of the M-A8 frames (sign out, turn off two-step
+/// verification, sign out a device): `status/danger-solid` with ink text.
+enum AppButtonVariant { primary, secondary, ghost, danger }
 
 /// Token-styled button with the key-cut button shape (styles come from `AppTheme`). [expand]
 /// fills the width (sticky footers); [loading] keeps the label for screen readers and shows a
@@ -69,6 +72,14 @@ class AppButton extends StatelessWidget {
       AppButtonVariant.ghost => TextButton(
         onPressed: pressed,
         style: style,
+        child: child,
+      ),
+      AppButtonVariant.danger => FilledButton(
+        onPressed: pressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: context.colors.statusDangerSolid,
+          foregroundColor: context.colors.contentInverse,
+        ).merge(style),
         child: child,
       ),
     };

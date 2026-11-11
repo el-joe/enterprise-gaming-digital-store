@@ -48,6 +48,17 @@ class AccountRepositoryImpl implements AccountRepository {
       guardRequest(() => _remote.revokeDevice(id));
 
   @override
+  Future<Result<PasswordChangeResult>> signOutOtherDevices({
+    required String currentPassword,
+  }) => guardRequest(() async {
+    final signedOut = await _remote.signOutOthers(currentPassword);
+    return PasswordChangeResult(
+      mobileFamilies: signedOut.mobileFamilies,
+      webSessions: signedOut.webSessions,
+    );
+  });
+
+  @override
   Future<Result<void>> resendVerificationEmail() =>
       guardRequest(_remote.resendVerificationEmail);
 }

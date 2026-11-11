@@ -18,5 +18,11 @@ abstract interface class AccountRepository {
   /// 409 `current_device` for this device (use logout instead), 404 for an unknown id.
   Future<Result<void>> revokeDevice(String id);
 
+  /// Signs every other app sign-in and browser session out; this one stays signed in and the
+  /// password does not change. 422 `errors.current_password` for a wrong password.
+  Future<Result<PasswordChangeResult>> signOutOtherDevices({
+    required String currentPassword,
+  });
+
   Future<Result<void>> resendVerificationEmail();
 }

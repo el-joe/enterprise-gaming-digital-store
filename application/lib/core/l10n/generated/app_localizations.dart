@@ -116,18 +116,6 @@ abstract class AppLocalizations {
   /// **'{flavor, select, dev{Development} staging{Staging} other{Production}}'**
   String environmentBadge(String flavor);
 
-  /// Button that switches the app to the other language, written in that language.
-  ///
-  /// In en, this message translates to:
-  /// **'العربية'**
-  String get switchLanguage;
-
-  /// Screen reader hint of the language switch button.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch the app language to Arabic'**
-  String get switchLanguageHint;
-
   /// Title shown while the store is in maintenance.
   ///
   /// In en, this message translates to:
@@ -817,30 +805,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'re signed out.'**
   String get signedOutMessage;
-
-  /// Account card line on home.
-  ///
-  /// In en, this message translates to:
-  /// **'Signed in as {email}'**
-  String homeSignedInAs(String email);
-
-  /// Account card line before the email is known.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'re signed in.'**
-  String get homeSignedIn;
-
-  /// Account card line when signed out.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to see your orders and codes.'**
-  String get homeSignedOut;
-
-  /// Account card title on home.
-  ///
-  /// In en, this message translates to:
-  /// **'Account'**
-  String get homeAccountTitle;
 
   /// Biometric offer title.
   ///
@@ -3584,6 +3548,672 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Store credit · balance {amount}'**
   String checkoutWalletBalance(String amount);
+
+  /// Account hub header when signed out.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account'**
+  String get accountSignedOutTitle;
+
+  /// Account hub text when signed out.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your orders, codes and store credit.'**
+  String get accountSignedOutBody;
+
+  /// Account hub header for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {name}, {email}'**
+  String accountHeaderSemantics(String name, String email);
+
+  /// Badge: email verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get accountVerifiedBadge;
+
+  /// Badge: email not verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get accountUnverifiedBadge;
+
+  /// Account hub row.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get accountNotifications;
+
+  /// Account hub row.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get accountSupport;
+
+  /// Account hub row and Profile title.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get accountProfile;
+
+  /// Account hub row and Security title.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get accountSecurity;
+
+  /// Account hub row and Settings title.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get accountSettings;
+
+  /// Security row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification on'**
+  String get accountTwoFactorOn;
+
+  /// Security row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification off'**
+  String get accountTwoFactorOff;
+
+  /// Signed-out hub section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ordered without an account?'**
+  String get accountGuestSection;
+
+  /// Installed app version in Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String appVersionLabel(String version);
+
+  /// Settings section.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get settingsPreferences;
+
+  /// Settings section.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// Settings link.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Sale'**
+  String get settingsTerms;
+
+  /// Settings link.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get settingsPrivacy;
+
+  /// Settings link.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund policy'**
+  String get settingsRefundPolicy;
+
+  /// Settings link.
+  ///
+  /// In en, this message translates to:
+  /// **'Help centre'**
+  String get settingsHelpCentre;
+
+  /// Screen reader hint of a link row.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens in your browser'**
+  String get opensInBrowserHint;
+
+  /// Snackbar after a language change.
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed.'**
+  String get languageChanged;
+
+  /// Profile field.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get profileNameLabel;
+
+  /// Profile field.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get profileEmailLabel;
+
+  /// Profile email helper.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support to change your email.'**
+  String get profileEmailHelper;
+
+  /// Profile field.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional)'**
+  String get profilePhoneLabel;
+
+  /// Profile phone helper.
+  ///
+  /// In en, this message translates to:
+  /// **'With the country code, for example +20 100 123 4567.'**
+  String get profilePhoneHelper;
+
+  /// Profile field.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get profileCountryLabel;
+
+  /// Profile section.
+  ///
+  /// In en, this message translates to:
+  /// **'Language and currency'**
+  String get profileRegionalSection;
+
+  /// Profile save button.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get profileSave;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved.'**
+  String get profileSaved;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to save.'**
+  String get profileUnchanged;
+
+  /// Local check.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at most 120 characters.'**
+  String get profileNameTooLong;
+
+  /// Profile banner title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email isn\'t verified'**
+  String get profileUnverifiedTitle;
+
+  /// Profile banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify it to reveal codes and write reviews. Check your inbox for the link.'**
+  String get profileUnverifiedBody;
+
+  /// Profile country field error.
+  ///
+  /// In en, this message translates to:
+  /// **'Countries couldn\'t be loaded.'**
+  String get profileCountriesFailed;
+
+  /// Title and Security row.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePasswordTitle;
+
+  /// Security row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Signs out your other devices'**
+  String get changePasswordSubtitle;
+
+  /// Field.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPasswordLabel;
+
+  /// Field.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPasswordLabel;
+
+  /// New password helper (customer policy).
+  ///
+  /// In en, this message translates to:
+  /// **'At least 10 characters, different from your current password.'**
+  String get newPasswordHelper;
+
+  /// Field.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get confirmNewPasswordLabel;
+
+  /// Info banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices will be signed out'**
+  String get changePasswordNoticeTitle;
+
+  /// Info banner.
+  ///
+  /// In en, this message translates to:
+  /// **'This device stays signed in.'**
+  String get changePasswordNoticeBody;
+
+  /// Button.
+  ///
+  /// In en, this message translates to:
+  /// **'Update password'**
+  String get changePasswordAction;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed. Your other devices were signed out.'**
+  String get passwordChanged;
+
+  /// Banner after a password change when biometric unlock was on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn biometric unlock on again'**
+  String get passwordChangedBiometricTitle;
+
+  /// Banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing your password turned biometric unlock off on every device. Turn it on below if you want it.'**
+  String get passwordChangedBiometricBody;
+
+  /// Security section.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in'**
+  String get securitySignInSection;
+
+  /// Security section.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get securityDevicesSection;
+
+  /// Title and row.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification'**
+  String get twoFactorTitle;
+
+  /// Security row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Off · protect codes with an authenticator app'**
+  String get twoFactorOffSubtitle;
+
+  /// Security row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On · a code from your authenticator app at sign-in'**
+  String get twoFactorOnSubtitle;
+
+  /// Row action.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get twoFactorTurnOn;
+
+  /// Row action.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get twoFactorTurnOff;
+
+  /// Security row and Devices title.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed-in devices'**
+  String get devicesTitle;
+
+  /// Security row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 device} other{{count} devices}}'**
+  String devicesCount(int count);
+
+  /// Info banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Revealing codes asks you to confirm it\'s you'**
+  String get securityRevealNoticeTitle;
+
+  /// Info banner.
+  ///
+  /// In en, this message translates to:
+  /// **'At most every 15 minutes on each device: your password, or biometrics where biometric unlock is on.'**
+  String get securityRevealNoticeBody;
+
+  /// Security button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out everywhere'**
+  String get signOutEverywhere;
+
+  /// Dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out everywhere?'**
+  String get signOutEverywhereTitle;
+
+  /// Dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'Every device, this one included, will need your password to sign in again.'**
+  String get signOutEverywhereBody;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out on every device.'**
+  String get signedOutEverywhere;
+
+  /// Enrolment step 0.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to start. You\'ll need an authenticator app on your phone.'**
+  String get twoFactorPasswordBody;
+
+  /// Enrolment step.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Scan with your authenticator app'**
+  String get twoFactorScanStep;
+
+  /// QR for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code for your authenticator app'**
+  String get twoFactorQrSemantics;
+
+  /// Enrolment key label.
+  ///
+  /// In en, this message translates to:
+  /// **'Or enter this key'**
+  String get twoFactorKeyLabel;
+
+  /// Copy button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy key'**
+  String get twoFactorCopyKey;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Key copied. The clipboard is cleared in 60 seconds.'**
+  String get twoFactorKeyCopied;
+
+  /// Enrolment step.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Enter the 6-digit code'**
+  String get twoFactorCodeStep;
+
+  /// OTP field label.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code from your authenticator app'**
+  String get twoFactorCodeSemantics;
+
+  /// Local check.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6 digits from your app.'**
+  String get twoFactorCodeInvalid;
+
+  /// Note under the key.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this key private. Screenshots are blocked where your phone allows.'**
+  String get twoFactorSecureNote;
+
+  /// Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery codes'**
+  String get recoveryCodesTitle;
+
+  /// Success banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification is on'**
+  String get twoFactorOnBannerTitle;
+
+  /// Success banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Next time you sign in, we\'ll ask for a code.'**
+  String get twoFactorOnBannerBody;
+
+  /// Recovery codes text.
+  ///
+  /// In en, this message translates to:
+  /// **'Save these codes somewhere safe. Each works once if you lose your phone. We will not show them again.'**
+  String get recoveryCodesBody;
+
+  /// Codes for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery codes: {codes}'**
+  String recoveryCodesListSemantics(String codes);
+
+  /// Button.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all'**
+  String get recoveryCodesCopy;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Codes copied. The clipboard is cleared in 60 seconds.'**
+  String get recoveryCodesCopied;
+
+  /// Button.
+  ///
+  /// In en, this message translates to:
+  /// **'I saved my codes'**
+  String get recoveryCodesSaved;
+
+  /// Dialog when leaving the codes.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved your codes?'**
+  String get recoveryCodesLeaveTitle;
+
+  /// Dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'You won\'t see these codes again. Without them, losing your phone can lock you out.'**
+  String get recoveryCodesLeaveBody;
+
+  /// Dialog: stay.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to codes'**
+  String get recoveryCodesShowAgain;
+
+  /// Already enabled state.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification is already on'**
+  String get twoFactorAlreadyOnTitle;
+
+  /// Already enabled state.
+  ///
+  /// In en, this message translates to:
+  /// **'To set it up again, turn it off first.'**
+  String get twoFactorAlreadyOnBody;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification is on.'**
+  String get twoFactorEnabled;
+
+  /// Sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off two-step verification?'**
+  String get twoFactorDisableTitle;
+
+  /// Sheet body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will be protected by your password only. Enter it to continue.'**
+  String get twoFactorDisableBody;
+
+  /// Sheet cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it on'**
+  String get twoFactorKeepOn;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification is off.'**
+  String get twoFactorDisabled;
+
+  /// Devices title.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get devicesPageTitle;
+
+  /// Device row.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get deviceThisDevice;
+
+  /// Device row trailing.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get deviceCurrentBadge;
+
+  /// Device row.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used {date}'**
+  String deviceLastUsed(String date);
+
+  /// Device row.
+  ///
+  /// In en, this message translates to:
+  /// **'IP {ip}'**
+  String deviceIp(String ip);
+
+  /// Device without a name.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed device'**
+  String get deviceUnnamed;
+
+  /// Browser session.
+  ///
+  /// In en, this message translates to:
+  /// **'Web browser'**
+  String get deviceWebBrowser;
+
+  /// Devices note.
+  ///
+  /// In en, this message translates to:
+  /// **'Web sessions are not listed here.'**
+  String get devicesWebNotListed;
+
+  /// Device action.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get deviceSignOut;
+
+  /// Device action for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out {name}'**
+  String deviceSignOutSemantics(String name);
+
+  /// Dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out “{name}”?'**
+  String deviceRevokeTitle(String name);
+
+  /// Dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'That device will need your password to sign in again.'**
+  String get deviceRevokeBody;
+
+  /// Dialog action.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out device'**
+  String get deviceRevokeAction;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was signed out.'**
+  String deviceSignedOut(String name);
+
+  /// Devices note.
+  ///
+  /// In en, this message translates to:
+  /// **'No other device is signed in.'**
+  String get devicesOnlyThis;
+
+  /// Button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of all other devices'**
+  String get signOutOthersAction;
+
+  /// Sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of all other devices?'**
+  String get signOutOthersTitle;
+
+  /// Sheet body.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password. This device stays signed in.'**
+  String get signOutOthersBody;
+
+  /// Snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Your other devices were signed out.'**
+  String get signOutOthersDone;
+
+  /// Display currency row value when the server picks the currency (owner decision 1: the country's currency, else USD).
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get displayCurrencyAutomatic;
 }
 
 class _AppLocalizationsDelegate

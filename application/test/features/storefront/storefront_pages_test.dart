@@ -223,8 +223,8 @@ void main() {
         expect(find.text(l10n.ordersTitle), findsWidgets);
         await tester.tap(find.text(l10n.navAccount));
         await tester.pumpAndSettle();
-        expect(find.text(l10n.homeAccountTitle), findsWidgets);
-        expect(find.text(l10n.displayCurrencyLabel), findsOneWidget);
+        expect(find.text(l10n.accountTitle), findsWidgets);
+        expect(find.text(l10n.accountSettings), findsOneWidget);
         await tester.tap(find.text(l10n.navHome));
         await tester.pumpAndSettle();
         expect(find.byKey(HomeScreen.pageKey), findsOneWidget);

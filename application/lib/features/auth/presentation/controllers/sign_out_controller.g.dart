@@ -50,7 +50,7 @@ final class SignOutControllerProvider
   }
 }
 
-String _$signOutControllerHash() => r'b3cde7ad3598ab4d423c93b2c6b897464e97e0a0';
+String _$signOutControllerHash() => r'b351567c096f8023925be73cd89c474679f9c3d2';
 
 /// Sign out (17.4): revokes this device's sign-in (`POST /mobile/auth/logout`), wipes secure
 /// storage (also when the call fails), deletes the local biometric key (the server key died with

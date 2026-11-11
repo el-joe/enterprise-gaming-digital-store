@@ -52,6 +52,21 @@ class AccountRemoteDataSource {
     await _dio.delete<Object?>('$base/devices/${Uri.encodeComponent(id)}');
   }
 
+  /// `POST /devices/sign-out-others` (4d): every other sign-in ends; this one stays.
+  Future<SignedOutDto> signOutOthers(String currentPassword) async {
+    final response = await _dio.post<Object?>(
+      '$base/devices/sign-out-others',
+      data: {'current_password': currentPassword},
+      options: Options(
+        extra: {RequestExtras.sensitive: true, RequestExtras.noRetry: true},
+      ),
+    );
+    return decodeEnvelope(
+      response.data,
+      (data) => SignedOutDto.fromJson(objectAt(data, 'signed_out')),
+    ).data;
+  }
+
   Future<void> resendVerificationEmail() async {
     await _dio.post<Object?>(
       '$base/email/verification-notification',

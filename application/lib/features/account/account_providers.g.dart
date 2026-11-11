@@ -104,8 +104,14 @@ final class AccountRepositoryProvider
 
 String _$accountRepositoryHash() => r'8d84815f49173b78281da2be3b5e50c5899d1eff';
 
+/// Kept alive: its callbacks run after the profile call returns (an auto-disposed provider would
+/// be gone by then, M-A16 fix).
+
 @ProviderFor(updateRegionalSettings)
 final updateRegionalSettingsProvider = UpdateRegionalSettingsProvider._();
+
+/// Kept alive: its callbacks run after the profile call returns (an auto-disposed provider would
+/// be gone by then, M-A16 fix).
 
 final class UpdateRegionalSettingsProvider
     extends
@@ -115,13 +121,15 @@ final class UpdateRegionalSettingsProvider
           UpdateRegionalSettings
         >
     with $Provider<UpdateRegionalSettings> {
+  /// Kept alive: its callbacks run after the profile call returns (an auto-disposed provider would
+  /// be gone by then, M-A16 fix).
   UpdateRegionalSettingsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'updateRegionalSettingsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -150,4 +158,4 @@ final class UpdateRegionalSettingsProvider
 }
 
 String _$updateRegionalSettingsHash() =>
-    r'7927fae6a14c78907ab57eed26230d125d81b230';
+    r'363254ad479c6b976434344f5a42c251864e70a4';

@@ -26,12 +26,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get switchLanguage => 'English';
-
-  @override
-  String get switchLanguageHint => 'تغيير لغة التطبيق إلى الإنجليزية';
-
-  @override
   String get maintenanceTitle => 'سنعود قريبًا';
 
   @override
@@ -432,20 +426,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signedOutMessage => 'تم تسجيل خروجك.';
-
-  @override
-  String homeSignedInAs(String email) {
-    return 'مسجّل الدخول باسم $email';
-  }
-
-  @override
-  String get homeSignedIn => 'أنت مسجّل الدخول.';
-
-  @override
-  String get homeSignedOut => 'سجّل الدخول لرؤية طلباتك ورموزك.';
-
-  @override
-  String get homeAccountTitle => 'الحساب';
 
   @override
   String get biometricOfferTitle => 'فتح القفل بالبصمة؟';
@@ -2084,4 +2064,384 @@ class AppLocalizationsAr extends AppLocalizations {
   String checkoutWalletBalance(String amount) {
     return 'رصيد المتجر · الرصيد $amount';
   }
+
+  @override
+  String get accountSignedOutTitle => 'حسابك';
+
+  @override
+  String get accountSignedOutBody =>
+      'سجّل الدخول لرؤية طلباتك ورموزك ورصيد المتجر.';
+
+  @override
+  String accountHeaderSemantics(String name, String email) {
+    return 'مسجّل الدخول باسم $name، $email';
+  }
+
+  @override
+  String get accountVerifiedBadge => 'موثّق';
+
+  @override
+  String get accountUnverifiedBadge => 'غير موثّق';
+
+  @override
+  String get accountNotifications => 'الإشعارات';
+
+  @override
+  String get accountSupport => 'الدعم';
+
+  @override
+  String get accountProfile => 'الملف الشخصي';
+
+  @override
+  String get accountSecurity => 'الأمان';
+
+  @override
+  String get accountSettings => 'الإعدادات';
+
+  @override
+  String get accountTwoFactorOn => 'التحقق بخطوتين مفعّل';
+
+  @override
+  String get accountTwoFactorOff => 'التحقق بخطوتين غير مفعّل';
+
+  @override
+  String get accountGuestSection => 'طلبت دون حساب؟';
+
+  @override
+  String appVersionLabel(String version) {
+    return 'الإصدار $version';
+  }
+
+  @override
+  String get settingsPreferences => 'التفضيلات';
+
+  @override
+  String get settingsAbout => 'حول';
+
+  @override
+  String get settingsTerms => 'شروط البيع';
+
+  @override
+  String get settingsPrivacy => 'سياسة الخصوصية';
+
+  @override
+  String get settingsRefundPolicy => 'سياسة الاسترداد';
+
+  @override
+  String get settingsHelpCentre => 'مركز المساعدة';
+
+  @override
+  String get opensInBrowserHint => 'يُفتح في المتصفح';
+
+  @override
+  String get languageChanged => 'تم تغيير اللغة.';
+
+  @override
+  String get profileNameLabel => 'الاسم الكامل';
+
+  @override
+  String get profileEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get profileEmailHelper => 'تواصل مع الدعم لتغيير بريدك الإلكتروني.';
+
+  @override
+  String get profilePhoneLabel => 'الهاتف (اختياري)';
+
+  @override
+  String get profilePhoneHelper => 'مع رمز الدولة، مثل ‎+20 100 123 4567.';
+
+  @override
+  String get profileCountryLabel => 'الدولة';
+
+  @override
+  String get profileRegionalSection => 'اللغة والعملة';
+
+  @override
+  String get profileSave => 'حفظ التغييرات';
+
+  @override
+  String get profileSaved => 'تم حفظ الملف الشخصي.';
+
+  @override
+  String get profileUnchanged => 'لا توجد تغييرات لحفظها.';
+
+  @override
+  String get profileNameTooLong => 'استخدم 120 حرفًا على الأكثر.';
+
+  @override
+  String get profileUnverifiedTitle => 'بريدك الإلكتروني غير موثّق';
+
+  @override
+  String get profileUnverifiedBody =>
+      'وثّقه لتتمكن من عرض الرموز وكتابة التقييمات. ابحث عن الرابط في بريدك.';
+
+  @override
+  String get profileCountriesFailed => 'تعذّر تحميل الدول.';
+
+  @override
+  String get changePasswordTitle => 'تغيير كلمة المرور';
+
+  @override
+  String get changePasswordSubtitle => 'يسجّل خروج أجهزتك الأخرى';
+
+  @override
+  String get currentPasswordLabel => 'كلمة المرور الحالية';
+
+  @override
+  String get newPasswordLabel => 'كلمة المرور الجديدة';
+
+  @override
+  String get newPasswordHelper =>
+      '10 أحرف على الأقل، ومختلفة عن كلمة المرور الحالية.';
+
+  @override
+  String get confirmNewPasswordLabel => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get changePasswordNoticeTitle => 'سيتم تسجيل خروج الأجهزة الأخرى';
+
+  @override
+  String get changePasswordNoticeBody => 'سيبقى هذا الجهاز مسجّل الدخول.';
+
+  @override
+  String get changePasswordAction => 'تحديث كلمة المرور';
+
+  @override
+  String get passwordChanged =>
+      'تم تغيير كلمة المرور. تم تسجيل خروج أجهزتك الأخرى.';
+
+  @override
+  String get passwordChangedBiometricTitle => 'فعّل فتح القفل بالبصمة مرة أخرى';
+
+  @override
+  String get passwordChangedBiometricBody =>
+      'أدى تغيير كلمة المرور إلى إيقاف فتح القفل بالبصمة على جميع الأجهزة. فعّله أدناه إن أردت.';
+
+  @override
+  String get securitySignInSection => 'تسجيل الدخول';
+
+  @override
+  String get securityDevicesSection => 'الأجهزة';
+
+  @override
+  String get twoFactorTitle => 'التحقق بخطوتين';
+
+  @override
+  String get twoFactorOffSubtitle => 'غير مفعّل · احمِ رموزك بتطبيق مصادقة';
+
+  @override
+  String get twoFactorOnSubtitle =>
+      'مفعّل · رمز من تطبيق المصادقة عند تسجيل الدخول';
+
+  @override
+  String get twoFactorTurnOn => 'تفعيل';
+
+  @override
+  String get twoFactorTurnOff => 'إيقاف';
+
+  @override
+  String get devicesTitle => 'الأجهزة المسجّلة';
+
+  @override
+  String devicesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count جهاز',
+      many: '$count جهازًا',
+      few: '$count أجهزة',
+      two: 'جهازان',
+      one: 'جهاز واحد',
+      zero: 'لا أجهزة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get securityRevealNoticeTitle => 'عرض الرموز يتطلب تأكيد هويتك';
+
+  @override
+  String get securityRevealNoticeBody =>
+      'مرة كل 15 دقيقة على الأكثر على كل جهاز: كلمة المرور، أو البصمة حيث يكون فتح القفل بالبصمة مفعّلًا.';
+
+  @override
+  String get signOutEverywhere => 'تسجيل الخروج من كل مكان';
+
+  @override
+  String get signOutEverywhereTitle => 'تسجيل الخروج من كل مكان؟';
+
+  @override
+  String get signOutEverywhereBody =>
+      'ستحتاج كل الأجهزة، ومنها هذا الجهاز، إلى كلمة المرور لتسجيل الدخول مرة أخرى.';
+
+  @override
+  String get signedOutEverywhere => 'تم تسجيل الخروج من كل الأجهزة.';
+
+  @override
+  String get twoFactorPasswordBody =>
+      'أدخل كلمة المرور للبدء. ستحتاج إلى تطبيق مصادقة على هاتفك.';
+
+  @override
+  String get twoFactorScanStep => '1. امسح الرمز بتطبيق المصادقة';
+
+  @override
+  String get twoFactorQrSemantics => 'رمز QR لتطبيق المصادقة';
+
+  @override
+  String get twoFactorKeyLabel => 'أو أدخل هذا المفتاح';
+
+  @override
+  String get twoFactorCopyKey => 'نسخ المفتاح';
+
+  @override
+  String get twoFactorKeyCopied =>
+      'تم نسخ المفتاح. سيتم مسح الحافظة بعد 60 ثانية.';
+
+  @override
+  String get twoFactorCodeStep => '2. أدخل الرمز المكوّن من 6 أرقام';
+
+  @override
+  String get twoFactorCodeSemantics =>
+      'الرمز المكوّن من 6 أرقام من تطبيق المصادقة';
+
+  @override
+  String get twoFactorCodeInvalid => 'أدخل الأرقام الستة من التطبيق.';
+
+  @override
+  String get twoFactorSecureNote =>
+      'احتفظ بهذا المفتاح لنفسك. لقطات الشاشة محظورة حيث يسمح هاتفك.';
+
+  @override
+  String get recoveryCodesTitle => 'رموز الاسترداد';
+
+  @override
+  String get twoFactorOnBannerTitle => 'التحقق بخطوتين مفعّل';
+
+  @override
+  String get twoFactorOnBannerBody =>
+      'سنطلب منك رمزًا عند تسجيل الدخول في المرة القادمة.';
+
+  @override
+  String get recoveryCodesBody =>
+      'احفظ هذه الرموز في مكان آمن. كل رمز يعمل مرة واحدة إذا فقدت هاتفك. لن نعرضها مرة أخرى.';
+
+  @override
+  String recoveryCodesListSemantics(String codes) {
+    return 'رموز الاسترداد: $codes';
+  }
+
+  @override
+  String get recoveryCodesCopy => 'نسخ الكل';
+
+  @override
+  String get recoveryCodesCopied =>
+      'تم نسخ الرموز. سيتم مسح الحافظة بعد 60 ثانية.';
+
+  @override
+  String get recoveryCodesSaved => 'حفظت الرموز';
+
+  @override
+  String get recoveryCodesLeaveTitle => 'هل حفظت الرموز؟';
+
+  @override
+  String get recoveryCodesLeaveBody =>
+      'لن ترى هذه الرموز مرة أخرى. بدونها قد تفقد الوصول إلى حسابك إذا فقدت هاتفك.';
+
+  @override
+  String get recoveryCodesShowAgain => 'العودة إلى الرموز';
+
+  @override
+  String get twoFactorAlreadyOnTitle => 'التحقق بخطوتين مفعّل بالفعل';
+
+  @override
+  String get twoFactorAlreadyOnBody => 'لإعداده من جديد، أوقفه أولًا.';
+
+  @override
+  String get twoFactorEnabled => 'تم تفعيل التحقق بخطوتين.';
+
+  @override
+  String get twoFactorDisableTitle => 'إيقاف التحقق بخطوتين؟';
+
+  @override
+  String get twoFactorDisableBody =>
+      'سيُحمى حسابك بكلمة المرور فقط. أدخلها للمتابعة.';
+
+  @override
+  String get twoFactorKeepOn => 'إبقاؤه مفعّلًا';
+
+  @override
+  String get twoFactorDisabled => 'تم إيقاف التحقق بخطوتين.';
+
+  @override
+  String get devicesPageTitle => 'الأجهزة';
+
+  @override
+  String get deviceThisDevice => 'هذا الجهاز';
+
+  @override
+  String get deviceCurrentBadge => 'الحالي';
+
+  @override
+  String deviceLastUsed(String date) {
+    return 'آخر استخدام $date';
+  }
+
+  @override
+  String deviceIp(String ip) {
+    return 'IP $ip';
+  }
+
+  @override
+  String get deviceUnnamed => 'جهاز بلا اسم';
+
+  @override
+  String get deviceWebBrowser => 'متصفح ويب';
+
+  @override
+  String get devicesWebNotListed => 'جلسات الويب غير مدرجة هنا.';
+
+  @override
+  String get deviceSignOut => 'تسجيل الخروج';
+
+  @override
+  String deviceSignOutSemantics(String name) {
+    return 'تسجيل خروج $name';
+  }
+
+  @override
+  String deviceRevokeTitle(String name) {
+    return 'تسجيل خروج «$name»؟';
+  }
+
+  @override
+  String get deviceRevokeBody =>
+      'سيحتاج ذلك الجهاز إلى كلمة المرور لتسجيل الدخول مرة أخرى.';
+
+  @override
+  String get deviceRevokeAction => 'تسجيل خروج الجهاز';
+
+  @override
+  String deviceSignedOut(String name) {
+    return 'تم تسجيل خروج $name.';
+  }
+
+  @override
+  String get devicesOnlyThis => 'لا يوجد جهاز آخر مسجّل الدخول.';
+
+  @override
+  String get signOutOthersAction => 'تسجيل الخروج من كل الأجهزة الأخرى';
+
+  @override
+  String get signOutOthersTitle => 'تسجيل الخروج من كل الأجهزة الأخرى؟';
+
+  @override
+  String get signOutOthersBody =>
+      'أدخل كلمة المرور. سيبقى هذا الجهاز مسجّل الدخول.';
+
+  @override
+  String get signOutOthersDone => 'تم تسجيل خروج أجهزتك الأخرى.';
+
+  @override
+  String get displayCurrencyAutomatic => 'تلقائي';
 }

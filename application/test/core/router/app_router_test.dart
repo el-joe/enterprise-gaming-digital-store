@@ -69,7 +69,14 @@ void main() {
       TextDirection.ltr,
     );
 
-    await tester.tap(find.text(en.switchLanguage));
+    // Signed out, the hub offers Settings, where the language sheet is.
+    await tester.tap(find.text(en.accountSettings));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(en.languageSetting));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(ar.languageArabic).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(ar.actionBack).first);
     await tester.pumpAndSettle();
 
     expect(find.text(ar.navHome), findsOneWidget);
@@ -78,9 +85,16 @@ void main() {
       TextDirection.rtl,
     );
 
-    await tester.tap(find.text(ar.switchLanguage));
+    await tester.tap(find.text(ar.accountSettings));
     await tester.pumpAndSettle();
-    expect(find.text(en.navHome), findsOneWidget);
+    await tester.tap(find.text(ar.languageSetting));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(en.languageEnglish).last);
+    await tester.pumpAndSettle();
+    expect(
+      Directionality.of(tester.element(find.text(en.accountSettings).first)),
+      TextDirection.ltr,
+    );
   });
 
   testWidgets('device locale picks Arabic when nothing is saved', (

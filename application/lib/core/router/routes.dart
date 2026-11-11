@@ -100,8 +100,7 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
-  /// Bottom navigation tabs (M-A11). The cart is M-A13 and orders M-A14; the account tab is a
-  /// placeholder until M-A16.
+  /// Bottom navigation tabs (M-A11). The cart is M-A13, orders M-A14 and the account hub M-A16.
   static const browse = AppRoute(name: 'browse', path: '/browse');
 
   static const cart = AppRoute(name: 'cart', path: '/cart');
@@ -175,6 +174,61 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
+  /// Profile (M-A16, 17.2), above the tabs.
+  static const accountProfile = AppRoute(
+    name: 'account-profile',
+    path: '/account/profile',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Settings (17.3): language, display currency, legal links, version and sign out. Public, so
+  /// a signed-out customer can change the language and read the terms.
+  static const accountSettings = AppRoute(
+    name: 'account-settings',
+    path: '/account/settings',
+  );
+
+  /// Notifications (placeholder until M-A17).
+  static const accountNotifications = AppRoute(
+    name: 'account-notifications',
+    path: '/account/notifications',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Support (placeholder until M-A17).
+  static const accountSupport = AppRoute(
+    name: 'account-support',
+    path: '/account/support',
+  );
+
+  /// Security (18.1): two-step verification, password, biometric unlock, devices.
+  static const security = AppRoute(
+    name: 'security',
+    path: '/account/security',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Change password (18.7).
+  static const changePassword = AppRoute(
+    name: 'change-password',
+    path: '/account/security/password',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Turn on two-step verification (18.2, 18.3): key and recovery codes, screen protected.
+  static const twoFactorSetup = AppRoute(
+    name: 'two-factor-setup',
+    path: '/account/security/two-factor',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Signed-in devices (18.5, 18.6).
+  static const devices = AppRoute(
+    name: 'devices',
+    path: '/account/security/devices',
+    access: RouteAccess.signedIn,
+  );
+
   /// Guest order access (11.x): paste the link of the delivery email. Reached from the Account
   /// tab and the signed-out Orders tab; no guest checkout (owner decision 4).
   static const guestAccess = AppRoute(
@@ -212,6 +266,14 @@ abstract final class Routes {
     codeReveal,
     refundRequest,
     wallet,
+    accountProfile,
+    accountSettings,
+    accountNotifications,
+    accountSupport,
+    security,
+    changePassword,
+    twoFactorSetup,
+    devices,
     guestAccess,
     guestOrder,
     guestReveal,

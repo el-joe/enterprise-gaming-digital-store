@@ -344,11 +344,15 @@ void main() {
 
     testWidgets('sign out asks first, then signs out ($lang)', (tester) async {
       final h = await pumpHarness(tester, languageCode: lang, signedIn: true);
-      // The account card lives on the Account tab since M-A11.
+      // Sign out sits at the end of the Account hub (M-A16).
       h.read(appRouterProvider).go(Routes.account.path);
       await tester.pumpAndSettle();
-      expect(find.text(l10n.homeSignedInAs(testUser.email)), findsOneWidget);
-      await tester.tap(_button(l10n.signOutAction));
+      expect(find.text('sara@example.com'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('account-sign-out')),
+        200,
+      );
+      await tester.tap(find.byKey(const ValueKey('account-sign-out')));
       await tester.pumpAndSettle();
       expect(find.text(l10n.signOutConfirmTitle), findsOneWidget);
       await tester.tap(find.widgetWithText(FilledButton, l10n.signOutAction));
@@ -356,7 +360,7 @@ void main() {
       expect(h.auth.logoutCalls, 1);
       expect(h.read(sessionProvider), SessionStatus.signedOut);
       expect(find.text(l10n.signedOutMessage), findsOneWidget);
-      expect(find.text(l10n.homeSignedOut), findsOneWidget);
+      expect(find.text(l10n.accountSignedOutBody), findsOneWidget);
     });
   }
 }

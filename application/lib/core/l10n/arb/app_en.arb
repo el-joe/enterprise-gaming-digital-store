@@ -17,14 +17,6 @@
       }
     }
   },
-  "switchLanguage": "العربية",
-  "@switchLanguage": {
-    "description": "Button that switches the app to the other language, written in that language."
-  },
-  "switchLanguageHint": "Switch the app language to Arabic",
-  "@switchLanguageHint": {
-    "description": "Screen reader hint of the language switch button."
-  },
   "maintenanceTitle": "We'll be right back",
   "@maintenanceTitle": {
     "description": "Title shown while the store is in maintenance."
@@ -540,27 +532,6 @@
   "signedOutMessage": "You're signed out.",
   "@signedOutMessage": {
     "description": "Snackbar after signing out."
-  },
-  "homeSignedInAs": "Signed in as {email}",
-  "@homeSignedInAs": {
-    "description": "Account card line on home.",
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
-  "homeSignedIn": "You're signed in.",
-  "@homeSignedIn": {
-    "description": "Account card line before the email is known."
-  },
-  "homeSignedOut": "Sign in to see your orders and codes.",
-  "@homeSignedOut": {
-    "description": "Account card line when signed out."
-  },
-  "homeAccountTitle": "Account",
-  "@homeAccountTitle": {
-    "description": "Account card title on home."
   },
   "biometricOfferTitle": "Unlock with biometrics?",
   "@biometricOfferTitle": {
@@ -2813,5 +2784,497 @@
         "type": "String"
       }
     }
+  },
+  "accountSignedOutTitle": "Your account",
+  "@accountSignedOutTitle": {
+    "description": "Account hub header when signed out."
+  },
+  "accountSignedOutBody": "Sign in to see your orders, codes and store credit.",
+  "@accountSignedOutBody": {
+    "description": "Account hub text when signed out."
+  },
+  "accountHeaderSemantics": "Signed in as {name}, {email}",
+  "@accountHeaderSemantics": {
+    "description": "Account hub header for screen readers.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "accountVerifiedBadge": "Verified",
+  "@accountVerifiedBadge": {
+    "description": "Badge: email verified."
+  },
+  "accountUnverifiedBadge": "Not verified",
+  "@accountUnverifiedBadge": {
+    "description": "Badge: email not verified."
+  },
+  "accountNotifications": "Notifications",
+  "@accountNotifications": {
+    "description": "Account hub row."
+  },
+  "accountSupport": "Support",
+  "@accountSupport": {
+    "description": "Account hub row."
+  },
+  "accountProfile": "Profile",
+  "@accountProfile": {
+    "description": "Account hub row and Profile title."
+  },
+  "accountSecurity": "Security",
+  "@accountSecurity": {
+    "description": "Account hub row and Security title."
+  },
+  "accountSettings": "Settings",
+  "@accountSettings": {
+    "description": "Account hub row and Settings title."
+  },
+  "accountTwoFactorOn": "Two-step verification on",
+  "@accountTwoFactorOn": {
+    "description": "Security row subtitle."
+  },
+  "accountTwoFactorOff": "Two-step verification off",
+  "@accountTwoFactorOff": {
+    "description": "Security row subtitle."
+  },
+  "accountGuestSection": "Ordered without an account?",
+  "@accountGuestSection": {
+    "description": "Signed-out hub section title."
+  },
+  "appVersionLabel": "Version {version}",
+  "@appVersionLabel": {
+    "description": "Installed app version in Settings.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPreferences": "Preferences",
+  "@settingsPreferences": {
+    "description": "Settings section."
+  },
+  "settingsAbout": "About",
+  "@settingsAbout": {
+    "description": "Settings section."
+  },
+  "settingsTerms": "Terms of Sale",
+  "@settingsTerms": {
+    "description": "Settings link."
+  },
+  "settingsPrivacy": "Privacy policy",
+  "@settingsPrivacy": {
+    "description": "Settings link."
+  },
+  "settingsRefundPolicy": "Refund policy",
+  "@settingsRefundPolicy": {
+    "description": "Settings link."
+  },
+  "settingsHelpCentre": "Help centre",
+  "@settingsHelpCentre": {
+    "description": "Settings link."
+  },
+  "opensInBrowserHint": "Opens in your browser",
+  "@opensInBrowserHint": {
+    "description": "Screen reader hint of a link row."
+  },
+  "languageChanged": "Language changed.",
+  "@languageChanged": {
+    "description": "Snackbar after a language change."
+  },
+  "profileNameLabel": "Full name",
+  "@profileNameLabel": {
+    "description": "Profile field."
+  },
+  "profileEmailLabel": "Email",
+  "@profileEmailLabel": {
+    "description": "Profile field."
+  },
+  "profileEmailHelper": "Contact support to change your email.",
+  "@profileEmailHelper": {
+    "description": "Profile email helper."
+  },
+  "profilePhoneLabel": "Phone (optional)",
+  "@profilePhoneLabel": {
+    "description": "Profile field."
+  },
+  "profilePhoneHelper": "With the country code, for example +20 100 123 4567.",
+  "@profilePhoneHelper": {
+    "description": "Profile phone helper."
+  },
+  "profileCountryLabel": "Country",
+  "@profileCountryLabel": {
+    "description": "Profile field."
+  },
+  "profileRegionalSection": "Language and currency",
+  "@profileRegionalSection": {
+    "description": "Profile section."
+  },
+  "profileSave": "Save changes",
+  "@profileSave": {
+    "description": "Profile save button."
+  },
+  "profileSaved": "Profile saved.",
+  "@profileSaved": {
+    "description": "Snackbar."
+  },
+  "profileUnchanged": "Nothing to save.",
+  "@profileUnchanged": {
+    "description": "Snackbar."
+  },
+  "profileNameTooLong": "Use at most 120 characters.",
+  "@profileNameTooLong": {
+    "description": "Local check."
+  },
+  "profileUnverifiedTitle": "Your email isn't verified",
+  "@profileUnverifiedTitle": {
+    "description": "Profile banner title."
+  },
+  "profileUnverifiedBody": "Verify it to reveal codes and write reviews. Check your inbox for the link.",
+  "@profileUnverifiedBody": {
+    "description": "Profile banner body."
+  },
+  "profileCountriesFailed": "Countries couldn't be loaded.",
+  "@profileCountriesFailed": {
+    "description": "Profile country field error."
+  },
+  "changePasswordTitle": "Change password",
+  "@changePasswordTitle": {
+    "description": "Title and Security row."
+  },
+  "changePasswordSubtitle": "Signs out your other devices",
+  "@changePasswordSubtitle": {
+    "description": "Security row subtitle."
+  },
+  "currentPasswordLabel": "Current password",
+  "@currentPasswordLabel": {
+    "description": "Field."
+  },
+  "newPasswordLabel": "New password",
+  "@newPasswordLabel": {
+    "description": "Field."
+  },
+  "newPasswordHelper": "At least 10 characters, different from your current password.",
+  "@newPasswordHelper": {
+    "description": "New password helper (customer policy)."
+  },
+  "confirmNewPasswordLabel": "Confirm new password",
+  "@confirmNewPasswordLabel": {
+    "description": "Field."
+  },
+  "changePasswordNoticeTitle": "Other devices will be signed out",
+  "@changePasswordNoticeTitle": {
+    "description": "Info banner."
+  },
+  "changePasswordNoticeBody": "This device stays signed in.",
+  "@changePasswordNoticeBody": {
+    "description": "Info banner."
+  },
+  "changePasswordAction": "Update password",
+  "@changePasswordAction": {
+    "description": "Button."
+  },
+  "passwordChanged": "Password changed. Your other devices were signed out.",
+  "@passwordChanged": {
+    "description": "Snackbar."
+  },
+  "passwordChangedBiometricTitle": "Turn biometric unlock on again",
+  "@passwordChangedBiometricTitle": {
+    "description": "Banner after a password change when biometric unlock was on."
+  },
+  "passwordChangedBiometricBody": "Changing your password turned biometric unlock off on every device. Turn it on below if you want it.",
+  "@passwordChangedBiometricBody": {
+    "description": "Banner body."
+  },
+  "securitySignInSection": "Sign-in",
+  "@securitySignInSection": {
+    "description": "Security section."
+  },
+  "securityDevicesSection": "Devices",
+  "@securityDevicesSection": {
+    "description": "Security section."
+  },
+  "twoFactorTitle": "Two-step verification",
+  "@twoFactorTitle": {
+    "description": "Title and row."
+  },
+  "twoFactorOffSubtitle": "Off · protect codes with an authenticator app",
+  "@twoFactorOffSubtitle": {
+    "description": "Security row subtitle."
+  },
+  "twoFactorOnSubtitle": "On · a code from your authenticator app at sign-in",
+  "@twoFactorOnSubtitle": {
+    "description": "Security row subtitle."
+  },
+  "twoFactorTurnOn": "Turn on",
+  "@twoFactorTurnOn": {
+    "description": "Row action."
+  },
+  "twoFactorTurnOff": "Turn off",
+  "@twoFactorTurnOff": {
+    "description": "Row action."
+  },
+  "devicesTitle": "Signed-in devices",
+  "@devicesTitle": {
+    "description": "Security row and Devices title."
+  },
+  "devicesCount": "{count, plural, =1{1 device} other{{count} devices}}",
+  "@devicesCount": {
+    "description": "Security row subtitle.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityRevealNoticeTitle": "Revealing codes asks you to confirm it's you",
+  "@securityRevealNoticeTitle": {
+    "description": "Info banner."
+  },
+  "securityRevealNoticeBody": "At most every 15 minutes on each device: your password, or biometrics where biometric unlock is on.",
+  "@securityRevealNoticeBody": {
+    "description": "Info banner."
+  },
+  "signOutEverywhere": "Sign out everywhere",
+  "@signOutEverywhere": {
+    "description": "Security button."
+  },
+  "signOutEverywhereTitle": "Sign out everywhere?",
+  "@signOutEverywhereTitle": {
+    "description": "Dialog title."
+  },
+  "signOutEverywhereBody": "Every device, this one included, will need your password to sign in again.",
+  "@signOutEverywhereBody": {
+    "description": "Dialog body."
+  },
+  "signedOutEverywhere": "Signed out on every device.",
+  "@signedOutEverywhere": {
+    "description": "Snackbar."
+  },
+  "twoFactorPasswordBody": "Enter your password to start. You'll need an authenticator app on your phone.",
+  "@twoFactorPasswordBody": {
+    "description": "Enrolment step 0."
+  },
+  "twoFactorScanStep": "1. Scan with your authenticator app",
+  "@twoFactorScanStep": {
+    "description": "Enrolment step."
+  },
+  "twoFactorQrSemantics": "QR code for your authenticator app",
+  "@twoFactorQrSemantics": {
+    "description": "QR for screen readers."
+  },
+  "twoFactorKeyLabel": "Or enter this key",
+  "@twoFactorKeyLabel": {
+    "description": "Enrolment key label."
+  },
+  "twoFactorCopyKey": "Copy key",
+  "@twoFactorCopyKey": {
+    "description": "Copy button label."
+  },
+  "twoFactorKeyCopied": "Key copied. The clipboard is cleared in 60 seconds.",
+  "@twoFactorKeyCopied": {
+    "description": "Snackbar."
+  },
+  "twoFactorCodeStep": "2. Enter the 6-digit code",
+  "@twoFactorCodeStep": {
+    "description": "Enrolment step."
+  },
+  "twoFactorCodeSemantics": "6-digit code from your authenticator app",
+  "@twoFactorCodeSemantics": {
+    "description": "OTP field label."
+  },
+  "twoFactorCodeInvalid": "Enter the 6 digits from your app.",
+  "@twoFactorCodeInvalid": {
+    "description": "Local check."
+  },
+  "twoFactorSecureNote": "Keep this key private. Screenshots are blocked where your phone allows.",
+  "@twoFactorSecureNote": {
+    "description": "Note under the key."
+  },
+  "recoveryCodesTitle": "Recovery codes",
+  "@recoveryCodesTitle": {
+    "description": "Title."
+  },
+  "twoFactorOnBannerTitle": "Two-step verification is on",
+  "@twoFactorOnBannerTitle": {
+    "description": "Success banner."
+  },
+  "twoFactorOnBannerBody": "Next time you sign in, we'll ask for a code.",
+  "@twoFactorOnBannerBody": {
+    "description": "Success banner."
+  },
+  "recoveryCodesBody": "Save these codes somewhere safe. Each works once if you lose your phone. We will not show them again.",
+  "@recoveryCodesBody": {
+    "description": "Recovery codes text."
+  },
+  "recoveryCodesListSemantics": "Recovery codes: {codes}",
+  "@recoveryCodesListSemantics": {
+    "description": "Codes for screen readers.",
+    "placeholders": {
+      "codes": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryCodesCopy": "Copy all",
+  "@recoveryCodesCopy": {
+    "description": "Button."
+  },
+  "recoveryCodesCopied": "Codes copied. The clipboard is cleared in 60 seconds.",
+  "@recoveryCodesCopied": {
+    "description": "Snackbar."
+  },
+  "recoveryCodesSaved": "I saved my codes",
+  "@recoveryCodesSaved": {
+    "description": "Button."
+  },
+  "recoveryCodesLeaveTitle": "Saved your codes?",
+  "@recoveryCodesLeaveTitle": {
+    "description": "Dialog when leaving the codes."
+  },
+  "recoveryCodesLeaveBody": "You won't see these codes again. Without them, losing your phone can lock you out.",
+  "@recoveryCodesLeaveBody": {
+    "description": "Dialog body."
+  },
+  "recoveryCodesShowAgain": "Back to codes",
+  "@recoveryCodesShowAgain": {
+    "description": "Dialog: stay."
+  },
+  "twoFactorAlreadyOnTitle": "Two-step verification is already on",
+  "@twoFactorAlreadyOnTitle": {
+    "description": "Already enabled state."
+  },
+  "twoFactorAlreadyOnBody": "To set it up again, turn it off first.",
+  "@twoFactorAlreadyOnBody": {
+    "description": "Already enabled state."
+  },
+  "twoFactorEnabled": "Two-step verification is on.",
+  "@twoFactorEnabled": {
+    "description": "Snackbar."
+  },
+  "twoFactorDisableTitle": "Turn off two-step verification?",
+  "@twoFactorDisableTitle": {
+    "description": "Sheet title."
+  },
+  "twoFactorDisableBody": "Your account will be protected by your password only. Enter it to continue.",
+  "@twoFactorDisableBody": {
+    "description": "Sheet body."
+  },
+  "twoFactorKeepOn": "Keep it on",
+  "@twoFactorKeepOn": {
+    "description": "Sheet cancel."
+  },
+  "twoFactorDisabled": "Two-step verification is off.",
+  "@twoFactorDisabled": {
+    "description": "Snackbar."
+  },
+  "devicesPageTitle": "Devices",
+  "@devicesPageTitle": {
+    "description": "Devices title."
+  },
+  "deviceThisDevice": "This device",
+  "@deviceThisDevice": {
+    "description": "Device row."
+  },
+  "deviceCurrentBadge": "Current",
+  "@deviceCurrentBadge": {
+    "description": "Device row trailing."
+  },
+  "deviceLastUsed": "Last used {date}",
+  "@deviceLastUsed": {
+    "description": "Device row.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceIp": "IP {ip}",
+  "@deviceIp": {
+    "description": "Device row.",
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceUnnamed": "Unnamed device",
+  "@deviceUnnamed": {
+    "description": "Device without a name."
+  },
+  "deviceWebBrowser": "Web browser",
+  "@deviceWebBrowser": {
+    "description": "Browser session."
+  },
+  "devicesWebNotListed": "Web sessions are not listed here.",
+  "@devicesWebNotListed": {
+    "description": "Devices note."
+  },
+  "deviceSignOut": "Sign out",
+  "@deviceSignOut": {
+    "description": "Device action."
+  },
+  "deviceSignOutSemantics": "Sign out {name}",
+  "@deviceSignOutSemantics": {
+    "description": "Device action for screen readers.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceRevokeTitle": "Sign out “{name}”?",
+  "@deviceRevokeTitle": {
+    "description": "Dialog title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceRevokeBody": "That device will need your password to sign in again.",
+  "@deviceRevokeBody": {
+    "description": "Dialog body."
+  },
+  "deviceRevokeAction": "Sign out device",
+  "@deviceRevokeAction": {
+    "description": "Dialog action."
+  },
+  "deviceSignedOut": "{name} was signed out.",
+  "@deviceSignedOut": {
+    "description": "Snackbar.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesOnlyThis": "No other device is signed in.",
+  "@devicesOnlyThis": {
+    "description": "Devices note."
+  },
+  "signOutOthersAction": "Sign out of all other devices",
+  "@signOutOthersAction": {
+    "description": "Button."
+  },
+  "signOutOthersTitle": "Sign out of all other devices?",
+  "@signOutOthersTitle": {
+    "description": "Sheet title."
+  },
+  "signOutOthersBody": "Enter your password. This device stays signed in.",
+  "@signOutOthersBody": {
+    "description": "Sheet body."
+  },
+  "signOutOthersDone": "Your other devices were signed out.",
+  "@signOutOthersDone": {
+    "description": "Snackbar."
+  },
+  "displayCurrencyAutomatic": "Automatic",
+  "@displayCurrencyAutomatic": {
+    "description": "Display currency row value when the server picks the currency (owner decision 1: the country's currency, else USD)."
   }
 }

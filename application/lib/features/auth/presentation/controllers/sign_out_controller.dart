@@ -13,14 +13,21 @@ class SignOutController extends _$SignOutController {
   @override
   bool build() => false;
 
-  Future<void> signOut() async {
+  Future<void> signOut() => _signOut(everywhere: false);
+
+  /// Sign out everywhere (18.1): `POST /mobile/auth/logout-all` revokes every app sign-in of the
+  /// account (this one included), then the same local cleanup as [signOut].
+  Future<void> signOutEverywhere() => _signOut(everywhere: true);
+
+  Future<void> _signOut({required bool everywhere}) async {
     if (state) {
       return;
     }
     state = true;
     final link = ref.keepAlive();
     try {
-      await ref.read(authRepositoryProvider).logout();
+      final auth = ref.read(authRepositoryProvider);
+      await (everywhere ? auth.logoutAll() : auth.logout());
       await ref
           .read(disableBiometricUnlockProvider)
           .call(revokeOnServer: false);

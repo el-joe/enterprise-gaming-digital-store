@@ -3,7 +3,7 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A15 wallet UI** (2026-11-11) on M-A14 (orders and code reveal UI), M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
+Status: **M-A16 account and security UI** (2026-11-11) on M-A15 (wallet UI), M-A14 (orders and code reveal UI), M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
 onboarding), the M-A7 data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
 maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
 (Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
@@ -12,9 +12,8 @@ suggestions, popular terms and a local history, the display currency switcher, a
 page (variants, delivery fields, add to cart, reviews) with the cart count on the Cart tab, the cart
 tab, the signed-in checkout, the payment hand-off to PayPal and Paymob in the system browser with the
 app-link return, the payment results, the Orders tab with the order detail, the protected code
-reveal, guest order access by email code and the wallet (balance and statement). The Account tab
-holds the M-A10 account card, the wallet entry, the currency, guest order access and the language
-until M-A16.
+reveal, guest order access by email code, the wallet (balance and statement) and the Account hub
+with profile, settings, change password, two-step verification, biometric unlock and devices.
 
 ## Requirements
 
@@ -101,8 +100,8 @@ tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 
 `presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10), for `home`,
 `catalog` and `search` (M-A11), for `product` (M-A12), for `cart`, `checkout` and `payments`
-(M-A13), for `orders` and `code_reveal` (M-A14) and for `wallet` (M-A15); the other features get
-theirs in M-A16 onwards.
+(M-A13), for `orders` and `code_reveal` (M-A14), for `wallet` (M-A15) and for `account` and
+`security` (M-A16); the other features get theirs in M-A17 onwards.
 `features/payments/payment_flow.dart` is the payments feature's public entry (`PaymentFlow`,
 `PaymentLaunch`), used by checkout, the app-link listener and the launch check.
 `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
@@ -437,6 +436,69 @@ including the link that cold-starts the app (kept until the first listen) and sc
   customer's own order behind a purchase or a refund); `apple-app-site-association` lists the app's
   link paths. No package was added.
 
+## Account and security (M-A16)
+
+- **Routes.** `/account` (tab: the hub, 17.1), above the tabs: `/account/profile` (17.2),
+  `/account/settings` (17.3, public), `/account/security` (18.1), `/account/security/password`
+  (18.7), `/account/security/two-factor` (18.2, 18.3), `/account/security/devices` (18.5, 18.6),
+  and the M-A17 placeholders `/account/notifications` and `/account/support`. Everything but
+  Settings and Support is `RouteAccess.signedIn`.
+- **Hub** (`AccountHubPage`): signed in, the profile header (volt avatar with the initials,
+  `initialsOf`, Arabic letters kept apart; name, email as an LTR island, Verified / Not verified
+  badge), then Orders (switches to the tab), Wallet (only with `features.wallet_enabled`; the
+  balance from `GET /account/wallet` as the row value, `accountWalletBalanceProvider`),
+  Notifications and Support (placeholders until M-A17), Profile, Security ("Two-step verification
+  on/off") and Settings, then Sign out (17.4 dialog). Signed out: sign in and create account
+  (`from=/account`), guest order access (M-A14), Support and Settings. The M-A10 account card and
+  the M-A11 language button are gone; `confirmSignOut` lives in `account_widgets.dart`.
+- **Profile** (`AccountProfileController`, keep-alive, reloaded on every sign-in and cleared on
+  sign-out; `ProfileFormController`): name, read-only email with the badge and "Contact support to
+  change your email" (the API has no verified email change), phone, country
+  (`GET /storefront/countries`, the M-A13 country sheet), language and display currency.
+  `PATCH /account/profile` sends only the keys that changed (a blank phone clears it); the name is
+  checked first (required, at most 120 characters); 422 messages show beside `name`, `phone`,
+  `country_code`, anything else in a banner. Unverified: a warning banner and "Resend email"
+  (`POST /account/email/verification-notification`, 60 s cooldown or `Retry-After`). A saved
+  profile updates the signed-in user (name, verification, two-step state).
+- **Settings**: language (sheet; signed in, `PATCH /profile locale` first through
+  `UpdateRegionalSettings`, applied only when the server accepted it; signed out, saved on the
+  device), display currency (the M-A11 sheet; "Automatic" while the server picks it), Notifications,
+  the legal and help links the configuration has (`links.terms`, `privacy`, `refund`, `support`;
+  https only, system browser), the version (`appVersion`) and Sign out. No theme setting: the app
+  is dark only, as designed. `updateRegionalSettingsProvider` is now keep-alive: auto-disposed, its
+  callbacks ran after the provider was gone, so a signed-in currency or language change failed
+  (found by the M-A16 tests).
+- **Change password** (`ChangePasswordController`): current, new (helper: 10 characters, the
+  customer policy) and confirmation; empty and mismatch checked first; 422 beside the fields; on
+  success "Other devices were signed out", the devices list reloads and biometric unlock is turned
+  off locally (above). Passwords are passed through, never kept in a state.
+- **Two-step verification** (`TwoFactorSetupController`, auto-disposed): the password (the API
+  needs `current_password`), then the QR code of the `otpauth://` URI and the key in groups of
+  four with copy, then the 6-digit code (checked locally, 422 `two_factor_invalid` shows the
+  server's text), then the recovery codes once with "Copy all" and "I saved my codes"; closing or
+  going back while the codes show asks first. 409 `two_factor_already_enabled` shows "already on".
+  The key leaves memory once confirmed and the codes on "I saved my codes"; `toString` is redacted;
+  nothing is logged or stored (`security_safety_test.dart`). `ScreenSecurity` (M-A14) is on while
+  the key or the codes are on screen and off when they leave or the screen is disposed. Copies go
+  through the clipboard guard (cleared after 60 s). Turn off: the password sheet (18.4,
+  `TwoFactorDisableController`, `DELETE /security/two-factor`).
+- **QR code.** The API returns the enrolment URI, not an image, to the app (the SVG route is a
+  web session route), so the app encodes it itself: `core/utils/qr_code.dart` is a port of the
+  backend's in-house `QrCodeSvg` (byte mode, level M, versions 1 to 20, mask by penalty) and
+  `test/core/utils/qr_code_test.dart` checks it module for module against the backend's output
+  (`test/fixtures/qr/reference.json`); `QrCodeView` paints it. No QR or SVG package.
+- **Devices** (`DevicesController`): this device first ("Current"), the others by last use with
+  the masked IP (LTR island); "Sign out" per device after a confirmation (`DELETE /devices/{id}`;
+  404 drops it and reloads); "Sign out of all other devices" with the password
+  (`POST /devices/sign-out-others`, new in the M-A7 data layer); the note when browser sessions
+  are not listed. **Sign out everywhere** (Security) is `POST /mobile/auth/logout-all` and the
+  usual local cleanup (`SignOutController.signOutEverywhere`).
+- **Biometric unlock switch** (`BiometricUnlockTile`) on Security; off deletes the server key and
+  the local key (owner decision 6).
+- **Shared**: `AppButtonVariant.danger`, `StatusPill` (library Badge), `QrCodeView`,
+  `PasswordActionSheet` (security widgets), `showConfirmDialog` and `LanguageSheet` (account
+  widgets). No package was added; no backend change.
+
 ## Biometric unlock (owner decision 6)
 
 Package: **`biometric_signature` 13.3.0** (pinned exactly; MIT; `github.com/chamodanethra/biometric_signature`).
@@ -469,7 +531,10 @@ server):
   challenge -> sign -> `confirm-biometric`; `BiometricCheck.usePassword` tells the caller to show the
   password sheet (not enrolled, key unknown to the server, biometrics changed, `biometric_locked`).
 - **Turn off**: `BiometricUnlockSettings.disable()` (`DELETE /mobile/auth/biometric-key`, delete key, clear
-  flag). The switch (`BiometricUnlockTile`) sits on the home account card until the Security screen (M-A16).
+  flag). The switch (`BiometricUnlockTile`) is on the Security screen since M-A16 (owner decision 6).
+- **Password change** (M-A16): the server revokes every biometric key of the account (ADR-040), so
+  `ChangePasswordController` deletes the local key and the flag (no server call) and Security shows
+  "Turn biometric unlock on again" (`BiometricResetNotice`, memory only).
 - Not verified here: the prompts on real devices (no emulator with biometrics in this environment) and the
   iOS build (no macOS host). Key attestation is not sent (ADR-040 outstanding).
 
@@ -549,6 +614,32 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A16 additions)
+
+`test/features/account/account_controllers_test.dart` (profile load, sign-out clear, failure and
+reload with the user fallback, initials; profile save of changed keys only, blank phone clears,
+name checks, 422 beside fields and banner, countries, resend cooldown and 429; language saved on
+the profile first, refused save, signed out; change password checks, 422, biometric turned off
+locally without a server call and the note, no biometric; the biometric switch off deleting the
+server and the local key; sign out everywhere), `test/features/security/security_controllers_test.dart`
+(enable, QR, copy, code check, confirm, recovery codes, finish with `setSecure` on and off; redacted
+state; wrong password; wrong code; 409; dispose turns protection off; disable with the password;
+devices order, revoke, 404, other failure, sign out others with the password, failed load,
+signed out), `security_safety_test.dart` (no logging, storage or file APIs in the security
+screens; auto-disposed enrolment; redacting log keeps no key, codes or password; a full enrolment
+and a password attempt leave secure storage and preferences unchanged),
+`account_pages_test.dart` and `security_pages_test.dart` (every page and state in `en` and `ar`:
+hub signed in and out, wallet row and `wallet_enabled` off, unverified badge, placeholders, sign
+out, 360 wide, settings links and failed open, language and currency saved on the profile, refused
+language save, profile save and 422, unverified resend, loading and failure; change password
+mismatch, 422 and success with and without biometric unlock; security rows, biometric switch off,
+the whole enrolment through the codes and the leave dialog, wrong code, turn off, sign out
+everywhere; devices, revoke, sign out others, error and retry; tap-target and label guidelines),
+`account_repositories_test.dart` (+1 sign-out-others), `test/core/utils/qr_code_test.dart` (10)
+and goldens in LTR and RTL (`test/goldens/m_a16/`, 15 states: 17.1 hub, signed out and 360x800;
+17.2 phone error and unverified; 17.3; 17.4; 18.1; 18.2; 18.3; 18.4; 18.5; 18.6; 18.7; devices
+error). Canary secrets only (`test/helpers/security_fakes.dart`).
 
 ## Tests (M-A15 additions)
 

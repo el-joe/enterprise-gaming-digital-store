@@ -26,6 +26,7 @@ import 'package:application/features/wallet/domain/entities/wallet.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/fake_http_adapter.dart';
 import '../helpers/pump_app.dart';
 import '../helpers/repo_harness.dart';
 
@@ -626,6 +627,52 @@ void main() {
 
       h.serveFixture('account/verification_notification_ok');
       okValue(await repo.resendVerificationEmail());
+    });
+
+    test('sign out other devices sends the current password once', () async {
+      final h = Harness(stored: signedIn());
+      final repo = AccountRepositoryImpl(AccountRemoteDataSource(h.dio));
+      h
+        ..adapter = FakeHttpAdapter(
+          (options, _) async => jsonBody(
+            okEnvelope({
+              'signed_out': {'mobile_families': 2, 'web_sessions': 1},
+            }),
+          ),
+        )
+        ..dio.httpClientAdapter = h.adapter;
+
+      final result = okValue(
+        await repo.signOutOtherDevices(currentPassword: 'password'),
+      );
+      expect(result.mobileFamilies, 2);
+      expect(result.webSessions, 1);
+      final request = h.adapter.requests.single;
+      expect(request.method, 'POST');
+      expect(
+        request.uri.path,
+        '/api/v1/mobile/account/devices/sign-out-others',
+      );
+      expect(request.data, {'current_password': 'password'});
+      expect(request.extra[RequestExtras.noRetry], isTrue);
+      expect(request.extra[RequestExtras.sensitive], isTrue);
+
+      h
+        ..adapter = FakeHttpAdapter(
+          (options, _) async => jsonBody({
+            ...errorEnvelope('validation_failed'),
+            'errors': {
+              'current_password': ['The password is incorrect.'],
+            },
+          }, status: 422),
+        )
+        ..dio.httpClientAdapter = h.adapter;
+      expect(
+        failureOf<ValidationFailure>(
+          await repo.signOutOtherDevices(currentPassword: 'wrong'),
+        ).firstErrorFor('current_password'),
+        'The password is incorrect.',
+      );
     });
 
     test('a null field update clears the field', () {

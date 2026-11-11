@@ -19,7 +19,9 @@ AccountRemoteDataSource accountRemoteDataSource(Ref ref) =>
 AccountRepository accountRepository(Ref ref) =>
     AccountRepositoryImpl(ref.watch(accountRemoteDataSourceProvider));
 
-@riverpod
+/// Kept alive: its callbacks run after the profile call returns (an auto-disposed provider would
+/// be gone by then, M-A16 fix).
+@Riverpod(keepAlive: true)
 UpdateRegionalSettings updateRegionalSettings(Ref ref) =>
     UpdateRegionalSettings(
       ref.watch(accountRepositoryProvider),

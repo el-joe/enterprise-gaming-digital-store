@@ -29,6 +29,7 @@ import 'package:application/features/payments/domain/usecases/resolve_payment.da
 import 'package:application/features/payments/payments_providers.dart';
 import 'package:application/features/product/product_providers.dart';
 import 'package:application/features/search/search_providers.dart';
+import 'package:application/features/security/security_providers.dart';
 import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +45,7 @@ import 'fakes.dart';
 import 'memory_stores.dart';
 import 'product_fakes.dart';
 import 'reveal_fakes.dart';
+import 'security_fakes.dart';
 import 'wallet_fakes.dart';
 
 final testEnv = AppEnv(
@@ -101,6 +103,7 @@ final class TestHarness {
     required this.security,
     required this.clipboard,
     required this.wallet,
+    required this.twoFactor,
   });
 
   final ProviderContainer container;
@@ -145,6 +148,10 @@ final class TestHarness {
 
   /// Wallet (M-A15): the balance and the statement pages.
   final FakeWalletRepository wallet;
+
+  /// Account and security (M-A16): two-step verification. Profile, password and devices are on
+  /// [account] (a mocktail mock).
+  final FakeSecurityRepository twoFactor;
 
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
@@ -207,6 +214,8 @@ TestHarness buildHarness({
   final security = FakeScreenSecurity();
   final clipboard = FakeClipboardGuard();
   final wallet = FakeWalletRepository();
+  final twoFactor = FakeSecurityRepository();
+  when(account.devices).thenAnswer((_) async => Ok(fixtureDevices()));
   when(account.profile).thenAnswer((_) async => Ok(fixtureProfile()));
 
   final container = ProviderContainer(
@@ -250,6 +259,7 @@ TestHarness buildHarness({
       screenSecurityProvider.overrideWithValue(security),
       clipboardGuardProvider.overrideWithValue(clipboard),
       walletRepositoryProvider.overrideWithValue(wallet),
+      securityRepositoryProvider.overrideWithValue(twoFactor),
       placeOrderProvider.overrideWith(
         (ref) => PlaceOrder(
           checkout: checkout,
@@ -298,6 +308,7 @@ TestHarness buildHarness({
     security: security,
     clipboard: clipboard,
     wallet: wallet,
+    twoFactor: twoFactor,
   );
 }
 

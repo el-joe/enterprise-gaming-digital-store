@@ -26,12 +26,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get switchLanguage => 'العربية';
-
-  @override
-  String get switchLanguageHint => 'Switch the app language to Arabic';
-
-  @override
   String get maintenanceTitle => 'We\'ll be right back';
 
   @override
@@ -424,20 +418,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signedOutMessage => 'You\'re signed out.';
-
-  @override
-  String homeSignedInAs(String email) {
-    return 'Signed in as $email';
-  }
-
-  @override
-  String get homeSignedIn => 'You\'re signed in.';
-
-  @override
-  String get homeSignedOut => 'Sign in to see your orders and codes.';
-
-  @override
-  String get homeAccountTitle => 'Account';
 
   @override
   String get biometricOfferTitle => 'Unlock with biometrics?';
@@ -2074,4 +2054,383 @@ class AppLocalizationsEn extends AppLocalizations {
   String checkoutWalletBalance(String amount) {
     return 'Store credit · balance $amount';
   }
+
+  @override
+  String get accountSignedOutTitle => 'Your account';
+
+  @override
+  String get accountSignedOutBody =>
+      'Sign in to see your orders, codes and store credit.';
+
+  @override
+  String accountHeaderSemantics(String name, String email) {
+    return 'Signed in as $name, $email';
+  }
+
+  @override
+  String get accountVerifiedBadge => 'Verified';
+
+  @override
+  String get accountUnverifiedBadge => 'Not verified';
+
+  @override
+  String get accountNotifications => 'Notifications';
+
+  @override
+  String get accountSupport => 'Support';
+
+  @override
+  String get accountProfile => 'Profile';
+
+  @override
+  String get accountSecurity => 'Security';
+
+  @override
+  String get accountSettings => 'Settings';
+
+  @override
+  String get accountTwoFactorOn => 'Two-step verification on';
+
+  @override
+  String get accountTwoFactorOff => 'Two-step verification off';
+
+  @override
+  String get accountGuestSection => 'Ordered without an account?';
+
+  @override
+  String appVersionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get settingsPreferences => 'Preferences';
+
+  @override
+  String get settingsAbout => 'About';
+
+  @override
+  String get settingsTerms => 'Terms of Sale';
+
+  @override
+  String get settingsPrivacy => 'Privacy policy';
+
+  @override
+  String get settingsRefundPolicy => 'Refund policy';
+
+  @override
+  String get settingsHelpCentre => 'Help centre';
+
+  @override
+  String get opensInBrowserHint => 'Opens in your browser';
+
+  @override
+  String get languageChanged => 'Language changed.';
+
+  @override
+  String get profileNameLabel => 'Full name';
+
+  @override
+  String get profileEmailLabel => 'Email';
+
+  @override
+  String get profileEmailHelper => 'Contact support to change your email.';
+
+  @override
+  String get profilePhoneLabel => 'Phone (optional)';
+
+  @override
+  String get profilePhoneHelper =>
+      'With the country code, for example +20 100 123 4567.';
+
+  @override
+  String get profileCountryLabel => 'Country';
+
+  @override
+  String get profileRegionalSection => 'Language and currency';
+
+  @override
+  String get profileSave => 'Save changes';
+
+  @override
+  String get profileSaved => 'Profile saved.';
+
+  @override
+  String get profileUnchanged => 'Nothing to save.';
+
+  @override
+  String get profileNameTooLong => 'Use at most 120 characters.';
+
+  @override
+  String get profileUnverifiedTitle => 'Your email isn\'t verified';
+
+  @override
+  String get profileUnverifiedBody =>
+      'Verify it to reveal codes and write reviews. Check your inbox for the link.';
+
+  @override
+  String get profileCountriesFailed => 'Countries couldn\'t be loaded.';
+
+  @override
+  String get changePasswordTitle => 'Change password';
+
+  @override
+  String get changePasswordSubtitle => 'Signs out your other devices';
+
+  @override
+  String get currentPasswordLabel => 'Current password';
+
+  @override
+  String get newPasswordLabel => 'New password';
+
+  @override
+  String get newPasswordHelper =>
+      'At least 10 characters, different from your current password.';
+
+  @override
+  String get confirmNewPasswordLabel => 'Confirm new password';
+
+  @override
+  String get changePasswordNoticeTitle => 'Other devices will be signed out';
+
+  @override
+  String get changePasswordNoticeBody => 'This device stays signed in.';
+
+  @override
+  String get changePasswordAction => 'Update password';
+
+  @override
+  String get passwordChanged =>
+      'Password changed. Your other devices were signed out.';
+
+  @override
+  String get passwordChangedBiometricTitle => 'Turn biometric unlock on again';
+
+  @override
+  String get passwordChangedBiometricBody =>
+      'Changing your password turned biometric unlock off on every device. Turn it on below if you want it.';
+
+  @override
+  String get securitySignInSection => 'Sign-in';
+
+  @override
+  String get securityDevicesSection => 'Devices';
+
+  @override
+  String get twoFactorTitle => 'Two-step verification';
+
+  @override
+  String get twoFactorOffSubtitle =>
+      'Off · protect codes with an authenticator app';
+
+  @override
+  String get twoFactorOnSubtitle =>
+      'On · a code from your authenticator app at sign-in';
+
+  @override
+  String get twoFactorTurnOn => 'Turn on';
+
+  @override
+  String get twoFactorTurnOff => 'Turn off';
+
+  @override
+  String get devicesTitle => 'Signed-in devices';
+
+  @override
+  String devicesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count devices',
+      one: '1 device',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get securityRevealNoticeTitle =>
+      'Revealing codes asks you to confirm it\'s you';
+
+  @override
+  String get securityRevealNoticeBody =>
+      'At most every 15 minutes on each device: your password, or biometrics where biometric unlock is on.';
+
+  @override
+  String get signOutEverywhere => 'Sign out everywhere';
+
+  @override
+  String get signOutEverywhereTitle => 'Sign out everywhere?';
+
+  @override
+  String get signOutEverywhereBody =>
+      'Every device, this one included, will need your password to sign in again.';
+
+  @override
+  String get signedOutEverywhere => 'Signed out on every device.';
+
+  @override
+  String get twoFactorPasswordBody =>
+      'Enter your password to start. You\'ll need an authenticator app on your phone.';
+
+  @override
+  String get twoFactorScanStep => '1. Scan with your authenticator app';
+
+  @override
+  String get twoFactorQrSemantics => 'QR code for your authenticator app';
+
+  @override
+  String get twoFactorKeyLabel => 'Or enter this key';
+
+  @override
+  String get twoFactorCopyKey => 'Copy key';
+
+  @override
+  String get twoFactorKeyCopied =>
+      'Key copied. The clipboard is cleared in 60 seconds.';
+
+  @override
+  String get twoFactorCodeStep => '2. Enter the 6-digit code';
+
+  @override
+  String get twoFactorCodeSemantics =>
+      '6-digit code from your authenticator app';
+
+  @override
+  String get twoFactorCodeInvalid => 'Enter the 6 digits from your app.';
+
+  @override
+  String get twoFactorSecureNote =>
+      'Keep this key private. Screenshots are blocked where your phone allows.';
+
+  @override
+  String get recoveryCodesTitle => 'Recovery codes';
+
+  @override
+  String get twoFactorOnBannerTitle => 'Two-step verification is on';
+
+  @override
+  String get twoFactorOnBannerBody =>
+      'Next time you sign in, we\'ll ask for a code.';
+
+  @override
+  String get recoveryCodesBody =>
+      'Save these codes somewhere safe. Each works once if you lose your phone. We will not show them again.';
+
+  @override
+  String recoveryCodesListSemantics(String codes) {
+    return 'Recovery codes: $codes';
+  }
+
+  @override
+  String get recoveryCodesCopy => 'Copy all';
+
+  @override
+  String get recoveryCodesCopied =>
+      'Codes copied. The clipboard is cleared in 60 seconds.';
+
+  @override
+  String get recoveryCodesSaved => 'I saved my codes';
+
+  @override
+  String get recoveryCodesLeaveTitle => 'Saved your codes?';
+
+  @override
+  String get recoveryCodesLeaveBody =>
+      'You won\'t see these codes again. Without them, losing your phone can lock you out.';
+
+  @override
+  String get recoveryCodesShowAgain => 'Back to codes';
+
+  @override
+  String get twoFactorAlreadyOnTitle => 'Two-step verification is already on';
+
+  @override
+  String get twoFactorAlreadyOnBody => 'To set it up again, turn it off first.';
+
+  @override
+  String get twoFactorEnabled => 'Two-step verification is on.';
+
+  @override
+  String get twoFactorDisableTitle => 'Turn off two-step verification?';
+
+  @override
+  String get twoFactorDisableBody =>
+      'Your account will be protected by your password only. Enter it to continue.';
+
+  @override
+  String get twoFactorKeepOn => 'Keep it on';
+
+  @override
+  String get twoFactorDisabled => 'Two-step verification is off.';
+
+  @override
+  String get devicesPageTitle => 'Devices';
+
+  @override
+  String get deviceThisDevice => 'This device';
+
+  @override
+  String get deviceCurrentBadge => 'Current';
+
+  @override
+  String deviceLastUsed(String date) {
+    return 'Last used $date';
+  }
+
+  @override
+  String deviceIp(String ip) {
+    return 'IP $ip';
+  }
+
+  @override
+  String get deviceUnnamed => 'Unnamed device';
+
+  @override
+  String get deviceWebBrowser => 'Web browser';
+
+  @override
+  String get devicesWebNotListed => 'Web sessions are not listed here.';
+
+  @override
+  String get deviceSignOut => 'Sign out';
+
+  @override
+  String deviceSignOutSemantics(String name) {
+    return 'Sign out $name';
+  }
+
+  @override
+  String deviceRevokeTitle(String name) {
+    return 'Sign out “$name”?';
+  }
+
+  @override
+  String get deviceRevokeBody =>
+      'That device will need your password to sign in again.';
+
+  @override
+  String get deviceRevokeAction => 'Sign out device';
+
+  @override
+  String deviceSignedOut(String name) {
+    return '$name was signed out.';
+  }
+
+  @override
+  String get devicesOnlyThis => 'No other device is signed in.';
+
+  @override
+  String get signOutOthersAction => 'Sign out of all other devices';
+
+  @override
+  String get signOutOthersTitle => 'Sign out of all other devices?';
+
+  @override
+  String get signOutOthersBody =>
+      'Enter your password. This device stays signed in.';
+
+  @override
+  String get signOutOthersDone => 'Your other devices were signed out.';
+
+  @override
+  String get displayCurrencyAutomatic => 'Automatic';
 }

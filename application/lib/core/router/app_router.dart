@@ -2,6 +2,10 @@ import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/router/guards.dart';
 import 'package:application/core/router/routes.dart';
 import 'package:application/core/router/shell_pages.dart';
+import 'package:application/features/account/presentation/pages/account_hub_page.dart';
+import 'package:application/features/account/presentation/pages/change_password_page.dart';
+import 'package:application/features/account/presentation/pages/profile_page.dart';
+import 'package:application/features/account/presentation/pages/settings_page.dart';
 import 'package:application/features/auth/presentation/pages/biometric_offer_page.dart';
 import 'package:application/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:application/features/auth/presentation/pages/login_page.dart';
@@ -26,6 +30,9 @@ import 'package:application/features/payments/presentation/pages/payment_page.da
 import 'package:application/features/product/presentation/pages/product_page.dart';
 import 'package:application/features/product/presentation/pages/product_reviews_page.dart';
 import 'package:application/features/search/presentation/pages/search_page.dart';
+import 'package:application/features/security/presentation/pages/devices_page.dart';
+import 'package:application/features/security/presentation/pages/security_page.dart';
+import 'package:application/features/security/presentation/pages/two_factor_setup_page.dart';
 import 'package:application/features/wallet/presentation/pages/wallet_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
@@ -136,7 +143,7 @@ GoRouter appRouter(Ref ref) {
               GoRoute(
                 path: Routes.account.path,
                 name: Routes.account.name,
-                builder: (context, state) => const AccountTabPage(),
+                builder: (context, state) => const AccountHubPage(),
               ),
             ],
           ),
@@ -208,6 +215,52 @@ GoRouter appRouter(Ref ref) {
         path: Routes.wallet.path,
         name: Routes.wallet.name,
         builder: (context, state) => const WalletPage(),
+      ),
+      GoRoute(
+        path: Routes.accountProfile.path,
+        name: Routes.accountProfile.name,
+        builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: Routes.accountSettings.path,
+        name: Routes.accountSettings.name,
+        builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: Routes.accountNotifications.path,
+        name: Routes.accountNotifications.name,
+        builder: (context, state) => ComingSoonPage(
+          title: context.l10n.accountNotifications,
+          root: false,
+        ),
+      ),
+      GoRoute(
+        path: Routes.accountSupport.path,
+        name: Routes.accountSupport.name,
+        builder: (context, state) =>
+            ComingSoonPage(title: context.l10n.accountSupport, root: false),
+      ),
+      GoRoute(
+        path: Routes.security.path,
+        name: Routes.security.name,
+        builder: (context, state) => const SecurityPage(),
+        routes: [
+          GoRoute(
+            path: 'password',
+            name: Routes.changePassword.name,
+            builder: (context, state) => const ChangePasswordPage(),
+          ),
+          GoRoute(
+            path: 'two-factor',
+            name: Routes.twoFactorSetup.name,
+            builder: (context, state) => const TwoFactorSetupPage(),
+          ),
+          GoRoute(
+            path: 'devices',
+            name: Routes.devices.name,
+            builder: (context, state) => const DevicesPage(),
+          ),
+        ],
       ),
       GoRoute(
         path: Routes.guestAccess.path,

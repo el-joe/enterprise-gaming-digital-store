@@ -87,7 +87,8 @@ void main() {
     group('wallet ($lang)', () {
       testWidgets('the Account tab opens the wallet', (tester) async {
         final h = await at(tester, Routes.account.path);
-        expect(find.text(l10n.walletAccountSubtitle), findsOneWidget);
+        // M-A16: the hub's Wallet row shows the balance (17.1).
+        expect(find.text('\u2066\$40.00\u2069'), findsOneWidget);
         await tester.tap(find.text(l10n.walletTitle));
         await tester.pumpAndSettle();
         expect(path(h), Routes.wallet.path);
