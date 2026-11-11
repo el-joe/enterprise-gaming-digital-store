@@ -14,10 +14,14 @@ import 'package:application/features/catalog/presentation/pages/listing_page.dar
 import 'package:application/features/catalog/presentation/pages/platforms_page.dart';
 import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
 import 'package:application/features/checkout/presentation/pages/checkout_page.dart';
+import 'package:application/features/code_reveal/presentation/pages/reveal_page.dart';
 import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:application/features/launch/presentation/pages/notice_pages.dart';
 import 'package:application/features/launch/presentation/pages/onboarding_pages.dart';
 import 'package:application/features/launch/presentation/pages/splash_page.dart';
+import 'package:application/features/orders/presentation/pages/guest_order_pages.dart';
+import 'package:application/features/orders/presentation/pages/order_detail_page.dart';
+import 'package:application/features/orders/presentation/pages/orders_page.dart';
 import 'package:application/features/payments/presentation/pages/payment_page.dart';
 import 'package:application/features/product/presentation/pages/product_page.dart';
 import 'package:application/features/product/presentation/pages/product_reviews_page.dart';
@@ -122,8 +126,7 @@ GoRouter appRouter(Ref ref) {
               GoRoute(
                 path: Routes.orders.path,
                 name: Routes.orders.name,
-                builder: (context, state) =>
-                    ComingSoonPage(title: context.l10n.ordersTitle),
+                builder: (context, state) => const OrdersPage(),
               ),
             ],
           ),
@@ -170,6 +173,64 @@ GoRouter appRouter(Ref ref) {
             orderPublicId: order,
           );
         },
+      ),
+      GoRoute(
+        path: Routes.orderDetail.path,
+        name: Routes.orderDetail.name,
+        builder: (context, state) {
+          final order = state.pathParameters[Routes.orderParameter]!;
+          return OrderDetailPage(
+            key: ValueKey('order-$order'),
+            orderPublicId: order,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: 'units/:${Routes.unitParameter}',
+            name: Routes.codeReveal.name,
+            builder: (context, state) => RevealPage(
+              orderPublicId: state.pathParameters[Routes.orderParameter]!,
+              unitPublicId: state.pathParameters[Routes.unitParameter]!,
+            ),
+          ),
+          GoRoute(
+            path: 'refund',
+            name: Routes.refundRequest.name,
+            builder: (context, state) => ComingSoonPage(
+              title: context.l10n.refundRequestTitle,
+              root: false,
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: Routes.guestAccess.path,
+        name: Routes.guestAccess.name,
+        builder: (context, state) => const GuestAccessPage(),
+        routes: [
+          GoRoute(
+            path: ':${Routes.orderParameter}',
+            name: Routes.guestOrder.name,
+            builder: (context, state) {
+              final order = state.pathParameters[Routes.orderParameter]!;
+              return GuestOrderPage(
+                key: ValueKey('guest-$order'),
+                orderPublicId: order,
+              );
+            },
+            routes: [
+              GoRoute(
+                path: 'units/:${Routes.unitParameter}',
+                name: Routes.guestReveal.name,
+                builder: (context, state) => RevealPage(
+                  orderPublicId: state.pathParameters[Routes.orderParameter]!,
+                  unitPublicId: state.pathParameters[Routes.unitParameter]!,
+                  guest: true,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: Routes.splash.path,

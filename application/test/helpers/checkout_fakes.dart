@@ -221,17 +221,33 @@ class FakeCheckoutRepository implements CheckoutRepository {
   Future<Result<void>> sendGuestOtp({
     required String orderPublicId,
     required String email,
-  }) async => const Ok(null);
+  }) async {
+    guestCalls.add('send:$email');
+    return sendOtpResult;
+  }
 
   @override
   Future<Result<void>> verifyGuestOtp({
     required String orderPublicId,
     required String code,
-  }) async => const Ok(null);
+  }) async {
+    guestCalls.add('verify:$code');
+    return verifyOtpResult;
+  }
+
+  /// Guest order access (M-A14).
+  Result<GuestLinkAccess> linkResult = const Ok(
+    GuestLinkAccess(orderPublicId: orderId, otpRequired: true),
+  );
+  Result<void> sendOtpResult = const Ok(null);
+  Result<void> verifyOtpResult = const Ok(null);
+  final guestCalls = <String>[];
 
   @override
-  Future<Result<GuestLinkAccess>> openGuestLink(Uri signedLink) =>
-      throw UnimplementedError();
+  Future<Result<GuestLinkAccess>> openGuestLink(Uri signedLink) async {
+    guestCalls.add('link:${signedLink.path}');
+    return linkResult;
+  }
 }
 
 /// [PaymentsRepository] recording every call; answers come from the queues (the last repeats).
@@ -286,10 +302,33 @@ class FakePaymentsRepository implements PaymentsRepository {
   int count(String prefix) => calls.where((c) => c.startsWith(prefix)).length;
 }
 
-/// [OrdersRepository] answering the account order detail.
+/// [OrdersRepository] answering the account order list and detail and the guest detail.
 class FakeOrdersRepository implements OrdersRepository {
   Result<OrderDetail> detailResult = Ok(fixtureOrderDetail());
   final details = <String>[];
+
+  /// The order list: one answer per page number (page 1 by default: the two fixture orders).
+  Map<int, Result<Paged<OrderSummary>>> pages = {
+    1: Ok(
+      pageOf([
+        fixtureOrderSummary(),
+        fixtureOrderSummary(id: orderId2, number: 'BX-1003'),
+      ]),
+    ),
+  };
+  final queries = <OrdersQuery>[];
+
+  /// When set, list waits for it.
+  Completer<void>? listGate;
+
+  Result<GuestOrderDetail> guestResult = Ok(
+    GuestOrderDetail(
+      order: fixtureOrderDetail(),
+      linkVerified: true,
+      otpVerified: true,
+    ),
+  );
+  final guestDetails = <String>[];
 
   @override
   Future<Result<OrderDetail>> detail(String orderPublicId) async {
@@ -298,13 +337,54 @@ class FakeOrdersRepository implements OrdersRepository {
   }
 
   @override
-  Future<Result<GuestOrderDetail>> guestDetail(String orderPublicId) =>
-      throw UnimplementedError();
+  Future<Result<GuestOrderDetail>> guestDetail(String orderPublicId) async {
+    guestDetails.add(orderPublicId);
+    return guestResult;
+  }
 
   @override
-  Future<Result<Paged<OrderSummary>>> list(OrdersQuery query) =>
-      throw UnimplementedError();
+  Future<Result<Paged<OrderSummary>>> list(OrdersQuery query) async {
+    queries.add(query);
+    await listGate?.future;
+    return pages[query.page] ?? Ok(pageOf(const [], page: query.page));
+  }
 }
+
+const orderId2 = '01JF0000000000000000000009';
+
+/// An order of the list (`orders/list_ok` shape) with a number, status and total.
+OrderSummary fixtureOrderSummary({
+  String id = orderId,
+  String number = 'BX-1004',
+  String status = 'completed',
+  String total = '31.50',
+  int items = 2,
+}) => OrderSummary(
+  publicId: id,
+  number: number,
+  status: status,
+  paymentStatus: status == 'pending_payment' ? 'unpaid' : 'paid',
+  isFinal: status != 'pending_payment',
+  displayTotal: usd(total),
+  paymentTotal: usd(total),
+  itemCount: items,
+  createdAt: DateTime(2026, 11, 10, 12),
+);
+
+/// One page of [items] (20 per page, [lastPage] pages).
+Paged<OrderSummary> pageOf(
+  List<OrderSummary> items, {
+  int page = 1,
+  int lastPage = 1,
+}) => Paged(
+  items: items,
+  page: PageInfo(
+    currentPage: page,
+    perPage: 20,
+    total: items.length,
+    lastPage: lastPage,
+  ),
+);
 
 /// [LinkSource] fed by the test.
 class FakeLinkSource implements LinkSource {

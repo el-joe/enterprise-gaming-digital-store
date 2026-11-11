@@ -70,7 +70,7 @@ class MainShell extends ConsumerWidget {
   }
 }
 
-/// A tab whose milestone is still to come (orders M-A14): its title and a "coming in the next update" note. No fake data.
+/// A screen whose milestone is still to come (the refund request form, M-A17): its title and a "coming in the next update" note. No fake data.
 class ComingSoonPage extends StatelessWidget {
   const ComingSoonPage({required this.title, this.root = true, super.key});
 
@@ -106,7 +106,7 @@ class ComingSoonPage extends StatelessWidget {
 }
 
 /// Account tab until M-A16: the account card (sign in, biometric unlock switch, sign out), the
-/// display currency (03.5) and the language.
+/// display currency (03.5), guest order access (M-A14) and the language.
 class AccountTabPage extends ConsumerWidget {
   const AccountTabPage({super.key});
 
@@ -133,6 +133,13 @@ class AccountTabPage extends ConsumerWidget {
             value: currency,
             showChevron: true,
             onTap: () => unawaited(showCurrencySheet(context)),
+          ),
+          AppListTile(
+            title: l10n.guestAccessEntry,
+            subtitle: l10n.guestAccessEntryBody,
+            icon: Icons.mark_email_read_outlined,
+            showChevron: true,
+            onTap: () => unawaited(context.push(Routes.guestAccess.path)),
           ),
           AppListTile(
             title: l10n.languageSetting,

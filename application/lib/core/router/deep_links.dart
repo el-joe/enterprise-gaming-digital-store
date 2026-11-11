@@ -98,6 +98,21 @@ final class ProductLink extends DeepLink {
   int get hashCode => slug.hashCode;
 }
 
+/// The order link of the delivery email for a customer order: `/account/orders/{order}` (also with
+/// a `/en` or `/ar` prefix; `OrderDelivered::link`). Opens the order detail in the app (M-A14).
+final class AccountOrderLink extends DeepLink {
+  const AccountOrderLink(this.orderPublicId);
+
+  final String orderPublicId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AccountOrderLink && other.orderPublicId == orderPublicId;
+
+  @override
+  int get hashCode => orderPublicId.hashCode;
+}
+
 final _segment = RegExp(r'^[A-Za-z0-9_-]{1,128}$');
 
 /// Parses an incoming link. Only `https` links on [appLinkHost] are accepted; signed links must
@@ -140,6 +155,15 @@ DeepLink? parseDeepLink(Uri uri, {required String appLinkHost}) {
       valid([s[2], s[3]]) &&
       signed()) {
     return VerifyEmailLink(s[2], s[3], uri);
+  }
+  final localized = s.length >= 2 && (s[0] == 'en' || s[0] == 'ar')
+      ? s.sublist(1)
+      : s;
+  if (localized.length == 3 &&
+      localized[0] == 'account' &&
+      localized[1] == 'orders' &&
+      valid([localized[2]])) {
+    return AccountOrderLink(localized[2]);
   }
   final product = s.length == 3 && (s[0] == 'en' || s[0] == 'ar')
       ? s.sublist(1)

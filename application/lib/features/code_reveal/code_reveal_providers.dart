@@ -7,8 +7,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'code_reveal_providers.g.dart';
 
-// Every provider here is auto-disposed and none holds a revealed code: the code lives only in the
-// reveal screen's widget state (M-A14), which clears it on dispose, on background and on timeout.
+// Every provider here is auto-disposed and none holds a revealed code. Since M-A14 the code lives
+// only in the state of the code screen's auto-disposed `RevealController`
+// (presentation/controllers), which drops it on hide, on background, on capture, after 60 s and
+// when the screen is left.
 
 @riverpod
 CodeRevealRemoteDataSource codeRevealRemoteDataSource(Ref ref) =>

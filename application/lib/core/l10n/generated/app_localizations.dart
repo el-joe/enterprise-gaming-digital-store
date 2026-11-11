@@ -2554,6 +2554,869 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not checked yet'**
   String get paymentStatusUnknown;
+
+  /// Order status filter chip.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get ordersFilterAll;
+
+  /// Order status.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get orderStatusCompleted;
+
+  /// Order status (paid, processing, supplier or review steps).
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get orderStatusProcessing;
+
+  /// Order status.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment processing'**
+  String get orderStatusPaymentProcessing;
+
+  /// Order status pending_payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting payment'**
+  String get orderStatusAwaitingPayment;
+
+  /// Order status partially_fulfilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Partly delivered'**
+  String get orderStatusPartlyDelivered;
+
+  /// Order status.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get orderStatusFailed;
+
+  /// Order status.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get orderStatusCancelled;
+
+  /// Order status.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund pending'**
+  String get orderStatusRefundPending;
+
+  /// Order status.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially refunded'**
+  String get orderStatusPartiallyRefunded;
+
+  /// Order status.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get orderStatusRefunded;
+
+  /// Number of items in an order.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String ordersItemCount(int count);
+
+  /// Screen reader label of an order row.
+  ///
+  /// In en, this message translates to:
+  /// **'Order {number}, {status}, {date}, {total}'**
+  String orderTileSemantics(
+    String number,
+    String status,
+    String date,
+    String total,
+  );
+
+  /// Empty orders title.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders yet'**
+  String get ordersEmptyTitle;
+
+  /// Empty orders body.
+  ///
+  /// In en, this message translates to:
+  /// **'Codes you buy show up here.'**
+  String get ordersEmptyBody;
+
+  /// Empty orders action.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the store'**
+  String get ordersEmptyAction;
+
+  /// Empty state with a status filter.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders with this status'**
+  String get ordersEmptyFilteredTitle;
+
+  /// Clears the status filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all orders'**
+  String get ordersShowAll;
+
+  /// Orders error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your orders'**
+  String get ordersLoadErrorTitle;
+
+  /// Next page failed bar.
+  ///
+  /// In en, this message translates to:
+  /// **'More orders couldn\'t load.'**
+  String get ordersMoreFailed;
+
+  /// Signed-out orders tab title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your orders'**
+  String get ordersSignedOutTitle;
+
+  /// Signed-out orders tab body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your orders and codes are kept in your account.'**
+  String get ordersSignedOutBody;
+
+  /// Signed-out orders tab action.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get ordersSignIn;
+
+  /// Link to guest order access.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a guest order'**
+  String get guestAccessEntry;
+
+  /// Guest order access hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ordered on the web without an account? Use the link in your delivery email.'**
+  String get guestAccessEntryBody;
+
+  /// Order detail title for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Order {number}'**
+  String orderDetailSemantics(String number);
+
+  /// Line quantity and unit price.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty {quantity} · {price} each'**
+  String orderQtyEach(int quantity, String price);
+
+  /// Line quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty {quantity}'**
+  String orderQty(int quantity);
+
+  /// Unit row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get orderUnitCode;
+
+  /// Unit status.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get orderUnitDelivered;
+
+  /// Unit status: delivered and viewed before.
+  ///
+  /// In en, this message translates to:
+  /// **'Revealed'**
+  String get orderUnitRevealed;
+
+  /// Unit status before delivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing'**
+  String get orderUnitPreparing;
+
+  /// Unit status failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not delivered'**
+  String get orderUnitFailed;
+
+  /// Unit status.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get orderUnitRefunded;
+
+  /// Unit status.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund pending'**
+  String get orderUnitRefundPending;
+
+  /// Unit status.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get orderUnitCancelled;
+
+  /// Screen reader label of a unit row.
+  ///
+  /// In en, this message translates to:
+  /// **'Code {index} of {name}, {status}'**
+  String orderUnitSemantics(int index, String name, String status);
+
+  /// Screen reader hint of a unit row.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the code'**
+  String get orderUnitOpenHint;
+
+  /// Order total (display currency).
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get orderTotal;
+
+  /// Amount charged in the payment currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Charged'**
+  String get orderCharged;
+
+  /// Payment row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get orderPayment;
+
+  /// Payment attempt number.
+  ///
+  /// In en, this message translates to:
+  /// **'attempt {attempt}'**
+  String orderAttempt(int attempt);
+
+  /// Payment status row.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment status'**
+  String get orderPaymentStatus;
+
+  /// Payment status.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get orderPaymentUnpaid;
+
+  /// Payment status.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get orderPaymentProcessing;
+
+  /// Payment status.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get orderPaymentPaid;
+
+  /// Payment status.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially refunded'**
+  String get orderPaymentPartiallyRefunded;
+
+  /// Payment status.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get orderPaymentRefunded;
+
+  /// Order detail action.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry payment'**
+  String get orderRetryPayment;
+
+  /// Order detail notice.
+  ///
+  /// In en, this message translates to:
+  /// **'This order is waiting for payment. Your last attempt did not go through.'**
+  String get orderAwaitingPaymentNote;
+
+  /// Order detail action.
+  ///
+  /// In en, this message translates to:
+  /// **'Get help'**
+  String get orderGetHelp;
+
+  /// Order detail action.
+  ///
+  /// In en, this message translates to:
+  /// **'Request refund'**
+  String get orderRequestRefund;
+
+  /// Order timeline heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get orderTimeline;
+
+  /// Timeline entry (pending payment).
+  ///
+  /// In en, this message translates to:
+  /// **'Placed'**
+  String get orderTimelinePlaced;
+
+  /// Timeline entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get orderTimelinePaid;
+
+  /// Refund banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund in progress'**
+  String get orderRefundPendingTitle;
+
+  /// Refund banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of this order was refunded'**
+  String get orderRefundPartialTitle;
+
+  /// Refund banner.
+  ///
+  /// In en, this message translates to:
+  /// **'This order was refunded'**
+  String get orderRefundFullTitle;
+
+  /// Refund banner body, wallet destination.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} was returned to your wallet.'**
+  String orderRefundToWallet(String amount);
+
+  /// Refund banner body, original destination.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} was returned to your payment method.'**
+  String orderRefundToOriginal(String amount);
+
+  /// 404 order.
+  ///
+  /// In en, this message translates to:
+  /// **'Order not found'**
+  String get orderNotFoundTitle;
+
+  /// 404 order body.
+  ///
+  /// In en, this message translates to:
+  /// **'This order isn\'t in your account.'**
+  String get orderNotFoundBody;
+
+  /// Order error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load this order'**
+  String get orderLoadErrorTitle;
+
+  /// Refund request placeholder title.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a refund'**
+  String get refundRequestTitle;
+
+  /// Code screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your code'**
+  String get revealTitle;
+
+  /// Unit position.
+  ///
+  /// In en, this message translates to:
+  /// **'Code {index} of {count}'**
+  String revealCodeOf(int index, int count);
+
+  /// Delivery time.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered {date}'**
+  String revealDeliveredAt(String date);
+
+  /// Code box label.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get revealCodeLabel;
+
+  /// PIN row label.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN'**
+  String get revealPinLabel;
+
+  /// Masked code for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Code hidden. Ends in {last}.'**
+  String revealMaskedSemantics(String last);
+
+  /// Masked code without a hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Code hidden.'**
+  String get revealMaskedSemanticsNoHint;
+
+  /// Reveal button.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal code'**
+  String get revealButton;
+
+  /// Reveal button hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Asks you to confirm it\'s you, then shows the code for 60 seconds'**
+  String get revealButtonHint;
+
+  /// Copy button.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get revealCopy;
+
+  /// Copy button label for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the code. The clipboard clears after 60 seconds'**
+  String get revealCopySemantics;
+
+  /// Hide button.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get revealHide;
+
+  /// Hide button label for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the code now'**
+  String get revealHideSemantics;
+
+  /// Button that announces the code to the screen reader.
+  ///
+  /// In en, this message translates to:
+  /// **'Read code aloud'**
+  String get revealReadAloud;
+
+  /// Revealed code box for screen readers (the code is not read automatically).
+  ///
+  /// In en, this message translates to:
+  /// **'Code shown. Use Read code aloud to hear it.'**
+  String get revealShownSemantics;
+
+  /// Snackbar after copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied. Clipboard clears in 60 s.'**
+  String get revealCopied;
+
+  /// Countdown before auto-hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hides in {time}'**
+  String revealHidesIn(String time);
+
+  /// Redemption link.
+  ///
+  /// In en, this message translates to:
+  /// **'Open redemption page'**
+  String get revealOpenRedemption;
+
+  /// Security note on Android.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots are blocked here. Every reveal is logged.'**
+  String get revealSecureNoteAndroid;
+
+  /// Security note on iOS (screenshots cannot be blocked).
+  ///
+  /// In en, this message translates to:
+  /// **'The code hides in the app switcher and while the screen is recorded. Every reveal is logged.'**
+  String get revealSecureNoteIos;
+
+  /// Instructions heading.
+  ///
+  /// In en, this message translates to:
+  /// **'How to redeem'**
+  String get revealHowTo;
+
+  /// Before the first reveal the API has no instructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Redemption steps appear with the code.'**
+  String get revealHowToAfterReveal;
+
+  /// Announcement after auto-hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Code hidden after 60 seconds.'**
+  String get revealHiddenTimeout;
+
+  /// Announcement after a hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Code hidden.'**
+  String get revealHidden;
+
+  /// iOS capture banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen recording detected'**
+  String get revealCaptureTitle;
+
+  /// iOS capture banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'On iPhone we can\'t block screenshots, so the code is hidden while recording or sharing.'**
+  String get revealCaptureBody;
+
+  /// Code box while captured.
+  ///
+  /// In en, this message translates to:
+  /// **'Code hidden while the screen is being recorded or shared.'**
+  String get revealCaptureHidden;
+
+  /// Privacy cover label.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden while the app is not in front'**
+  String get revealObscured;
+
+  /// 403 reveal_denied.
+  ///
+  /// In en, this message translates to:
+  /// **'This code can\'t be shown'**
+  String get revealDeniedTitle;
+
+  /// 403 body.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that your email is verified and the order is paid. Every attempt is logged.'**
+  String get revealDeniedBody;
+
+  /// Guest 403 body.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the link in your delivery email and confirm the emailed code on this device first.'**
+  String get revealGuestDeniedBody;
+
+  /// Unverified email banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email to reveal codes'**
+  String get revealUnverifiedTitle;
+
+  /// Unverified email banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a link to your email address.'**
+  String get revealUnverifiedBody;
+
+  /// Opens the verify email screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify email'**
+  String get revealVerifyAction;
+
+  /// 429 banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many reveals'**
+  String get revealRateLimitedTitle;
+
+  /// 429 body with the wait.
+  ///
+  /// In en, this message translates to:
+  /// **'For security you can reveal 10 codes per hour. Try again in {minutes, plural, =1{1 minute} other{{minutes} minutes}}.'**
+  String revealRateLimitedBody(int minutes);
+
+  /// 429 body without a wait.
+  ///
+  /// In en, this message translates to:
+  /// **'For security you can reveal 10 codes per hour. Try again later.'**
+  String get revealRateLimitedLater;
+
+  /// Disabled reveal button while rate limited.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {time}'**
+  String revealTryAgainIn(String time);
+
+  /// Rooted device banner.
+  ///
+  /// In en, this message translates to:
+  /// **'This device may be modified'**
+  String get revealIntegrityTitle;
+
+  /// Rooted device banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooted or jailbroken devices are less safe for codes. Reveal on another device if you can.'**
+  String get revealIntegrityBody;
+
+  /// 404 unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Code not found'**
+  String get revealNotFoundTitle;
+
+  /// 404 unit body.
+  ///
+  /// In en, this message translates to:
+  /// **'This code isn\'t in your orders.'**
+  String get revealNotFoundBody;
+
+  /// Other reveal failure.
+  ///
+  /// In en, this message translates to:
+  /// **'The code couldn\'t be shown'**
+  String get revealFailedTitle;
+
+  /// Unit not revealable.
+  ///
+  /// In en, this message translates to:
+  /// **'This code isn\'t ready yet. We\'ll email you when it is.'**
+  String get revealNotReady;
+
+  /// System biometric prompt title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you to reveal the code'**
+  String get revealBiometricPrompt;
+
+  /// Re-auth sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you'**
+  String get reauthTitle;
+
+  /// Re-auth sheet body.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to reveal codes. We ask again after 15 minutes.'**
+  String get reauthBody;
+
+  /// Re-auth sheet button.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm and reveal'**
+  String get reauthConfirm;
+
+  /// Re-auth sheet link.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get reauthForgot;
+
+  /// Guest order screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest order'**
+  String get guestOrderTitle;
+
+  /// Guest order screen title with number.
+  ///
+  /// In en, this message translates to:
+  /// **'Order {number}'**
+  String guestOrderNumberTitle(String number);
+
+  /// Guest step 11.1.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify it\'s you'**
+  String get guestVerifyTitle;
+
+  /// Guest step 11.1 body.
+  ///
+  /// In en, this message translates to:
+  /// **'To open the codes for this order we\'ll send a 6-digit code to the email you ordered with.'**
+  String get guestVerifyBody;
+
+  /// Guest email field.
+  ///
+  /// In en, this message translates to:
+  /// **'Order email'**
+  String get guestEmailLabel;
+
+  /// Guest info banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Link verified'**
+  String get guestLinkVerifiedTitle;
+
+  /// Guest info banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'You opened this order from the delivery email. The link is valid for 72 hours.'**
+  String get guestLinkVerifiedBody;
+
+  /// Guest send OTP button.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get guestSendCode;
+
+  /// Guest step 11.2.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code'**
+  String get guestCodeTitle;
+
+  /// Guest step 11.2 body.
+  ///
+  /// In en, this message translates to:
+  /// **'If {email} matches the order, we sent it a 6-digit code. It expires in 10 minutes.'**
+  String guestCodeBody(String email);
+
+  /// OTP input label.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code from the email'**
+  String get guestCodeSemantics;
+
+  /// Guest verify button.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get guestVerify;
+
+  /// Guest resend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get guestResend;
+
+  /// Guest resend cooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {time}'**
+  String guestResendIn(String time);
+
+  /// Back to the email step.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get guestChangeEmail;
+
+  /// Tag on the guest order.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest order'**
+  String get guestOrderLabel;
+
+  /// Create account prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your codes in one place'**
+  String get guestAccountPromptTitle;
+
+  /// Create account prompt body.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account with your order email to see future orders here.'**
+  String get guestAccountPromptBody;
+
+  /// Create account button.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get guestCreateAccount;
+
+  /// Guest 11.5.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has expired'**
+  String get guestLinkExpiredTitle;
+
+  /// Guest 11.5 body.
+  ///
+  /// In en, this message translates to:
+  /// **'Order links work for 72 hours. Contact support to get a new one.'**
+  String get guestLinkExpiredBody;
+
+  /// No guest proof on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your delivery email'**
+  String get guestNeedLinkTitle;
+
+  /// No guest proof body.
+  ///
+  /// In en, this message translates to:
+  /// **'To see the codes of a guest order on this device, open the link in the delivery email.'**
+  String get guestNeedLinkBody;
+
+  /// Guest order without the link proof.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the link in the delivery email again to reveal codes on this device.'**
+  String get guestLinkProofMissing;
+
+  /// Paste link page title.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a guest order'**
+  String get guestEntryTitle;
+
+  /// Paste link page body.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the link from your delivery email. We\'ll email you a code to confirm it\'s you.'**
+  String get guestEntryBody;
+
+  /// Paste link field.
+  ///
+  /// In en, this message translates to:
+  /// **'Order link'**
+  String get guestEntryLabel;
+
+  /// Invalid pasted link.
+  ///
+  /// In en, this message translates to:
+  /// **'This isn\'t a boxcards.shop order link.'**
+  String get guestEntryInvalid;
+
+  /// Paste link button.
+  ///
+  /// In en, this message translates to:
+  /// **'Open order'**
+  String get guestEntryOpen;
+
+  /// Payment provider name for the store wallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get orderGatewayWallet;
 }
 
 class _AppLocalizationsDelegate

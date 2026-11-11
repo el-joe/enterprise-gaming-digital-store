@@ -3,7 +3,7 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A13 cart, checkout and payments UI** (2026-11-11) on M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
+Status: **M-A14 orders and code reveal UI** (2026-11-11) on M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
 onboarding), the M-A7 data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
 maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
 (Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
@@ -11,8 +11,9 @@ maintenance, offline), runs onboarding (language, display currency) once, and op
 suggestions, popular terms and a local history, the display currency switcher, and the product
 page (variants, delivery fields, add to cart, reviews) with the cart count on the Cart tab, the cart
 tab, the signed-in checkout, the payment hand-off to PayPal and Paymob in the system browser with the
-app-link return, and the payment results. Orders is a "coming in the next update" placeholder until
-M-A14; the Account tab holds the M-A10 account card, the currency and the language until M-A16.
+app-link return, the payment results, the Orders tab with the order detail, the protected code
+reveal and guest order access by email code. The Account tab holds the M-A10 account card, the
+currency, guest order access and the language until M-A16.
 
 ## Requirements
 
@@ -63,7 +64,8 @@ lib/
                                  ThemeData and ThemeExtensions
   core/l10n/                     ARB files (en, ar), generated localizations, locale provider
   core/money/                    Money (Decimal), CurrencyInfo, MoneyFormatter
-  core/security/                 FLAG_SECURE screen guard, clipboard guard (Android channel)
+  core/security/                 screen security (Android FLAG_SECURE, iOS capture + privacy overlay),
+                                 clipboard guard (60 s clear), device integrity
   core/utils/ulid.dart           request ids and idempotency keys
   core/platform/                 NativeBridge: device integrity, device name, open https page / store
                                  listing (the app's own `shop.boxcards.app/security` channel)
@@ -97,8 +99,8 @@ tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 ```
 
 `presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10), for `home`,
-`catalog` and `search` (M-A11), for `product` (M-A12) and for `cart`, `checkout` and `payments`
-(M-A13); the other features get theirs in M-A14 onwards.
+`catalog` and `search` (M-A11), for `product` (M-A12), for `cart`, `checkout` and `payments`
+(M-A13) and for `orders` and `code_reveal` (M-A14); the other features get theirs in M-A15 onwards.
 `features/payments/payment_flow.dart` is the payments feature's public entry (`PaymentFlow`,
 `PaymentLaunch`), used by checkout, the app-link listener and the launch check.
 `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
@@ -165,7 +167,7 @@ app lock at a cold start, biometric offer), called by the launch feature after t
   products open the product, platforms and categories open the listing.
 - **Links.** Banner and home item links (`LinkTargetResolver` targets) map in
   `core/router/link_targets.dart`: `product` -> product page, `category` and `platform` -> listing,
-  `search` -> search with the term, `url` -> system browser (https only), `order` -> Orders tab;
+  `search` -> search with the term, `url` -> system browser (https only), `order` -> order detail;
   anything else is ignored.
 - **Hero carousel (owner decision 8).** `CarouselAutoplay` (`core/utils/carousel_autoplay.dart`)
   owns the timer: every 5 s; paused while a finger is down (touch or swipe) or a slide has focus,
@@ -316,6 +318,87 @@ including the link that cold-starts the app (kept until the first listen) and sc
 (published 2026-10-06) is the newest release and more than two weeks old. It is used only through
 `linkSourceProvider` (tests feed a fake stream). No other package was added in M-A13.
 
+## Orders and code reveal (M-A14)
+
+- **Routes.** `/orders` (tab: 09.1 to 09.3), `/orders/:order` (detail, 09.4, 09.5),
+  `/orders/:order/units/:unit` (code, 10.1 to 10.6), `/orders/:order/refund` (placeholder until the
+  M-A17 form), all three `RouteAccess.signedIn`; `/guest-orders` (paste the delivery link),
+  `/guest-orders/:order` (11.1 to 11.5) and `/guest-orders/:order/units/:unit` (guest code), public.
+  "View order" on a paid result opens the detail and "Go to orders" the tab; notification and
+  banner `order` targets open the detail.
+- **Orders tab** (`OrdersListController`): `GET /account/orders`, 20 per page, `meta` paging (the
+  next page 600 px before the end, a failed page keeps the list with a retry bar, no retry loop),
+  status chips (one `status` per request: all, completed, processing, awaiting payment, partially
+  refunded, refunded, failed, cancelled), pull to refresh, loading, empty (and empty for a filter),
+  error with request id and offline states. Signed out it offers sign-in (`from=/orders`) and guest
+  order access. A sign-in, a sign-out and `CartRevision` reload it.
+- **Order detail** (`OrderDetailController`): status and date, lines with units (masked code and
+  status; a unit opens its code screen when the server says `revealable`), refund notice
+  (`refund_state` with the succeeded refunds and their destination), total in the display currency
+  and the charged amount when the payment currency differs (owner decision 1), payment status,
+  provider and attempt, timeline. "Retry payment" for a `pending_payment` order whose latest attempt
+  ended goes through the M-A13 `PaymentFlow.retryFromOrder` (`retry-payment`, `client: app`) to the
+  payment screen. "Get help" opens `links.support`; "Request refund" opens the M-A17 placeholder
+  when the order is paid and no refund is pending or complete.
+- **Code reveal** (`RevealController`, auto-disposed family per order, unit and guest flag): masked by
+  default (the stored mask, `****7777`, never a code from a list). "Reveal code" runs the M-A7
+  `RevealCode` with `X-Device-Integrity` from `deviceIntegrityProvider` (owner decision 5; a
+  `compromised` device sees the warning banner, nothing is blocked). On 423 the controller runs
+  `confirmRecentAuthWithBiometricProvider` first (owner decision 6), and on any other outcome the
+  password sheet (10.2): "Confirm and reveal" sends `confirm-password`; a wrong password keeps the
+  sheet with the server's message (10.3); closing it returns to masked. One retry of the reveal.
+  429 shows "Too many reveals" with the minutes from `Retry-After` and a disabled "Try again in m:ss"
+  (never retried); `reveal_denied` and an unverified email (with "Verify email") have their own
+  banners; 404 is "Code not found". Revealed (10.4): the code and PIN (LTR, mono), "Copy code",
+  "Hide", "Hides in m:ss", "Read code aloud", "Open redemption page" (https only, system browser) and
+  the server's instructions under "How to redeem".
+- **Owner decision 7, as built.** The code hides after **60 s** (controller timer; the countdown is
+  display only), when the app goes to `hidden`/`paused`/`detached` (`AppLifecycleListener` on the
+  screen), when the customer taps Hide, when iOS capture starts, and when the screen is left (the
+  provider is disposed). While the app is `inactive` the screen is covered by an opaque panel (both
+  platforms). Copy goes to `clipboardGuardProvider` (keep-alive, holds no text): cleared after
+  **60 s**, also after leaving the screen, and on resume when the timer fell due in the background.
+  Android: a sensitive clip with the app's label, cleared only while the clipboard still holds it.
+  iOS and others: Flutter cannot read whose text is on the clipboard (and a read shows the iOS paste
+  notice), so an empty string is written after 60 s; **limitation**: something the customer copied
+  in between is cleared too.
+- **Screen protection** (`screenSecurityProvider`, `core/security/secure_screen.dart`): the reveal
+  controller calls `setSecure(true)` when it is created and `setSecure(false)` when it is disposed,
+  reference counted, so only while a code screen is open. Android: `FLAG_SECURE` (screenshots,
+  recording and the recents thumbnail are blank). iOS (`AppDelegate.swift`): `setSecure` arms a
+  native blur over every window on `willResignActive` / `willDeactivate` (the app-switcher
+  snapshot is taken before Flutter can draw), `isCaptured` and the event channel
+  `shop.boxcards.app/security/capture` (`UIScreen.capturedDidChangeNotification`) hide the code
+  while the screen is recorded or mirrored (10.5). **iOS cannot block a screenshot**; the secure
+  note on iOS says what is protected instead.
+- **Accessibility.** Copy, Hide and Reveal have their own screen-reader labels and hints; the code
+  box reads "Code hidden. Ends in 0000." or "Code shown. Use Read code aloud to hear it." and is
+  never read out by itself; "Read code aloud" announces it character by character on request; a hide
+  is announced ("Code hidden after 60 seconds."). 48dp targets; RTL layouts with LTR code islands.
+- **Never kept.** The code is in the controller state only while revealed; `RevealedCode` and
+  `RevealScreenState` print `<redacted>`; no provider in `code_reveal` is keep-alive; nothing is
+  written to secure storage, preferences, files, logs or analytics (tests scan the sources and
+  check storage after a reveal); reveal requests stay `sensitive` and `noRetry` with
+  `Cache-Control: no-store`.
+- **Guest order access** (owner decision 4: no guest checkout; access stays for existing guest web
+  orders). The signed delivery link (app link, or pasted on `/guest-orders`) is handed over through
+  `GuestLinkInbox` (memory only) and opened through its `/mobile` twin (link proof, token stored by
+  the M-A7 repository); then the order email (the API does not return it, so the customer types it),
+  `otp/send`, the 6-digit code (`otp_invalid` under the boxes, 60 s resend cooldown or
+  `Retry-After`), `otp/verify` (new token with both proofs), the guest order detail and the codes
+  through the same reveal screen (no re-auth for guests; the server checks the proofs). An expired
+  link is 11.5; with no link and no usable token the screen asks to open the email's link again.
+- **App links** (`AppLinkListener`): `https://<APP_LINK_HOST>/account/orders/{order}` (also
+  `/en|ar/...`, the customer delivery email) opens the detail (the guard asks to sign in first and
+  returns), and `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest
+  delivery email) opens guest access. Android intent filter: `/account/orders/`,
+  `/en/account/orders/`, `/ar/account/orders/` and the pattern
+  `/api/v1/checkout/guest/orders/.*/access`. iOS: the server's `apple-app-site-association` still
+  lists only `/app/*` (open item).
+- **Dates** (`core/utils/date_format.dart`): local time, Arabic month names with Western digits.
+- No package was added in M-A14; no backend change (the order detail carries the unit ids and masks;
+  a JSON `GET /account/digital-codes` was not needed).
+
 ## Biometric unlock (owner decision 6)
 
 Package: **`biometric_signature` 13.3.0** (pinned exactly; MIT; `github.com/chamodanethra/biometric_signature`).
@@ -391,8 +474,10 @@ server):
   `payment_status: paid` from the server is "paid".
 - **Reveal** (`code_reveal/domain/usecases/reveal_code.dart`): 423 -> password callback ->
   confirm-password -> one retry; 429 and every other failure are returned, never retried. Reveal requests
-  are `sensitive` and `noRetry`; the revealed code is a plain class with a redacted `toString`, held by no
-  provider (all code-reveal providers are auto-disposed) and never written to storage.
+  are `sensitive` and `noRetry`; the revealed code is a plain class with a redacted `toString`, held only
+  by the code screen's auto-disposed controller (M-A14; every code-reveal provider is auto-disposed) and
+  never written to storage. M-A14 added `confirmRecentAuth` (biometric, then password) and
+  `deviceIntegrity` (`X-Device-Integrity`) to `RevealCode`.
 - **Fixtures**: `test/fixtures/api` is a committed copy of `docs/api-fixtures`, so Flutter CI needs no PHP.
   After a backend contract change: `cd backend && UPDATE_API_FIXTURES=1 php artisan test --compact
   tests/Feature/MobileContract`, then `bash application/tool/sync_fixtures.sh`. `tool/ci.sh` runs
@@ -426,6 +511,32 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A14 additions)
+
+`test/features/orders/reveal_controller_test.dart` (unit lookup; reveal with `X-Device-Integrity`;
+423 -> biometric success; 423 -> biometric fails -> password; no biometric -> password; wrong
+password keeps the sheet; closing the sheet; 429 with the retry time and no retry; 403 and 404;
+unverified email; auto-hide at 60 s on the test clock; hide on pause and cover on inactive; iOS
+capture; Hide; `setSecure` on and off with the provider's life; copy; the real Android guard clears
+after 60 s; https-only redemption link; the header on the wire),
+`orders_controllers_test.dart` (paging through `meta`, failed next page, status filter, retry,
+signed out, reload on `CartRevision`; retry payment through `PaymentFlow`; refund eligibility; guest
+link -> email -> code -> order, `otp_invalid`, expired link, OTP already done, no link; paste-link
+validation; the account and guest app links), `orders_pages_test.dart` (every state in `en` and
+`ar`: list, paging by scroll, chips, empty, offline, signed out, detail and unit to code, refund
+placeholder, retry payment, not found, "View order" from a paid result; code screen through the
+re-auth sheet, copy, hide, wrong password, denied, rate limit, device warning, 60 s and background
+hide, capture, screen-reader labels and the announcement on request only, 360 wide, provider
+disposed and nothing stored after leaving; the guest flow end to end; tap-target and label
+guidelines), `test/features/code_reveal/reveal_safety_test.dart` (M-A7 checks plus: the screen
+controller is auto-disposed, no logging, storage, analytics or file APIs in the reveal screen, the
+state prints no code, the header is logged without the code), `test/core/security/security_test.dart`
+(`setSecure` reference counting on Android and iOS, the capture stream, the clipboard clear on
+Android and iOS without reading, the clear on resume) and goldens in LTR and RTL
+(`test/goldens/m_a14/`, 22 states incl. the 19.4 code reveal at 360x800, canary codes only).
+`test/helpers/reveal_fakes.dart` holds the fake reveal repository, screen security and clipboard
+guard; the harness wires them and the extended orders and guest checkout fakes.
 
 ## Tests (M-A13 additions)
 
@@ -480,12 +591,8 @@ goldens of the key states in LTR and RTL (`test/goldens/m_a10/`). `test/helpers/
 
 ## Screen and clipboard protection
 
-`SecureScreen` sets Android `FLAG_SECURE` through the app's own method channel
-(`android/app/src/main/kotlin/shop/boxcards/app/SecurityChannel.kt`, channel
-`shop.boxcards.app/security`) instead of a third-party plugin. `ClipboardGuard` marks copied codes as
-sensitive on Android 13+ and clears them after 60 s if the clipboard still holds the app's clip.
-iOS cannot block screenshots; iOS capture detection and app-switcher obscuring arrive with the code
-reveal milestone (M-A14), and until then both helpers are no-ops on iOS.
+See "Orders and code reveal (M-A14)" above. Everything goes through the app's own channel
+`shop.boxcards.app/security` (`SecurityChannel.kt`, `AppDelegate.swift`); no third-party plugin.
 
 ## Brand assets and icons
 

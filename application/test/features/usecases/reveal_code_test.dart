@@ -17,6 +17,7 @@ class ScriptedReveal implements CodeRevealRepository {
   final List<Result<RevealedCode>> reveals;
   final Result<void> confirmation;
   final List<String> calls = [];
+  final List<String?> integrity = [];
 
   @override
   Future<Result<void>> confirmPassword(String password) async {
@@ -25,8 +26,12 @@ class ScriptedReveal implements CodeRevealRepository {
   }
 
   @override
-  Future<Result<RevealedCode>> reveal(RevealTarget target) async {
+  Future<Result<RevealedCode>> reveal(
+    RevealTarget target, {
+    String? deviceIntegrity,
+  }) async {
     calls.add('reveal');
+    integrity.add(deviceIntegrity);
     return reveals.removeAt(0);
   }
 }
@@ -123,5 +128,56 @@ void main() {
       expect(repo.calls, ['reveal']);
       expect(prompts, 0);
     }
+  });
+
+  group('confirmRecentAuth (M-A14: biometric, then the password sheet)', () {
+    test('423: confirms once and retries once, sending the integrity header '
+        'on both reveals', () async {
+      final repo = ScriptedReveal([
+        const Err(RecentAuthRequiredFailure()),
+        const Ok(canary),
+      ]);
+      var confirmations = 0;
+
+      final result = await RevealCode(repo)(
+        target,
+        deviceIntegrity: 'compromised',
+        confirmRecentAuth: () async {
+          confirmations++;
+          return true;
+        },
+      );
+
+      expect(okValue(result).code, 'FIXTURE-CODE-0000');
+      expect(confirmations, 1);
+      expect(repo.calls, ['reveal', 'reveal']);
+      expect(repo.integrity, ['compromised', 'compromised']);
+    });
+
+    test(
+      'a step that is not confirmed returns the 423 without retrying',
+      () async {
+        final repo = ScriptedReveal([const Err(RecentAuthRequiredFailure())]);
+
+        failureOf<RecentAuthRequiredFailure>(
+          await RevealCode(repo)(target, confirmRecentAuth: () async => false),
+        );
+        expect(repo.calls, ['reveal']);
+      },
+    );
+
+    test('429 is returned at once and the step is never asked', () async {
+      final repo = ScriptedReveal([
+        const Err(RateLimitedFailure(retryAfter: Duration(minutes: 42))),
+      ]);
+
+      failureOf<RateLimitedFailure>(
+        await RevealCode(repo)(
+          target,
+          confirmRecentAuth: () async => fail('no re-auth on 429'),
+        ),
+      );
+      expect(repo.calls, ['reveal']);
+    });
   });
 }

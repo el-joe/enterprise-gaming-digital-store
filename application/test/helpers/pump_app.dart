@@ -7,6 +7,8 @@ import 'package:application/core/network/result.dart';
 import 'package:application/core/platform/native_bridge.dart';
 import 'package:application/core/router/app_link_listener.dart';
 import 'package:application/core/router/guards.dart';
+import 'package:application/core/security/clipboard_guard.dart';
+import 'package:application/core/security/secure_screen.dart';
 import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/core/storage/secure_store.dart';
 import 'package:application/core/utils/clock.dart';
@@ -20,6 +22,7 @@ import 'package:application/features/catalog/catalog_providers.dart';
 import 'package:application/features/checkout/checkout_providers.dart';
 import 'package:application/features/checkout/data/repositories/checkout_repository_impl.dart';
 import 'package:application/features/checkout/domain/usecases/place_order.dart';
+import 'package:application/features/code_reveal/code_reveal_providers.dart';
 import 'package:application/features/home/home_providers.dart';
 import 'package:application/features/orders/orders_providers.dart';
 import 'package:application/features/payments/domain/usecases/resolve_payment.dart';
@@ -39,6 +42,7 @@ import 'checkout_fakes.dart';
 import 'fakes.dart';
 import 'memory_stores.dart';
 import 'product_fakes.dart';
+import 'reveal_fakes.dart';
 
 final testEnv = AppEnv(
   flavor: Flavor.dev,
@@ -91,6 +95,9 @@ final class TestHarness {
     required this.orders,
     required this.links,
     required this.issuedKeys,
+    required this.reveal,
+    required this.security,
+    required this.clipboard,
   });
 
   final ProviderContainer container;
@@ -127,12 +134,19 @@ final class TestHarness {
   final FakeLinkSource links;
   final List<String> issuedKeys;
 
+  /// Orders and code reveal (M-A14): the reveal and confirm-password calls, the screen
+  /// protection (`setSecure` and iOS capture events) and the clipboard.
+  final FakeCodeRevealRepository reveal;
+  final FakeScreenSecurity security;
+  final FakeClipboardGuard clipboard;
+
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
   void dispose() {
     container.dispose();
     now.dispose();
     unawaited(links.controller.close());
+    unawaited(security.capture.close());
   }
 }
 
@@ -183,6 +197,9 @@ TestHarness buildHarness({
   final orders = FakeOrdersRepository();
   final links = FakeLinkSource();
   final issuedKeys = <String>[];
+  final reveal = FakeCodeRevealRepository();
+  final security = FakeScreenSecurity();
+  final clipboard = FakeClipboardGuard();
   when(account.profile).thenAnswer((_) async => Ok(fixtureProfile()));
 
   final container = ProviderContainer(
@@ -222,6 +239,9 @@ TestHarness buildHarness({
       paymentsRepositoryProvider.overrideWithValue(payments),
       ordersRepositoryProvider.overrideWithValue(orders),
       linkSourceProvider.overrideWithValue(links),
+      codeRevealRepositoryProvider.overrideWithValue(reveal),
+      screenSecurityProvider.overrideWithValue(security),
+      clipboardGuardProvider.overrideWithValue(clipboard),
       placeOrderProvider.overrideWith(
         (ref) => PlaceOrder(
           checkout: checkout,
@@ -266,6 +286,9 @@ TestHarness buildHarness({
     orders: orders,
     links: links,
     issuedKeys: issuedKeys,
+    reveal: reveal,
+    security: security,
+    clipboard: clipboard,
   );
 }
 

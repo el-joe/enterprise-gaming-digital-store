@@ -13,15 +13,21 @@ class CodeRevealRepositoryImpl implements CodeRevealRepository {
       guardRequest(() => _remote.confirmPassword(password));
 
   @override
-  Future<Result<RevealedCode>> reveal(RevealTarget target) => guardRequest(
-    () async {
-      final dto = target.guest
-          ? await _remote.revealGuest(target.orderPublicId, target.unitPublicId)
-          : await _remote.revealAccount(
-              target.orderPublicId,
-              target.unitPublicId,
-            );
-      return dto.toEntity();
-    },
-  );
+  Future<Result<RevealedCode>> reveal(
+    RevealTarget target, {
+    String? deviceIntegrity,
+  }) => guardRequest(() async {
+    final dto = target.guest
+        ? await _remote.revealGuest(
+            target.orderPublicId,
+            target.unitPublicId,
+            deviceIntegrity: deviceIntegrity,
+          )
+        : await _remote.revealAccount(
+            target.orderPublicId,
+            target.unitPublicId,
+            deviceIntegrity: deviceIntegrity,
+          );
+    return dto.toEntity();
+  });
 }

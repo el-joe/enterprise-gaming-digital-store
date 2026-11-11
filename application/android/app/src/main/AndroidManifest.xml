@@ -35,7 +35,8 @@
                  build.gradle.kts). Verification needs the owner's SHA-256 signing fingerprints in
                  the server's /.well-known/assetlinks.json (MOBILE_ANDROID_SHA256_FINGERPRINTS);
                  until then Android opens these links in the browser. Only these paths: other
-                 links on the domain stay in the browser. -->
+                 links on the domain stay in the browser. M-A14 adds the delivery email links:
+                 the customer order page and the signed guest access link. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -46,6 +47,10 @@
                 <data android:pathPrefix="/products/"/>
                 <data android:pathPrefix="/en/products/"/>
                 <data android:pathPrefix="/ar/products/"/>
+                <data android:pathPrefix="/account/orders/"/>
+                <data android:pathPrefix="/en/account/orders/"/>
+                <data android:pathPrefix="/ar/account/orders/"/>
+                <data android:pathPattern="/api/v1/checkout/guest/orders/.*/access"/>
             </intent-filter>
             <!-- Links go to the app_links listener only, not straight to the router. -->
             <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>

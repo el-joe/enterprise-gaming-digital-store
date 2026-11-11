@@ -3,36 +3,53 @@ import 'dart:async';
 import 'package:application/core/security/security_channel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-/// Screen capture protection for sensitive screens (MOBILE_APP_ROADMAP.md 6.3).
+part 'secure_screen.g.dart';
+
+/// Screen capture protection for code screens (MOBILE_APP_ROADMAP.md 6.3, owner decision 7),
+/// through the app's own channel `shop.boxcards.app/security`.
 ///
-/// Android: `FLAG_SECURE` through the app's own platform channel (blocks screenshots, screen
-/// recording and the recents thumbnail). iOS cannot block screenshots; the capture-detection and
-/// app-switcher obscuring for iOS is delivered with the code reveal milestone (M-A14), so on iOS
-/// and other platforms [enable] returns false and nothing changes.
-class SecureScreenController {
-  SecureScreenController({
+/// - **Android**: `setSecure(true)` sets `FLAG_SECURE` on the activity window (screenshots,
+///   recording and the recents thumbnail show nothing). It is on only while a code screen holds
+///   it ([enable] / [disable], reference counted).
+/// - **iOS** cannot block screenshots. `setSecure(true)` turns on the native privacy overlay that
+///   covers the window when the app resigns active (the app-switcher snapshot), and
+///   [captureChanges] reports `UIScreen.capturedDidChangeNotification` (recording, AirPlay
+///   mirroring, QuickTime) so the screen can hide the code while capture is on. A screenshot
+///   itself cannot be prevented or hidden on iOS; this limitation is documented.
+/// - Other platforms: nothing (no native side).
+class ScreenSecurity {
+  ScreenSecurity({
     this._channel = securityChannel,
+    this._captureChannel = securityCaptureChannel,
     TargetPlatform Function()? platform,
   }) : _platform = platform ?? (() => defaultTargetPlatform);
 
   final MethodChannel _channel;
+  final EventChannel _captureChannel;
   final TargetPlatform Function() _platform;
   int _holders = 0;
 
-  bool get isSupported => _platform() == TargetPlatform.android;
+  bool get _android => _platform() == TargetPlatform.android;
+  bool get _ios => _platform() == TargetPlatform.iOS;
 
-  /// Turns protection on. Nested screens are reference counted.
-  Future<bool> enable() async {
+  /// Whether this platform has a native side for [enable].
+  bool get isSupported => _android || _ios;
+
+  /// Whether a screen currently holds protection.
+  bool get isOn => _holders > 0;
+
+  /// Turns protection on. Nested holders are reference counted; only the first sends
+  /// `setSecure(true)`.
+  Future<void> enable() async {
     if (!isSupported) {
-      return false;
+      return;
     }
     _holders++;
     if (_holders == 1) {
-      await _channel.invokeMethod<bool>('setSecure', {'enabled': true});
+      await _send(enabled: true);
     }
-    return true;
   }
 
   /// Releases one [enable]; protection turns off when the last holder leaves.
@@ -42,41 +59,42 @@ class SecureScreenController {
     }
     _holders--;
     if (_holders == 0) {
-      await _channel.invokeMethod<bool>('setSecure', {'enabled': false});
+      await _send(enabled: false);
     }
   }
-}
 
-/// Shared controller so nested secure screens count correctly.
-final secureScreenController = SecureScreenController();
-
-/// Protects its subtree from capture while mounted.
-class SecureScreen extends StatefulWidget {
-  const SecureScreen({required this.child, this.controller, super.key});
-
-  final Widget child;
-  final SecureScreenController? controller;
-
-  @override
-  State<SecureScreen> createState() => _SecureScreenState();
-}
-
-class _SecureScreenState extends State<SecureScreen> {
-  late final SecureScreenController _controller =
-      widget.controller ?? secureScreenController;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_controller.enable());
+  Future<void> _send({required bool enabled}) async {
+    try {
+      await _channel.invokeMethod<bool>('setSecure', {'enabled': enabled});
+    } on Object {
+      // A missing native side must never break the screen; the code stays masked by default.
+    }
   }
 
-  @override
-  void dispose() {
-    unawaited(_controller.disable());
-    super.dispose();
+  /// iOS only: whether the screen is being recorded or mirrored right now.
+  Future<bool> isCaptured() async {
+    if (!_ios) {
+      return false;
+    }
+    try {
+      return await _channel.invokeMethod<bool>('isCaptured') ?? false;
+    } on Object {
+      return false;
+    }
   }
 
-  @override
-  Widget build(BuildContext context) => widget.child;
+  /// iOS only: `true` when recording or mirroring starts, `false` when it stops. Empty elsewhere.
+  Stream<bool> get captureChanges {
+    if (!_ios) {
+      return const Stream<bool>.empty();
+    }
+    return _captureChannel
+        .receiveBroadcastStream()
+        .map((event) => event == true)
+        .handleError((Object _) {});
+  }
 }
+
+/// One instance for the app, so nested code screens count correctly.
+@Riverpod(keepAlive: true)
+ScreenSecurity screenSecurity(Ref ref) => ScreenSecurity();

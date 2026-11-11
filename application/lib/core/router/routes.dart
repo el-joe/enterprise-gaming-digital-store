@@ -100,8 +100,8 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
-  /// Bottom navigation tabs (M-A11). The cart is M-A13; orders and account are placeholders
-  /// until M-A14 and M-A16.
+  /// Bottom navigation tabs (M-A11). The cart is M-A13 and orders M-A14; the account tab is a
+  /// placeholder until M-A16.
   static const browse = AppRoute(name: 'browse', path: '/browse');
 
   static const cart = AppRoute(name: 'cart', path: '/cart');
@@ -146,6 +146,48 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
+  /// Order detail (M-A14, 09.4, 09.5), above the tabs; the delivery email's
+  /// `/account/orders/{order}` link lands here.
+  static const orderDetail = AppRoute(
+    name: 'order-detail',
+    path: '/orders/:order',
+    access: RouteAccess.signedIn,
+  );
+
+  /// One unit's code (M-A14, 10.1 to 10.6), pushed from the order detail.
+  static const codeReveal = AppRoute(
+    name: 'code-reveal',
+    path: '/orders/:order/units/:unit',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Refund request entry (the form is M-A17; a placeholder until then).
+  static const refundRequest = AppRoute(
+    name: 'refund-request',
+    path: '/orders/:order/refund',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Guest order access (11.x): paste the link of the delivery email. Reached from the Account
+  /// tab and the signed-out Orders tab; no guest checkout (owner decision 4).
+  static const guestAccess = AppRoute(
+    name: 'guest-access',
+    path: '/guest-orders',
+  );
+
+  /// A guest order: email code (OTP), then the order (11.1 to 11.5). The signed delivery link
+  /// lands here through the app-link listener.
+  static const guestOrder = AppRoute(
+    name: 'guest-order',
+    path: '/guest-orders/:order',
+  );
+
+  /// One unit's code of a guest order (guest order token with the link and OTP proofs).
+  static const guestReveal = AppRoute(
+    name: 'guest-reveal',
+    path: '/guest-orders/:order/units/:unit',
+  );
+
   static const all = [
     home,
     browse,
@@ -159,6 +201,12 @@ abstract final class Routes {
     productReviews,
     checkout,
     payment,
+    orderDetail,
+    codeReveal,
+    refundRequest,
+    guestAccess,
+    guestOrder,
+    guestReveal,
     maintenance,
     updateRequired,
     splash,
@@ -220,6 +268,32 @@ abstract final class Routes {
   /// Location of [payment] for an order.
   static String paymentLocation(String orderPublicId) =>
       '/payments/${Uri.encodeComponent(orderPublicId)}';
+
+  /// Location of [orderDetail].
+  static String orderLocation(String orderPublicId) =>
+      '/orders/${Uri.encodeComponent(orderPublicId)}';
+
+  /// Location of [codeReveal].
+  static String codeRevealLocation(String orderPublicId, String unitPublicId) =>
+      '${orderLocation(orderPublicId)}/units/${Uri.encodeComponent(unitPublicId)}';
+
+  /// Location of [refundRequest].
+  static String refundRequestLocation(String orderPublicId) =>
+      '${orderLocation(orderPublicId)}/refund';
+
+  /// Location of [guestOrder].
+  static String guestOrderLocation(String orderPublicId) =>
+      '/guest-orders/${Uri.encodeComponent(orderPublicId)}';
+
+  /// Location of [guestReveal].
+  static String guestRevealLocation(
+    String orderPublicId,
+    String unitPublicId,
+  ) =>
+      '${guestOrderLocation(orderPublicId)}/units/${Uri.encodeComponent(unitPublicId)}';
+
+  /// Path parameter of [codeReveal] and [guestReveal].
+  static const unitParameter = 'unit';
 
   /// Path parameter of [payment].
   static const orderParameter = 'order';

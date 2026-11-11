@@ -5,6 +5,7 @@ import 'package:application/core/config/app_env.dart';
 import 'package:application/core/router/app_router.dart';
 import 'package:application/core/router/deep_links.dart';
 import 'package:application/core/router/guards.dart';
+import 'package:application/core/router/link_inbox.dart';
 import 'package:application/core/router/routes.dart';
 import 'package:application/features/payments/payment_flow.dart';
 import 'package:go_router/go_router.dart';
@@ -34,13 +35,17 @@ LinkSource linkSource(Ref ref) => AppLinksSource();
 ///   to [PaymentFlow] (which only ever asks the server; the link marks nothing paid) and opens
 ///   its payment screen.
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
+/// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
+///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
+///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
+///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the
-/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Other
-/// parsed links (guest order access, email verification, password reset) are not routed by the
-/// platform to the app: the intent filters and associated domains cover only `/app/payments/`
-/// and the product paths.
+/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Email
+/// verification and password reset links are parsed but not routed: they are not in the intent
+/// filters, so they keep opening in the browser.
 @Riverpod(keepAlive: true)
 class AppLinkListener extends _$AppLinkListener {
   final _queue = <DeepLink>[];
@@ -120,7 +125,12 @@ class AppLinkListener extends _$AppLinkListener {
         router.go(Routes.paymentLocation(orderPublicId));
       case ProductLink(:final location):
         unawaited(router.push(location));
-      case GuestOrderAccessLink() || VerifyEmailLink() || ResetPasswordLink():
+      case AccountOrderLink(:final orderPublicId):
+        router.go(Routes.orderLocation(orderPublicId));
+      case GuestOrderAccessLink(:final orderPublicId, :final signedUri):
+        ref.read(guestLinkInboxProvider).put(orderPublicId, signedUri);
+        router.go(Routes.guestOrderLocation(orderPublicId));
+      case VerifyEmailLink() || ResetPasswordLink():
         break;
     }
   }

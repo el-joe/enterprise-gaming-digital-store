@@ -99,8 +99,9 @@ class PaymentPage extends ConsumerWidget {
           AppButton(
             label: l10n.paymentViewOrder,
             expand: true,
-            onPressed: () =>
-                unawaited(_leave(context, ref, Routes.orders.path)),
+            onPressed: () => unawaited(
+              _leave(context, ref, Routes.orderLocation(orderPublicId)),
+            ),
           ),
           AppButton(
             label: l10n.paymentKeepShopping,

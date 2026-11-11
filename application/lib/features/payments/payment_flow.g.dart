@@ -68,7 +68,7 @@ final class PaymentFlowProvider
   }
 }
 
-String _$paymentFlowHash() => r'7a0e5788d4cd7c8f991e699b210438267abe5bef';
+String _$paymentFlowHash() => r'7fd055138a61e974b90096a20736787594d44198';
 
 /// The payment of one order after place-order (MOBILE_APP_ROADMAP.md 5, ADR-039). The payments
 /// feature's public entry: checkout starts it, the app-link listener hands it return links, and

@@ -2,60 +2,87 @@ import 'package:application/core/security/clipboard_guard.dart';
 import 'package:application/core/security/secure_screen.dart';
 import 'package:application/core/security/security_channel.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final calls = <MethodCall>[];
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
   setUp(() {
     calls.clear();
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(securityChannel, (call) async {
-          calls.add(call);
-          return true;
-        });
+    messenger.setMockMethodCallHandler(securityChannel, (call) async {
+      calls.add(call);
+      return true;
+    });
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(securityChannel, null);
+    messenger.setMockMethodCallHandler(securityChannel, null);
   });
 
-  group('SecureScreen', () {
-    testWidgets(
-      'sets FLAG_SECURE while mounted on Android, reference counted',
-      (tester) async {
-        final controller = SecureScreenController(
-          platform: () => TargetPlatform.android,
-        );
-        await tester.pumpWidget(
-          SecureScreen(
-            controller: controller,
-            child: SecureScreen(
-              controller: controller,
-              child: const SizedBox(),
-            ),
-          ),
-        );
+  group('ScreenSecurity', () {
+    test(
+      'Android: setSecure on for the first holder, off after the last',
+      () async {
+        final security = ScreenSecurity(platform: () => TargetPlatform.android);
+        await security.enable();
+        await security.enable();
         expect(calls.map((c) => c.arguments), [
           {'enabled': true},
         ]);
-
-        await tester.pumpWidget(const SizedBox());
+        await security.disable();
+        expect(calls, hasLength(1));
+        await security.disable();
         expect(calls.map((c) => c.method), ['setSecure', 'setSecure']);
+        expect(calls.last.arguments, {'enabled': false});
+        expect(security.isOn, isFalse);
+        // Capture detection is iOS only.
+        expect(await security.isCaptured(), isFalse);
+        expect(await security.captureChanges.isEmpty, isTrue);
+      },
+    );
+
+    test(
+      'iOS: setSecure drives the privacy overlay; capture is read and streamed',
+      () async {
+        final security = ScreenSecurity(platform: () => TargetPlatform.iOS);
+        await security.enable();
+        expect(calls.single.method, 'setSecure');
+        expect(await security.isCaptured(), isTrue);
+
+        messenger.setMockStreamHandler(
+          securityCaptureChannel,
+          MockStreamHandler.inline(
+            onListen: (_, sink) {
+              sink
+                ..success(true)
+                ..success(false);
+            },
+          ),
+        );
+        addTearDown(
+          () => messenger.setMockStreamHandler(securityCaptureChannel, null),
+        );
+        expect(await security.captureChanges.take(2).toList(), [true, false]);
+        await security.disable();
         expect(calls.last.arguments, {'enabled': false});
       },
     );
 
-    test('is a no-op on iOS (handled in M-A14)', () async {
-      final controller = SecureScreenController(
-        platform: () => TargetPlatform.iOS,
-      );
-      expect(await controller.enable(), isFalse);
-      await controller.disable();
+    test('other platforms do nothing', () async {
+      final security = ScreenSecurity(platform: () => TargetPlatform.linux);
+      await security.enable();
+      await security.disable();
       expect(calls, isEmpty);
+    });
+
+    test('a missing native side never throws', () async {
+      messenger.setMockMethodCallHandler(securityChannel, null);
+      final security = ScreenSecurity(platform: () => TargetPlatform.android);
+      await security.enable();
+      await security.disable();
     });
   });
 
@@ -64,9 +91,9 @@ void main() {
       tester,
     ) async {
       final guard = ClipboardGuard(platform: () => TargetPlatform.android);
-      await guard.copy('CODE-1234');
+      await guard.copy('CANARY-1234');
       expect(calls.single.method, 'copySensitive');
-      expect(calls.single.arguments, {'text': 'CODE-1234'});
+      expect(calls.single.arguments, {'text': 'CANARY-1234'});
       expect(guard.hasPendingClear, isTrue);
 
       await tester.pump(const Duration(seconds: 59));
@@ -77,42 +104,55 @@ void main() {
     });
 
     testWidgets(
-      'other platforms clear only if the clipboard still holds the copy',
+      'iOS writes an empty string after 60 s without reading the clipboard',
       (tester) async {
-        String? clipboard;
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-              if (call.method == 'Clipboard.setData') {
-                clipboard =
-                    (call.arguments as Map<Object?, Object?>)['text']
-                        as String?;
-                return null;
-              }
-              if (call.method == 'Clipboard.getData') {
-                return {'text': clipboard};
-              }
-              return null;
-            });
-        addTearDown(
-          () => TestDefaultBinaryMessengerBinding
-              .instance
-              .defaultBinaryMessenger
-              .setMockMethodCallHandler(SystemChannels.platform, null),
-        );
+        {
+          final platformCalls = <String>[];
+          String? clipboard;
+          messenger.setMockMethodCallHandler(SystemChannels.platform, (
+            call,
+          ) async {
+            platformCalls.add(call.method);
+            if (call.method == 'Clipboard.setData') {
+              clipboard =
+                  (call.arguments as Map<Object?, Object?>)['text'] as String?;
+            }
+            return null;
+          });
+          addTearDown(
+            () => messenger.setMockMethodCallHandler(
+              SystemChannels.platform,
+              null,
+            ),
+          );
 
-        final guard = ClipboardGuard(platform: () => TargetPlatform.iOS);
-        await guard.copy('PIN-1');
-        expect(clipboard, 'PIN-1');
-        await tester.pump(const Duration(seconds: 60));
-        await tester.pump();
-        expect(clipboard, '');
-
-        await guard.copy('PIN-2');
-        clipboard = 'something the user copied';
-        await guard.dispose();
-        expect(clipboard, 'something the user copied');
-        expect(calls, isEmpty);
+          final guard = ClipboardGuard(platform: () => TargetPlatform.iOS);
+          await guard.copy('CANARY-PIN');
+          expect(clipboard, 'CANARY-PIN');
+          await tester.pump(const Duration(seconds: 60));
+          await tester.pump();
+          expect(clipboard, '');
+          expect(platformCalls, isNot(contains('Clipboard.getData')));
+          expect(calls, isEmpty);
+        }
       },
     );
+
+    test('a clear that fell due in the background runs on resume', () async {
+      var now = DateTime.utc(2026, 11, 11, 12);
+      final guard = ClipboardGuard(
+        platform: () => TargetPlatform.android,
+        clock: () => now,
+      );
+      await guard.copy('CANARY-1');
+      await guard.resumed();
+      expect(calls.map((c) => c.method), ['copySensitive']);
+
+      now = now.add(const Duration(seconds: 61));
+      await guard.resumed();
+      expect(calls.last.method, 'clearSensitive');
+      expect(guard.hasPendingClear, isFalse);
+      guard.dispose();
+    });
   });
 }

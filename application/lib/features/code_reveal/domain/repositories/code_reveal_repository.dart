@@ -6,6 +6,10 @@ abstract interface class CodeRevealRepository {
   Future<Result<void>> confirmPassword(String password);
 
   /// 423 `recent_auth_required` (account), 403 `reveal_denied`, 404, 429. Every attempt is
-  /// audited by the server; the client never retries automatically.
-  Future<Result<RevealedCode>> reveal(RevealTarget target);
+  /// audited by the server; the client never retries automatically. [deviceIntegrity] is sent as
+  /// `X-Device-Integrity` (`ok`, `compromised`, `unknown`; owner decision 5).
+  Future<Result<RevealedCode>> reveal(
+    RevealTarget target, {
+    String? deviceIntegrity,
+  });
 }

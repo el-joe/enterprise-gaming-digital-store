@@ -1472,4 +1472,509 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentStatusUnknown => 'Not checked yet';
+
+  @override
+  String get ordersFilterAll => 'All';
+
+  @override
+  String get orderStatusCompleted => 'Completed';
+
+  @override
+  String get orderStatusProcessing => 'Processing';
+
+  @override
+  String get orderStatusPaymentProcessing => 'Payment processing';
+
+  @override
+  String get orderStatusAwaitingPayment => 'Awaiting payment';
+
+  @override
+  String get orderStatusPartlyDelivered => 'Partly delivered';
+
+  @override
+  String get orderStatusFailed => 'Failed';
+
+  @override
+  String get orderStatusCancelled => 'Cancelled';
+
+  @override
+  String get orderStatusRefundPending => 'Refund pending';
+
+  @override
+  String get orderStatusPartiallyRefunded => 'Partially refunded';
+
+  @override
+  String get orderStatusRefunded => 'Refunded';
+
+  @override
+  String ordersItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String orderTileSemantics(
+    String number,
+    String status,
+    String date,
+    String total,
+  ) {
+    return 'Order $number, $status, $date, $total';
+  }
+
+  @override
+  String get ordersEmptyTitle => 'No orders yet';
+
+  @override
+  String get ordersEmptyBody => 'Codes you buy show up here.';
+
+  @override
+  String get ordersEmptyAction => 'Browse the store';
+
+  @override
+  String get ordersEmptyFilteredTitle => 'No orders with this status';
+
+  @override
+  String get ordersShowAll => 'Show all orders';
+
+  @override
+  String get ordersLoadErrorTitle => 'We couldn\'t load your orders';
+
+  @override
+  String get ordersMoreFailed => 'More orders couldn\'t load.';
+
+  @override
+  String get ordersSignedOutTitle => 'Sign in to see your orders';
+
+  @override
+  String get ordersSignedOutBody =>
+      'Your orders and codes are kept in your account.';
+
+  @override
+  String get ordersSignIn => 'Sign in';
+
+  @override
+  String get guestAccessEntry => 'Open a guest order';
+
+  @override
+  String get guestAccessEntryBody =>
+      'Ordered on the web without an account? Use the link in your delivery email.';
+
+  @override
+  String orderDetailSemantics(String number) {
+    return 'Order $number';
+  }
+
+  @override
+  String orderQtyEach(int quantity, String price) {
+    return 'Qty $quantity · $price each';
+  }
+
+  @override
+  String orderQty(int quantity) {
+    return 'Qty $quantity';
+  }
+
+  @override
+  String get orderUnitCode => 'Code';
+
+  @override
+  String get orderUnitDelivered => 'Delivered';
+
+  @override
+  String get orderUnitRevealed => 'Revealed';
+
+  @override
+  String get orderUnitPreparing => 'Preparing';
+
+  @override
+  String get orderUnitFailed => 'Not delivered';
+
+  @override
+  String get orderUnitRefunded => 'Refunded';
+
+  @override
+  String get orderUnitRefundPending => 'Refund pending';
+
+  @override
+  String get orderUnitCancelled => 'Cancelled';
+
+  @override
+  String orderUnitSemantics(int index, String name, String status) {
+    return 'Code $index of $name, $status';
+  }
+
+  @override
+  String get orderUnitOpenHint => 'Opens the code';
+
+  @override
+  String get orderTotal => 'Total';
+
+  @override
+  String get orderCharged => 'Charged';
+
+  @override
+  String get orderPayment => 'Payment';
+
+  @override
+  String orderAttempt(int attempt) {
+    return 'attempt $attempt';
+  }
+
+  @override
+  String get orderPaymentStatus => 'Payment status';
+
+  @override
+  String get orderPaymentUnpaid => 'Unpaid';
+
+  @override
+  String get orderPaymentProcessing => 'Processing';
+
+  @override
+  String get orderPaymentPaid => 'Paid';
+
+  @override
+  String get orderPaymentPartiallyRefunded => 'Partially refunded';
+
+  @override
+  String get orderPaymentRefunded => 'Refunded';
+
+  @override
+  String get orderRetryPayment => 'Retry payment';
+
+  @override
+  String get orderAwaitingPaymentNote =>
+      'This order is waiting for payment. Your last attempt did not go through.';
+
+  @override
+  String get orderGetHelp => 'Get help';
+
+  @override
+  String get orderRequestRefund => 'Request refund';
+
+  @override
+  String get orderTimeline => 'Timeline';
+
+  @override
+  String get orderTimelinePlaced => 'Placed';
+
+  @override
+  String get orderTimelinePaid => 'Paid';
+
+  @override
+  String get orderRefundPendingTitle => 'Refund in progress';
+
+  @override
+  String get orderRefundPartialTitle => 'Part of this order was refunded';
+
+  @override
+  String get orderRefundFullTitle => 'This order was refunded';
+
+  @override
+  String orderRefundToWallet(String amount) {
+    return '$amount was returned to your wallet.';
+  }
+
+  @override
+  String orderRefundToOriginal(String amount) {
+    return '$amount was returned to your payment method.';
+  }
+
+  @override
+  String get orderNotFoundTitle => 'Order not found';
+
+  @override
+  String get orderNotFoundBody => 'This order isn\'t in your account.';
+
+  @override
+  String get orderLoadErrorTitle => 'We couldn\'t load this order';
+
+  @override
+  String get refundRequestTitle => 'Request a refund';
+
+  @override
+  String get revealTitle => 'Your code';
+
+  @override
+  String revealCodeOf(int index, int count) {
+    return 'Code $index of $count';
+  }
+
+  @override
+  String revealDeliveredAt(String date) {
+    return 'Delivered $date';
+  }
+
+  @override
+  String get revealCodeLabel => 'Code';
+
+  @override
+  String get revealPinLabel => 'PIN';
+
+  @override
+  String revealMaskedSemantics(String last) {
+    return 'Code hidden. Ends in $last.';
+  }
+
+  @override
+  String get revealMaskedSemanticsNoHint => 'Code hidden.';
+
+  @override
+  String get revealButton => 'Reveal code';
+
+  @override
+  String get revealButtonHint =>
+      'Asks you to confirm it\'s you, then shows the code for 60 seconds';
+
+  @override
+  String get revealCopy => 'Copy code';
+
+  @override
+  String get revealCopySemantics =>
+      'Copy the code. The clipboard clears after 60 seconds';
+
+  @override
+  String get revealHide => 'Hide';
+
+  @override
+  String get revealHideSemantics => 'Hide the code now';
+
+  @override
+  String get revealReadAloud => 'Read code aloud';
+
+  @override
+  String get revealShownSemantics =>
+      'Code shown. Use Read code aloud to hear it.';
+
+  @override
+  String get revealCopied => 'Code copied. Clipboard clears in 60 s.';
+
+  @override
+  String revealHidesIn(String time) {
+    return 'Hides in $time';
+  }
+
+  @override
+  String get revealOpenRedemption => 'Open redemption page';
+
+  @override
+  String get revealSecureNoteAndroid =>
+      'Screenshots are blocked here. Every reveal is logged.';
+
+  @override
+  String get revealSecureNoteIos =>
+      'The code hides in the app switcher and while the screen is recorded. Every reveal is logged.';
+
+  @override
+  String get revealHowTo => 'How to redeem';
+
+  @override
+  String get revealHowToAfterReveal => 'Redemption steps appear with the code.';
+
+  @override
+  String get revealHiddenTimeout => 'Code hidden after 60 seconds.';
+
+  @override
+  String get revealHidden => 'Code hidden.';
+
+  @override
+  String get revealCaptureTitle => 'Screen recording detected';
+
+  @override
+  String get revealCaptureBody =>
+      'On iPhone we can\'t block screenshots, so the code is hidden while recording or sharing.';
+
+  @override
+  String get revealCaptureHidden =>
+      'Code hidden while the screen is being recorded or shared.';
+
+  @override
+  String get revealObscured => 'Hidden while the app is not in front';
+
+  @override
+  String get revealDeniedTitle => 'This code can\'t be shown';
+
+  @override
+  String get revealDeniedBody =>
+      'Check that your email is verified and the order is paid. Every attempt is logged.';
+
+  @override
+  String get revealGuestDeniedBody =>
+      'Open the link in your delivery email and confirm the emailed code on this device first.';
+
+  @override
+  String get revealUnverifiedTitle => 'Verify your email to reveal codes';
+
+  @override
+  String get revealUnverifiedBody => 'We sent a link to your email address.';
+
+  @override
+  String get revealVerifyAction => 'Verify email';
+
+  @override
+  String get revealRateLimitedTitle => 'Too many reveals';
+
+  @override
+  String revealRateLimitedBody(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return 'For security you can reveal 10 codes per hour. Try again in $_temp0.';
+  }
+
+  @override
+  String get revealRateLimitedLater =>
+      'For security you can reveal 10 codes per hour. Try again later.';
+
+  @override
+  String revealTryAgainIn(String time) {
+    return 'Try again in $time';
+  }
+
+  @override
+  String get revealIntegrityTitle => 'This device may be modified';
+
+  @override
+  String get revealIntegrityBody =>
+      'Rooted or jailbroken devices are less safe for codes. Reveal on another device if you can.';
+
+  @override
+  String get revealNotFoundTitle => 'Code not found';
+
+  @override
+  String get revealNotFoundBody => 'This code isn\'t in your orders.';
+
+  @override
+  String get revealFailedTitle => 'The code couldn\'t be shown';
+
+  @override
+  String get revealNotReady =>
+      'This code isn\'t ready yet. We\'ll email you when it is.';
+
+  @override
+  String get revealBiometricPrompt => 'Confirm it\'s you to reveal the code';
+
+  @override
+  String get reauthTitle => 'Confirm it\'s you';
+
+  @override
+  String get reauthBody =>
+      'Enter your password to reveal codes. We ask again after 15 minutes.';
+
+  @override
+  String get reauthConfirm => 'Confirm and reveal';
+
+  @override
+  String get reauthForgot => 'Forgot password?';
+
+  @override
+  String get guestOrderTitle => 'Guest order';
+
+  @override
+  String guestOrderNumberTitle(String number) {
+    return 'Order $number';
+  }
+
+  @override
+  String get guestVerifyTitle => 'Verify it\'s you';
+
+  @override
+  String get guestVerifyBody =>
+      'To open the codes for this order we\'ll send a 6-digit code to the email you ordered with.';
+
+  @override
+  String get guestEmailLabel => 'Order email';
+
+  @override
+  String get guestLinkVerifiedTitle => 'Link verified';
+
+  @override
+  String get guestLinkVerifiedBody =>
+      'You opened this order from the delivery email. The link is valid for 72 hours.';
+
+  @override
+  String get guestSendCode => 'Send code';
+
+  @override
+  String get guestCodeTitle => 'Enter the code';
+
+  @override
+  String guestCodeBody(String email) {
+    return 'If $email matches the order, we sent it a 6-digit code. It expires in 10 minutes.';
+  }
+
+  @override
+  String get guestCodeSemantics => '6-digit code from the email';
+
+  @override
+  String get guestVerify => 'Verify';
+
+  @override
+  String get guestResend => 'Resend code';
+
+  @override
+  String guestResendIn(String time) {
+    return 'Resend in $time';
+  }
+
+  @override
+  String get guestChangeEmail => 'Change email';
+
+  @override
+  String get guestOrderLabel => 'Guest order';
+
+  @override
+  String get guestAccountPromptTitle => 'Keep your codes in one place';
+
+  @override
+  String get guestAccountPromptBody =>
+      'Create an account with your order email to see future orders here.';
+
+  @override
+  String get guestCreateAccount => 'Create account';
+
+  @override
+  String get guestLinkExpiredTitle => 'This link has expired';
+
+  @override
+  String get guestLinkExpiredBody =>
+      'Order links work for 72 hours. Contact support to get a new one.';
+
+  @override
+  String get guestNeedLinkTitle => 'Open your delivery email';
+
+  @override
+  String get guestNeedLinkBody =>
+      'To see the codes of a guest order on this device, open the link in the delivery email.';
+
+  @override
+  String get guestLinkProofMissing =>
+      'Open the link in the delivery email again to reveal codes on this device.';
+
+  @override
+  String get guestEntryTitle => 'Open a guest order';
+
+  @override
+  String get guestEntryBody =>
+      'Paste the link from your delivery email. We\'ll email you a code to confirm it\'s you.';
+
+  @override
+  String get guestEntryLabel => 'Order link';
+
+  @override
+  String get guestEntryInvalid => 'This isn\'t a boxcards.shop order link.';
+
+  @override
+  String get guestEntryOpen => 'Open order';
+
+  @override
+  String get orderGatewayWallet => 'Wallet';
 }

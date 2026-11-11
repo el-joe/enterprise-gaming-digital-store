@@ -24,14 +24,37 @@ class CodeRevealRemoteDataSource {
     );
   }
 
-  Future<RevealedCodeDto> revealAccount(String order, String unit) =>
-      _reveal('/mobile/account/orders/$order/units/$unit/reveal');
+  /// The device-integrity header of the reveal routes (API_DOCUMENTATION.md 1g).
+  static const deviceIntegrityHeader = 'X-Device-Integrity';
 
-  Future<RevealedCodeDto> revealGuest(String order, String unit) =>
-      _reveal('/mobile/checkout/guest/orders/$order/units/$unit/reveal');
+  Future<RevealedCodeDto> revealAccount(
+    String order,
+    String unit, {
+    String? deviceIntegrity,
+  }) => _reveal(
+    '/mobile/account/orders/$order/units/$unit/reveal',
+    deviceIntegrity,
+  );
 
-  Future<RevealedCodeDto> _reveal(String path) async {
-    final response = await _dio.post<Object?>(path, options: _sensitive);
+  Future<RevealedCodeDto> revealGuest(
+    String order,
+    String unit, {
+    String? deviceIntegrity,
+  }) => _reveal(
+    '/mobile/checkout/guest/orders/$order/units/$unit/reveal',
+    deviceIntegrity,
+  );
+
+  Future<RevealedCodeDto> _reveal(String path, String? deviceIntegrity) async {
+    final response = await _dio.post<Object?>(
+      path,
+      options: _sensitive.copyWith(
+        headers: {
+          ..._sensitive.headers!,
+          deviceIntegrityHeader: ?deviceIntegrity,
+        },
+      ),
+    );
     return decodeEnvelope(
       response.data,
       (data) => RevealedCodeDto.fromJson(asJsonObject(data)),

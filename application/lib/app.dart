@@ -1,6 +1,7 @@
 import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/router/app_link_listener.dart';
 import 'package:application/core/router/app_router.dart';
+import 'package:application/core/security/clipboard_resume_hook.dart';
 import 'package:application/core/theme/app_theme.dart';
 import 'package:application/features/auth/presentation/widgets/biometric_widgets.dart';
 import 'package:flutter/material.dart';
@@ -28,8 +29,10 @@ class App extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       routerConfig: ref.watch(appRouterProvider),
       // Biometric app lock above the navigator (owner decision 6).
-      builder: (context, child) =>
-          AppLockGate(child: child ?? const SizedBox.shrink()),
+      // The clipboard clear of a copied code also runs after a return from the background.
+      builder: (context, child) => AppLockGate(
+        child: ClipboardResumeHook(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

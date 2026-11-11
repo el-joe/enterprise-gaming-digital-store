@@ -1987,5 +1987,688 @@
   "paymentStatusUnknown": "Not checked yet",
   "@paymentStatusUnknown": {
     "description": "Status chip before a check."
+  },
+  "ordersFilterAll": "All",
+  "@ordersFilterAll": {
+    "description": "Order status filter chip."
+  },
+  "orderStatusCompleted": "Completed",
+  "@orderStatusCompleted": {
+    "description": "Order status."
+  },
+  "orderStatusProcessing": "Processing",
+  "@orderStatusProcessing": {
+    "description": "Order status (paid, processing, supplier or review steps)."
+  },
+  "orderStatusPaymentProcessing": "Payment processing",
+  "@orderStatusPaymentProcessing": {
+    "description": "Order status."
+  },
+  "orderStatusAwaitingPayment": "Awaiting payment",
+  "@orderStatusAwaitingPayment": {
+    "description": "Order status pending_payment."
+  },
+  "orderStatusPartlyDelivered": "Partly delivered",
+  "@orderStatusPartlyDelivered": {
+    "description": "Order status partially_fulfilled."
+  },
+  "orderStatusFailed": "Failed",
+  "@orderStatusFailed": {
+    "description": "Order status."
+  },
+  "orderStatusCancelled": "Cancelled",
+  "@orderStatusCancelled": {
+    "description": "Order status."
+  },
+  "orderStatusRefundPending": "Refund pending",
+  "@orderStatusRefundPending": {
+    "description": "Order status."
+  },
+  "orderStatusPartiallyRefunded": "Partially refunded",
+  "@orderStatusPartiallyRefunded": {
+    "description": "Order status."
+  },
+  "orderStatusRefunded": "Refunded",
+  "@orderStatusRefunded": {
+    "description": "Order status."
+  },
+  "ordersItemCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@ordersItemCount": {
+    "description": "Number of items in an order.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orderTileSemantics": "Order {number}, {status}, {date}, {total}",
+  "@orderTileSemantics": {
+    "description": "Screen reader label of an order row.",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "ordersEmptyTitle": "No orders yet",
+  "@ordersEmptyTitle": {
+    "description": "Empty orders title."
+  },
+  "ordersEmptyBody": "Codes you buy show up here.",
+  "@ordersEmptyBody": {
+    "description": "Empty orders body."
+  },
+  "ordersEmptyAction": "Browse the store",
+  "@ordersEmptyAction": {
+    "description": "Empty orders action."
+  },
+  "ordersEmptyFilteredTitle": "No orders with this status",
+  "@ordersEmptyFilteredTitle": {
+    "description": "Empty state with a status filter."
+  },
+  "ordersShowAll": "Show all orders",
+  "@ordersShowAll": {
+    "description": "Clears the status filter."
+  },
+  "ordersLoadErrorTitle": "We couldn't load your orders",
+  "@ordersLoadErrorTitle": {
+    "description": "Orders error title."
+  },
+  "ordersMoreFailed": "More orders couldn't load.",
+  "@ordersMoreFailed": {
+    "description": "Next page failed bar."
+  },
+  "ordersSignedOutTitle": "Sign in to see your orders",
+  "@ordersSignedOutTitle": {
+    "description": "Signed-out orders tab title."
+  },
+  "ordersSignedOutBody": "Your orders and codes are kept in your account.",
+  "@ordersSignedOutBody": {
+    "description": "Signed-out orders tab body."
+  },
+  "ordersSignIn": "Sign in",
+  "@ordersSignIn": {
+    "description": "Signed-out orders tab action."
+  },
+  "guestAccessEntry": "Open a guest order",
+  "@guestAccessEntry": {
+    "description": "Link to guest order access."
+  },
+  "guestAccessEntryBody": "Ordered on the web without an account? Use the link in your delivery email.",
+  "@guestAccessEntryBody": {
+    "description": "Guest order access hint."
+  },
+  "orderDetailSemantics": "Order {number}",
+  "@orderDetailSemantics": {
+    "description": "Order detail title for screen readers.",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "orderQtyEach": "Qty {quantity} · {price} each",
+  "@orderQtyEach": {
+    "description": "Line quantity and unit price.",
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "orderQty": "Qty {quantity}",
+  "@orderQty": {
+    "description": "Line quantity.",
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "orderUnitCode": "Code",
+  "@orderUnitCode": {
+    "description": "Unit row label."
+  },
+  "orderUnitDelivered": "Delivered",
+  "@orderUnitDelivered": {
+    "description": "Unit status."
+  },
+  "orderUnitRevealed": "Revealed",
+  "@orderUnitRevealed": {
+    "description": "Unit status: delivered and viewed before."
+  },
+  "orderUnitPreparing": "Preparing",
+  "@orderUnitPreparing": {
+    "description": "Unit status before delivery."
+  },
+  "orderUnitFailed": "Not delivered",
+  "@orderUnitFailed": {
+    "description": "Unit status failed."
+  },
+  "orderUnitRefunded": "Refunded",
+  "@orderUnitRefunded": {
+    "description": "Unit status."
+  },
+  "orderUnitRefundPending": "Refund pending",
+  "@orderUnitRefundPending": {
+    "description": "Unit status."
+  },
+  "orderUnitCancelled": "Cancelled",
+  "@orderUnitCancelled": {
+    "description": "Unit status."
+  },
+  "orderUnitSemantics": "Code {index} of {name}, {status}",
+  "@orderUnitSemantics": {
+    "description": "Screen reader label of a unit row.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "orderUnitOpenHint": "Opens the code",
+  "@orderUnitOpenHint": {
+    "description": "Screen reader hint of a unit row."
+  },
+  "orderTotal": "Total",
+  "@orderTotal": {
+    "description": "Order total (display currency)."
+  },
+  "orderCharged": "Charged",
+  "@orderCharged": {
+    "description": "Amount charged in the payment currency."
+  },
+  "orderPayment": "Payment",
+  "@orderPayment": {
+    "description": "Payment row label."
+  },
+  "orderAttempt": "attempt {attempt}",
+  "@orderAttempt": {
+    "description": "Payment attempt number.",
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      }
+    }
+  },
+  "orderPaymentStatus": "Payment status",
+  "@orderPaymentStatus": {
+    "description": "Payment status row."
+  },
+  "orderPaymentUnpaid": "Unpaid",
+  "@orderPaymentUnpaid": {
+    "description": "Payment status."
+  },
+  "orderPaymentProcessing": "Processing",
+  "@orderPaymentProcessing": {
+    "description": "Payment status."
+  },
+  "orderPaymentPaid": "Paid",
+  "@orderPaymentPaid": {
+    "description": "Payment status."
+  },
+  "orderPaymentPartiallyRefunded": "Partially refunded",
+  "@orderPaymentPartiallyRefunded": {
+    "description": "Payment status."
+  },
+  "orderPaymentRefunded": "Refunded",
+  "@orderPaymentRefunded": {
+    "description": "Payment status."
+  },
+  "orderRetryPayment": "Retry payment",
+  "@orderRetryPayment": {
+    "description": "Order detail action."
+  },
+  "orderAwaitingPaymentNote": "This order is waiting for payment. Your last attempt did not go through.",
+  "@orderAwaitingPaymentNote": {
+    "description": "Order detail notice."
+  },
+  "orderGetHelp": "Get help",
+  "@orderGetHelp": {
+    "description": "Order detail action."
+  },
+  "orderRequestRefund": "Request refund",
+  "@orderRequestRefund": {
+    "description": "Order detail action."
+  },
+  "orderTimeline": "Timeline",
+  "@orderTimeline": {
+    "description": "Order timeline heading."
+  },
+  "orderTimelinePlaced": "Placed",
+  "@orderTimelinePlaced": {
+    "description": "Timeline entry (pending payment)."
+  },
+  "orderTimelinePaid": "Paid",
+  "@orderTimelinePaid": {
+    "description": "Timeline entry."
+  },
+  "orderRefundPendingTitle": "Refund in progress",
+  "@orderRefundPendingTitle": {
+    "description": "Refund banner."
+  },
+  "orderRefundPartialTitle": "Part of this order was refunded",
+  "@orderRefundPartialTitle": {
+    "description": "Refund banner."
+  },
+  "orderRefundFullTitle": "This order was refunded",
+  "@orderRefundFullTitle": {
+    "description": "Refund banner."
+  },
+  "orderRefundToWallet": "{amount} was returned to your wallet.",
+  "@orderRefundToWallet": {
+    "description": "Refund banner body, wallet destination.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderRefundToOriginal": "{amount} was returned to your payment method.",
+  "@orderRefundToOriginal": {
+    "description": "Refund banner body, original destination.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderNotFoundTitle": "Order not found",
+  "@orderNotFoundTitle": {
+    "description": "404 order."
+  },
+  "orderNotFoundBody": "This order isn't in your account.",
+  "@orderNotFoundBody": {
+    "description": "404 order body."
+  },
+  "orderLoadErrorTitle": "We couldn't load this order",
+  "@orderLoadErrorTitle": {
+    "description": "Order error title."
+  },
+  "refundRequestTitle": "Request a refund",
+  "@refundRequestTitle": {
+    "description": "Refund request placeholder title."
+  },
+  "revealTitle": "Your code",
+  "@revealTitle": {
+    "description": "Code screen title."
+  },
+  "revealCodeOf": "Code {index} of {count}",
+  "@revealCodeOf": {
+    "description": "Unit position.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "revealDeliveredAt": "Delivered {date}",
+  "@revealDeliveredAt": {
+    "description": "Delivery time.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "revealCodeLabel": "Code",
+  "@revealCodeLabel": {
+    "description": "Code box label."
+  },
+  "revealPinLabel": "PIN",
+  "@revealPinLabel": {
+    "description": "PIN row label."
+  },
+  "revealMaskedSemantics": "Code hidden. Ends in {last}.",
+  "@revealMaskedSemantics": {
+    "description": "Masked code for screen readers.",
+    "placeholders": {
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "revealMaskedSemanticsNoHint": "Code hidden.",
+  "@revealMaskedSemanticsNoHint": {
+    "description": "Masked code without a hint."
+  },
+  "revealButton": "Reveal code",
+  "@revealButton": {
+    "description": "Reveal button."
+  },
+  "revealButtonHint": "Asks you to confirm it's you, then shows the code for 60 seconds",
+  "@revealButtonHint": {
+    "description": "Reveal button hint."
+  },
+  "revealCopy": "Copy code",
+  "@revealCopy": {
+    "description": "Copy button."
+  },
+  "revealCopySemantics": "Copy the code. The clipboard clears after 60 seconds",
+  "@revealCopySemantics": {
+    "description": "Copy button label for screen readers."
+  },
+  "revealHide": "Hide",
+  "@revealHide": {
+    "description": "Hide button."
+  },
+  "revealHideSemantics": "Hide the code now",
+  "@revealHideSemantics": {
+    "description": "Hide button label for screen readers."
+  },
+  "revealReadAloud": "Read code aloud",
+  "@revealReadAloud": {
+    "description": "Button that announces the code to the screen reader."
+  },
+  "revealShownSemantics": "Code shown. Use Read code aloud to hear it.",
+  "@revealShownSemantics": {
+    "description": "Revealed code box for screen readers (the code is not read automatically)."
+  },
+  "revealCopied": "Code copied. Clipboard clears in 60 s.",
+  "@revealCopied": {
+    "description": "Snackbar after copy."
+  },
+  "revealHidesIn": "Hides in {time}",
+  "@revealHidesIn": {
+    "description": "Countdown before auto-hide.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "revealOpenRedemption": "Open redemption page",
+  "@revealOpenRedemption": {
+    "description": "Redemption link."
+  },
+  "revealSecureNoteAndroid": "Screenshots are blocked here. Every reveal is logged.",
+  "@revealSecureNoteAndroid": {
+    "description": "Security note on Android."
+  },
+  "revealSecureNoteIos": "The code hides in the app switcher and while the screen is recorded. Every reveal is logged.",
+  "@revealSecureNoteIos": {
+    "description": "Security note on iOS (screenshots cannot be blocked)."
+  },
+  "revealHowTo": "How to redeem",
+  "@revealHowTo": {
+    "description": "Instructions heading."
+  },
+  "revealHowToAfterReveal": "Redemption steps appear with the code.",
+  "@revealHowToAfterReveal": {
+    "description": "Before the first reveal the API has no instructions."
+  },
+  "revealHiddenTimeout": "Code hidden after 60 seconds.",
+  "@revealHiddenTimeout": {
+    "description": "Announcement after auto-hide."
+  },
+  "revealHidden": "Code hidden.",
+  "@revealHidden": {
+    "description": "Announcement after a hide."
+  },
+  "revealCaptureTitle": "Screen recording detected",
+  "@revealCaptureTitle": {
+    "description": "iOS capture banner."
+  },
+  "revealCaptureBody": "On iPhone we can't block screenshots, so the code is hidden while recording or sharing.",
+  "@revealCaptureBody": {
+    "description": "iOS capture banner body."
+  },
+  "revealCaptureHidden": "Code hidden while the screen is being recorded or shared.",
+  "@revealCaptureHidden": {
+    "description": "Code box while captured."
+  },
+  "revealObscured": "Hidden while the app is not in front",
+  "@revealObscured": {
+    "description": "Privacy cover label."
+  },
+  "revealDeniedTitle": "This code can't be shown",
+  "@revealDeniedTitle": {
+    "description": "403 reveal_denied."
+  },
+  "revealDeniedBody": "Check that your email is verified and the order is paid. Every attempt is logged.",
+  "@revealDeniedBody": {
+    "description": "403 body."
+  },
+  "revealGuestDeniedBody": "Open the link in your delivery email and confirm the emailed code on this device first.",
+  "@revealGuestDeniedBody": {
+    "description": "Guest 403 body."
+  },
+  "revealUnverifiedTitle": "Verify your email to reveal codes",
+  "@revealUnverifiedTitle": {
+    "description": "Unverified email banner."
+  },
+  "revealUnverifiedBody": "We sent a link to your email address.",
+  "@revealUnverifiedBody": {
+    "description": "Unverified email banner body."
+  },
+  "revealVerifyAction": "Verify email",
+  "@revealVerifyAction": {
+    "description": "Opens the verify email screen."
+  },
+  "revealRateLimitedTitle": "Too many reveals",
+  "@revealRateLimitedTitle": {
+    "description": "429 banner."
+  },
+  "revealRateLimitedBody": "For security you can reveal 10 codes per hour. Try again in {minutes, plural, =1{1 minute} other{{minutes} minutes}}.",
+  "@revealRateLimitedBody": {
+    "description": "429 body with the wait.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "revealRateLimitedLater": "For security you can reveal 10 codes per hour. Try again later.",
+  "@revealRateLimitedLater": {
+    "description": "429 body without a wait."
+  },
+  "revealTryAgainIn": "Try again in {time}",
+  "@revealTryAgainIn": {
+    "description": "Disabled reveal button while rate limited.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "revealIntegrityTitle": "This device may be modified",
+  "@revealIntegrityTitle": {
+    "description": "Rooted device banner."
+  },
+  "revealIntegrityBody": "Rooted or jailbroken devices are less safe for codes. Reveal on another device if you can.",
+  "@revealIntegrityBody": {
+    "description": "Rooted device banner body."
+  },
+  "revealNotFoundTitle": "Code not found",
+  "@revealNotFoundTitle": {
+    "description": "404 unit."
+  },
+  "revealNotFoundBody": "This code isn't in your orders.",
+  "@revealNotFoundBody": {
+    "description": "404 unit body."
+  },
+  "revealFailedTitle": "The code couldn't be shown",
+  "@revealFailedTitle": {
+    "description": "Other reveal failure."
+  },
+  "revealNotReady": "This code isn't ready yet. We'll email you when it is.",
+  "@revealNotReady": {
+    "description": "Unit not revealable."
+  },
+  "revealBiometricPrompt": "Confirm it's you to reveal the code",
+  "@revealBiometricPrompt": {
+    "description": "System biometric prompt title."
+  },
+  "reauthTitle": "Confirm it's you",
+  "@reauthTitle": {
+    "description": "Re-auth sheet title."
+  },
+  "reauthBody": "Enter your password to reveal codes. We ask again after 15 minutes.",
+  "@reauthBody": {
+    "description": "Re-auth sheet body."
+  },
+  "reauthConfirm": "Confirm and reveal",
+  "@reauthConfirm": {
+    "description": "Re-auth sheet button."
+  },
+  "reauthForgot": "Forgot password?",
+  "@reauthForgot": {
+    "description": "Re-auth sheet link."
+  },
+  "guestOrderTitle": "Guest order",
+  "@guestOrderTitle": {
+    "description": "Guest order screen title."
+  },
+  "guestOrderNumberTitle": "Order {number}",
+  "@guestOrderNumberTitle": {
+    "description": "Guest order screen title with number.",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "guestVerifyTitle": "Verify it's you",
+  "@guestVerifyTitle": {
+    "description": "Guest step 11.1."
+  },
+  "guestVerifyBody": "To open the codes for this order we'll send a 6-digit code to the email you ordered with.",
+  "@guestVerifyBody": {
+    "description": "Guest step 11.1 body."
+  },
+  "guestEmailLabel": "Order email",
+  "@guestEmailLabel": {
+    "description": "Guest email field."
+  },
+  "guestLinkVerifiedTitle": "Link verified",
+  "@guestLinkVerifiedTitle": {
+    "description": "Guest info banner."
+  },
+  "guestLinkVerifiedBody": "You opened this order from the delivery email. The link is valid for 72 hours.",
+  "@guestLinkVerifiedBody": {
+    "description": "Guest info banner body."
+  },
+  "guestSendCode": "Send code",
+  "@guestSendCode": {
+    "description": "Guest send OTP button."
+  },
+  "guestCodeTitle": "Enter the code",
+  "@guestCodeTitle": {
+    "description": "Guest step 11.2."
+  },
+  "guestCodeBody": "If {email} matches the order, we sent it a 6-digit code. It expires in 10 minutes.",
+  "@guestCodeBody": {
+    "description": "Guest step 11.2 body.",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "guestCodeSemantics": "6-digit code from the email",
+  "@guestCodeSemantics": {
+    "description": "OTP input label."
+  },
+  "guestVerify": "Verify",
+  "@guestVerify": {
+    "description": "Guest verify button."
+  },
+  "guestResend": "Resend code",
+  "@guestResend": {
+    "description": "Guest resend."
+  },
+  "guestResendIn": "Resend in {time}",
+  "@guestResendIn": {
+    "description": "Guest resend cooldown.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "guestChangeEmail": "Change email",
+  "@guestChangeEmail": {
+    "description": "Back to the email step."
+  },
+  "guestOrderLabel": "Guest order",
+  "@guestOrderLabel": {
+    "description": "Tag on the guest order."
+  },
+  "guestAccountPromptTitle": "Keep your codes in one place",
+  "@guestAccountPromptTitle": {
+    "description": "Create account prompt."
+  },
+  "guestAccountPromptBody": "Create an account with your order email to see future orders here.",
+  "@guestAccountPromptBody": {
+    "description": "Create account prompt body."
+  },
+  "guestCreateAccount": "Create account",
+  "@guestCreateAccount": {
+    "description": "Create account button."
+  },
+  "guestLinkExpiredTitle": "This link has expired",
+  "@guestLinkExpiredTitle": {
+    "description": "Guest 11.5."
+  },
+  "guestLinkExpiredBody": "Order links work for 72 hours. Contact support to get a new one.",
+  "@guestLinkExpiredBody": {
+    "description": "Guest 11.5 body."
+  },
+  "guestNeedLinkTitle": "Open your delivery email",
+  "@guestNeedLinkTitle": {
+    "description": "No guest proof on this device."
+  },
+  "guestNeedLinkBody": "To see the codes of a guest order on this device, open the link in the delivery email.",
+  "@guestNeedLinkBody": {
+    "description": "No guest proof body."
+  },
+  "guestLinkProofMissing": "Open the link in the delivery email again to reveal codes on this device.",
+  "@guestLinkProofMissing": {
+    "description": "Guest order without the link proof."
+  },
+  "guestEntryTitle": "Open a guest order",
+  "@guestEntryTitle": {
+    "description": "Paste link page title."
+  },
+  "guestEntryBody": "Paste the link from your delivery email. We'll email you a code to confirm it's you.",
+  "@guestEntryBody": {
+    "description": "Paste link page body."
+  },
+  "guestEntryLabel": "Order link",
+  "@guestEntryLabel": {
+    "description": "Paste link field."
+  },
+  "guestEntryInvalid": "This isn't a boxcards.shop order link.",
+  "@guestEntryInvalid": {
+    "description": "Invalid pasted link."
+  },
+  "guestEntryOpen": "Open order",
+  "@guestEntryOpen": {
+    "description": "Paste link button."
+  },
+  "orderGatewayWallet": "Wallet",
+  "@orderGatewayWallet": {
+    "description": "Payment provider name for the store wallet."
   }
 }

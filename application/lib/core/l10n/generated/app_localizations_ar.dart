@@ -1483,4 +1483,508 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get paymentStatusUnknown => 'لم يُتحقق بعد';
+
+  @override
+  String get ordersFilterAll => 'الكل';
+
+  @override
+  String get orderStatusCompleted => 'مكتمل';
+
+  @override
+  String get orderStatusProcessing => 'قيد التنفيذ';
+
+  @override
+  String get orderStatusPaymentProcessing => 'الدفع قيد المعالجة';
+
+  @override
+  String get orderStatusAwaitingPayment => 'بانتظار الدفع';
+
+  @override
+  String get orderStatusPartlyDelivered => 'تم التسليم جزئيًا';
+
+  @override
+  String get orderStatusFailed => 'فشل';
+
+  @override
+  String get orderStatusCancelled => 'ملغى';
+
+  @override
+  String get orderStatusRefundPending => 'الاسترداد قيد التنفيذ';
+
+  @override
+  String get orderStatusPartiallyRefunded => 'مسترد جزئيًا';
+
+  @override
+  String get orderStatusRefunded => 'مسترد';
+
+  @override
+  String ordersItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count منتجات',
+      two: 'منتجان',
+      one: 'منتج واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String orderTileSemantics(
+    String number,
+    String status,
+    String date,
+    String total,
+  ) {
+    return 'الطلب $number، $status، $date، $total';
+  }
+
+  @override
+  String get ordersEmptyTitle => 'لا توجد طلبات بعد';
+
+  @override
+  String get ordersEmptyBody => 'تظهر هنا الأكواد التي تشتريها.';
+
+  @override
+  String get ordersEmptyAction => 'تصفح المتجر';
+
+  @override
+  String get ordersEmptyFilteredTitle => 'لا توجد طلبات بهذه الحالة';
+
+  @override
+  String get ordersShowAll => 'عرض كل الطلبات';
+
+  @override
+  String get ordersLoadErrorTitle => 'تعذر تحميل طلباتك';
+
+  @override
+  String get ordersMoreFailed => 'تعذر تحميل المزيد من الطلبات.';
+
+  @override
+  String get ordersSignedOutTitle => 'سجّل الدخول لعرض طلباتك';
+
+  @override
+  String get ordersSignedOutBody => 'طلباتك وأكوادك محفوظة في حسابك.';
+
+  @override
+  String get ordersSignIn => 'تسجيل الدخول';
+
+  @override
+  String get guestAccessEntry => 'فتح طلب ضيف';
+
+  @override
+  String get guestAccessEntryBody =>
+      'طلبت من الموقع دون حساب؟ استخدم الرابط في رسالة التسليم.';
+
+  @override
+  String orderDetailSemantics(String number) {
+    return 'الطلب $number';
+  }
+
+  @override
+  String orderQtyEach(int quantity, String price) {
+    return 'الكمية $quantity · $price للواحدة';
+  }
+
+  @override
+  String orderQty(int quantity) {
+    return 'الكمية $quantity';
+  }
+
+  @override
+  String get orderUnitCode => 'الكود';
+
+  @override
+  String get orderUnitDelivered => 'تم التسليم';
+
+  @override
+  String get orderUnitRevealed => 'تم الإظهار';
+
+  @override
+  String get orderUnitPreparing => 'قيد التجهيز';
+
+  @override
+  String get orderUnitFailed => 'لم يُسلَّم';
+
+  @override
+  String get orderUnitRefunded => 'مسترد';
+
+  @override
+  String get orderUnitRefundPending => 'الاسترداد قيد التنفيذ';
+
+  @override
+  String get orderUnitCancelled => 'ملغى';
+
+  @override
+  String orderUnitSemantics(int index, String name, String status) {
+    return 'الكود $index من $name، $status';
+  }
+
+  @override
+  String get orderUnitOpenHint => 'يفتح الكود';
+
+  @override
+  String get orderTotal => 'الإجمالي';
+
+  @override
+  String get orderCharged => 'المبلغ المدفوع';
+
+  @override
+  String get orderPayment => 'الدفع';
+
+  @override
+  String orderAttempt(int attempt) {
+    return 'المحاولة $attempt';
+  }
+
+  @override
+  String get orderPaymentStatus => 'حالة الدفع';
+
+  @override
+  String get orderPaymentUnpaid => 'غير مدفوع';
+
+  @override
+  String get orderPaymentProcessing => 'قيد المعالجة';
+
+  @override
+  String get orderPaymentPaid => 'مدفوع';
+
+  @override
+  String get orderPaymentPartiallyRefunded => 'مسترد جزئيًا';
+
+  @override
+  String get orderPaymentRefunded => 'مسترد';
+
+  @override
+  String get orderRetryPayment => 'إعادة محاولة الدفع';
+
+  @override
+  String get orderAwaitingPaymentNote =>
+      'هذا الطلب بانتظار الدفع. لم تكتمل محاولتك الأخيرة.';
+
+  @override
+  String get orderGetHelp => 'الحصول على مساعدة';
+
+  @override
+  String get orderRequestRefund => 'طلب استرداد';
+
+  @override
+  String get orderTimeline => 'السجل الزمني';
+
+  @override
+  String get orderTimelinePlaced => 'تم الطلب';
+
+  @override
+  String get orderTimelinePaid => 'تم الدفع';
+
+  @override
+  String get orderRefundPendingTitle => 'الاسترداد قيد التنفيذ';
+
+  @override
+  String get orderRefundPartialTitle => 'تم استرداد جزء من هذا الطلب';
+
+  @override
+  String get orderRefundFullTitle => 'تم استرداد هذا الطلب';
+
+  @override
+  String orderRefundToWallet(String amount) {
+    return 'تمت إعادة $amount إلى محفظتك.';
+  }
+
+  @override
+  String orderRefundToOriginal(String amount) {
+    return 'تمت إعادة $amount إلى وسيلة الدفع.';
+  }
+
+  @override
+  String get orderNotFoundTitle => 'الطلب غير موجود';
+
+  @override
+  String get orderNotFoundBody => 'هذا الطلب غير موجود في حسابك.';
+
+  @override
+  String get orderLoadErrorTitle => 'تعذر تحميل هذا الطلب';
+
+  @override
+  String get refundRequestTitle => 'طلب استرداد';
+
+  @override
+  String get revealTitle => 'الكود الخاص بك';
+
+  @override
+  String revealCodeOf(int index, int count) {
+    return 'الكود $index من $count';
+  }
+
+  @override
+  String revealDeliveredAt(String date) {
+    return 'سُلّم $date';
+  }
+
+  @override
+  String get revealCodeLabel => 'الكود';
+
+  @override
+  String get revealPinLabel => 'الرقم السري';
+
+  @override
+  String revealMaskedSemantics(String last) {
+    return 'الكود مخفي. ينتهي بـ $last.';
+  }
+
+  @override
+  String get revealMaskedSemanticsNoHint => 'الكود مخفي.';
+
+  @override
+  String get revealButton => 'إظهار الكود';
+
+  @override
+  String get revealButtonHint => 'يطلب تأكيد هويتك ثم يعرض الكود لمدة 60 ثانية';
+
+  @override
+  String get revealCopy => 'نسخ الكود';
+
+  @override
+  String get revealCopySemantics => 'نسخ الكود. تُمسح الحافظة بعد 60 ثانية';
+
+  @override
+  String get revealHide => 'إخفاء';
+
+  @override
+  String get revealHideSemantics => 'إخفاء الكود الآن';
+
+  @override
+  String get revealReadAloud => 'قراءة الكود بصوت';
+
+  @override
+  String get revealShownSemantics =>
+      'الكود ظاهر. استخدم قراءة الكود بصوت لسماعه.';
+
+  @override
+  String get revealCopied => 'تم نسخ الكود. تُمسح الحافظة خلال 60 ث.';
+
+  @override
+  String revealHidesIn(String time) {
+    return 'يُخفى خلال $time';
+  }
+
+  @override
+  String get revealOpenRedemption => 'فتح صفحة الاسترداد';
+
+  @override
+  String get revealSecureNoteAndroid =>
+      'لقطات الشاشة محظورة هنا. يُسجَّل كل إظهار للكود.';
+
+  @override
+  String get revealSecureNoteIos =>
+      'يُخفى الكود في مبدّل التطبيقات وأثناء تسجيل الشاشة. يُسجَّل كل إظهار للكود.';
+
+  @override
+  String get revealHowTo => 'طريقة الاستخدام';
+
+  @override
+  String get revealHowToAfterReveal => 'تظهر خطوات الاستخدام مع الكود.';
+
+  @override
+  String get revealHiddenTimeout => 'أُخفي الكود بعد 60 ثانية.';
+
+  @override
+  String get revealHidden => 'أُخفي الكود.';
+
+  @override
+  String get revealCaptureTitle => 'تم رصد تسجيل للشاشة';
+
+  @override
+  String get revealCaptureBody =>
+      'لا يمكننا حظر لقطات الشاشة على آيفون، لذا يُخفى الكود أثناء التسجيل أو المشاركة.';
+
+  @override
+  String get revealCaptureHidden =>
+      'الكود مخفي أثناء تسجيل الشاشة أو مشاركتها.';
+
+  @override
+  String get revealObscured => 'مخفي أثناء عدم ظهور التطبيق';
+
+  @override
+  String get revealDeniedTitle => 'لا يمكن عرض هذا الكود';
+
+  @override
+  String get revealDeniedBody =>
+      'تأكد من توثيق بريدك الإلكتروني ومن دفع الطلب. تُسجَّل كل محاولة.';
+
+  @override
+  String get revealGuestDeniedBody =>
+      'افتح الرابط في رسالة التسليم وأكّد الرمز المُرسل على هذا الجهاز أولًا.';
+
+  @override
+  String get revealUnverifiedTitle => 'وثّق بريدك الإلكتروني لإظهار الأكواد';
+
+  @override
+  String get revealUnverifiedBody => 'أرسلنا رابطًا إلى بريدك الإلكتروني.';
+
+  @override
+  String get revealVerifyAction => 'توثيق البريد';
+
+  @override
+  String get revealRateLimitedTitle => 'عدد كبير من مرات الإظهار';
+
+  @override
+  String revealRateLimitedBody(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes دقيقة',
+      two: 'دقيقتين',
+      one: 'دقيقة واحدة',
+    );
+    return 'لأمانك يمكنك إظهار 10 أكواد في الساعة. حاول مجددًا بعد $_temp0.';
+  }
+
+  @override
+  String get revealRateLimitedLater =>
+      'لأمانك يمكنك إظهار 10 أكواد في الساعة. حاول مجددًا لاحقًا.';
+
+  @override
+  String revealTryAgainIn(String time) {
+    return 'حاول مجددًا بعد $time';
+  }
+
+  @override
+  String get revealIntegrityTitle => 'قد يكون هذا الجهاز معدّلًا';
+
+  @override
+  String get revealIntegrityBody =>
+      'الأجهزة المعدّلة (روت أو جيلبريك) أقل أمانًا للأكواد. أظهر الكود على جهاز آخر إن أمكن.';
+
+  @override
+  String get revealNotFoundTitle => 'الكود غير موجود';
+
+  @override
+  String get revealNotFoundBody => 'هذا الكود غير موجود في طلباتك.';
+
+  @override
+  String get revealFailedTitle => 'تعذر عرض الكود';
+
+  @override
+  String get revealNotReady =>
+      'هذا الكود غير جاهز بعد. سنرسل إليك بريدًا عندما يجهز.';
+
+  @override
+  String get revealBiometricPrompt => 'أكّد هويتك لإظهار الكود';
+
+  @override
+  String get reauthTitle => 'تأكيد الهوية';
+
+  @override
+  String get reauthBody =>
+      'أدخل كلمة المرور لإظهار الأكواد. سنطلبها مجددًا بعد 15 دقيقة.';
+
+  @override
+  String get reauthConfirm => 'تأكيد وإظهار';
+
+  @override
+  String get reauthForgot => 'نسيت كلمة المرور؟';
+
+  @override
+  String get guestOrderTitle => 'طلب ضيف';
+
+  @override
+  String guestOrderNumberTitle(String number) {
+    return 'الطلب $number';
+  }
+
+  @override
+  String get guestVerifyTitle => 'تأكيد الهوية';
+
+  @override
+  String get guestVerifyBody =>
+      'لفتح أكواد هذا الطلب سنرسل رمزًا من 6 أرقام إلى البريد الذي طلبت به.';
+
+  @override
+  String get guestEmailLabel => 'بريد الطلب';
+
+  @override
+  String get guestLinkVerifiedTitle => 'تم التحقق من الرابط';
+
+  @override
+  String get guestLinkVerifiedBody =>
+      'فتحت هذا الطلب من رسالة التسليم. الرابط صالح لمدة 72 ساعة.';
+
+  @override
+  String get guestSendCode => 'إرسال الرمز';
+
+  @override
+  String get guestCodeTitle => 'أدخل الرمز';
+
+  @override
+  String guestCodeBody(String email) {
+    return 'إذا كان $email مطابقًا للطلب فقد أرسلنا إليه رمزًا من 6 أرقام. تنتهي صلاحيته خلال 10 دقائق.';
+  }
+
+  @override
+  String get guestCodeSemantics => 'رمز من 6 أرقام من البريد';
+
+  @override
+  String get guestVerify => 'تحقق';
+
+  @override
+  String get guestResend => 'إعادة إرسال الرمز';
+
+  @override
+  String guestResendIn(String time) {
+    return 'إعادة الإرسال بعد $time';
+  }
+
+  @override
+  String get guestChangeEmail => 'تغيير البريد';
+
+  @override
+  String get guestOrderLabel => 'طلب ضيف';
+
+  @override
+  String get guestAccountPromptTitle => 'احتفظ بأكوادك في مكان واحد';
+
+  @override
+  String get guestAccountPromptBody =>
+      'أنشئ حسابًا ببريد الطلب لترى طلباتك القادمة هنا.';
+
+  @override
+  String get guestCreateAccount => 'إنشاء حساب';
+
+  @override
+  String get guestLinkExpiredTitle => 'انتهت صلاحية هذا الرابط';
+
+  @override
+  String get guestLinkExpiredBody =>
+      'تعمل روابط الطلب لمدة 72 ساعة. تواصل مع الدعم للحصول على رابط جديد.';
+
+  @override
+  String get guestNeedLinkTitle => 'افتح رسالة التسليم';
+
+  @override
+  String get guestNeedLinkBody =>
+      'لعرض أكواد طلب ضيف على هذا الجهاز، افتح الرابط في رسالة التسليم.';
+
+  @override
+  String get guestLinkProofMissing =>
+      'افتح الرابط في رسالة التسليم مجددًا لإظهار الأكواد على هذا الجهاز.';
+
+  @override
+  String get guestEntryTitle => 'فتح طلب ضيف';
+
+  @override
+  String get guestEntryBody =>
+      'الصق الرابط من رسالة التسليم. سنرسل إليك رمزًا بالبريد لتأكيد هويتك.';
+
+  @override
+  String get guestEntryLabel => 'رابط الطلب';
+
+  @override
+  String get guestEntryInvalid => 'هذا ليس رابط طلب من boxcards.shop.';
+
+  @override
+  String get guestEntryOpen => 'فتح الطلب';
+
+  @override
+  String get orderGatewayWallet => 'المحفظة';
 }

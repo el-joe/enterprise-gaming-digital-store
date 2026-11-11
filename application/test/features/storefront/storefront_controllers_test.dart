@@ -433,7 +433,7 @@ void main() {
       );
       expect(
         destinationFor(link('order', '01JF')),
-        const InAppDestination('/orders'),
+        const InAppDestination('/orders/01JF'),
       );
     });
 

@@ -56,13 +56,17 @@ String _$linkSourceHash() => r'ba078e7094f13e70a7a3acf6b14bd513515328f0';
 ///   to [PaymentFlow] (which only ever asks the server; the link marks nothing paid) and opens
 ///   its payment screen.
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
+/// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
+///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
+///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
+///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the
-/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Other
-/// parsed links (guest order access, email verification, password reset) are not routed by the
-/// platform to the app: the intent filters and associated domains cover only `/app/payments/`
-/// and the product paths.
+/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Email
+/// verification and password reset links are parsed but not routed: they are not in the intent
+/// filters, so they keep opening in the browser.
 
 @ProviderFor(AppLinkListener)
 final appLinkListenerProvider = AppLinkListenerProvider._();
@@ -73,13 +77,17 @@ final appLinkListenerProvider = AppLinkListenerProvider._();
 ///   to [PaymentFlow] (which only ever asks the server; the link marks nothing paid) and opens
 ///   its payment screen.
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
+/// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
+///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
+///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
+///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the
-/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Other
-/// parsed links (guest order access, email verification, password reset) are not routed by the
-/// platform to the app: the intent filters and associated domains cover only `/app/payments/`
-/// and the product paths.
+/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Email
+/// verification and password reset links are parsed but not routed: they are not in the intent
+/// filters, so they keep opening in the browser.
 final class AppLinkListenerProvider
     extends $NotifierProvider<AppLinkListener, void> {
   /// Routes app links (MOBILE_APP_ROADMAP.md 2.1 `deep_links.dart`, ADR-039):
@@ -88,13 +96,17 @@ final class AppLinkListenerProvider
   ///   to [PaymentFlow] (which only ever asks the server; the link marks nothing paid) and opens
   ///   its payment screen.
   /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
+  /// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
+  ///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+  /// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
+  ///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
+  ///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
   ///
   /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
   /// while the launch check, onboarding, maintenance or force update is on screen wait until the
-  /// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Other
-  /// parsed links (guest order access, email verification, password reset) are not routed by the
-  /// platform to the app: the intent filters and associated domains cover only `/app/payments/`
-  /// and the product paths.
+  /// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Email
+  /// verification and password reset links are parsed but not routed: they are not in the intent
+  /// filters, so they keep opening in the browser.
   AppLinkListenerProvider._()
     : super(
         from: null,
@@ -122,7 +134,7 @@ final class AppLinkListenerProvider
   }
 }
 
-String _$appLinkListenerHash() => r'93b2388eef50c47e4c6c667eca51bcc640d3eb1d';
+String _$appLinkListenerHash() => r'366285e727a503fc9a44357f3bf04bac82820677';
 
 /// Routes app links (MOBILE_APP_ROADMAP.md 2.1 `deep_links.dart`, ADR-039):
 ///
@@ -130,13 +142,17 @@ String _$appLinkListenerHash() => r'93b2388eef50c47e4c6c667eca51bcc640d3eb1d';
 ///   to [PaymentFlow] (which only ever asks the server; the link marks nothing paid) and opens
 ///   its payment screen.
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
+/// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
+///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
+///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
+///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the
-/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Other
-/// parsed links (guest order access, email verification, password reset) are not routed by the
-/// platform to the app: the intent filters and associated domains cover only `/app/payments/`
-/// and the product paths.
+/// app reaches its normal pages. Signed-in-only links the guards send to sign in first. Email
+/// verification and password reset links are parsed but not routed: they are not in the intent
+/// filters, so they keep opening in the browser.
 
 abstract class _$AppLinkListener extends $Notifier<void> {
   void build();

@@ -209,6 +209,30 @@ class PaymentFlow extends _$PaymentFlow {
     await _launch(next);
   }
 
+  /// "Retry payment" on the order detail (M-A14): opens the flow for an unpaid order whose
+  /// latest attempt ended and starts a new attempt on its gateway (`retry-payment`,
+  /// `client: app`), exactly as "Try payment again" on the failed result does.
+  Future<void> retryFromOrder({
+    required String orderPublicId,
+    String? gatewayLabel,
+    String? orderNumber,
+    Money? paymentTotal,
+    int? attempt,
+  }) async {
+    _generation++;
+    _confirming = false;
+    state = PaymentFlowState(
+      orderPublicId: orderPublicId,
+      phase: PaymentPhase.failed,
+      retryable: true,
+      gatewayLabel: gatewayLabel,
+      orderNumber: orderNumber,
+      paymentTotal: paymentTotal,
+      attempt: attempt,
+    );
+    await retryPayment();
+  }
+
   /// The order exists but no attempt could be started (`next: null` and retry-payment failed).
   void notStarted({
     required String orderPublicId,

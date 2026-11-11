@@ -6,7 +6,9 @@ import 'package:application/core/network/interceptors/redacting_log_interceptor.
 import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/core/storage/secure_store.dart';
 import 'package:application/features/code_reveal/code_reveal_providers.dart';
+import 'package:application/features/code_reveal/data/datasources/code_reveal_remote_data_source.dart';
 import 'package:application/features/code_reveal/domain/entities/revealed_code.dart';
+import 'package:application/features/code_reveal/presentation/controllers/reveal_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -105,5 +107,94 @@ void main() {
     const code = RevealedCode(code: canary, pin: 'FIXTURE-PIN-0000');
     expect('$code', isNot(contains(canary)));
     expect('$code', isNot(contains('FIXTURE-PIN')));
+  });
+
+  group('M-A14 reveal screen', () {
+    final presentation = Directory('lib/features/code_reveal/presentation')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where(
+          (f) =>
+              f.path.endsWith('.dart') &&
+              !f.path.endsWith('.g.dart') &&
+              !f.path.endsWith('.freezed.dart'),
+        )
+        .toList();
+
+    test('the screen controller is auto-disposed (never keep-alive)', () {
+      final controller = File(
+        'lib/features/code_reveal/presentation/controllers/reveal_controller.dart',
+      ).readAsStringSync();
+      expect(controller, contains('@riverpod\nclass RevealController'));
+      expect(controller, isNot(contains('keepAlive')));
+      final generated = File(
+        'lib/features/code_reveal/presentation/controllers/reveal_controller.g.dart',
+      ).readAsStringSync();
+      expect(generated, contains('isAutoDispose: true'));
+    });
+
+    test('nothing in the reveal screen logs, stores, caches or reports', () {
+      expect(presentation, isNotEmpty);
+      for (final file in presentation) {
+        final source = file.readAsStringSync();
+        for (final banned in [
+          'print(',
+          'debugPrint(',
+          'log(',
+          'developer',
+          'secure_store',
+          'preferences_store',
+          'shared_preferences',
+          'flutter_secure_storage',
+          'analytics',
+          'crashlytics',
+          'sentry',
+          'cached_network_image',
+          'path_provider',
+          'dart:io',
+        ]) {
+          expect(
+            source,
+            isNot(contains(banned)),
+            reason: '${file.path} must not use $banned',
+          );
+        }
+      }
+    });
+
+    test('the screen state never prints the code', () {
+      const state = RevealScreenState(
+        phase: RevealPhase.revealed,
+        code: RevealedCode(code: canary, pin: 'FIXTURE-PIN-0000'),
+      );
+      expect('$state', isNot(contains(canary)));
+      expect('$state', isNot(contains('FIXTURE-PIN')));
+    });
+
+    test(
+      'a reveal sends X-Device-Integrity, and the log keeps no code',
+      () async {
+        final lines = <String>[];
+        final h = Harness(
+          stored: {
+            SecureStore.accessTokenKey: 'a',
+            SecureStore.refreshTokenKey: 'r',
+          },
+        );
+        h.dio.interceptors.add(RedactingLogInterceptor(log: lines.add));
+        h.serveFixture('code_reveal/reveal_ok');
+        final dto = await CodeRevealRemoteDataSource(h.dio).revealAccount(
+          target.orderPublicId,
+          target.unitPublicId,
+          deviceIntegrity: 'compromised',
+        );
+        expect(dto.code, canary);
+        expect(
+          lines.join('\n'),
+          contains('"X-Device-Integrity":"compromised"'),
+        );
+        expect(lines.join('\n'), isNot(contains(canary)));
+      },
+    );
   });
 }
