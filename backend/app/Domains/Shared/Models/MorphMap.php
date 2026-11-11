@@ -63,6 +63,7 @@ use App\Domains\Identity\Models\ServiceAccount;
 use App\Domains\Identity\Models\User;
 use App\Domains\Mcp\Models\McpAuditLog;
 use App\Domains\Mcp\Models\McpPendingAction;
+use App\Domains\Notifications\Models\MobilePushToken;
 use App\Domains\Notifications\Models\NotificationPreference;
 use App\Domains\Notifications\Models\NotificationTemplate;
 use App\Domains\Orders\Models\Cart;
@@ -188,6 +189,7 @@ final class MorphMap
             'mobile_biometric_challenge' => MobileBiometricChallenge::class,
             'mobile_biometric_key' => MobileBiometricKey::class,
             'mobile_login_challenge' => MobileLoginChallenge::class,
+            'mobile_push_token' => MobilePushToken::class,
             'mobile_refresh_token' => MobileRefreshToken::class,
             'newsletter_subscriber' => NewsletterSubscriber::class,
             'not_found_log' => NotFoundLog::class,

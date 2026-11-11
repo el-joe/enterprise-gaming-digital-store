@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             HomepageSectionSeeder::class,
             SeoTemplateSeeder::class,
             AutomationWorkflowSeeder::class,
+            SuperAdminSeeder::class,
         ]);
     }
 }

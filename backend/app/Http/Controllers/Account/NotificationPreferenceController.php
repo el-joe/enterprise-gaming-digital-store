@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 /**
  * GET and PATCH /account/notification-preferences (M-A5): category x channel
- * (`mail`, `database`, `sms`), with the mandatory cells marked.
+ * (`mail`, `database`, `sms`, and `push` for orders and support), with the mandatory cells marked.
  */
 class NotificationPreferenceController extends Controller
 {

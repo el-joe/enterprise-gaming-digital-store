@@ -12,6 +12,7 @@ use App\Domains\Notifications\DTOs\PreferenceSetting;
 use App\Domains\Notifications\Enums\NotificationPreferenceCategory as Category;
 use App\Domains\Notifications\Enums\NotificationPreferenceChannel as Channel;
 use App\Domains\Notifications\Exceptions\NotificationPreferenceMandatory;
+use App\Domains\Notifications\Exceptions\NotificationPreferenceUnavailable;
 use App\Domains\Notifications\Models\NotificationPreference;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Collection;
@@ -25,6 +26,9 @@ use Illuminate\Support\Facades\DB;
  * - `sms` is off (opt-in, ADR-034, as `CustomerContactPolicy` reads it);
  * - marketing follows the customer's latest marketing consent for the channel (email marketing
  *   consent for mail and the inbox, SMS marketing consent for SMS), off without one.
+ *
+ * - `push` (M-A18, ADR-042) exists for orders and support only (`isAvailable()`) and is on by
+ *   default there; marketing and security have no push cell.
  *
  * Mandatory, never switched off: order emails (the delivery link is how a customer reaches codes
  * and the failure notice announces a refund, ADR-009 and ADR-013) and security emails (password
@@ -41,7 +45,16 @@ class NotificationPreferenceService
     }
 
     /**
-     * The full matrix in a fixed order (categories, then channels, in enum order).
+     * Whether the category has this channel at all. Push is for transactional updates only
+     * (orders and support): nothing is pushed for marketing or security.
+     */
+    public static function isAvailable(Category $category, Channel $channel): bool
+    {
+        return $channel !== Channel::Push || in_array($category, [Category::Orders, Category::Support], true);
+    }
+
+    /**
+     * The matrix in a fixed order (categories, then channels, in enum order), available cells only.
      *
      * @return list<PreferenceSetting>
      */
@@ -52,6 +65,10 @@ class NotificationPreferenceService
 
         foreach (Category::cases() as $category) {
             foreach (Channel::cases() as $channel) {
+                if (! self::isAvailable($category, $channel)) {
+                    continue;
+                }
+
                 $settings[] = new PreferenceSetting($category, $channel, $this->effective($user, $rows, $category, $channel), self::isMandatory($category, $channel));
             }
         }
@@ -60,16 +77,22 @@ class NotificationPreferenceService
     }
 
     /**
-     * Save the given cells; a mandatory cell can be sent enabled but never disabled.
+     * Save the given cells; a mandatory cell can be sent enabled but never disabled, and a cell
+     * the category does not have (push for marketing or security) is refused.
      *
      * @param  list<array{category: Category, channel: Channel, enabled: bool}>  $changes
      * @return list<PreferenceSetting>
      *
      * @throws NotificationPreferenceMandatory
+     * @throws NotificationPreferenceUnavailable
      */
     public function update(User $user, array $changes): array
     {
         foreach ($changes as $index => $change) {
+            if (! self::isAvailable($change['category'], $change['channel'])) {
+                throw new NotificationPreferenceUnavailable("preferences.{$index}.channel");
+            }
+
             if (! $change['enabled'] && self::isMandatory($change['category'], $change['channel'])) {
                 throw new NotificationPreferenceMandatory("preferences.{$index}.enabled");
             }
@@ -96,8 +119,8 @@ class NotificationPreferenceService
     }
 
     /**
-     * The Laravel channels (`mail`, `database`) a notification of this category goes to. An
-     * account follows its preferences; a guest (on-demand notifiable) gets email only.
+     * The Laravel channels (`mail`, `database`, `push`) a notification of this category goes to.
+     * An account follows its preferences; a guest (on-demand notifiable) gets email only.
      *
      * @param  list<Channel>  $supported
      * @return list<string>
@@ -112,7 +135,7 @@ class NotificationPreferenceService
 
         return array_values(array_map(
             static fn (Channel $channel): string => $channel->value,
-            array_filter($supported, fn (Channel $channel): bool => $this->effective($notifiable, $rows, $category, $channel)),
+            array_filter($supported, fn (Channel $channel): bool => self::isAvailable($category, $channel) && $this->effective($notifiable, $rows, $category, $channel)),
         ));
     }
 

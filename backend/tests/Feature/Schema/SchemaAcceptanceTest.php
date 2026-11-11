@@ -94,6 +94,7 @@ it('creates exactly the tables in the design', function (): void {
         'mobile_biometric_challenges', // OD-1, ADR-040
         'mobile_biometric_keys', // OD-1, ADR-040
         'mobile_login_challenges',
+        'mobile_push_tokens', // M-A18, ADR-042
         'mobile_refresh_tokens',
         'model_has_permissions',
         'model_has_roles',
