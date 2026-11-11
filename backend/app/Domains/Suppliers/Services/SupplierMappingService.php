@@ -3,6 +3,7 @@
 namespace App\Domains\Suppliers\Services;
 
 use App\Domains\Audit\Services\AuditLogger;
+use App\Domains\Catalog\Models\ProductVariant;
 use App\Domains\Pricing\Services\PricingDirtyMarker;
 use App\Domains\Shared\Services\CrudService;
 use App\Domains\Shared\Services\ListQueryApplier;
@@ -12,6 +13,7 @@ use App\Domains\Suppliers\Models\Supplier;
 use App\Domains\Suppliers\Models\SupplierProduct;
 use App\Domains\Suppliers\Models\SupplierProductMapping;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -24,9 +26,108 @@ use Illuminate\Validation\ValidationException;
  */
 class SupplierMappingService extends CrudService
 {
+    public const int BULK_LIMIT = 200;
+
     public function __construct(ListQueryApplier $lists, AuditLogger $audit, private PricingDirtyMarker $dirty)
     {
         parent::__construct($lists, $audit);
+    }
+
+    /**
+     * Bulk mapping (M15): one line per variant, `variant_sku,external_id,price,currency[,role][,priority]`,
+     * all mapped to products of one supplier in one transaction (nothing is saved when any line
+     * is refused). Each mapping is created, checked and audited like a single one. Errors are
+     * reported per line on `rows`.
+     *
+     * @return int the number of mappings created
+     *
+     * @throws ValidationException
+     */
+    public function bulkCreate(int $supplierId, string $rows): int
+    {
+        $supplier = Supplier::query()->findOrFail($supplierId);
+        $lines = array_values(array_filter(array_map('trim', preg_split('/\R/', $rows) ?: []), static fn (string $line): bool => $line !== '' && ! str_starts_with($line, '#')));
+
+        if ($lines === [] || count($lines) > self::BULK_LIMIT) {
+            throw ValidationException::withMessages(['rows' => [__('admin.mappings_bulk.err_count', ['max' => self::BULK_LIMIT])]]);
+        }
+
+        $parsed = [];
+        $errors = [];
+
+        foreach ($lines as $index => $line) {
+            $number = $index + 1;
+            $cells = array_map('trim', str_getcsv($line));
+            [$sku, $externalId, $price, $currency] = array_pad($cells, 4, '');
+            $role = ($cells[4] ?? '') !== '' ? $cells[4] : SupplierProductMappingRole::Secondary->value;
+            $priority = ($cells[5] ?? '') !== '' ? $cells[5] : '100';
+
+            $variantId = ProductVariant::query()->where('sku', $sku)->value('id');
+            $productId = SupplierProduct::query()->where('supplier_id', $supplier->id)->where('external_id', $externalId)->value('id');
+
+            $error = match (true) {
+                $variantId === null => __('admin.mappings_bulk.err_variant', ['line' => $number, 'sku' => $sku]),
+                $productId === null && $supplier->adapter_key !== InternalStockAdapter::KEY => __('admin.mappings_bulk.err_product', ['line' => $number, 'id' => $externalId]),
+                preg_match('/^\d{1,12}(\.\d{1,6})?$/', $price) !== 1 || bccomp($price, '0', 6) <= 0 => __('admin.mappings_bulk.err_price', ['line' => $number]),
+                preg_match('/^[A-Z]{3}$/', strtoupper($currency)) !== 1 => __('admin.mappings_bulk.err_currency', ['line' => $number]),
+                SupplierProductMappingRole::tryFrom($role) === null => __('admin.mappings_bulk.err_role', ['line' => $number]),
+                ! ctype_digit($priority) || (int) $priority > 65535 => __('admin.mappings_bulk.err_priority', ['line' => $number]),
+                default => null,
+            };
+
+            if ($error !== null) {
+                $errors[] = $error;
+
+                continue;
+            }
+
+            $parsed[$number] = array_filter([
+                'product_variant_id' => (int) $variantId,
+                'supplier_id' => $supplier->id,
+                'supplier_product_id' => $productId,
+                'role' => $role,
+                'priority' => (int) $priority,
+                'supplier_unit_price' => $price,
+                'supplier_unit_currency' => strtoupper($currency),
+            ], static fn (mixed $value): bool => $value !== null);
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages(['rows' => $errors]);
+        }
+
+        DB::transaction(function () use ($parsed): void {
+            foreach ($parsed as $number => $attributes) {
+                try {
+                    $this->create($attributes);
+                } catch (ValidationException $exception) {
+                    throw ValidationException::withMessages(['rows' => [__('admin.mappings_bulk.err_line', ['line' => $number, 'message' => collect($exception->errors())->flatten()->first()])]]);
+                }
+            }
+        });
+
+        return count($parsed);
+    }
+
+    /**
+     * Switch mappings on or off (M15 bulk action), each audited as an update.
+     *
+     * @param  list<int>  $ids
+     * @return int the number changed
+     */
+    public function setActive(array $ids, bool $active): int
+    {
+        $changed = 0;
+
+        DB::transaction(function () use ($ids, $active, &$changed): void {
+            SupplierProductMapping::query()->whereKey($ids)->where('is_active', ! $active)->orderBy('id')->lockForUpdate()->get()
+                ->each(function (SupplierProductMapping $mapping) use ($active, &$changed): void {
+                    $this->update($mapping, ['is_active' => $active]);
+                    $changed++;
+                });
+        });
+
+        return $changed;
     }
 
     protected function model(): string

@@ -155,6 +155,30 @@ class SupportTicketService
     }
 
     /**
+     * Active staff a ticket can be assigned to (they can reply), for the admin screen (M15).
+     *
+     * @return array<int, string> id => name
+     */
+    public function assignableStaff(): array
+    {
+        return User::query()->where('type', 'staff')->where('status', 'active')
+            ->permission(PermissionName::SupportReply->value)
+            ->orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    /**
+     * Names of the staff who wrote messages on the ticket (M15 thread view).
+     *
+     * @return array<int, string>
+     */
+    public function staffAuthors(SupportTicket $ticket): array
+    {
+        $ids = $ticket->supportTicketMessages->where('author_type.value', 'staff')->pluck('author_id')->filter()->unique()->values()->all();
+
+        return $ids === [] ? [] : User::query()->whereKey($ids)->pluck('name', 'id')->all();
+    }
+
+    /**
      * @param  array<string, mixed>  $values
      */
     private function change(SupportTicket $ticket, array $values, string $action): void

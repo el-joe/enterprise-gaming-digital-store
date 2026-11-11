@@ -12,4 +12,5 @@ enum BiometricKeyRevocationReason: string
     case TooManyFailures = 'too_many_failures';
     case PasswordChanged = 'password_changed';
     case PasswordReset = 'password_reset';
+    case RevokedByStaff = 'revoked_by_staff';
 }

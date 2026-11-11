@@ -9,8 +9,8 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
- * Data of the admin layout (M14): navigation for the signed-in staff member, the current
- * section, the user menu, the language and direction.
+ * Data of the admin layout (M14, M15): navigation for the signed-in staff member, the current
+ * section and its tabs, the user menu, the language and direction.
  */
 class AdminLayoutComposer
 {
@@ -32,13 +32,17 @@ class AdminLayoutComposer
         $locale = app()->getLocale();
         $routeName = (string) $this->request->route()?->getName();
 
+        $section = explode('.', Str::after($routeName, 'admin.'))[0];
+        $staff = $user instanceof User && $user->isStaff();
+
         $data = [
             'locale' => $locale,
             'dir' => $locale === 'ar' ? 'rtl' : 'ltr',
-            'section' => explode('.', Str::after($routeName, 'admin.'))[0],
+            'section' => $section,
             'user' => $user instanceof User ? ['name' => $user->name, 'email' => $user->email, 'initials' => $this->initials((string) $user->name), 'roles' => $user->getRoleNames()->all()] : null,
-            'navigation' => $user instanceof User && $user->isStaff() ? $this->navigation->items($user) : [],
-            'payment_tabs' => $user instanceof User && $user->isStaff() ? $this->navigation->paymentTabs($user) : [],
+            'navigation' => $staff ? $this->navigation->items($user) : [],
+            'payment_tabs' => $staff ? $this->navigation->paymentTabs($user) : [],
+            'tabs' => $staff ? $this->navigation->tabs($user, $section) : [],
         ];
 
         $this->request->attributes->set('admin.layout', $data);

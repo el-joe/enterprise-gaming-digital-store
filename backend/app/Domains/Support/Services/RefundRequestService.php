@@ -7,6 +7,7 @@ use App\Domains\Audit\Services\AuditLogger;
 use App\Domains\Identity\Models\User;
 use App\Domains\Orders\DTOs\OrderActor;
 use App\Domains\Orders\Models\Order;
+use App\Domains\Orders\Models\OrderItemUnit;
 use App\Domains\Payments\Enums\RefundDestination;
 use App\Domains\Payments\Enums\RefundReason;
 use App\Domains\Payments\Enums\RefundStatus;
@@ -17,6 +18,7 @@ use App\Domains\Support\Enums\RefundRequestStatus;
 use App\Domains\Support\Models\RefundRequest;
 use App\Domains\Support\Models\SupportTicket;
 use App\Domains\Support\Repositories\SupportTicketRepository;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -118,6 +120,17 @@ class RefundRequestService
             ->where('status', RefundRequestStatus::Approved->value)
             ->whereIn('refund_id', Refund::query()->select('id')->where('order_id', $orderId)->where('status', RefundStatus::Succeeded->value))
             ->update(['status' => RefundRequestStatus::Completed->value, 'updated_at' => now()]);
+    }
+
+    /**
+     * The units of the request's order, for choosing what to refund on the admin screen (M15).
+     *
+     * @return Collection<int, OrderItemUnit>
+     */
+    public function orderUnits(RefundRequest $request): Collection
+    {
+        return OrderItemUnit::query()->where('order_id', $request->order_id)->with('orderItem:id,name_snapshot,sku_snapshot')->orderBy('id')
+            ->get(['id', 'public_id', 'order_id', 'order_item_id', 'status']);
     }
 
     public function detailed(RefundRequest $request): RefundRequest

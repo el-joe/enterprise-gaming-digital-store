@@ -86,6 +86,57 @@ final class Cell
         return '<span class="font-semibold whitespace-nowrap text-content-primary" dir="ltr">'.e($text).'</span>';
     }
 
+    /**
+     * A row action button (M15) for `admin/action.js` (delegated inside the table): the JSON
+     * route, its method and body, the confirmation title and, with `reason`, a required written
+     * reason sent as `reasonField`. Every attribute is escaped.
+     *
+     * @param  array<string, mixed>  $body
+     */
+    public static function action(
+        string $label,
+        string $url,
+        string $method = 'POST',
+        array $body = [],
+        ?string $confirm = null,
+        bool $danger = false,
+        ?string $reason = null,
+        string $reasonField = 'reason',
+    ): string {
+        $attributes = [
+            'type' => 'button',
+            'class' => $danger ? 'admin-btn h-8 text-status-danger' : 'admin-btn h-8',
+            'data-action-url' => $url,
+            'data-action-method' => $method,
+            'data-confirm-title' => $confirm ?? $label,
+        ];
+
+        if ($body !== []) {
+            $attributes['data-action-body'] = (string) json_encode($body);
+        }
+
+        if ($reason !== null) {
+            $attributes['data-reason'] = $reason;
+            $attributes['data-reason-field'] = $reasonField;
+        }
+
+        $html = '';
+
+        foreach ($attributes as $name => $value) {
+            $html .= ' '.$name.'="'.e($value).'"';
+        }
+
+        return '<button'.$html.($danger ? ' data-confirm-danger' : '').'>'.e($label).'</button>';
+    }
+
+    /**
+     * Several row actions side by side.
+     */
+    public static function actions(string ...$buttons): string
+    {
+        return '<span class="flex flex-wrap justify-end gap-1.5">'.implode('', $buttons).'</span>';
+    }
+
     public static function yesNo(bool $value): string
     {
         return $value

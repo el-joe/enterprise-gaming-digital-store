@@ -2,7 +2,9 @@
 
 use App\DataTables\AdminTables;
 use App\Http\Controllers\Admin\Affiliates\AffiliateController;
+use App\Http\Controllers\Admin\Automation\AiSuggestionController;
 use App\Http\Controllers\Admin\Automation\AutomationCredentialController;
+use App\Http\Controllers\Admin\Automation\AutomationWorkflowController;
 use App\Http\Controllers\Admin\Catalog\AttributeDefinitionController;
 use App\Http\Controllers\Admin\Catalog\CategoryController;
 use App\Http\Controllers\Admin\Catalog\DeliveryFieldDefinitionController;
@@ -21,8 +23,11 @@ use App\Http\Controllers\Admin\Cms\MediaController;
 use App\Http\Controllers\Admin\Cms\MenuController;
 use App\Http\Controllers\Admin\Cms\MenuItemController;
 use App\Http\Controllers\Admin\Cms\PageController;
+use App\Http\Controllers\Admin\Content\TranslationController;
+use App\Http\Controllers\Admin\Currency\CountryController;
 use App\Http\Controllers\Admin\Currency\CurrencyController;
 use App\Http\Controllers\Admin\Currency\ExchangeRateController;
+use App\Http\Controllers\Admin\Customers\CustomerController;
 use App\Http\Controllers\Admin\Customers\CustomerWalletController;
 use App\Http\Controllers\Admin\Fulfillment\DigitalCodeController;
 use App\Http\Controllers\Admin\Fulfillment\ManualTaskController;
@@ -38,13 +43,17 @@ use App\Http\Controllers\Admin\Promotions\CouponController;
 use App\Http\Controllers\Admin\Promotions\PromotionController;
 use App\Http\Controllers\Admin\Reviews\ReviewController;
 use App\Http\Controllers\Admin\Seo\RedirectController;
+use App\Http\Controllers\Admin\Seo\SeoMetadataController;
 use App\Http\Controllers\Admin\SessionController;
+use App\Http\Controllers\Admin\Settings\SettingsController;
 use App\Http\Controllers\Admin\Suppliers\SupplierController;
 use App\Http\Controllers\Admin\Suppliers\SupplierMappingController;
 use App\Http\Controllers\Admin\Support\RefundRequestController;
 use App\Http\Controllers\Admin\Support\SupportTicketController;
 use App\Http\Controllers\Admin\Tables\BulkActionController;
 use App\Http\Controllers\Admin\Tables\TableController;
+use App\Http\Controllers\Admin\Users\RoleController;
+use App\Http\Controllers\Admin\Users\StaffController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/me', [SessionController::class, 'show'])->name('me');
@@ -77,7 +86,7 @@ $crud('regions', RegionController::class, 'catalog.view', 'catalog.manage');
 $crud('attributes', AttributeDefinitionController::class, 'catalog.view', 'catalog.manage', ['attributes' => 'attributeDefinition']);
 $crud('delivery-fields', DeliveryFieldDefinitionController::class, 'catalog.view', 'catalog.manage', ['delivery-fields' => 'deliveryFieldDefinition']);
 
-Route::post('products/bulk', [ProductController::class, 'bulk'])->name('products.bulk');
+Route::post('products/bulk', [ProductController::class, 'bulk'])->middleware('permission:catalog.publish|catalog.manage')->name('products.bulk');
 Route::post('products/{product}/activate', [ProductController::class, 'activate'])->middleware('permission:catalog.publish')->name('products.activate');
 Route::post('products/{product}/deactivate', [ProductController::class, 'deactivate'])->middleware('permission:catalog.publish')->name('products.deactivate');
 $crud('products', ProductController::class, 'catalog.view', 'catalog.manage');
@@ -121,6 +130,8 @@ Route::middleware('permission:currency.manage')->group(static function (): void 
     Route::post('exchange-rates/{currency}/reject-pending', [ExchangeRateController::class, 'rejectPending'])->name('exchange-rates.reject-pending');
 });
 
+Route::patch('countries/{country}', [CountryController::class, 'update'])->middleware('permission:currency.manage')->name('countries.update');
+
 // Pricing
 Route::post('pricing-rules/simulate', [PriceSimulationController::class, 'store'])->middleware('permission:pricing.view')->name('pricing-rules.simulate');
 $crud('pricing-rules', PricingRuleController::class, 'pricing.view', 'pricing.manage', ['pricing-rules' => 'pricingRule']);
@@ -143,6 +154,8 @@ Route::get('supplier-mappings', [SupplierMappingController::class, 'index'])->mi
 Route::get('supplier-mappings/{supplierMapping}', [SupplierMappingController::class, 'show'])->middleware('permission:suppliers.view|mappings.manage')->name('supplier-mappings.show');
 Route::middleware('permission:mappings.manage')->group(static function (): void {
     Route::post('supplier-mappings', [SupplierMappingController::class, 'store'])->name('supplier-mappings.store');
+    Route::post('supplier-mappings/bulk', [SupplierMappingController::class, 'bulk'])->middleware('throttle:10,1')->name('supplier-mappings.bulk');
+    Route::post('supplier-mappings/bulk-status', [SupplierMappingController::class, 'bulkStatus'])->name('supplier-mappings.bulk-status');
     Route::patch('supplier-mappings/{supplierMapping}', [SupplierMappingController::class, 'update'])->name('supplier-mappings.update');
     Route::delete('supplier-mappings/{supplierMapping}', [SupplierMappingController::class, 'destroy'])->name('supplier-mappings.destroy');
 });
@@ -207,6 +220,37 @@ Route::middleware('permission:customers.wallet_adjust')->group(static function (
     Route::post('customers/{customer:public_id}/wallet/status', [CustomerWalletController::class, 'status'])->name('customers.wallet.status');
 });
 
+// Customers (M15): account actions, all audited with a reason.
+Route::middleware('permission:customers.manage')->prefix('customers/{customer:public_id}')->name('customers.')->group(static function (): void {
+    Route::post('block', [CustomerController::class, 'block'])->name('block');
+    Route::post('unblock', [CustomerController::class, 'unblock'])->name('unblock');
+    Route::put('risk', [CustomerController::class, 'risk'])->name('risk');
+    Route::post('notes', [CustomerController::class, 'note'])->name('notes.store');
+    Route::delete('devices/{device}', [CustomerController::class, 'revokeDevice'])->where('device', '[A-Za-z0-9_-]{1,80}')->name('devices.destroy');
+    Route::delete('biometric-keys/{key}', [CustomerController::class, 'revokeBiometricKey'])->whereUlid('key')->name('biometric-keys.destroy');
+    Route::get('export', [CustomerController::class, 'export'])->middleware('throttle:10,1')->name('export');
+    Route::post('anonymize', [CustomerController::class, 'anonymize'])->middleware('throttle:5,1')->name('anonymize');
+});
+
+// Staff, roles and permissions (M15): no self-change and no escalation (StaffAdminService).
+Route::middleware('permission:users.manage')->group(static function (): void {
+    Route::post('staff', [StaffController::class, 'store'])->middleware('throttle:10,1')->name('staff.store');
+    Route::put('staff/{staff:public_id}/roles', [StaffController::class, 'roles'])->name('staff.roles');
+    Route::put('staff/{staff:public_id}/permissions', [StaffController::class, 'permissions'])->name('staff.permissions');
+    Route::post('staff/{staff:public_id}/status', [StaffController::class, 'status'])->name('staff.status');
+    Route::post('staff/{staff:public_id}/reset-two-factor', [StaffController::class, 'resetTwoFactor'])->name('staff.reset-two-factor');
+});
+Route::middleware('permission:roles.manage')->group(static function (): void {
+    Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
+    Route::put('roles/{role}/permissions', [RoleController::class, 'permissions'])->whereNumber('role')->name('roles.permissions');
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])->whereNumber('role')->name('roles.destroy');
+});
+
+// Settings (M15): the group's own permission is checked by AdminSettingsService.
+Route::put('settings/{group}', [SettingsController::class, 'update'])->where('group', '[a-z_]+')->middleware('permission:settings.manage|settings.manage_critical')->name('settings.update');
+Route::put('settings/{group}/secrets/{key}', [SettingsController::class, 'secret'])->where(['group' => '[a-z_]+', 'key' => '[a-z0-9_]+'])
+    ->middleware(['permission:settings.manage_critical', 'throttle:10,1'])->name('settings.secrets');
+
 // MCP (M16): token issuance and the out-of-band approval queue. Screens arrive in M15.
 Route::middleware('permission:service_accounts.manage')->group(static function (): void {
     Route::get('mcp-tokens', [McpTokenController::class, 'index'])->name('mcp-tokens.index');
@@ -219,6 +263,15 @@ Route::middleware('permission:service_accounts.manage')->group(static function (
     Route::post('automation-credentials', [AutomationCredentialController::class, 'store'])->middleware('throttle:10,1')->name('automation-credentials.store');
     Route::delete('automation-credentials/{tokenId}', [AutomationCredentialController::class, 'destroy'])->whereNumber('tokenId')->name('automation-credentials.destroy');
 });
+Route::middleware('permission:service_accounts.manage')->group(static function (): void {
+    Route::post('automation-workflows/{workflow}/enable', [AutomationWorkflowController::class, 'enable'])->where('workflow', '[A-Z][0-9]{2}')->name('automation-workflows.enable');
+    Route::post('automation-workflows/{workflow}/disable', [AutomationWorkflowController::class, 'disable'])->where('workflow', '[A-Z][0-9]{2}')->name('automation-workflows.disable');
+});
+// AI drafts review (M15)
+Route::middleware('permission:ai_suggestions.review')->group(static function (): void {
+    Route::post('ai-suggestions/{suggestion}/approve', [AiSuggestionController::class, 'approve'])->whereNumber('suggestion')->name('ai-suggestions.approve');
+    Route::post('ai-suggestions/{suggestion}/reject', [AiSuggestionController::class, 'reject'])->whereNumber('suggestion')->name('ai-suggestions.reject');
+});
 Route::middleware('permission:mcp_actions.approve')->group(static function (): void {
     Route::get('mcp-actions', [McpActionController::class, 'index'])->name('mcp-actions.index');
     Route::post('mcp-actions/{mcpAction:public_id}/approve', [McpActionController::class, 'approve'])->name('mcp-actions.approve');
@@ -228,9 +281,24 @@ Route::middleware('permission:mcp_actions.approve')->group(static function (): v
 // Payment gateways and reconciliation (M14). Credentials are write-only (E permission).
 Route::patch('payment-gateways/{gateway}', [PaymentGatewayController::class, 'update'])->middleware('permission:payments.manage')->name('payment-gateways.update');
 Route::post('payment-gateways/{gateway}/credentials', [PaymentGatewayController::class, 'credentials'])->middleware(['permission:payments.credentials', 'throttle:10,1'])->name('payment-gateways.credentials');
+Route::middleware('permission:payments.manage')->group(static function (): void {
+    Route::post('payment-gateways/{gateway}/eligibility-rules', [PaymentGatewayController::class, 'storeRule'])->name('payment-gateways.rules.store');
+    Route::put('payment-eligibility-rules/{rule}', [PaymentGatewayController::class, 'updateRule'])->name('payment-eligibility-rules.replace');
+    Route::delete('payment-eligibility-rules/{rule}', [PaymentGatewayController::class, 'destroyRule'])->name('payment-eligibility-rules.destroy');
+});
+Route::put('payment-gateways/{gateway}/public-key', [PaymentGatewayController::class, 'publicKey'])->middleware(['permission:payments.credentials', 'throttle:10,1'])->name('payment-gateways.public-key');
 Route::patch('payment-eligibility-rules/{rule}', [PaymentGatewayController::class, 'toggleRule'])->middleware('permission:payments.manage')->name('payment-eligibility-rules.update');
 Route::post('payments/reconcile', [PaymentGatewayController::class, 'reconcile'])->middleware(['permission:payments.manage', 'throttle:6,1'])->name('payments.reconcile');
 Route::post('reconciliation-items/{item}/resolve', [PaymentGatewayController::class, 'resolveItem'])->middleware('permission:payments.manage')->name('reconciliation-items.resolve');
+
+// Translations (M15): one route per translatable type, each behind the permission that edits it.
+foreach ((array) config('admin.translations') as $type => $translatable) {
+    Route::put("translations/{$type}/{id}", [TranslationController::class, 'update'])->whereNumber('id')
+        ->middleware('permission:'.$translatable['permission'])->name("translations.{$type}.update")->defaults('translation_type', $type);
+}
+// SEO fields (M15)
+Route::put('seo/{type}/{id}', [SeoMetadataController::class, 'update'])->whereIn('type', array_keys((array) config('admin.seo')))->whereNumber('id')
+    ->middleware('permission:seo.manage')->name('seo.update');
 
 // Admin tables (M14): server-side data, layout, saved filters and queued exports, each table
 // behind its own permission. The table is chosen by the route, never by input.

@@ -8,9 +8,10 @@ use App\Domains\Orders\Services\AdminOrderReader;
 use Illuminate\Support\Facades\Route;
 
 /**
- * The admin sidebar and the payments tabs (M14, `config/admin.php`). An entry is listed only
- * when its route exists and the staff member holds one of its permissions; the route still
- * checks its own permission (SECURITY.md section 4: hidden navigation is a convenience).
+ * The admin sidebar and the section tabs (M14, M15, `config/admin.php`). An entry is listed only
+ * when its route exists and the staff member holds one of its permissions; a section entry
+ * opens its first permitted tab. The route still checks its own permission (SECURITY.md
+ * section 4: hidden navigation is a convenience).
  */
 class AdminNavigation
 {
@@ -24,11 +25,11 @@ class AdminNavigation
         $items = [];
 
         foreach ((array) config('admin.navigation') as $item) {
-            if ($item['route'] === null || ! Route::has($item['route']) || ! $this->allowed($user, $item['permissions'])) {
-                continue;
+            if (isset($item['tabs'])) {
+                $route = $this->tabs($user, $item['tabs'])[0]['route'] ?? null;
+            } else {
+                $route = $item['route'] !== null && Route::has($item['route']) && $this->allowed($user, $item['permissions']) ? $item['route'] : null;
             }
-
-            $route = $item['key'] === 'payments' ? ($this->paymentTabs($user)[0]['route'] ?? null) : $item['route'];
 
             if ($route === null) {
                 continue;
@@ -47,19 +48,29 @@ class AdminNavigation
     }
 
     /**
+     * The tabs of a section the staff member may open, in order.
+     *
      * @return list<array{key: string, route: string, url: string}>
      */
-    public function paymentTabs(User $user): array
+    public function tabs(User $user, string $section): array
     {
         $tabs = [];
 
-        foreach ((array) config('admin.payment_tabs') as $tab) {
+        foreach ((array) config("admin.sections.{$section}", []) as $tab) {
             if (Route::has($tab['route']) && $this->allowed($user, $tab['permissions'])) {
                 $tabs[] = ['key' => $tab['key'], 'route' => $tab['route'], 'url' => route($tab['route'])];
             }
         }
 
         return $tabs;
+    }
+
+    /**
+     * @return list<array{key: string, route: string, url: string}>
+     */
+    public function paymentTabs(User $user): array
+    {
+        return $this->tabs($user, 'payments');
     }
 
     /**

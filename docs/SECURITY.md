@@ -62,6 +62,8 @@ Spatie roles and permissions, checked in routes and Policies. Admin routes requi
 
 Customer data access is object-level: Policies check ownership on orders, tickets, reviews, wallet.
 
+Staff administration (built M15, `StaffAdminService`): nobody changes their own roles, direct permissions, status or two-step verification; a role or permission may only be granted by someone who holds every permission in it (Super Admins excepted); explicit-grant permissions (E) are never part of a role and are granted to a staff member only by a Super Admin; the Super Admin role is fixed by the seeder, only a Super Admin gives or removes it, and nobody edits a role they hold. Invited staff receive a reset link and must enrol two-step verification before their first admin page. Every change is audited and clears the permission cache. Customer privacy actions (block, risk, notes, device and biometric key revocation, data export and erasure) need `customers.manage` and a written reason. Write-only secrets (gateway and supplier credentials, encrypted settings) are never rendered; the admin screens show configured or not configured and a replace form (canary tests).
+
 ## 5. Secrets
 
 | Secret | Storage |

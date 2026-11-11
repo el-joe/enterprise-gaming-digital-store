@@ -7,10 +7,13 @@ use App\Domains\Payments\Models\PaymentEligibilityRule;
 use App\Domains\Payments\Models\PaymentGateway;
 use App\Domains\Payments\Models\ReconciliationItem;
 use App\Domains\Payments\Services\PaymentGatewayAdminService;
+use App\Domains\Payments\Services\PaymentPublicCredentials;
 use App\Domains\Shared\Enums\EnvironmentMode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Payments\ResolveReconciliationRequest;
+use App\Http\Requests\Admin\Payments\SaveEligibilityRuleRequest;
 use App\Http\Requests\Admin\Payments\SetGatewayCredentialsRequest;
+use App\Http\Requests\Admin\Payments\SetPublicKeyRequest;
 use App\Http\Requests\Admin\Payments\ToggleRuleRequest;
 use App\Http\Requests\Admin\Payments\UpdateGatewayRequest;
 use Illuminate\Http\JsonResponse;
@@ -55,5 +58,34 @@ class PaymentGatewayController extends Controller
         $changed = $this->service->resolveItems([$item->id], ReconciliationItemStatus::from($request->validated('status')), $request->validated('note'), $request->user());
 
         return $this->success(['changed' => $changed], 'Saved.');
+    }
+
+    public function storeRule(SaveEligibilityRuleRequest $request, PaymentGateway $gateway): JsonResponse
+    {
+        $rule = $this->service->saveRule($gateway, null, $request->validated());
+
+        return $this->success(['id' => $rule->id], 'Rule created.', status: 201);
+    }
+
+    public function updateRule(SaveEligibilityRuleRequest $request, PaymentEligibilityRule $rule): JsonResponse
+    {
+        $this->service->saveRule($rule->paymentGateway, $rule, $request->validated());
+
+        return $this->success(['id' => $rule->id], 'Rule saved.');
+    }
+
+    public function destroyRule(PaymentEligibilityRule $rule): JsonResponse
+    {
+        $this->service->deleteRule($rule);
+
+        return $this->success(message: 'Rule deleted.');
+    }
+
+    public function publicKey(SetPublicKeyRequest $request, PaymentGateway $gateway, PaymentPublicCredentials $public): JsonResponse
+    {
+        $value = $request->validated('value');
+        $public->set($gateway->key, EnvironmentMode::from((string) $request->validated('mode')), $value === null || $value === '' ? null : (string) $value);
+
+        return $this->success(message: 'Public key saved.');
     }
 }

@@ -79,6 +79,66 @@ class AccountSessionService
     }
 
     /**
+     * The customer's devices as staff see them (M15 admin customer page): the same list as
+     * {@see devices()} with no current device and no customer audit entry.
+     *
+     * @return list<AccountDevice>
+     */
+    public function devicesForStaff(User $user): array
+    {
+        $mobile = $this->tokens->liveFamiliesForUser($user->id)->map(static fn (MobileRefreshToken $live): AccountDevice => new AccountDevice(
+            id: $live->family_id,
+            type: AccountDeviceType::Mobile,
+            deviceName: $live->device_name,
+            userAgent: null,
+            ip: $live->ip,
+            signedInAt: self::time($live->getAttribute('signed_in_at')),
+            lastUsedAt: self::latest(self::time($live->getAttribute('access_token_last_used_at')), $live->created_at?->toImmutable()),
+            expiresAt: $live->expires_at?->toImmutable(),
+            current: false,
+        ));
+
+        $web = $this->webSessions->forUser($user->id)->map(static fn (object $session): AccountDevice => new AccountDevice(
+            id: WebSessionRepository::publicId($session->id),
+            type: AccountDeviceType::Web,
+            deviceName: null,
+            userAgent: $session->user_agent === null ? null : Str::limit($session->user_agent, 252),
+            ip: $session->ip_address,
+            signedInAt: null,
+            lastUsedAt: CarbonImmutable::createFromTimestamp((int) $session->last_activity),
+            expiresAt: null,
+            current: false,
+        ));
+
+        return [...$mobile->values()->all(), ...$web->values()->all()];
+    }
+
+    /**
+     * Staff sign one of the customer's devices out (M15). Audited by the caller with the staff
+     * member as actor; unknown ids are not found.
+     *
+     * @throws ModelNotFoundException
+     */
+    public function revokeByStaff(User $user, string $deviceId): AccountDeviceType
+    {
+        if (str_starts_with($deviceId, 'web_')) {
+            if (! $this->webSessions->deleteByPublicId($user->id, $deviceId)) {
+                throw (new ModelNotFoundException)->setModel(MobileRefreshToken::class);
+            }
+
+            return AccountDeviceType::Web;
+        }
+
+        if (! $this->tokens->hasLiveFamily($user->id, $deviceId)) {
+            throw (new ModelNotFoundException)->setModel(MobileRefreshToken::class);
+        }
+
+        DB::transaction(fn (): int => $this->tokens->revokeFamily($deviceId, TokenRevocationReason::DeviceRevoked));
+
+        return AccountDeviceType::Mobile;
+    }
+
+    /**
      * Sign one other device out. Unknown ids and other customers' devices are not found.
      *
      * @throws ModelNotFoundException

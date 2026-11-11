@@ -2,9 +2,10 @@
     An admin server-side table (M14, Figma "DataTables patterns"): toolbar (search, filters,
     saved filters, columns, export), bulk bar, the DataTables table, skeleton while loading,
     empty state with "clear filters", info, page length and numbered pager.
-    `table` is the array from App\Http\Support\AdminTablePage::make; `search` an initial search.
+    `table` is the array from App\Http\Support\AdminTablePage::make; `search` an initial search;
+    `actions` wires `[data-action-url]` buttons inside rows (admin/action.js, delegated).
 --}}
-@props(['table', 'search' => '', 'title' => null])
+@props(['table', 'search' => '', 'title' => null, 'actions' => false])
 
 @php
     $config = [
@@ -19,7 +20,7 @@
     $id = 'dt-'.$table['key'];
 @endphp
 
-<section {{ $attributes->class(['admin-card min-w-0']) }} data-module="table" data-table-config="{{ json_encode($config) }}" aria-labelledby="{{ $id }}-title">
+<section {{ $attributes->class(['admin-card min-w-0']) }} data-module="{{ $actions ? 'table action' : 'table' }}" data-table-config="{{ json_encode($config) }}" aria-labelledby="{{ $id }}-title">
     <h2 id="{{ $id }}-title" class="sr-only">{{ $title ?? __('admin.table.title') }}</h2>
 
     <div class="flex flex-wrap items-center gap-2 p-4">

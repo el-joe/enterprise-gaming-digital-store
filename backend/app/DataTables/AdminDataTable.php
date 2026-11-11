@@ -123,6 +123,33 @@ abstract class AdminDataTable
         return app(CurrencyConverter::class)->present(Money::of((string) $amount, $currency))['formatted'];
     }
 
+    /**
+     * Select filter options for enum cases, labelled from `admin.enums.{group}` (M15).
+     *
+     * @param  list<\BackedEnum>  $cases
+     * @return array<string, string>
+     */
+    protected function enumOptions(string $group, array $cases): array
+    {
+        $options = [];
+
+        foreach ($cases as $case) {
+            $options[(string) $case->value] = Cell::label($group, (string) $case->value);
+        }
+
+        return $options;
+    }
+
+    /**
+     * Yes/no select filter on a boolean column (M15).
+     */
+    protected function booleanFilter(string $key, string $label, string $column): Filter
+    {
+        return new Filter($key, $label, 'select', static function (Builder $query, string $value) use ($column): void {
+            $query->where($column, $value === '1');
+        }, ['1' => (string) __('admin.common.yes'), '0' => (string) __('admin.common.no')]);
+    }
+
     protected function dateTime(?\DateTimeInterface $value): string
     {
         return $value === null ? '—' : Carbon::instance($value)->timezone((string) config('app.timezone'))->format('Y-m-d H:i');

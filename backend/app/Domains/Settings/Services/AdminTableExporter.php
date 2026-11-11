@@ -158,6 +158,27 @@ class AdminTableExporter
     }
 
     /**
+     * Delete the files of exports past their expiry (M15, scheduled hourly). The row stays, with
+     * no file, so the audit trail keeps who exported what; downloads already answer 410 after
+     * expiry.
+     *
+     * @return int files removed
+     */
+    public function pruneExpired(int $limit = 1000): int
+    {
+        $removed = 0;
+
+        ExportJob::query()->whereNotNull('media_path')->where('expires_at', '<', now())->orderBy('id')->limit($limit)->get()
+            ->each(static function (ExportJob $export) use (&$removed): void {
+                Storage::disk(self::DISK)->delete((string) $export->media_path);
+                $export->forceFill(['media_path' => null])->save();
+                $removed++;
+            });
+
+        return $removed;
+    }
+
+    /**
      * @return array{id: int, status: string, rows: ?int, download_url: ?string, expires_at: ?string}
      */
     public function present(ExportJob $export): array

@@ -1,12 +1,21 @@
 <?php
 
 use App\Http\Controllers\Admin\Pages\AuthPageController;
+use App\Http\Controllers\Admin\Pages\AutomationPageController;
+use App\Http\Controllers\Admin\Pages\CatalogPageController;
+use App\Http\Controllers\Admin\Pages\CustomerPageController;
 use App\Http\Controllers\Admin\Pages\DashboardController;
 use App\Http\Controllers\Admin\Pages\HomeController;
 use App\Http\Controllers\Admin\Pages\LocaleController;
 use App\Http\Controllers\Admin\Pages\OrderPageController;
 use App\Http\Controllers\Admin\Pages\PaymentPageController;
+use App\Http\Controllers\Admin\Pages\PricingPageController;
+use App\Http\Controllers\Admin\Pages\ResourcePageController;
+use App\Http\Controllers\Admin\Pages\SettingsPageController;
 use App\Http\Controllers\Admin\Pages\SupplierPageController;
+use App\Http\Controllers\Admin\Pages\SupportPageController;
+use App\Http\Controllers\Admin\Pages\UsersPageController;
+use App\Http\Support\AdminScreens\ResourceScreens;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -49,4 +58,61 @@ Route::middleware(['auth', 'staff', 'two_factor:redirect', 'admin.idle', 'thrott
     Route::get('/payments/refunds', [PaymentPageController::class, 'refunds'])->middleware('permission:refunds.view')->name('payments.refunds');
     Route::get('/payments/disputes', [PaymentPageController::class, 'disputes'])->middleware('permission:payments.view')->name('payments.disputes');
     Route::get('/payments/reconciliation', [PaymentPageController::class, 'reconciliation'])->middleware('permission:payments.view')->name('payments.reconciliation');
+
+    Route::middleware('permission:catalog.view')->group(function (): void {
+        Route::get('/catalog/products', [CatalogPageController::class, 'products'])->name('catalog.products.index');
+        Route::get('/catalog/products/create', [CatalogPageController::class, 'createProduct'])->middleware('permission:catalog.manage')->name('catalog.products.create');
+        Route::get('/catalog/products/{product}', [CatalogPageController::class, 'product'])->whereUlid('product')->name('catalog.products.edit');
+    });
+    Route::get('/catalog/mappings', [CatalogPageController::class, 'mappings'])->middleware('permission:mappings.manage')->name('catalog.mappings.index');
+    Route::get('/content/media', [CatalogPageController::class, 'media'])->middleware('permission:content.media')->name('content.media.index');
+
+    Route::middleware('permission:customers.view')->group(function (): void {
+        Route::get('/customers', [CustomerPageController::class, 'index'])->name('customers.index');
+        Route::get('/customers/{customer:public_id}', [CustomerPageController::class, 'show'])->whereUlid('customer')->name('customers.show');
+    });
+
+    Route::middleware('permission:support.view')->group(function (): void {
+        Route::get('/support/tickets', [SupportPageController::class, 'tickets'])->name('support.tickets.index');
+        Route::get('/support/tickets/{ticket}', [SupportPageController::class, 'ticket'])->whereUlid('ticket')->name('support.tickets.show');
+    });
+    Route::middleware('permission:support.refund_requests')->group(function (): void {
+        Route::get('/support/refund-requests', [SupportPageController::class, 'refundRequests'])->name('support.refund-requests.index');
+        Route::get('/support/refund-requests/{refundRequest}', [SupportPageController::class, 'refundRequest'])->whereNumber('refundRequest')->name('support.refund-requests.show');
+    });
+    Route::get('/reviews', [SupportPageController::class, 'reviews'])->middleware('permission:catalog.manage')->name('reviews.index');
+
+    Route::middleware('permission:users.manage')->group(function (): void {
+        Route::get('/users/staff', [UsersPageController::class, 'index'])->name('users.staff.index');
+        Route::get('/users/staff/{staff:public_id}', [UsersPageController::class, 'show'])->whereUlid('staff')->name('users.staff.show');
+    });
+    Route::get('/users/roles', [UsersPageController::class, 'roles'])->middleware('permission:roles.manage|users.manage')->name('users.roles.index');
+
+    Route::get('/settings/{group?}', SettingsPageController::class)->middleware('permission:settings.view')->where('group', '[a-z_]+')->name('settings.show');
+
+    Route::get('/automation/ai-suggestions', [AutomationPageController::class, 'aiSuggestions'])->middleware('permission:ai_suggestions.review')->name('automation.ai-suggestions.index');
+    Route::get('/automation/mcp-actions', [AutomationPageController::class, 'mcpActions'])->middleware('permission:mcp_actions.approve')->name('automation.mcp-actions.index');
+    Route::middleware('permission:service_accounts.manage')->group(function (): void {
+        Route::get('/automation/mcp-tokens', [AutomationPageController::class, 'mcpTokens'])->name('automation.mcp-tokens.index');
+        Route::get('/automation/credentials', [AutomationPageController::class, 'credentials'])->name('automation.credentials.index');
+    });
+
+    Route::get('/pricing/exchange-rates', [PricingPageController::class, 'exchangeRates'])->middleware('permission:pricing.view|currency.manage')->name('pricing.exchange-rates.index');
+
+    // M15: declarative list, create and edit screens (App\Http\Support\AdminScreens). The list
+    // and edit pages need the screen's view permission, the create page its manage permission;
+    // without the manage permission the edit page is read-only and the API refuses writes.
+    foreach (ResourceScreens::all() as $key => $screen) {
+        $base = '/'.$screen::section().'/'.$screen::slug();
+
+        Route::middleware('permission:'.$screen::viewPermission())->group(function () use ($base, $key, $screen): void {
+            Route::get($base, [ResourcePageController::class, 'index'])->name($screen::routeSuffix('index'))->defaults('screen', $key);
+
+            if ($screen::creatable()) {
+                Route::get($base.'/create', [ResourcePageController::class, 'create'])->middleware('permission:'.$screen::managePermission())->name($screen::routeSuffix('create'))->defaults('screen', $key);
+            }
+
+            Route::get($base.'/{record}', [ResourcePageController::class, 'edit'])->where('record', '[A-Za-z0-9_-]+')->name($screen::routeSuffix('edit'))->defaults('screen', $key);
+        });
+    }
 });

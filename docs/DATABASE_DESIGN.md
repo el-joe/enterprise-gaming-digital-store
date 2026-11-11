@@ -190,7 +190,7 @@ Indexes: `idx_mrt_family` (family_id): family revocation. `idx_mrt_user_device` 
 | failed_attempts | tinyint unsigned | NN | consecutive bad signatures; reset on success |
 | last_used_at | ts | Y | |
 | revoked_at | ts | Y | |
-| revocation_reason | enum | Y | `revoked_by_user`, `replaced`, `too_many_failures`, `password_changed`, `password_reset` |
+| revocation_reason | enum | Y | `revoked_by_user`, `replaced`, `too_many_failures`, `password_changed`, `password_reset`; M15 adds `revoked_by_staff` (admin customer page, customer block or erasure) |
 
 Indexes: `idx_mbk_family` (family_id, revoked_at), `idx_mbk_user` (user_id, revoked_at). One live key per family (enforced by the service: registering revokes the previous one).
 
@@ -1624,7 +1624,7 @@ Columns: user_id fk cascade NN, table_key str(64) NN, hidden_columns json Y (col
 
 ### export_jobs
 
-Columns: user_id fk NN, table_key str(64) NN, filters json Y, status enum NN (`pending`,`running`,`completed`,`failed`), media_path str(500) Y, row_count int unsigned Y, expires_at ts Y, error str(255) Y. Index (user_id, created_at).
+Columns: user_id fk NN, table_key str(64) NN, filters json Y, status enum NN (`pending`,`running`,`completed`,`failed`), media_path str(500) Y, row_count int unsigned Y, expires_at ts Y, error str(255) Y. Index (user_id, created_at). M15: `admin:prune-exports` (hourly) deletes expired files and sets `media_path` null; the row stays for the audit trail.
 
 ### audit_logs [append]
 

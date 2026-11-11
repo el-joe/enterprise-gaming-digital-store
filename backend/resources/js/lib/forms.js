@@ -110,17 +110,31 @@ export async function busy(button, task) {
 export function formValues(form) {
     const values = {};
 
-    form.querySelectorAll('input[name], select[name], textarea[name]').forEach((field) => {
+    // A <form> also owns controls outside it that name it with `form="id"` (M15 permission matrix).
+    const fields = form instanceof HTMLFormElement
+        ? Array.from(form.elements).filter((field) => field.name && ['INPUT', 'SELECT', 'TEXTAREA'].includes(field.tagName))
+        : Array.from(form.querySelectorAll('input[name], select[name], textarea[name]'));
+
+    fields.forEach((field) => {
         if (field.type === 'submit' || field.disabled || (field.type === 'radio' && !field.checked)) {
             return;
         }
 
         if (field.name.endsWith('[]')) {
-            const key = field.name.slice(0, -2);
-            values[key] ??= [];
+            const listPath = field.name.slice(0, -2).replace(/\]/g, '').split('[');
+            let parent = values;
 
-            if (!['checkbox', 'radio'].includes(field.type) || field.checked) {
-                values[key].push(field.value);
+            listPath.slice(0, -1).forEach((part) => {
+                parent[part] ??= {};
+                parent = parent[part];
+            });
+
+            const key = listPath[listPath.length - 1];
+            parent[key] ??= [];
+
+            // `data-list-sentinel` only makes sure an empty list is still sent (M15).
+            if (field.dataset.listSentinel === undefined && (!['checkbox', 'radio'].includes(field.type) || field.checked)) {
+                parent[key].push(field.value);
             }
 
             return;

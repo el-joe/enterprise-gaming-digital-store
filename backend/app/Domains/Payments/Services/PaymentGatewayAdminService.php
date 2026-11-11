@@ -13,6 +13,7 @@ use App\Domains\Payments\Models\ReconciliationItem;
 use App\Domains\Shared\Enums\EnvironmentMode;
 use App\Domains\Shared\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -125,6 +126,41 @@ class PaymentGatewayAdminService
         $this->audit->record(new AuditEntry('payments.eligibility_rule_toggled', $rule, before: ['is_active' => $before], after: ['is_active' => $active]));
 
         return $rule;
+    }
+
+    /**
+     * Create or edit an eligibility rule of a gateway (M15). Lists of countries and currencies
+     * are stored upper-case; an empty list means "any". Audited with before and after.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function saveRule(PaymentGateway $gateway, ?PaymentEligibilityRule $rule, array $data): PaymentEligibilityRule
+    {
+        foreach (['countries', 'ip_countries', 'currencies'] as $list) {
+            if (array_key_exists($list, $data)) {
+                $values = array_values(array_unique(array_map('strtoupper', (array) ($data[$list] ?? []))));
+                $data[$list] = $values === [] ? null : $values;
+            }
+        }
+
+        return DB::transaction(function () use ($gateway, $rule, $data): PaymentEligibilityRule {
+            $rule ??= new PaymentEligibilityRule(['payment_gateway_id' => $gateway->id]);
+            $before = $rule->exists ? Arr::except($rule->attributesToArray(), ['created_at', 'updated_at']) : null;
+
+            $rule->fill(Arr::except($data, ['payment_gateway_id']))->save();
+
+            $this->audit->record(new AuditEntry($before === null ? 'payments.eligibility_rule_created' : 'payments.eligibility_rule_updated', $rule, $before, Arr::except($rule->attributesToArray(), ['created_at', 'updated_at'])));
+
+            return $rule;
+        });
+    }
+
+    public function deleteRule(PaymentEligibilityRule $rule): void
+    {
+        DB::transaction(function () use ($rule): void {
+            $this->audit->record(new AuditEntry('payments.eligibility_rule_deleted', $rule, Arr::except($rule->attributesToArray(), ['created_at', 'updated_at'])));
+            $rule->delete();
+        });
     }
 
     /**

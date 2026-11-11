@@ -63,6 +63,32 @@ class PaymentPublicCredentials
     }
 
     /**
+     * The public credential of a gateway for each mode, for the admin gateway page (M15): only a
+     * value that passes the publishable check is returned, so a secret is never shown.
+     *
+     * @return array{field: string, values: array<string, string|null>}|null null when the gateway has none
+     */
+    public function forGateway(PaymentGateway $gateway): ?array
+    {
+        $spec = $this->specFor($gateway);
+
+        if ($spec === null) {
+            return null;
+        }
+
+        $values = [];
+        $rows = $gateway->paymentGatewayCredentials()->get(['id', 'payment_gateway_id', 'mode', 'credentials']);
+
+        foreach (EnvironmentMode::cases() as $mode) {
+            $row = $rows->first(static fn (PaymentGatewayCredential $credential): bool => $credential->mode === $mode);
+            $value = $row?->credentials[$spec['field']] ?? null;
+            $values[$mode->value] = is_string($value) && $this->isPublishable($value, $spec, $mode) ? $value : null;
+        }
+
+        return ['field' => $spec['field'], 'values' => $values];
+    }
+
+    /**
      * Store (or, with null, remove) a gateway's public credential for a mode. The mode must
      * already have credentials: a public key alone would make the gateway look configured.
      *

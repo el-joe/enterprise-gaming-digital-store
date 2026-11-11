@@ -203,11 +203,17 @@ export default function adminTable(root) {
         }
     });
 
+    root.addEventListener('admin:table-refresh', () => {
+        state.selected.clear();
+        syncSelection();
+        table.draw(false);
+    });
+
     root.querySelectorAll('[data-dt-bulk-action]').forEach((button) => {
         const action = config.bulk.find((item) => item.key === button.dataset.dtBulkAction);
 
         button.addEventListener('click', async () => {
-            const needsNote = button.dataset.needsNote !== undefined;
+            const needsNote = button.dataset.needsNote !== undefined || action.note === true;
             const { confirmed, reason } = await confirmDialog({
                 title: action.confirm,
                 text: t('selected_count', { count: state.selected.size }),
@@ -219,7 +225,7 @@ export default function adminTable(root) {
                 return;
             }
 
-            const result = await busy(button, () => post(action.url, { ids: [...state.selected], ...(needsNote ? { note: reason } : {}) }));
+            const result = await busy(button, () => post(action.url, { ...(action.body ?? {}), ids: [...state.selected], ...(needsNote ? { [action.note_field ?? 'note']: reason } : {}) }));
             toast(result.ok ? (result.body?.message ?? '') : messageFor(result));
 
             if (result.ok) {

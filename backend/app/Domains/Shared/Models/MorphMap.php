@@ -123,6 +123,7 @@ use App\Domains\Support\Models\SupportTicketAttachment;
 use App\Domains\Support\Models\SupportTicketMessage;
 use App\Domains\Wallet\Models\CustomerWallet;
 use App\Domains\Wallet\Models\WalletTransaction;
+use Spatie\Permission\Models\Role;
 
 /**
  * Polymorphic type aliases, so the database never stores PHP class names.
@@ -223,6 +224,7 @@ final class MorphMap
             'promotion' => Promotion::class,
             'promotion_target' => PromotionTarget::class,
             'reconciliation_item' => ReconciliationItem::class,
+            'role' => Role::class,
             'reconciliation_run' => ReconciliationRun::class,
             'redirect' => Redirect::class,
             'refund' => Refund::class,

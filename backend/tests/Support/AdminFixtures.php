@@ -57,5 +57,12 @@ function tableRequest(array $overrides = []): array
 
 function postTable(string $key, array $overrides = []): TestResponse
 {
-    return test()->postJson("/admin/api/tables/{$key}", tableRequest($overrides));
+    $response = test()->postJson("/admin/api/tables/{$key}", tableRequest($overrides));
+
+    // Yajra answers 200 with an `error` key when a row fails to render (M15): never acceptable.
+    if ($response->isOk()) {
+        expect($response->json('error'))->toBeNull();
+    }
+
+    return $response;
 }

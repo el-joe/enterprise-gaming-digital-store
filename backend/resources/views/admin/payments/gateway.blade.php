@@ -60,16 +60,35 @@
                                     <td class="admin-td"><x-admin.badge :tone="$rule->is_active ? 'success' : 'neutral'" :dot="false">{{ $rule->is_active ? __('admin.common.yes') : __('admin.common.no') }}</x-admin.badge></td>
                                     <td class="admin-td text-end">
                                         @can('payments.manage')
-                                            <button type="button" @class(['admin-btn', 'text-status-danger' => $rule->is_active]) data-action-url="{{ url('/admin/api/payment-eligibility-rules/'.$rule->id) }}" data-action-method="PATCH" data-action-body='{"is_active":{{ $rule->is_active ? 'false' : 'true' }}}' data-confirm-title="{{ $rule->is_active ? __('admin.gateways.disable_rule') : __('admin.gateways.enable_rule') }}" @if ($rule->is_active) data-confirm-danger @endif>{{ $rule->is_active ? __('admin.gateways.disable') : __('admin.gateways.enable') }}</button>
+                                            <span class="flex justify-end gap-1.5">
+                                                <button type="button" @class(['admin-btn', 'text-status-danger' => $rule->is_active]) data-action-url="{{ url('/admin/api/payment-eligibility-rules/'.$rule->id) }}" data-action-method="PATCH" data-action-body='{"is_active":{{ $rule->is_active ? 'false' : 'true' }}}' data-confirm-title="{{ $rule->is_active ? __('admin.gateways.disable_rule') : __('admin.gateways.enable_rule') }}" @if ($rule->is_active) data-confirm-danger @endif>{{ $rule->is_active ? __('admin.gateways.disable') : __('admin.gateways.enable') }}</button>
+                                                <button type="button" class="admin-btn text-status-danger" data-action-url="{{ url('/admin/api/payment-eligibility-rules/'.$rule->id) }}" data-action-method="DELETE" data-confirm-title="{{ __('admin.gateways.delete_rule') }}" data-confirm-danger>{{ __('admin.common.delete') }}</button>
+                                            </span>
                                         @endcan
                                     </td>
                                 </tr>
+                                @can('payments.manage')
+                                    <tr>
+                                        <td colspan="6" class="admin-td pt-0">
+                                            <details>
+                                                <summary class="cursor-pointer text-sm font-medium text-accent-text">{{ __('admin.gateways.edit_rule') }}</summary>
+                                                <div class="mt-3">@include('admin.payments._rule-form', ['rule' => $rule, 'action' => url('/admin/api/payment-eligibility-rules/'.$rule->id), 'method' => 'PUT', 'prefix' => 'rule-'.$rule->id])</div>
+                                            </details>
+                                        </td>
+                                    </tr>
+                                @endcan
                             @empty
                                 <tr><td colspan="6" class="admin-td text-center text-content-muted">{{ __('admin.gateways.no_rules') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+                @can('payments.manage')
+                    <details class="border-t border-line-subtle px-5 py-4">
+                        <summary class="admin-btn inline-flex cursor-pointer"><x-store.icon name="plus" :size="16" /> {{ __('admin.gateways.add_rule') }}</summary>
+                        <div class="mt-3">@include('admin.payments._rule-form', ['rule' => null, 'action' => url('/admin/api/payment-gateways/'.$gateway->id.'/eligibility-rules'), 'method' => 'POST', 'prefix' => 'rule-new'])</div>
+                    </details>
+                @endcan
             </x-admin.card>
         </div>
 
@@ -94,6 +113,27 @@
                     </form>
                 </x-admin.card>
             @endcan
+
+            @if ($public)
+                <x-admin.card :title="__('admin.gateways.public_key')" :subtitle="__('admin.gateways.public_key_note')">
+                    <ul class="flex flex-col gap-2 text-sm">
+                        @foreach ($public['values'] as $mode => $value)
+                            <li class="flex flex-col gap-0.5"><span class="text-content-muted">{{ \App\DataTables\Cell::label('mode', $mode) }} · {{ \App\DataTables\Cell::label('credential', $public['field']) }}</span><span class="font-mono text-xs break-all" dir="ltr">{{ $value ?? __('admin.common.not_configured') }}</span></li>
+                        @endforeach
+                    </ul>
+                    @can('payments.credentials')
+                        <form class="mt-3 flex flex-col gap-3" data-module="form" data-action="{{ $api('public-key') }}" data-method="PUT" data-success="reload" novalidate>
+                            <div>
+                                <label for="pk-mode" class="field-label">{{ __('admin.suppliers.col.mode') }}</label>
+                                <select id="pk-mode" name="mode" class="admin-input">@foreach ($public['values'] as $mode => $value)<option value="{{ $mode }}" @selected($gateway->mode->value === $mode)>{{ \App\DataTables\Cell::label('mode', $mode) }}</option>@endforeach</select>
+                            </div>
+                            <x-admin.field name="value" id="pk-value" :label="\App\DataTables\Cell::label('credential', $public['field'])" dir="ltr" autocomplete="off" data-nullable :help="__('admin.gateways.public_key_help')" />
+                            <x-admin.form-alerts />
+                            <div><button type="submit" class="admin-btn">{{ __('admin.gateways.save_public_key') }}</button></div>
+                        </form>
+                    @endcan
+                </x-admin.card>
+            @endif
 
             <x-admin.card :title="__('admin.gateways.credentials')">
                 <ul class="flex flex-col gap-2 text-sm">

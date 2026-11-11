@@ -22,7 +22,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | OD-1 | Owner decisions, backend (`OWNER_DECISIONS.md` 1, 3, 4, 5, 6) | Complete (2026-11-11, not committed; Flutter only DTO fields and fixtures) |
 | M13 | Customer account | Complete (2026-11-11, not committed; every spec section 9 module in EN/AR including wishlist; ticket attachments not built, no API) |
 | M14 | Admin core | Complete (2026-11-11, not committed; layout, dashboard, DataTables base, orders, suppliers and payments in EN/AR; M15 sections hidden until built) |
-| M15 | Admin remaining | Not started |
+| M15 | Admin remaining | Complete (2026-11-11, not committed; every spec Phase 9 module in EN/AR; some settings stored for later milestones, see the M15 open items) |
 | M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
 | M17 | n8n workflows | Complete (run before M14 and BD9 by PM decision; Laravel automation API, outbox and heartbeats built and tested; 58 workflows authored and validated, **not executed**: n8n is not installed here; admin screen is M15) |
 | M18 | SEO and analytics | Not started |
@@ -1140,6 +1140,111 @@ The admin panel core as server-rendered Blade with Tailwind 4 and plain JavaScri
 ### Next milestone
 
 M15: Admin remaining (Step 8).
+
+---
+
+## M15: Admin remaining
+
+Date completed: 2026-11-11
+Completed by: Senior Laravel full-stack developer, alone and in sequence. Not committed.
+
+### Summary of completed work
+
+Every remaining spec Phase 9 module as server-rendered Blade with Tailwind 4 and plain JavaScript through Vite (no Livewire, no new packages), in English and Arabic (RTL), on the M14 base (DataTables, layout, form and action modules). Built with semantic theme tokens only, so the dark theme the owner chose (`config('admin.theme')`, committed during M15) and Admin Light both render; `data-theme` behaviour unchanged. Pages only read; every change is a JSON route with its own permission, a Form Request, a Service and an audit entry; envelope errors show beside the fields. Secrets are write-only everywhere (canary tests).
+
+### Modules and pages
+
+| Module | Pages | Permission |
+|---|---|---|
+| Catalog | products list (bulk publish, unpublish, delete) and editor (basics, delivery, categories and regions, descriptions, required delivery fields, variants, status, images from the media library, supplier mappings, Arabic text, SEO); platforms, categories, regions, attributes, delivery fields; supplier mappings with bulk mapping and bulk on/off | `catalog.view` (writes `catalog.manage`, publish `catalog.publish`), `mappings.manage` |
+| Content | pages (legal pages included), blog posts and categories, FAQs and groups, menus with items, redirects, media library with upload; Arabic text and SEO cards | `content.*`, `seo.redirects`, `seo.manage` |
+| Pricing and currency | pricing rules, country prices, currencies (active/inactive, markup, rounding; base and gateway charge currencies shown read-only per OD-1), exchange rates (fetch now, held rates approve/reject, manual override), country display currency (OD-1) | `pricing.view`, `pricing.manage`, `currency.manage` |
+| Marketing | coupons, promotions, affiliates (write-only payout details, commissions with approval), banners, homepage sections with items | `marketing.*`, `content.homepage` |
+| Customers | list (email masked and not searchable without `customers.view_pii`), detail (KPIs, recent orders, wallet ledger, wallet adjustment, risk, notes, tickets, devices and biometric keys with revoke, audit trail, data export and erasure), block and unblock | `customers.view`, `customers.manage`, `customers.wallet_adjust`, `audit.view` |
+| Support | ticket queue, thread with replies and internal notes (staff only, never in customer views or exports), assignment, status and priority; refund requests with approve through the refund flow or reject; review moderation | `support.*`, `refunds.create`, `catalog.manage` |
+| Users and roles | staff list, invite (reset link, 2FA enforced at first page), roles, explicit (E) grants by Super Admin only, suspend, 2FA reset; role permission matrix | `users.manage`, `roles.manage` |
+| Settings | general, orders, checkout (guest checkout read-only from config), pricing defaults, currency, security and risk, suppliers (with supplier creation), notifications, SMTP, analytics, mobile app config (`mobile:app-config` keys incl. `web_checkout_redirect` and force-update versions), automation drivers; write-only secrets; payment eligibility rule editing and the public payment key on the gateway page | `settings.view`, `settings.manage`, `settings.manage_critical`, `payments.manage`, `payments.credentials`, `suppliers.manage` |
+| AI and automation | AI draft review, MCP action approval queue, MCP tokens (issue shown once, revoke), n8n credentials (token and HMAC secret shown once, revoke) and workflow switches | `ai_suggestions.review`, `mcp_actions.approve`, `service_accounts.manage` |
+
+Routes and bodies: `API_DOCUMENTATION.md` section 5f.
+
+### Shared building blocks
+
+- **Section tabs**: `config('admin.sections')` and `AdminNavigation::tabs()` (payments tabs moved there; `paymentTabs()` kept); `admin/partials/tabs`.
+- **Declarative screens** (`app/Http/Support/AdminScreens`): `Field` (text, textarea, html, number, decimal as string, select, multi, csv, toggle, datetime, json, password), `ResourceScreen`, `ResourceScreens` (21 screens in `Screens/`), `Options`, `ProductForm`; one `ResourcePageController` and `admin/resource/{index,form}`; `<x-admin.input>`. The list, create and edit routes are registered in a loop with each screen's permissions; the edit page is read-only without the manage permission.
+- **Translations and SEO cards** on every translatable record (`admin/partials/{translations,seo}`).
+- **JS**: `admin/form.js` gained `data-json`, `data-csv`, `data-rows` (list of objects), `__field__` URL placeholders, multipart upload, redirect and one-time reveal of a returned token or secret; `admin/action.js` is delegated (row actions inside tables, table redraw after success, `data-redirect`); `admin/table.js` redraws on `admin:table-refresh` and sends a bulk action's own body and note; `lib/forms.js` `formValues` builds nested lists and reads controls owned through `form="id"` (permission matrix).
+- **DataTables**: 45 new tables in `app/DataTables/{Catalog,Content,Customers,Marketing,Pricing,Support,Users,Automation}`; `Cell::action()`/`actions()` for escaped row buttons; `AdminDataTable::enumOptions()` and `booleanFilter()`.
+
+### Files created
+
+- Controllers: `Admin/Pages/{ResourcePageController,CatalogPageController,PricingPageController,CustomerPageController,SupportPageController,UsersPageController,SettingsPageController,AutomationPageController}`, `Admin/Content/TranslationController`, `Admin/Seo/SeoMetadataController`, `Admin/Currency/CountryController`, `Admin/Customers/CustomerController`, `Admin/Users/{StaffController,RoleController}`, `Admin/Settings/SettingsController`, `Admin/Automation/{AiSuggestionController,AutomationWorkflowController}`.
+- Requests: `Admin/Content/SaveTranslationsRequest`, `Admin/Seo/SaveSeoMetadataRequest`, `Admin/Currency/UpdateCountryRequest`, `Admin/Suppliers/{BulkMappingRequest,BulkMappingStatusRequest}`, `Admin/Customers/{CustomerReasonRequest,SetRiskRequest,AddCustomerNoteRequest,AnonymizeCustomerRequest}`, `Admin/Users/{InviteStaffRequest,SyncStaffRolesRequest,SyncPermissionsRequest,SetStaffStatusRequest,CreateRoleRequest}`, `Admin/Settings/{SaveSettingsRequest,SetSecretRequest}`, `Admin/Payments/{SaveEligibilityRuleRequest,SetPublicKeyRequest}`.
+- Domain: `Catalog/Services/{ContentTranslationAdminService,ProductAdminReader}`, `Seo/Services/SeoMetadataService`, `Currency/Services/CountryCurrencyService`, `Customers/Repositories/CustomerAdminRepository`, `Customers/Services/{CustomerAdminService,CustomerPrivacyService}`, `Identity/Services/StaffAdminService`, `Settings/Services/AdminSettingsService`, `Automation/Services/AiSuggestionReviewService`.
+- Console: `admin:prune-exports` (hourly at :20), `customers:export`, `customers:anonymize`.
+- Config: `config/admin_settings.php`; `config/admin.php` (`sections`, `translations`, `seo`, tones).
+- Views: `admin/{resource,catalog,customers,support,users,settings,automation,pricing,marketing,content}/*`, `admin/partials/{tabs,translations,seo}`, `admin/payments/_rule-form`, `components/admin/input`.
+- Tests: `tests/Feature/Admin/{AdminResourceScreensTest,AdminCatalogPagesTest,AdminCustomerAndSupportPagesTest,AdminUsersAndRolesTest,AdminSettingsTest,AdminAutomationPagesTest,AdminM15RouteDenialTest}.php`.
+
+### Files changed
+
+`AdminNavigation`, `AdminLayoutComposer`, `AdminDataTable`, `AdminTables`, `Cell`, `routes/{admin,admin_pages}.php`, `TaskSchedule`, `MorphMap` (`role` alias for audit subjects), `BiometricKeyRevocationReason` (`revoked_by_staff`), `AccountSessionService` (`devicesForStaff`, `revokeByStaff`), `PaymentGatewayAdminService` (`saveRule`, `deleteRule`), `PaymentPublicCredentials` (`forGateway`), `SupplierMappingService` (`bulkCreate`, `setActive`), `SupportTicketService` (`assignableStaff`, `staffAuthors`), `SupportTicketRepository` (customer public id on the thread), `RefundRequestService` (`orderUnits`), `AutomationWorkflowRegistry` (audited switches), `AdminTableExporter` (`pruneExpired`), `PaymentPageController` and `admin/payments/gateway` (rule editing, public key), `components/admin/table` (`actions` prop), `lang/{en,ar}/admin.php`, the four JS modules above, `products/bulk` route now also behind `catalog.publish|catalog.manage`.
+
+### Migrations
+
+None. No new packages (composer or npm). `backend/.yarn/`, `.yarnrc.yml` and `yarn.lock` untouched.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Every spec Phase 9 module exists | Met, with the open items below | Pages and routes above; 9.1, 9.3, 9.4 and 9.6 were M14 |
+| Permissions and 403 | Met | Every new page and JSON route is 403 without its permission (`AdminM15RouteDenialTest`, per-screen datasets); navigation per permission and per seeded role; read-only pages without the manage permission |
+| DataTable endpoints | Met | Every new table returns rows server-side for its permission and 403 without it; `postTable()` now fails on a Yajra `error` key (a row that fails to render) |
+| Validation errors in the envelope | Met | 422 dot keys asserted (fields, `values.*`, `countries.0`, `rows`, `filters.*`); headless Chrome showed them beside the fields (platform, JSON setting, mobile version) |
+| Audit | Met | Each new mutation asserts its `audit_logs` action (translations with field names only, SEO, country currency, bulk mapping per mapping, customer actions with reason, staff and roles, settings per key, secrets without value, rules, public key, AI decisions, workflows) |
+| Credentials write-only | Met | Settings secret canary (`SETTINGS_SECRET_CANARY`) absent from every settings page, the response, the stored row and the audit log; gateway secret canary absent with the public key shown; MCP token, n8n token and HMAC secret only in the issue response, never in the page or tables; affiliate payout details configured or not only |
+| No self-escalation | Met | `AdminUsersAndRolesTest`: own account refused, granting unheld permissions refused, (E) only by Super Admin, Super Admin role fixed, own roles not editable |
+| No console errors or CSP violations at 1280, 768, 375 in EN and AR | Met | Headless Chrome (pipe CDP, no packages) over 34 pages x 3 widths x EN/AR (204 loads) in the dark theme on preview data in the testing database: no exceptions, console errors or CSP violations; tables loaded rows; the only network errors were media files of factory rows without files (403 on `/storage/...`, data, not code); a horizontal overflow on Settings at 768 was fixed (re-run clean). Interactive run: envelope errors beside fields, JSON parse error, MCP token revealed once, role matrix save, review approval from the row |
+| Full suite, Pint, build | Met | see Tests |
+
+### Tests and results
+
+- New tests in `tests/Feature/Admin` (seven files above, datasets included).
+- Full suite: `php artisan test --compact` (sequential, MySQL): **2756 passed, 0 failed, 19668 assertions, about 196 s** (222 more tests) (2534 after M14). `vendor/bin/pint --dirty`: passed. `npm run build`: passed.
+- Existing tests changed (adaptation, not weakening): `AdminAccessTest` "hides M15 sections" became "shows the M15 sections to holders of their permissions" (now asserts they appear and that others stay hidden); the seeded-role navigation dataset now expects Catalog and Customers for Operations Manager, Pricing for Finance Manager, Support and Customers for Support Agent, and a home for Catalog Manager (was 403 because nothing existed). `tests/Support/AdminFixtures.php` `postTable()` additionally asserts no Yajra `error` (stronger).
+
+### Deviations from Figma
+
+- Built with semantic tokens; screenshots checked in the dark theme now set by the owner (Admin Light also works through the same tokens).
+- No searchable select widget (native selects, as M14); media ids are typed into number fields with a media library page that shows each id, rather than a picker.
+- Product editor: the image card attaches a media id (upload happens in the media library); the supplier card lists mappings and adds one, without the "Primary supplier" single select of the frame.
+- Customer detail: no "Reset 2FA" for customers (customers have no 2FA); notes and audit trail as in the frame; "Edit" profile is not offered (customers own their profile).
+- Ticket thread: no canned replies and no attachments (no API); the reply kind is a radio pair instead of tabs; no SLA badge (no SLA data).
+- Settings: groups as in the frame, plus Orders, Pricing defaults, Security, Mobile app and Automation; "Send test email" not built (mail settings are stored, not applied); Branding and Localization are not separate groups (logo is a brand asset; languages are fixed EN/AR by BD5).
+- Users: the matrix is saved per role column (one Save per column) rather than instantly per checkbox.
+
+### Decisions made
+
+- Wallet adjustments stay single-step (no maker-checker): the spec and SECURITY.md do not require it; each adjustment needs a reason, an idempotency key and `customers.wallet_adjust`, and is audited.
+- Guest checkout is shown read-only: it is the config flag `storefront.guest_checkout` (owner decision 4), not a DB setting. The gateway charge currency is shown, never edited (OD-1).
+- Reviews keep `catalog.manage` (M11 open item unchanged).
+- AI review approval records the decision only; nothing is published or drafted automatically.
+
+### Outstanding requirements
+
+- Settings stored but not yet read by code (labelled on screen): General, Notifications, SMTP (mail still reads `.env`), Analytics ids and secret (M18).
+- Not built: cross-selling and upselling (`product_relations` has no admin API), product attribute values and country restrictions on the product editor (API exists), affiliate payouts, staff notification feed, ticket attachments and canned replies, AI draft-to-content creation, customer profile editing by staff, "send test email", dashboard export.
+- Media picker for media id fields; searchable selects.
+- Apply nothing new to the app database (no migrations in M15).
+
+### Design changes made
+
+- `API_DOCUMENTATION.md` section 5f; `SECURITY.md` section 4 (staff administration rules); `DATABASE_DESIGN.md` (`revoked_by_staff`, export file pruning).
+
+### Next milestone
+
+M18 (SEO and analytics): the SEO fields and analytics settings stored here are ready to be consumed.
 
 ---
 

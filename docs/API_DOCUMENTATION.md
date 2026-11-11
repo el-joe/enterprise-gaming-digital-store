@@ -762,12 +762,82 @@ Admin pages (Blade, `routes/admin_pages.php`, prefix `/admin`, names `admin.*`) 
 | `POST tables/orders/bulk/reconcile` | `{ ids: [order public ids, 1 to 100] }`, 6 per minute: "check status now" for each order. `{ orders, attempts_checked, skipped }`; audited per order (`orders.reconciled`) | `orders.reconcile` |
 | `PATCH payment-gateways/{id}` | `{ is_active?, mode?: sandbox\|production }`. Activating needs credentials for the mode (422 on `is_active`). The charge currency (`default_currency`, OD-1) is not editable. Audited `payments.gateway_updated` | `payments.manage` |
 | `POST payment-gateways/{id}/credentials` | `{ mode, credentials: { …every field of the adapter }, webhook_secret? }`, 10 per minute. Fields per adapter (`admin.credential_fields.gateways`): Stripe `secret_key`, `publishable_key` (prefixes must match the mode: `sk_test_`/`pk_test_` in sandbox, `sk_live_`/`pk_live_` in production); PayPal `client_id`, `client_secret`, `webhook_id`; Paymob `api_key`, `secret_key`, `public_key`. Replaces the mode's values; extra fields dropped. Answer `{ credentials_configured: { sandbox: { configured, rotated_at }, production: {…} } }`, never a value. Audited `payments.credentials_set` with field names only | `payments.credentials` (E) |
-| `PATCH payment-eligibility-rules/{id}` | `{ is_active }`. Audited `payments.eligibility_rule_toggled` (rule editing is M15) | `payments.manage` |
+| `PATCH payment-eligibility-rules/{id}` | `{ is_active }`. Audited `payments.eligibility_rule_toggled` (full rule editing: 5f) | `payments.manage` |
 | `POST payments/reconcile` | No body, 6 per minute. Runs the five-minute open-payment reconciliation now; `{ payments, expired, refunds, webhooks }`. Audited `payments.reconciled` | `payments.manage` |
 | `POST reconciliation-items/{id}/resolve` | `{ status: resolved\|ignored, note (5 to 1000) }`; closed items are skipped. `{ changed }`. Audited per item | `payments.manage` |
 | `POST tables/reconciliation/bulk/resolve`, `.../bulk/ignore` | `{ ids: [item ids], note }` | `payments.manage` |
 
 Existing routes used by the M14 pages without change: order `review`, `reconcile`, `retry-verified-unit`, `transactions/{id}/mark-not-accepted`, `orders/{id}/refunds` (5b, 5c; refunds created by staff are now audited `refunds.created`), and supplier `PATCH`, `credentials`, `test-connection`, `sync-catalog`, `sync-pricing` (5b). The sign-in pages post to `/login`, `/two-factor-challenge` and `/api/v1/account/security/two-factor[/confirm]` (1a, 4a).
+
+### 5f. Built admin screens and routes (M15)
+
+Same conventions as 5e: pages only read; every change is JSON under `/admin/api` (session, CSRF, staff, two-step verification passed, `throttle:admin`), checked by its own permission (403 `forbidden` before validation), validated by a Form Request (422 `validation_failed`, dot keys shown beside the fields) and audited. Secrets are write-only: no page, table or response contains a stored secret value (canary tests). Contact details are masked without `customers.view_pii`.
+
+**Navigation.** Sections with several screens have tabs (`config('admin.sections')`); a sidebar entry opens the first tab the staff member may open and is hidden when there is none. New entries: Catalog, Customers, Pricing, Marketing, Content, Support, Reviews, AI and automation, Users and roles, Settings.
+
+**Pages** (all `GET`, 403 without the permission):
+
+| Page | Permission |
+|---|---|
+| `/admin/catalog/products`, `/create` (needs `catalog.manage`), `/{public_id}` (editor: basics, delivery, categories and regions, descriptions, required delivery fields, variants, status, images, supplier mappings, Arabic text, SEO) | `catalog.view` (read-only without `catalog.manage`) |
+| `/admin/catalog/{platforms,categories,regions,attributes,delivery-fields}` (+ `/create`, `/{id}`) | `catalog.view`; writes `catalog.manage` |
+| `/admin/catalog/mappings` (all mappings, bulk on/off, bulk mapping) | `mappings.manage` |
+| `/admin/pricing/{pricing-rules,variant-prices}` (+ `/create`, `/{id}`) | `pricing.view`; writes `pricing.manage` |
+| `/admin/pricing/currencies/{code}`, `/admin/pricing/countries/{code}`, lists | `pricing.view` or `currency.manage`; writes `currency.manage` |
+| `/admin/pricing/exchange-rates` (fetch now, held rates, manual override) | `pricing.view` or `currency.manage` |
+| `/admin/marketing/{coupons,promotions,affiliates,banners}` (+ `/create`, `/{id}`) | `marketing.coupons`, `.promotions`, `.affiliates`, `.banners` |
+| `/admin/marketing/homepage-sections` (+ items) | `content.homepage` |
+| `/admin/content/{pages,blog-posts,blog-categories,faqs,faq-groups,menus}` (+ `/create`, `/{id}`) | `content.pages`, `content.blog`, `content.faq`, `content.menus` |
+| `/admin/content/redirects` | `seo.redirects` |
+| `/admin/content/media` (upload, ids, delete) | `content.media` |
+| `/admin/customers`, `/admin/customers/{public_id}` | `customers.view` |
+| `/admin/support/tickets`, `/admin/support/tickets/{public_id}` | `support.view` (reply `support.reply`; status, priority, assignee `support.manage`) |
+| `/admin/support/refund-requests`, `/{id}` | `support.refund_requests` (approve also `refunds.create`) |
+| `/admin/reviews` | `catalog.manage` |
+| `/admin/users/staff`, `/admin/users/staff/{public_id}` | `users.manage` |
+| `/admin/users/roles` (permission matrix) | `roles.manage` or `users.manage` (editing `roles.manage`) |
+| `/admin/settings/{group?}` | `settings.view` (saving: the group's permission) |
+| `/admin/automation/ai-suggestions` | `ai_suggestions.review` |
+| `/admin/automation/mcp-actions` | `mcp_actions.approve` |
+| `/admin/automation/mcp-tokens`, `/admin/automation/credentials` | `service_accounts.manage` |
+
+The declarative list, create and edit screens post to the existing 5a/5d resources (`platforms`, `categories`, `regions`, `attributes`, `delivery-fields`, `pricing-rules`, `variant-prices`, `currencies`, `coupons`, `promotions`, `affiliates`, `banners`, `homepage-sections`, `pages`, `blog-categories`, `blog-posts`, `faq-groups`, `faqs`, `menus`, `menus/{id}/items`, `redirects`, `media`, `products`, `products/{id}/variants`, `products/{id}/images`, `supplier-mappings`, `suppliers`, `reviews/*`, `tickets/*`, `refund-requests/*`, `customers/{id}/wallet/*`, `mcp-tokens`, `mcp-actions/*`, `automation-credentials`) without changes to their contracts.
+
+**New tables** (`POST /admin/api/tables/{table}`, as 5e): `products` (rows keyed by public id; filters `status`, `platform`, `featured`; bulk publish, unpublish, delete by permission), `platforms`, `categories`, `regions`, `attributes`, `delivery-fields`, `mappings` (filters `supplier`, `active`; bulk on/off), `media`, `pricing-rules`, `variant-prices`, `currencies`, `exchange-rates` (row actions for `currency.manage`), `countries`, `coupons`, `promotions`, `affiliates`, `affiliate-commissions` (context `affiliate`; approve action), `banners`, `homepage-sections`, `pages`, `blog-posts`, `blog-categories`, `faqs`, `faq-groups`, `menus`, `redirects`, `customers` (email search only with `customers.view_pii`), `customer-wallet` (context `customer`), `tickets` (filters `status`, `priority`, `category`, `assignee=me|none`), `refund-requests`, `reviews` (row actions), `staff`, `ai-suggestions`, `mcp-actions`, `mcp-tokens`, `automation-credentials`, `automation-workflows`. Each with the permission of its page.
+
+**New routes.**
+
+| Route | Body and answer | Permission |
+|---|---|---|
+| `PUT translations/{type}/{id}` | `{ locale: ar, values: { field: text\|null } }`. Writes `content_translations` (ADR-015); types and fields from `config('admin.translations')`: `product` (name, short_description, description, instructions, terms), `product_variant` (title), `gaming_platform`, `category` (name, description), `banner` (title, subtitle, cta_label), `homepage_section` (title, subtitle), `faq` (question, answer), `page` (title, body), `blog_post` (title, excerpt, body), `menu_item` (label). The base locale is refused; empty removes; HTML fields sanitized; catalog records reindexed for search. `{ values: { ar: {…} } }`. Audited `content.translation.updated` (field names only) | the type's edit permission (`catalog.manage`, `marketing.banners`, `content.homepage`, `content.faq`, `content.pages`, `content.blog`, `content.menus`) |
+| `PUT seo/{type}/{id}` | `{ locale, title?, description?, canonical_override?, robots?: index,follow\|noindex,follow\|index,nofollow\|noindex,nofollow, og_image_media_id? }` for `product`, `gaming_platform`, `category`, `page`, `blog_post`. All empty removes the row. Audited `seo.metadata.updated` | `seo.manage` |
+| `PATCH countries/{code}` | `{ default_currency?, is_active? }`: the OD-1 display currency of a country. Audited `currency.country_currency.updated` | `currency.manage` |
+| `POST supplier-mappings/bulk` | `{ supplier_id, rows }`, rows one per line `variant_sku,external_id,price,currency[,role][,priority]` (at most 200, `#` comments). All or nothing; errors on `rows` per line. 201 `{ created }`. Each mapping audited `suppliers.mapping.created` | `mappings.manage` |
+| `POST supplier-mappings/bulk-status` | `{ ids: [1..200], is_active }`. `{ changed }`; audited per mapping | `mappings.manage` |
+| `POST products/bulk` | (5a) now also behind `catalog.publish` or `catalog.manage` at the route | as before |
+| `POST customers/{public_id}/block`, `/unblock` | `{ reason (5 to 500) }`. Block: status `suspended`, signed out everywhere, biometric keys revoked; 409 when already blocked or not blocked. Audited `customers.blocked`, `customers.unblocked` | `customers.manage` |
+| `PUT customers/{public_id}/risk` | `{ risk_level: low\|medium\|high\|blocked, risk_notes?, reason }`. Audited `customers.risk_level.changed` | `customers.manage` |
+| `POST customers/{public_id}/notes` | `{ body (2 to 5000) }`, 201. Staff-only notes. Audited `customers.note_added` | `customers.manage` |
+| `DELETE customers/{public_id}/devices/{id}` | `{ reason }`. Signs out a browser session (`web_…`) or an app sign-in family; 404 for unknown ids. Audited `customers.device_revoked` | `customers.manage` |
+| `DELETE customers/{public_id}/biometric-keys/{key}` | `{ reason }`. Revokes one biometric unlock key (OD-1, reason `revoked_by_staff`); another customer's key is 404. Audited `customers.biometric_key_revoked` | `customers.manage` |
+| `GET customers/{public_id}/export` | Personal data export as a JSON attachment (`no-store`): profile, consents, preferences, orders with lines, wallet, tickets without internal notes, reviews; never codes, delivery values, provider data or staff notes. 10 per minute. Audited `customers.data_exported`. Console twin `customers:export {public_id}` | `customers.manage` |
+| `POST customers/{public_id}/anonymize` | `{ reason (10 to 500), confirm: the public id }`; 409 `wallet_not_empty` while the wallet holds a balance. Replaces identity fields (account and order contact), closes the account, signs out everywhere; financial records kept. Audited `customers.anonymized`. Console twin `customers:anonymize` | `customers.manage` |
+| `POST staff` | `{ name, email, roles: [names] }`, 201. Creates a staff account with a random password and sends a reset link; two-step verification is required at first sign-in. Audited `users.staff_invited` | `users.manage` |
+| `PUT staff/{public_id}/roles` | `{ roles: [names] }` | `users.manage` |
+| `PUT staff/{public_id}/permissions` | `{ permissions: [names] }`: direct grants, the way to grant explicit (E) permissions | `users.manage` |
+| `POST staff/{public_id}/status` | `{ status: active\|suspended, reason }` (suspension signs out everywhere) | `users.manage` |
+| `POST staff/{public_id}/reset-two-factor` | `{ reason }`: removes two-step verification and signs out; set up again at the next admin page | `users.manage` |
+| `POST roles` | `{ name }`, 201 | `roles.manage` |
+| `PUT roles/{id}/permissions` | `{ permissions: [names from SECURITY.md 4] }` | `roles.manage` |
+| `DELETE roles/{id}` | Custom roles without staff only; seeded roles 403 | `roles.manage` |
+| `PUT settings/{group}` | The group's fields (`config/admin_settings.php`): `orders`, `pricing`, `suppliers`, `notifications`, `analytics`, `general`, `mobile` (the public app config: versions with force update, maintenance and message, feature flags including `web_checkout_redirect`, links) need `settings.manage`; `currency`, `security`, `mail`, `automation` need `settings.manage_critical`. Typed, validated per field (422 on the field key), audited `settings.updated` per changed key. `checkout` is read-only (guest checkout is the `storefront.guest_checkout` config flag) | route: `settings.manage` or `settings.manage_critical`; then the group's permission (403) |
+| `PUT settings/{group}/secrets/{key}` | `{ value \| null }`, 10 per minute. Write-only encrypted settings: `currency.oxr_app_id`, `mail.smtp_password`, `analytics.ga4_api_secret`; null clears. Answer `{ configured }`, never the value; audit has no value | `settings.manage_critical` (E) |
+| `POST payment-gateways/{id}/eligibility-rules`, `PUT payment-eligibility-rules/{id}`, `DELETE payment-eligibility-rules/{id}` | `{ effect, countries[], ip_countries[], require_ip_match, currencies[], min_amount_base, max_amount_base, allow_guest, max_risk_level, priority, is_active }` (empty lists mean any). Audited `payments.eligibility_rule_created`, `_updated`, `_deleted` | `payments.manage` |
+| `PUT payment-gateways/{id}/public-key` | `{ mode, value \| null }`: the publishable identifier (Stripe `publishable_key` with the mode's prefix, PayPal `client_id`, Paymob `public_key`); secret-shaped values refused; the mode needs credentials (409). The gateway page shows the public value per mode. Audited `payments.public_credential_updated` | `payments.credentials` (E) |
+| `POST ai-suggestions/{id}/approve`, `/reject` | `{ note? }` (required to reject). Once only (409 after a decision); nothing is published. Audited `ai_suggestions.approved`, `ai_suggestions.rejected` | `ai_suggestions.review` |
+| `POST automation-workflows/{id}/enable`, `/disable` | Workflow kill switch (`automation:workflows` on a screen). Audited `automation.workflows_enabled`, `_disabled` | `service_accounts.manage` |
+
+**Scheduled.** `admin:prune-exports` (hourly at :20) deletes the files of expired table exports and keeps the rows.
 
 ## 6. Webhooks
 

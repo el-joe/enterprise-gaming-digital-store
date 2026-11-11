@@ -6,6 +6,8 @@ use App\Domains\Suppliers\Models\SupplierProductMapping;
 use App\Domains\Suppliers\Services\SupplierMappingService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminListRequest;
+use App\Http\Requests\Admin\Suppliers\BulkMappingRequest;
+use App\Http\Requests\Admin\Suppliers\BulkMappingStatusRequest;
 use App\Http\Requests\Admin\Suppliers\SaveSupplierMappingRequest;
 use App\Http\Resources\Admin\Suppliers\SupplierMappingResource;
 use Illuminate\Http\JsonResponse;
@@ -39,5 +41,19 @@ class SupplierMappingController extends Controller
         $this->service->delete($supplierMapping);
 
         return $this->success(message: 'Deleted.');
+    }
+
+    public function bulk(BulkMappingRequest $request): JsonResponse
+    {
+        $created = $this->service->bulkCreate((int) $request->validated('supplier_id'), (string) $request->validated('rows'));
+
+        return $this->success(['created' => $created], 'Mappings created.', status: 201);
+    }
+
+    public function bulkStatus(BulkMappingStatusRequest $request): JsonResponse
+    {
+        $changed = $this->service->setActive(array_map('intval', $request->validated('ids')), (bool) $request->validated('is_active'));
+
+        return $this->success(['changed' => $changed], 'Saved.');
     }
 }

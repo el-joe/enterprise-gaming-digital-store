@@ -125,17 +125,20 @@ describe('permission-based navigation', function (): void {
         'refunds only (support agent)' => [['refunds.view'], ['Payments'], ['Orders', 'Dashboard', 'Suppliers']],
     ]);
 
-    it('hides M15 sections even for holders of their permissions', function (): void {
+    it('shows the M15 sections to holders of their permissions', function (): void {
         adminWith(['orders.view', 'catalog.view', 'customers.view', 'pricing.view', 'support.view', 'settings.view', 'users.manage']);
 
         $nav = (string) str($this->get('/admin/orders')->getContent())->between('data-admin-sidebar', '</aside>');
 
         expect($nav)->toContain('>Orders</span>')
-            ->not->toContain('>Catalog</span>')
-            ->not->toContain('>Customers</span>')
-            ->not->toContain('>Pricing</span>')
-            ->not->toContain('>Support</span>')
-            ->not->toContain('>Settings</span>');
+            ->toContain('>Catalog</span>')
+            ->toContain('>Customers</span>')
+            ->toContain('>Pricing</span>')
+            ->toContain('>Support</span>')
+            ->toContain('>Settings</span>')
+            ->toContain('>Users &amp; roles</span>')
+            ->not->toContain('>Marketing</span>')
+            ->not->toContain('>Content</span>');
     });
 
     it('shows each seeded role its own navigation', function (string $role, array $visible, array $hidden): void {
@@ -158,10 +161,10 @@ describe('permission-based navigation', function (): void {
             expect($nav)->not->toContain('>'.$label.'</span>');
         }
     })->with([
-        'Operations Manager' => ['Operations Manager', ['Dashboard', 'Orders', 'Suppliers', 'Payments'], ['Catalog']],
-        'Finance Manager' => ['Finance Manager', ['Dashboard', 'Orders', 'Payments'], ['Suppliers']],
-        'Support Agent' => ['Support Agent', ['Orders', 'Payments'], ['Dashboard', 'Suppliers']],
-        'Catalog Manager' => ['Catalog Manager', [], []],
+        'Operations Manager' => ['Operations Manager', ['Dashboard', 'Orders', 'Suppliers', 'Payments', 'Catalog', 'Customers'], ['Marketing', 'Settings']],
+        'Finance Manager' => ['Finance Manager', ['Dashboard', 'Orders', 'Payments', 'Pricing'], ['Suppliers', 'Catalog']],
+        'Support Agent' => ['Support Agent', ['Orders', 'Payments', 'Support', 'Customers'], ['Dashboard', 'Suppliers', 'Settings']],
+        'Catalog Manager' => ['Catalog Manager', ['Catalog', 'Content', 'Pricing', 'Reviews'], ['Orders', 'Dashboard', 'Customers']],
     ]);
 
     it('opens the first permitted screen from the admin home', function (): void {

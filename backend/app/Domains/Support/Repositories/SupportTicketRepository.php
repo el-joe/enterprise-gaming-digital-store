@@ -63,7 +63,7 @@ class SupportTicketRepository
     {
         return $ticket->load([
             'order:id,public_id,order_number,status',
-            'user:id,name,email',
+            'user:id,public_id,name,email',
             'assignedTo:id,name',
             'supportTicketMessages' => static fn ($query) => $query->orderBy('id'),
         ]);

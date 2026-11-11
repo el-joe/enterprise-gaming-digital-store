@@ -51,6 +51,9 @@ final class TaskSchedule
         // Stateless storefront and checkout (M-A3)
         $schedule->command('orders:prune-guest-order-tokens')->hourly()->withoutOverlapping()->onOneServer();
 
+        // Admin (M15): expired table export files.
+        $schedule->command('admin:prune-exports')->hourlyAt(20)->withoutOverlapping()->onOneServer();
+
         // Automation (M17)
         $schedule->command('automation:flush-outbox')->everyMinute()->withoutOverlapping()->onOneServer();
     }

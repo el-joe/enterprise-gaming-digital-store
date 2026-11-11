@@ -2,6 +2,8 @@
 
 namespace App\Domains\Automation\Services;
 
+use App\Domains\Audit\DTOs\AuditEntry;
+use App\Domains\Audit\Services\AuditLogger;
 use App\Domains\Automation\Models\AutomationWorkflow;
 use App\Domains\Shared\Exceptions\ApplicationException;
 use Illuminate\Support\Collection;
@@ -12,6 +14,8 @@ use Illuminate\Support\Collection;
  */
 class AutomationWorkflowRegistry
 {
+    public function __construct(private AuditLogger $audit) {}
+
     public function assertEnabled(string $workflowId): AutomationWorkflow
     {
         $workflow = AutomationWorkflow::query()->where('workflow_id', $workflowId)->first();
@@ -45,7 +49,14 @@ class AutomationWorkflowRegistry
             $query->whereIn('workflow_id', $workflowIds);
         }
 
-        return $query->update(['is_enabled' => $enabled]);
+        $changed = $query->update(['is_enabled' => $enabled]);
+
+        $this->audit->record(new AuditEntry(
+            action: $enabled ? 'automation.workflows_enabled' : 'automation.workflows_disabled',
+            after: ['workflows' => $workflowIds === [] ? 'all' : $workflowIds, 'changed' => $changed],
+        ));
+
+        return $changed;
     }
 
     /**

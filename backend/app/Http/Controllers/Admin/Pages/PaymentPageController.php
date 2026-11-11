@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Pages;
 
 use App\Domains\Payments\Models\PaymentGateway;
 use App\Domains\Payments\Services\PaymentGatewayAdminService;
+use App\Domains\Payments\Services\PaymentPublicCredentials;
 use App\Http\Controllers\Controller;
 use App\Http\Support\AdminTablePage;
 use Illuminate\Http\Request;
@@ -26,9 +27,10 @@ class PaymentPageController extends Controller
         ]);
     }
 
-    public function gateway(PaymentGateway $gateway, PaymentGatewayAdminService $service): Response
+    public function gateway(PaymentGateway $gateway, PaymentGatewayAdminService $service, PaymentPublicCredentials $public): Response
     {
         return response()->view('admin.payments.gateway', [
+            'public' => $public->forGateway($gateway),
             'gateway' => $service->gateway($gateway),
             'credentials' => $service->credentialState($gateway),
             'fields' => (array) config("admin.credential_fields.gateways.{$gateway->adapter_key}", []),
