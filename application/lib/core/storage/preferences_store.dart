@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,8 +53,12 @@ class PreferencesStore {
   /// The rooted or jailbroken device warning was shown once (owner decision 5).
   static const integrityWarningShownKey = 'prefs.integrity_warning_shown';
 
+  /// Recent search terms, newest first (M-A11). Local only: there is no API for history.
+  static const searchHistoryKey = 'prefs.search_history';
+
   static const allowedKeys = {
     localeKey,
+    searchHistoryKey,
     currencyKey,
     onboardingCompletedKey,
     biometricOfferShownKey,
@@ -95,6 +101,24 @@ class PreferencesStore {
 
   Future<void> setBiometricOfferShown() =>
       _backend.setBool(biometricOfferShownKey, value: true);
+
+  /// Recent search terms, newest first; an unreadable value counts as empty.
+  List<String> get searchHistory {
+    final raw = _backend.getString(searchHistoryKey);
+    if (raw == null) {
+      return const [];
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      return decoded is List ? [...decoded.whereType<String>()] : const [];
+    } on FormatException {
+      return const [];
+    }
+  }
+
+  Future<void> setSearchHistory(List<String> terms) => terms.isEmpty
+      ? _backend.remove(searchHistoryKey)
+      : _backend.setString(searchHistoryKey, jsonEncode(terms));
 
   bool get integrityWarningShown =>
       _backend.getBool(integrityWarningShownKey) ?? false;

@@ -1,6 +1,7 @@
 import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/router/app_router.dart';
 import 'package:application/core/router/guards.dart';
+import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,7 +11,8 @@ void main() {
   testWidgets('boots to the home shell', (tester) async {
     await pumpApp(tester);
     final l10n = lookupAppLocalizations(const Locale('en'));
-    expect(find.text(l10n.homeTitle), findsOneWidget);
+    expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
+    expect(find.text(l10n.navBrowse), findsOneWidget);
     expect(find.text(l10n.environmentBadge('dev')), findsOneWidget);
   });
 
@@ -28,7 +30,7 @@ void main() {
         .read(availabilityProvider.notifier)
         .update(AppAvailability.available);
     await tester.pumpAndSettle();
-    expect(find.text(l10n.homeTitle), findsOneWidget);
+    expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
   });
 
   testWidgets('update required shows its notice', (tester) async {
@@ -53,30 +55,32 @@ void main() {
     expect(find.text(l10n.notFoundTitle), findsOneWidget);
     await tester.tap(find.text(l10n.backToHome));
     await tester.pumpAndSettle();
-    expect(find.text(l10n.homeTitle), findsOneWidget);
+    expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
   });
 
   testWidgets('switching to Arabic mirrors the shell', (tester) async {
-    await pumpApp(tester);
+    final container = await pumpApp(tester);
     final en = lookupAppLocalizations(const Locale('en'));
     final ar = lookupAppLocalizations(const Locale('ar'));
+    container.read(appRouterProvider).go('/account');
+    await tester.pumpAndSettle();
     expect(
-      Directionality.of(tester.element(find.text(en.homeTitle))),
+      Directionality.of(tester.element(find.text(en.accountTitle).first)),
       TextDirection.ltr,
     );
 
     await tester.tap(find.text(en.switchLanguage));
     await tester.pumpAndSettle();
 
-    expect(find.text(ar.homeTitle), findsOneWidget);
+    expect(find.text(ar.navHome), findsOneWidget);
     expect(
-      Directionality.of(tester.element(find.text(ar.homeTitle))),
+      Directionality.of(tester.element(find.text(ar.navHome))),
       TextDirection.rtl,
     );
 
     await tester.tap(find.text(ar.switchLanguage));
     await tester.pumpAndSettle();
-    expect(find.text(en.homeTitle), findsOneWidget);
+    expect(find.text(en.navHome), findsOneWidget);
   });
 
   testWidgets('device locale picks Arabic when nothing is saved', (
@@ -84,7 +88,7 @@ void main() {
   ) async {
     await pumpApp(tester, deviceLocales: const [Locale('ar', 'EG')]);
     expect(
-      find.text(lookupAppLocalizations(const Locale('ar')).homeTitle),
+      find.text(lookupAppLocalizations(const Locale('ar')).navHome),
       findsOneWidget,
     );
   });

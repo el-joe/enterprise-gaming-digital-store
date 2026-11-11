@@ -12,12 +12,17 @@ import 'package:application/features/app_config/app_config_providers.dart';
 import 'package:application/features/app_config/domain/entities/app_config.dart';
 import 'package:application/features/auth/auth_providers.dart';
 import 'package:application/features/auth/domain/entities/biometric.dart';
+import 'package:application/features/catalog/catalog_providers.dart';
+import 'package:application/features/home/home_providers.dart';
+import 'package:application/features/search/search_providers.dart';
+import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override, ProviderListenable;
 import 'package:flutter_test/flutter_test.dart';
 
+import 'catalog_fakes.dart';
 import 'fakes.dart';
 import 'memory_stores.dart';
 
@@ -61,6 +66,10 @@ final class TestHarness {
     required this.prefs,
     required this.secure,
     required this.now,
+    required this.home,
+    required this.catalog,
+    required this.search,
+    required this.images,
   });
 
   final ProviderContainer container;
@@ -75,6 +84,13 @@ final class TestHarness {
 
   /// The test clock; move it with `harness.now.value = ...`.
   final ValueNotifier<DateTime> now;
+
+  /// Storefront fakes (M-A11): home, catalog (paged listing, platforms, categories,
+  /// currencies), search, and the image loader recording every requested URL.
+  final FakeHomeRepository home;
+  final FakeCatalogRepository catalog;
+  final FakeSearchRepository search;
+  final RecordingImages images;
 
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
@@ -118,6 +134,10 @@ TestHarness buildHarness({
   final biometricServer = FakeBiometricAuthRepository();
   final native = FakeNativeBridge(integrity: integrity);
   final now = ValueNotifier(DateTime.utc(2026, 11, 11, 12));
+  final home = FakeHomeRepository();
+  final catalog = FakeCatalogRepository();
+  final search = FakeSearchRepository();
+  final images = RecordingImages();
 
   final container = ProviderContainer(
     overrides: [
@@ -146,6 +166,10 @@ TestHarness buildHarness({
       biometricAuthRepositoryProvider.overrideWithValue(biometricServer),
       nativeBridgeProvider.overrideWithValue(native),
       clockProvider.overrideWithValue(() => now.value),
+      homeRepositoryProvider.overrideWithValue(home),
+      catalogRepositoryProvider.overrideWithValue(catalog),
+      searchRepositoryProvider.overrideWithValue(search),
+      catalogImagesProvider.overrideWithValue(images.call),
       ...overrides,
     ],
   );
@@ -160,6 +184,10 @@ TestHarness buildHarness({
     prefs: prefsBackend,
     secure: secure,
     now: now,
+    home: home,
+    catalog: catalog,
+    search: search,
+    images: images,
   );
 }
 
@@ -179,6 +207,7 @@ Future<TestHarness> pumpHarness(
   Map<String, Object> preferences = const {},
   List<Override> overrides = const [],
   bool settle = true,
+  void Function(TestHarness harness)? arrange,
 }) async {
   tester.view
     ..physicalSize = size
@@ -197,6 +226,7 @@ Future<TestHarness> pumpHarness(
     overrides: overrides,
   );
   addTearDown(harness.dispose);
+  arrange?.call(harness);
   await tester.pumpWidget(
     UncontrolledProviderScope(container: harness.container, child: const App()),
   );
@@ -227,7 +257,10 @@ Future<void> precacheImages(WidgetTester tester) async {
   await tester.runAsync(() async {
     for (final element in find.byType(Image).evaluate()) {
       final image = element.widget as Image;
-      await precacheImage(image.image, element);
+      // Bundled brand assets only: catalog media (fake loader) never finishes on purpose.
+      if (image.image is AssetBundleImageProvider) {
+        await precacheImage(image.image, element);
+      }
     }
   });
   await tester.pumpAndSettle();

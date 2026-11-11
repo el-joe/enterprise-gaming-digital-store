@@ -29,6 +29,8 @@ void main() {
       // M-A10: two "shown once" flags; no secret, token or biometric key material.
       PreferencesStore.biometricOfferShownKey,
       PreferencesStore.integrityWarningShownKey,
+      // M-A11: local search history (terms the customer typed, no secret).
+      PreferencesStore.searchHistoryKey,
     });
     for (final key in PreferencesStore.allowedKeys) {
       expect(key, isNot(matches(RegExp('token|password|secret|key'))));

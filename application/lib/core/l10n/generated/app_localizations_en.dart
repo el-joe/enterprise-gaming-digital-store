@@ -26,16 +26,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeOverline => 'Store';
-
-  @override
-  String get homeTitle => 'Welcome to boxcards.shop';
-
-  @override
-  String get homeBody =>
-      'Gift cards and game top-ups. The full store arrives in the next app releases.';
-
-  @override
   String get switchLanguage => 'العربية';
 
   @override
@@ -527,4 +517,297 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get integrityAcknowledge => 'I understand';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navBrowse => 'Browse';
+
+  @override
+  String get navCart => 'Cart';
+
+  @override
+  String get navOrders => 'Orders';
+
+  @override
+  String get navAccount => 'Account';
+
+  @override
+  String get searchFieldHint => 'Search gift cards and top-ups';
+
+  @override
+  String get searchAction => 'Search';
+
+  @override
+  String currencyButtonLabel(String code) {
+    return 'Display currency: $code';
+  }
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String seeAllSemantics(String section) {
+    return 'See all: $section';
+  }
+
+  @override
+  String get loadErrorTitle => 'We couldn\'t load this page';
+
+  @override
+  String get homeErrorTitle => 'We couldn\'t load the store';
+
+  @override
+  String errorServerBody(String requestId) {
+    return 'Something went wrong on our side. Request ID $requestId';
+  }
+
+  @override
+  String get errorServerBodyNoId => 'Something went wrong on our side.';
+
+  @override
+  String get actionRetry => 'Retry';
+
+  @override
+  String get offlineBannerTitle => 'You are offline';
+
+  @override
+  String get offlineBannerBody =>
+      'Prices and stock need a connection. We will refresh when you are back online.';
+
+  @override
+  String get noConnectionTitle => 'No connection';
+
+  @override
+  String get noConnectionBody => 'Check Wi-Fi or mobile data, then try again.';
+
+  @override
+  String heroSlideLabel(int index, int count, String title) {
+    return 'Banner $index of $count: $title';
+  }
+
+  @override
+  String get heroCarouselLabel => 'Offers';
+
+  @override
+  String get platformsTitle => 'Platforms';
+
+  @override
+  String get platformsIntro =>
+      'Choose a platform to see its gift cards, wallet codes and top-ups.';
+
+  @override
+  String get platformsEmpty => 'No platforms yet';
+
+  @override
+  String get categoriesTitle => 'Categories';
+
+  @override
+  String get allCategory => 'All';
+
+  @override
+  String productCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count products',
+      one: '1 product',
+      zero: 'No products',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get allProductsTitle => 'All products';
+
+  @override
+  String get filtersChip => 'Filters';
+
+  @override
+  String filtersChipCount(int count) {
+    return 'Filters · $count';
+  }
+
+  @override
+  String sortChip(String sort) {
+    return 'Sort: $sort';
+  }
+
+  @override
+  String get sortPopular => 'Popular';
+
+  @override
+  String get sortPriceAsc => 'Price low to high';
+
+  @override
+  String get sortPriceDesc => 'Price high to low';
+
+  @override
+  String get sortNewest => 'Newest';
+
+  @override
+  String get sortName => 'Name';
+
+  @override
+  String get sortTitle => 'Sort';
+
+  @override
+  String get filtersTitle => 'Filters';
+
+  @override
+  String get filterDelivery => 'Delivery';
+
+  @override
+  String get deliveryInstantCode => 'Instant code';
+
+  @override
+  String get deliveryDirectTopup => 'Direct top-up';
+
+  @override
+  String get filterMinPrice => 'Min price';
+
+  @override
+  String get filterMaxPrice => 'Max price';
+
+  @override
+  String filterPriceHelper(String currency) {
+    return 'In $currency';
+  }
+
+  @override
+  String get filterPriceInvalid => 'Enter an amount like 5 or 5.50';
+
+  @override
+  String get filterPriceRange => 'Min price must not be above max price';
+
+  @override
+  String get filtersClear => 'Clear';
+
+  @override
+  String get filtersApply => 'Show results';
+
+  @override
+  String get listingEmptyTitle => 'No products match';
+
+  @override
+  String get listingEmptyBody => 'Try another price or remove a filter.';
+
+  @override
+  String get catalogEmptyTitle => 'No products here yet';
+
+  @override
+  String get catalogEmptyBody => 'New gift cards and top-ups are added often.';
+
+  @override
+  String get clearFilters => 'Clear filters';
+
+  @override
+  String get loadMoreFailed => 'Couldn\'t load more products.';
+
+  @override
+  String get badgeInstant => 'Instant';
+
+  @override
+  String get badgeTopup => 'Top-up';
+
+  @override
+  String get badgeSubscription => 'Subscription';
+
+  @override
+  String get productUnavailable => 'Unavailable';
+
+  @override
+  String get searchSuggestions => 'Suggestions';
+
+  @override
+  String get searchResults => 'Results';
+
+  @override
+  String get searchRecent => 'Recent searches';
+
+  @override
+  String get searchClearHistory => 'Clear';
+
+  @override
+  String get searchClearHistoryLabel => 'Clear recent searches';
+
+  @override
+  String searchRemoveTerm(String term) {
+    return 'Remove $term';
+  }
+
+  @override
+  String searchFillTerm(String term) {
+    return 'Search for $term';
+  }
+
+  @override
+  String get searchPopular => 'Popular';
+
+  @override
+  String searchNoResultsTitle(String query) {
+    return 'No results for “$query”';
+  }
+
+  @override
+  String get searchNoResultsBody =>
+      'Check the spelling or try a platform name.';
+
+  @override
+  String get searchTypePlatform => 'Platform';
+
+  @override
+  String get searchTypeCategory => 'Category';
+
+  @override
+  String get searchTypeProduct => 'Product';
+
+  @override
+  String get searchFailed => 'Couldn\'t load suggestions.';
+
+  @override
+  String get currencySheetBody =>
+      'Prices refresh in the new currency. Your cart is re-priced before checkout.';
+
+  @override
+  String get currencyApply => 'Apply';
+
+  @override
+  String currencyChanged(String code) {
+    return 'Prices are now shown in $code.';
+  }
+
+  @override
+  String get cartTitle => 'Cart';
+
+  @override
+  String get ordersTitle => 'Orders';
+
+  @override
+  String get accountTitle => 'Account';
+
+  @override
+  String get comingSoonTitle => 'Coming in the next update';
+
+  @override
+  String get comingSoonBody =>
+      'This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.';
+
+  @override
+  String get productTitle => 'Product';
+
+  @override
+  String get languageSetting => 'Language';
+
+  @override
+  String reviewsRating(int rating) {
+    return 'Rated $rating out of 5';
+  }
+
+  @override
+  String get verifiedPurchase => 'Verified purchase';
+
+  @override
+  String get notificationsComingSoon => 'Notifications';
 }

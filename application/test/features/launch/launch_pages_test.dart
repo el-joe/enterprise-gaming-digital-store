@@ -2,6 +2,7 @@ import 'package:application/core/network/failure.dart';
 import 'package:application/core/network/result.dart';
 import 'package:application/core/router/app_router.dart';
 import 'package:application/core/storage/preferences_store.dart';
+import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:application/shared/widgets/status_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,7 +31,7 @@ void main() {
         );
         await tester.tap(find.text(l10n.actionTryAgain));
         await tester.pumpAndSettle();
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
         expect(h.appConfig.calls, hasLength(2));
       });
 
@@ -105,7 +106,7 @@ void main() {
 
           await tester.tap(find.text(l10n.actionTryAgain));
           await tester.pumpAndSettle();
-          expect(find.text(l10n.homeTitle), findsOneWidget);
+          expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
         },
       );
 
@@ -149,7 +150,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(start);
         await tester.pumpAndSettle();
-        expect(find.text(otherL10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
         expect(h.prefs.values[PreferencesStore.currencyKey], 'USD');
         expect(h.prefs.values[PreferencesStore.onboardingCompletedKey], isTrue);
       });
@@ -166,7 +167,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text(l10n.skipForNow));
         await tester.pumpAndSettle();
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
         expect(
           h.prefs.values.containsKey(PreferencesStore.currencyKey),
           isFalse,
@@ -184,7 +185,7 @@ void main() {
         expect(find.text(l10n.integrityTitle), findsOneWidget);
         await tester.tap(find.text(l10n.integrityAcknowledge));
         await tester.pumpAndSettle();
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
         expect(
           h.prefs.values[PreferencesStore.integrityWarningShownKey],
           isTrue,
@@ -194,7 +195,7 @@ void main() {
         h.read(appRouterProvider).go('/splash');
         await tester.pumpAndSettle();
         expect(find.text(l10n.integrityTitle), findsNothing);
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
       });
     });
   }

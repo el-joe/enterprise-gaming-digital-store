@@ -17,18 +17,6 @@
       }
     }
   },
-  "homeOverline": "Store",
-  "@homeOverline": {
-    "description": "Small label above the home title."
-  },
-  "homeTitle": "Welcome to boxcards.shop",
-  "@homeTitle": {
-    "description": "Home placeholder title."
-  },
-  "homeBody": "Gift cards and game top-ups. The full store arrives in the next app releases.",
-  "@homeBody": {
-    "description": "Home placeholder text until the catalog screens ship."
-  },
   "switchLanguage": "العربية",
   "@switchLanguage": {
     "description": "Button that switches the app to the other language, written in that language."
@@ -669,5 +657,416 @@
   "integrityAcknowledge": "I understand",
   "@integrityAcknowledge": {
     "description": "Closes the device integrity sheet."
+  },
+  "navHome": "Home",
+  "@navHome": {
+    "description": "Bottom navigation tab."
+  },
+  "navBrowse": "Browse",
+  "@navBrowse": {
+    "description": "Bottom navigation tab."
+  },
+  "navCart": "Cart",
+  "@navCart": {
+    "description": "Bottom navigation tab."
+  },
+  "navOrders": "Orders",
+  "@navOrders": {
+    "description": "Bottom navigation tab."
+  },
+  "navAccount": "Account",
+  "@navAccount": {
+    "description": "Bottom navigation tab."
+  },
+  "searchFieldHint": "Search gift cards and top-ups",
+  "@searchFieldHint": {
+    "description": "Search field placeholder."
+  },
+  "searchAction": "Search",
+  "@searchAction": {
+    "description": "Search button tooltip."
+  },
+  "currencyButtonLabel": "Display currency: {code}",
+  "@currencyButtonLabel": {
+    "description": "Semantics of the currency button in the home header.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "seeAll": "See all",
+  "@seeAll": {
+    "description": "Section link to the full list."
+  },
+  "seeAllSemantics": "See all: {section}",
+  "@seeAllSemantics": {
+    "description": "Screen reader label of See all.",
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
+  "loadErrorTitle": "We couldn't load this page",
+  "@loadErrorTitle": {
+    "description": "Generic load error title."
+  },
+  "homeErrorTitle": "We couldn't load the store",
+  "@homeErrorTitle": {
+    "description": "Home error state title (03.3)."
+  },
+  "errorServerBody": "Something went wrong on our side. Request ID {requestId}",
+  "@errorServerBody": {
+    "description": "Server error with the request id.",
+    "placeholders": {
+      "requestId": {
+        "type": "String"
+      }
+    }
+  },
+  "errorServerBodyNoId": "Something went wrong on our side.",
+  "@errorServerBodyNoId": {
+    "description": "Server error without a request id."
+  },
+  "actionRetry": "Retry",
+  "@actionRetry": {
+    "description": "Retry button."
+  },
+  "offlineBannerTitle": "You are offline",
+  "@offlineBannerTitle": {
+    "description": "Offline banner title (03.4)."
+  },
+  "offlineBannerBody": "Prices and stock need a connection. We will refresh when you are back online.",
+  "@offlineBannerBody": {
+    "description": "Offline banner text."
+  },
+  "noConnectionTitle": "No connection",
+  "@noConnectionTitle": {
+    "description": "Offline state title."
+  },
+  "noConnectionBody": "Check Wi-Fi or mobile data, then try again.",
+  "@noConnectionBody": {
+    "description": "Offline state text."
+  },
+  "heroSlideLabel": "Banner {index} of {count}: {title}",
+  "@heroSlideLabel": {
+    "description": "Screen reader label of a hero slide.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "heroCarouselLabel": "Offers",
+  "@heroCarouselLabel": {
+    "description": "Screen reader label of the hero carousel."
+  },
+  "platformsTitle": "Platforms",
+  "@platformsTitle": {
+    "description": "Platforms title."
+  },
+  "platformsIntro": "Choose a platform to see its gift cards, wallet codes and top-ups.",
+  "@platformsIntro": {
+    "description": "Platforms page intro (04.1)."
+  },
+  "platformsEmpty": "No platforms yet",
+  "@platformsEmpty": {
+    "description": "No platforms."
+  },
+  "categoriesTitle": "Categories",
+  "@categoriesTitle": {
+    "description": "Categories title."
+  },
+  "allCategory": "All",
+  "@allCategory": {
+    "description": "Chip that removes the category filter."
+  },
+  "productCount": "{count, plural, =0{No products} =1{1 product} other{{count} products}}",
+  "@productCount": {
+    "description": "Number of products.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allProductsTitle": "All products",
+  "@allProductsTitle": {
+    "description": "Listing title without category or platform."
+  },
+  "filtersChip": "Filters",
+  "@filtersChip": {
+    "description": "Filters chip without active filters."
+  },
+  "filtersChipCount": "Filters · {count}",
+  "@filtersChipCount": {
+    "description": "Filters chip with the number of active filters.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sortChip": "Sort: {sort}",
+  "@sortChip": {
+    "description": "Sort chip.",
+    "placeholders": {
+      "sort": {
+        "type": "String"
+      }
+    }
+  },
+  "sortPopular": "Popular",
+  "@sortPopular": {
+    "description": "Sort option."
+  },
+  "sortPriceAsc": "Price low to high",
+  "@sortPriceAsc": {
+    "description": "Sort option."
+  },
+  "sortPriceDesc": "Price high to low",
+  "@sortPriceDesc": {
+    "description": "Sort option."
+  },
+  "sortNewest": "Newest",
+  "@sortNewest": {
+    "description": "Sort option."
+  },
+  "sortName": "Name",
+  "@sortName": {
+    "description": "Sort option."
+  },
+  "sortTitle": "Sort",
+  "@sortTitle": {
+    "description": "Sort sheet and filter group title."
+  },
+  "filtersTitle": "Filters",
+  "@filtersTitle": {
+    "description": "Filters sheet title."
+  },
+  "filterDelivery": "Delivery",
+  "@filterDelivery": {
+    "description": "Filter group."
+  },
+  "deliveryInstantCode": "Instant code",
+  "@deliveryInstantCode": {
+    "description": "Delivery filter option."
+  },
+  "deliveryDirectTopup": "Direct top-up",
+  "@deliveryDirectTopup": {
+    "description": "Delivery filter option."
+  },
+  "filterMinPrice": "Min price",
+  "@filterMinPrice": {
+    "description": "Price filter field."
+  },
+  "filterMaxPrice": "Max price",
+  "@filterMaxPrice": {
+    "description": "Price filter field."
+  },
+  "filterPriceHelper": "In {currency}",
+  "@filterPriceHelper": {
+    "description": "Currency of the price filter.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "filterPriceInvalid": "Enter an amount like 5 or 5.50",
+  "@filterPriceInvalid": {
+    "description": "Invalid price bound."
+  },
+  "filterPriceRange": "Min price must not be above max price",
+  "@filterPriceRange": {
+    "description": "Min above max."
+  },
+  "filtersClear": "Clear",
+  "@filtersClear": {
+    "description": "Clears the filters in the sheet."
+  },
+  "filtersApply": "Show results",
+  "@filtersApply": {
+    "description": "Applies the filters."
+  },
+  "listingEmptyTitle": "No products match",
+  "@listingEmptyTitle": {
+    "description": "Listing empty with filters (04.4)."
+  },
+  "listingEmptyBody": "Try another price or remove a filter.",
+  "@listingEmptyBody": {
+    "description": "Listing empty text."
+  },
+  "catalogEmptyTitle": "No products here yet",
+  "@catalogEmptyTitle": {
+    "description": "Listing empty without filters."
+  },
+  "catalogEmptyBody": "New gift cards and top-ups are added often.",
+  "@catalogEmptyBody": {
+    "description": "Listing empty text without filters."
+  },
+  "clearFilters": "Clear filters",
+  "@clearFilters": {
+    "description": "Clears the listing filters."
+  },
+  "loadMoreFailed": "Couldn't load more products.",
+  "@loadMoreFailed": {
+    "description": "Next page failed (04.5)."
+  },
+  "badgeInstant": "Instant",
+  "@badgeInstant": {
+    "description": "Delivery badge."
+  },
+  "badgeTopup": "Top-up",
+  "@badgeTopup": {
+    "description": "Delivery badge."
+  },
+  "badgeSubscription": "Subscription",
+  "@badgeSubscription": {
+    "description": "Delivery badge."
+  },
+  "productUnavailable": "Unavailable",
+  "@productUnavailable": {
+    "description": "Product without a price."
+  },
+  "searchSuggestions": "Suggestions",
+  "@searchSuggestions": {
+    "description": "Search section."
+  },
+  "searchResults": "Results",
+  "@searchResults": {
+    "description": "Search results section after submit."
+  },
+  "searchRecent": "Recent searches",
+  "@searchRecent": {
+    "description": "Search history section."
+  },
+  "searchClearHistory": "Clear",
+  "@searchClearHistory": {
+    "description": "Clears the search history."
+  },
+  "searchClearHistoryLabel": "Clear recent searches",
+  "@searchClearHistoryLabel": {
+    "description": "Screen reader label of Clear."
+  },
+  "searchRemoveTerm": "Remove {term}",
+  "@searchRemoveTerm": {
+    "description": "Removes one history term.",
+    "placeholders": {
+      "term": {
+        "type": "String"
+      }
+    }
+  },
+  "searchFillTerm": "Search for {term}",
+  "@searchFillTerm": {
+    "description": "Puts a suggestion in the field.",
+    "placeholders": {
+      "term": {
+        "type": "String"
+      }
+    }
+  },
+  "searchPopular": "Popular",
+  "@searchPopular": {
+    "description": "Popular searches section."
+  },
+  "searchNoResultsTitle": "No results for “{query}”",
+  "@searchNoResultsTitle": {
+    "description": "Search no results (04.7).",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchNoResultsBody": "Check the spelling or try a platform name.",
+  "@searchNoResultsBody": {
+    "description": "Search no results text."
+  },
+  "searchTypePlatform": "Platform",
+  "@searchTypePlatform": {
+    "description": "Suggestion type."
+  },
+  "searchTypeCategory": "Category",
+  "@searchTypeCategory": {
+    "description": "Suggestion type."
+  },
+  "searchTypeProduct": "Product",
+  "@searchTypeProduct": {
+    "description": "Suggestion type."
+  },
+  "searchFailed": "Couldn't load suggestions.",
+  "@searchFailed": {
+    "description": "Suggestions failed."
+  },
+  "currencySheetBody": "Prices refresh in the new currency. Your cart is re-priced before checkout.",
+  "@currencySheetBody": {
+    "description": "Currency sheet text (03.5)."
+  },
+  "currencyApply": "Apply",
+  "@currencyApply": {
+    "description": "Applies the currency."
+  },
+  "currencyChanged": "Prices are now shown in {code}.",
+  "@currencyChanged": {
+    "description": "Currency changed snackbar.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "cartTitle": "Cart",
+  "@cartTitle": {
+    "description": "Cart tab title."
+  },
+  "ordersTitle": "Orders",
+  "@ordersTitle": {
+    "description": "Orders tab title."
+  },
+  "accountTitle": "Account",
+  "@accountTitle": {
+    "description": "Account tab title."
+  },
+  "comingSoonTitle": "Coming in the next update",
+  "@comingSoonTitle": {
+    "description": "Placeholder of a screen not built yet."
+  },
+  "comingSoonBody": "This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.",
+  "@comingSoonBody": {
+    "description": "Placeholder text."
+  },
+  "productTitle": "Product",
+  "@productTitle": {
+    "description": "Product placeholder title."
+  },
+  "languageSetting": "Language",
+  "@languageSetting": {
+    "description": "Account settings row."
+  },
+  "reviewsRating": "Rated {rating} out of 5",
+  "@reviewsRating": {
+    "description": "Review rating for screen readers.",
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
+  },
+  "verifiedPurchase": "Verified purchase",
+  "@verifiedPurchase": {
+    "description": "Review badge."
+  },
+  "notificationsComingSoon": "Notifications",
+  "@notificationsComingSoon": {
+    "description": "Notifications button tooltip."
   }
 }

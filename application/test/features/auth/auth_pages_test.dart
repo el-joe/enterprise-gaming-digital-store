@@ -6,6 +6,7 @@ import 'package:application/core/router/routes.dart';
 import 'package:application/features/auth/domain/entities/auth_entities.dart';
 import 'package:application/features/auth/domain/entities/biometric.dart';
 import 'package:application/features/auth/presentation/controllers/biometric_controllers.dart';
+import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -149,7 +150,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(h.auth.twoFactorCalls.single.code, '481902');
         expect(h.read(sessionProvider), SessionStatus.signedIn);
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
       });
 
       testWidgets('an invalid code is shown under the boxes', (tester) async {
@@ -247,7 +248,7 @@ void main() {
         h.auth.meResult = const Ok(testUser);
         await tester.tap(_button(l10n.iVerified));
         await tester.pumpAndSettle();
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
       });
     });
 
@@ -286,7 +287,7 @@ void main() {
         expect(h.biometricServer.passwords, ['secret']);
         expect(h.biometricServer.registeredKeys, hasLength(2));
         expect(find.text(l10n.biometricEnabled), findsOneWidget);
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
         expect(await h.read(biometricUnlockSettingsProvider.future), isTrue);
       });
 
@@ -322,7 +323,7 @@ void main() {
         // Launch locked the app and the automatic prompt unlocked it with the (fake) key.
         expect(pumped.keys.signedPayloads, hasLength(1));
         expect(find.text(l10n.lockTitle), findsNothing);
-        expect(find.text(l10n.homeTitle), findsOneWidget);
+        expect(find.byKey(HomeScreen.pageKey), findsOneWidget);
 
         // Lock again, cancel the prompt and use the password.
         pumped.keys.signResults.add(
@@ -343,6 +344,9 @@ void main() {
 
     testWidgets('sign out asks first, then signs out ($lang)', (tester) async {
       final h = await pumpHarness(tester, languageCode: lang, signedIn: true);
+      // The account card lives on the Account tab since M-A11.
+      h.read(appRouterProvider).go(Routes.account.path);
+      await tester.pumpAndSettle();
       expect(find.text(l10n.homeSignedInAs(testUser.email)), findsOneWidget);
       await tester.tap(_button(l10n.signOutAction));
       await tester.pumpAndSettle();

@@ -100,8 +100,41 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
+  /// Bottom navigation tabs (M-A11). Cart, orders and account are placeholders until M-A13,
+  /// M-A14 and M-A16.
+  static const browse = AppRoute(name: 'browse', path: '/browse');
+
+  static const cart = AppRoute(name: 'cart', path: '/cart');
+
+  static const orders = AppRoute(name: 'orders', path: '/orders');
+
+  static const account = AppRoute(name: 'account', path: '/account');
+
+  /// All platforms (04.1).
+  static const platforms = AppRoute(
+    name: 'platforms',
+    path: '/browse/platforms',
+  );
+
+  /// Product listing with filters (04.2); query parameters `category`, `platform`, `sort`.
+  static const listing = AppRoute(name: 'listing', path: '/browse/products');
+
+  /// Search (04.6); query parameter `q` prefills and submits the term.
+  static const search = AppRoute(name: 'search', path: '/search');
+
+  /// Product detail, a placeholder until M-A12.
+  static const product = AppRoute(name: 'product', path: '/products/:slug');
+
   static const all = [
     home,
+    browse,
+    cart,
+    orders,
+    account,
+    platforms,
+    listing,
+    search,
+    product,
     maintenance,
     updateRequired,
     splash,
@@ -120,6 +153,41 @@ abstract final class Routes {
 
   /// Query parameter carrying the location to return to after sign-in.
   static const fromParameter = 'from';
+
+  /// Query parameter names of [listing] and [search].
+  static const categoryParameter = 'category';
+  static const platformParameter = 'platform';
+  static const sortParameter = 'sort';
+  static const queryParameter = 'q';
+
+  /// Location of [listing] for a category, a platform and a sort.
+  static String listingLocation({
+    String? category,
+    String? platform,
+    String? sort,
+  }) {
+    final query = {
+      categoryParameter: ?category,
+      platformParameter: ?platform,
+      sortParameter: ?sort,
+    };
+    return Uri(
+      path: listing.path,
+      queryParameters: query.isEmpty ? null : query,
+    ).toString();
+  }
+
+  /// Location of [search], submitting [query] when given.
+  static String searchLocation([String? query]) => Uri(
+    path: search.path,
+    queryParameters: query == null || query.trim().isEmpty
+        ? null
+        : {queryParameter: query.trim()},
+  ).toString();
+
+  /// Location of [product] for [slug].
+  static String productLocation(String slug) =>
+      '/products/${Uri.encodeComponent(slug)}';
 
   /// The route whose path pattern equals [path] (go_router's `fullPath`), if any.
   static AppRoute? byPath(String? path) {

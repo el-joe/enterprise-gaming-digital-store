@@ -116,24 +116,6 @@ abstract class AppLocalizations {
   /// **'{flavor, select, dev{Development} staging{Staging} other{Production}}'**
   String environmentBadge(String flavor);
 
-  /// Small label above the home title.
-  ///
-  /// In en, this message translates to:
-  /// **'Store'**
-  String get homeOverline;
-
-  /// Home placeholder title.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to boxcards.shop'**
-  String get homeTitle;
-
-  /// Home placeholder text until the catalog screens ship.
-  ///
-  /// In en, this message translates to:
-  /// **'Gift cards and game top-ups. The full store arrives in the next app releases.'**
-  String get homeBody;
-
   /// Button that switches the app to the other language, written in that language.
   ///
   /// In en, this message translates to:
@@ -1003,6 +985,516 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I understand'**
   String get integrityAcknowledge;
+
+  /// Bottom navigation tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// Bottom navigation tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get navBrowse;
+
+  /// Bottom navigation tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get navCart;
+
+  /// Bottom navigation tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get navOrders;
+
+  /// Bottom navigation tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get navAccount;
+
+  /// Search field placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search gift cards and top-ups'**
+  String get searchFieldHint;
+
+  /// Search button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchAction;
+
+  /// Semantics of the currency button in the home header.
+  ///
+  /// In en, this message translates to:
+  /// **'Display currency: {code}'**
+  String currencyButtonLabel(String code);
+
+  /// Section link to the full list.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+  /// Screen reader label of See all.
+  ///
+  /// In en, this message translates to:
+  /// **'See all: {section}'**
+  String seeAllSemantics(String section);
+
+  /// Generic load error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load this page'**
+  String get loadErrorTitle;
+
+  /// Home error state title (03.3).
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load the store'**
+  String get homeErrorTitle;
+
+  /// Server error with the request id.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong on our side. Request ID {requestId}'**
+  String errorServerBody(String requestId);
+
+  /// Server error without a request id.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong on our side.'**
+  String get errorServerBodyNoId;
+
+  /// Retry button.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get actionRetry;
+
+  /// Offline banner title (03.4).
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline'**
+  String get offlineBannerTitle;
+
+  /// Offline banner text.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices and stock need a connection. We will refresh when you are back online.'**
+  String get offlineBannerBody;
+
+  /// Offline state title.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection'**
+  String get noConnectionTitle;
+
+  /// Offline state text.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Wi-Fi or mobile data, then try again.'**
+  String get noConnectionBody;
+
+  /// Screen reader label of a hero slide.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner {index} of {count}: {title}'**
+  String heroSlideLabel(int index, int count, String title);
+
+  /// Screen reader label of the hero carousel.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers'**
+  String get heroCarouselLabel;
+
+  /// Platforms title.
+  ///
+  /// In en, this message translates to:
+  /// **'Platforms'**
+  String get platformsTitle;
+
+  /// Platforms page intro (04.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a platform to see its gift cards, wallet codes and top-ups.'**
+  String get platformsIntro;
+
+  /// No platforms.
+  ///
+  /// In en, this message translates to:
+  /// **'No platforms yet'**
+  String get platformsEmpty;
+
+  /// Categories title.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get categoriesTitle;
+
+  /// Chip that removes the category filter.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allCategory;
+
+  /// Number of products.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No products} =1{1 product} other{{count} products}}'**
+  String productCount(int count);
+
+  /// Listing title without category or platform.
+  ///
+  /// In en, this message translates to:
+  /// **'All products'**
+  String get allProductsTitle;
+
+  /// Filters chip without active filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filtersChip;
+
+  /// Filters chip with the number of active filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters · {count}'**
+  String filtersChipCount(int count);
+
+  /// Sort chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort: {sort}'**
+  String sortChip(String sort);
+
+  /// Sort option.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get sortPopular;
+
+  /// Sort option.
+  ///
+  /// In en, this message translates to:
+  /// **'Price low to high'**
+  String get sortPriceAsc;
+
+  /// Sort option.
+  ///
+  /// In en, this message translates to:
+  /// **'Price high to low'**
+  String get sortPriceDesc;
+
+  /// Sort option.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get sortNewest;
+
+  /// Sort option.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortName;
+
+  /// Sort sheet and filter group title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sortTitle;
+
+  /// Filters sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filtersTitle;
+
+  /// Filter group.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get filterDelivery;
+
+  /// Delivery filter option.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant code'**
+  String get deliveryInstantCode;
+
+  /// Delivery filter option.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct top-up'**
+  String get deliveryDirectTopup;
+
+  /// Price filter field.
+  ///
+  /// In en, this message translates to:
+  /// **'Min price'**
+  String get filterMinPrice;
+
+  /// Price filter field.
+  ///
+  /// In en, this message translates to:
+  /// **'Max price'**
+  String get filterMaxPrice;
+
+  /// Currency of the price filter.
+  ///
+  /// In en, this message translates to:
+  /// **'In {currency}'**
+  String filterPriceHelper(String currency);
+
+  /// Invalid price bound.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount like 5 or 5.50'**
+  String get filterPriceInvalid;
+
+  /// Min above max.
+  ///
+  /// In en, this message translates to:
+  /// **'Min price must not be above max price'**
+  String get filterPriceRange;
+
+  /// Clears the filters in the sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get filtersClear;
+
+  /// Applies the filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Show results'**
+  String get filtersApply;
+
+  /// Listing empty with filters (04.4).
+  ///
+  /// In en, this message translates to:
+  /// **'No products match'**
+  String get listingEmptyTitle;
+
+  /// Listing empty text.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another price or remove a filter.'**
+  String get listingEmptyBody;
+
+  /// Listing empty without filters.
+  ///
+  /// In en, this message translates to:
+  /// **'No products here yet'**
+  String get catalogEmptyTitle;
+
+  /// Listing empty text without filters.
+  ///
+  /// In en, this message translates to:
+  /// **'New gift cards and top-ups are added often.'**
+  String get catalogEmptyBody;
+
+  /// Clears the listing filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// Next page failed (04.5).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load more products.'**
+  String get loadMoreFailed;
+
+  /// Delivery badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant'**
+  String get badgeInstant;
+
+  /// Delivery badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up'**
+  String get badgeTopup;
+
+  /// Delivery badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get badgeSubscription;
+
+  /// Product without a price.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get productUnavailable;
+
+  /// Search section.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get searchSuggestions;
+
+  /// Search results section after submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Results'**
+  String get searchResults;
+
+  /// Search history section.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent searches'**
+  String get searchRecent;
+
+  /// Clears the search history.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get searchClearHistory;
+
+  /// Screen reader label of Clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear recent searches'**
+  String get searchClearHistoryLabel;
+
+  /// Removes one history term.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {term}'**
+  String searchRemoveTerm(String term);
+
+  /// Puts a suggestion in the field.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for {term}'**
+  String searchFillTerm(String term);
+
+  /// Popular searches section.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get searchPopular;
+
+  /// Search no results (04.7).
+  ///
+  /// In en, this message translates to:
+  /// **'No results for “{query}”'**
+  String searchNoResultsTitle(String query);
+
+  /// Search no results text.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the spelling or try a platform name.'**
+  String get searchNoResultsBody;
+
+  /// Suggestion type.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get searchTypePlatform;
+
+  /// Suggestion type.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get searchTypeCategory;
+
+  /// Suggestion type.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get searchTypeProduct;
+
+  /// Suggestions failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load suggestions.'**
+  String get searchFailed;
+
+  /// Currency sheet text (03.5).
+  ///
+  /// In en, this message translates to:
+  /// **'Prices refresh in the new currency. Your cart is re-priced before checkout.'**
+  String get currencySheetBody;
+
+  /// Applies the currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get currencyApply;
+
+  /// Currency changed snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are now shown in {code}.'**
+  String currencyChanged(String code);
+
+  /// Cart tab title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get cartTitle;
+
+  /// Orders tab title.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get ordersTitle;
+
+  /// Account tab title.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountTitle;
+
+  /// Placeholder of a screen not built yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming in the next update'**
+  String get comingSoonTitle;
+
+  /// Placeholder text.
+  ///
+  /// In en, this message translates to:
+  /// **'This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.'**
+  String get comingSoonBody;
+
+  /// Product placeholder title.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get productTitle;
+
+  /// Account settings row.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageSetting;
+
+  /// Review rating for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Rated {rating} out of 5'**
+  String reviewsRating(int rating);
+
+  /// Review badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified purchase'**
+  String get verifiedPurchase;
+
+  /// Notifications button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsComingSoon;
 }
 
 class _AppLocalizationsDelegate

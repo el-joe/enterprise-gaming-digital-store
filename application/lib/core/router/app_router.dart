@@ -1,3 +1,4 @@
+import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/router/guards.dart';
 import 'package:application/core/router/routes.dart';
 import 'package:application/core/router/shell_pages.dart';
@@ -7,9 +8,15 @@ import 'package:application/features/auth/presentation/pages/login_page.dart';
 import 'package:application/features/auth/presentation/pages/register_page.dart';
 import 'package:application/features/auth/presentation/pages/two_factor_page.dart';
 import 'package:application/features/auth/presentation/pages/verify_email_page.dart';
+import 'package:application/features/catalog/presentation/pages/browse_page.dart';
+import 'package:application/features/catalog/presentation/pages/listing_page.dart';
+import 'package:application/features/catalog/presentation/pages/platforms_page.dart';
+import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
+import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:application/features/launch/presentation/pages/notice_pages.dart';
 import 'package:application/features/launch/presentation/pages/onboarding_pages.dart';
 import 'package:application/features/launch/presentation/pages/splash_page.dart';
+import 'package:application/features/search/presentation/pages/search_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -46,15 +53,92 @@ GoRouter appRouter(Ref ref) {
       access: Routes.byPath(state.fullPath)?.access ?? RouteAccess.public,
     ),
     routes: [
-      ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
-        routes: [
-          GoRoute(
-            path: Routes.home.path,
-            name: Routes.home.name,
-            builder: (context, state) => const FoundationHomePage(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => MainShell(shell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.home.path,
+                name: Routes.home.name,
+                builder: (context, state) =>
+                    const HomeScreen(openCurrencySwitcher: showCurrencySheet),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.browse.path,
+                name: Routes.browse.name,
+                builder: (context, state) => const BrowsePage(),
+                routes: [
+                  GoRoute(
+                    path: 'platforms',
+                    name: Routes.platforms.name,
+                    builder: (context, state) => const PlatformsPage(),
+                  ),
+                  GoRoute(
+                    path: 'products',
+                    name: Routes.listing.name,
+                    builder: (context, state) {
+                      final query = state.uri.queryParameters;
+                      return ListingPage(
+                        key: ValueKey(state.uri.query),
+                        category: query[Routes.categoryParameter],
+                        platform: query[Routes.platformParameter],
+                        sort: query[Routes.sortParameter],
+                      );
+                    },
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: Routes.search.path,
+                name: Routes.search.name,
+                builder: (context, state) => SearchPage(
+                  initialQuery:
+                      state.uri.queryParameters[Routes.queryParameter],
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.cart.path,
+                name: Routes.cart.name,
+                builder: (context, state) =>
+                    ComingSoonPage(title: context.l10n.cartTitle),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.orders.path,
+                name: Routes.orders.name,
+                builder: (context, state) =>
+                    ComingSoonPage(title: context.l10n.ordersTitle),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.account.path,
+                name: Routes.account.name,
+                builder: (context, state) => const AccountTabPage(),
+              ),
+            ],
           ),
         ],
+      ),
+      GoRoute(
+        path: Routes.product.path,
+        name: Routes.product.name,
+        builder: (context, state) =>
+            ComingSoonPage(title: context.l10n.productTitle, root: false),
       ),
       GoRoute(
         path: Routes.splash.path,

@@ -26,16 +26,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get homeOverline => 'المتجر';
-
-  @override
-  String get homeTitle => 'مرحبًا بك في boxcards.shop';
-
-  @override
-  String get homeBody =>
-      'بطاقات الهدايا وشحن الألعاب. يصل المتجر الكامل في الإصدارات القادمة من التطبيق.';
-
-  @override
   String get switchLanguage => 'English';
 
   @override
@@ -533,4 +523,301 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get integrityAcknowledge => 'فهمت';
+
+  @override
+  String get navHome => 'الرئيسية';
+
+  @override
+  String get navBrowse => 'تصفّح';
+
+  @override
+  String get navCart => 'السلة';
+
+  @override
+  String get navOrders => 'الطلبات';
+
+  @override
+  String get navAccount => 'حسابي';
+
+  @override
+  String get searchFieldHint => 'ابحث عن بطاقات الهدايا وشحن الألعاب';
+
+  @override
+  String get searchAction => 'بحث';
+
+  @override
+  String currencyButtonLabel(String code) {
+    return 'عملة العرض: $code';
+  }
+
+  @override
+  String get seeAll => 'عرض الكل';
+
+  @override
+  String seeAllSemantics(String section) {
+    return 'عرض الكل: $section';
+  }
+
+  @override
+  String get loadErrorTitle => 'تعذّر تحميل هذه الصفحة';
+
+  @override
+  String get homeErrorTitle => 'تعذّر تحميل المتجر';
+
+  @override
+  String errorServerBody(String requestId) {
+    return 'حدث خطأ من جهتنا. رقم الطلب $requestId';
+  }
+
+  @override
+  String get errorServerBodyNoId => 'حدث خطأ من جهتنا.';
+
+  @override
+  String get actionRetry => 'إعادة المحاولة';
+
+  @override
+  String get offlineBannerTitle => 'أنت غير متصل';
+
+  @override
+  String get offlineBannerBody =>
+      'الأسعار والمخزون تحتاج إلى اتصال. سنحدّث الصفحة عند عودتك إلى الاتصال.';
+
+  @override
+  String get noConnectionTitle => 'لا يوجد اتصال';
+
+  @override
+  String get noConnectionBody =>
+      'تحقّق من الواي فاي أو بيانات الجوال، ثم حاول مرة أخرى.';
+
+  @override
+  String heroSlideLabel(int index, int count, String title) {
+    return 'الإعلان $index من $count: $title';
+  }
+
+  @override
+  String get heroCarouselLabel => 'العروض';
+
+  @override
+  String get platformsTitle => 'المنصات';
+
+  @override
+  String get platformsIntro =>
+      'اختر منصة لعرض بطاقات الهدايا وأكواد المحافظ وعمليات الشحن.';
+
+  @override
+  String get platformsEmpty => 'لا توجد منصات بعد';
+
+  @override
+  String get categoriesTitle => 'الفئات';
+
+  @override
+  String get allCategory => 'الكل';
+
+  @override
+  String productCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count منتج',
+      many: '$count منتجًا',
+      few: '$count منتجات',
+      two: 'منتجان',
+      one: 'منتج واحد',
+      zero: 'لا توجد منتجات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get allProductsTitle => 'كل المنتجات';
+
+  @override
+  String get filtersChip => 'الفلاتر';
+
+  @override
+  String filtersChipCount(int count) {
+    return 'الفلاتر · $count';
+  }
+
+  @override
+  String sortChip(String sort) {
+    return 'الترتيب: $sort';
+  }
+
+  @override
+  String get sortPopular => 'الأكثر رواجًا';
+
+  @override
+  String get sortPriceAsc => 'السعر من الأقل إلى الأعلى';
+
+  @override
+  String get sortPriceDesc => 'السعر من الأعلى إلى الأقل';
+
+  @override
+  String get sortNewest => 'الأحدث';
+
+  @override
+  String get sortName => 'الاسم';
+
+  @override
+  String get sortTitle => 'الترتيب';
+
+  @override
+  String get filtersTitle => 'الفلاتر';
+
+  @override
+  String get filterDelivery => 'طريقة التسليم';
+
+  @override
+  String get deliveryInstantCode => 'كود فوري';
+
+  @override
+  String get deliveryDirectTopup => 'شحن مباشر';
+
+  @override
+  String get filterMinPrice => 'أقل سعر';
+
+  @override
+  String get filterMaxPrice => 'أعلى سعر';
+
+  @override
+  String filterPriceHelper(String currency) {
+    return 'بعملة $currency';
+  }
+
+  @override
+  String get filterPriceInvalid => 'أدخل مبلغًا مثل 5 أو 5.50';
+
+  @override
+  String get filterPriceRange => 'يجب ألّا يزيد أقل سعر عن أعلى سعر';
+
+  @override
+  String get filtersClear => 'مسح';
+
+  @override
+  String get filtersApply => 'عرض النتائج';
+
+  @override
+  String get listingEmptyTitle => 'لا توجد منتجات مطابقة';
+
+  @override
+  String get listingEmptyBody => 'جرّب سعرًا آخر أو أزل أحد الفلاتر.';
+
+  @override
+  String get catalogEmptyTitle => 'لا توجد منتجات هنا بعد';
+
+  @override
+  String get catalogEmptyBody =>
+      'نضيف بطاقات هدايا وعمليات شحن جديدة باستمرار.';
+
+  @override
+  String get clearFilters => 'مسح الفلاتر';
+
+  @override
+  String get loadMoreFailed => 'تعذّر تحميل المزيد من المنتجات.';
+
+  @override
+  String get badgeInstant => 'فوري';
+
+  @override
+  String get badgeTopup => 'شحن';
+
+  @override
+  String get badgeSubscription => 'اشتراك';
+
+  @override
+  String get productUnavailable => 'غير متاح';
+
+  @override
+  String get searchSuggestions => 'اقتراحات';
+
+  @override
+  String get searchResults => 'النتائج';
+
+  @override
+  String get searchRecent => 'عمليات البحث الأخيرة';
+
+  @override
+  String get searchClearHistory => 'مسح';
+
+  @override
+  String get searchClearHistoryLabel => 'مسح عمليات البحث الأخيرة';
+
+  @override
+  String searchRemoveTerm(String term) {
+    return 'إزالة $term';
+  }
+
+  @override
+  String searchFillTerm(String term) {
+    return 'البحث عن $term';
+  }
+
+  @override
+  String get searchPopular => 'الأكثر بحثًا';
+
+  @override
+  String searchNoResultsTitle(String query) {
+    return 'لا توجد نتائج لـ «$query»';
+  }
+
+  @override
+  String get searchNoResultsBody => 'تحقّق من الإملاء أو جرّب اسم منصة.';
+
+  @override
+  String get searchTypePlatform => 'منصة';
+
+  @override
+  String get searchTypeCategory => 'فئة';
+
+  @override
+  String get searchTypeProduct => 'منتج';
+
+  @override
+  String get searchFailed => 'تعذّر تحميل الاقتراحات.';
+
+  @override
+  String get currencySheetBody =>
+      'تتحدّث الأسعار بالعملة الجديدة، ويُعاد تسعير سلتك قبل الدفع.';
+
+  @override
+  String get currencyApply => 'تطبيق';
+
+  @override
+  String currencyChanged(String code) {
+    return 'تظهر الأسعار الآن بعملة $code.';
+  }
+
+  @override
+  String get cartTitle => 'السلة';
+
+  @override
+  String get ordersTitle => 'الطلبات';
+
+  @override
+  String get accountTitle => 'حسابي';
+
+  @override
+  String get comingSoonTitle => 'قادم في التحديث القادم';
+
+  @override
+  String get comingSoonBody =>
+      'هذا القسم قيد الإعداد. يمكنك حتى ذلك الحين استخدام boxcards.shop على الويب.';
+
+  @override
+  String get productTitle => 'المنتج';
+
+  @override
+  String get languageSetting => 'اللغة';
+
+  @override
+  String reviewsRating(int rating) {
+    return 'التقييم $rating من 5';
+  }
+
+  @override
+  String get verifiedPurchase => 'شراء مؤكد';
+
+  @override
+  String get notificationsComingSoon => 'الإشعارات';
 }

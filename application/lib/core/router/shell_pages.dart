@@ -1,130 +1,142 @@
-import 'package:application/core/config/app_env.dart';
+import 'dart:async';
+
 import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/router/routes.dart';
+import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/core/theme/theme_extensions.dart';
-import 'package:application/core/theme/tokens/elevation.dart';
-import 'package:application/core/theme/tokens/radii.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/auth/presentation/widgets/account_card.dart';
+import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
+import 'package:application/shared/widgets/app_bottom_nav.dart';
 import 'package:application/shared/widgets/app_button.dart';
+import 'package:application/shared/widgets/app_list_tile.dart';
 import 'package:application/shared/widgets/brand_logo.dart';
+import 'package:application/shared/widgets/mobile_app_bar.dart';
+import 'package:application/shared/widgets/state_views.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Shell around the in-app routes: header with the logo and, outside prod, the environment badge.
-/// The bottom navigation is added when the first feature tabs exist (M-A11).
-class AppShell extends ConsumerWidget {
-  const AppShell({required this.child, super.key});
+/// The tab shell (M-A11): Home, Browse, Cart, Orders, Account with the Mobile Bottom Nav
+/// (`75:568`). Each tab keeps its own navigation stack; tapping the current tab returns to its
+/// first page.
+class MainShell extends StatelessWidget {
+  const MainShell({required this.shell, super.key});
 
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final flavor = ref.watch(appEnvProvider).flavor;
-    final colors = context.colors;
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: Spacing.s4,
-                vertical: Spacing.s3,
-              ),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: colors.lineSubtle)),
-              ),
-              child: Row(
-                children: [
-                  const BrandLogo.full(),
-                  const Spacer(),
-                  if (flavor != Flavor.prod) _EnvironmentBadge(flavor: flavor),
-                ],
-              ),
-            ),
-            Expanded(child: child),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EnvironmentBadge extends StatelessWidget {
-  const _EnvironmentBadge({required this.flavor});
-
-  final Flavor flavor;
+  final StatefulNavigationShell shell;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.accentEmberTint,
-        borderRadius: BorderRadius.circular(Radii.full),
+    final l10n = context.l10n;
+    return Scaffold(
+      body: shell,
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: shell.currentIndex,
+        onSelected: (index) =>
+            shell.goBranch(index, initialLocation: index == shell.currentIndex),
+        items: [
+          AppNavItem(
+            label: l10n.navHome,
+            icon: Icons.home_outlined,
+            selectedIcon: Icons.home,
+          ),
+          AppNavItem(
+            label: l10n.navBrowse,
+            icon: Icons.grid_view_outlined,
+            selectedIcon: Icons.grid_view,
+          ),
+          AppNavItem(
+            label: l10n.navCart,
+            icon: Icons.shopping_bag_outlined,
+            selectedIcon: Icons.shopping_bag,
+          ),
+          AppNavItem(
+            label: l10n.navOrders,
+            icon: Icons.receipt_long_outlined,
+            selectedIcon: Icons.receipt_long,
+          ),
+          AppNavItem(
+            label: l10n.navAccount,
+            icon: Icons.person_outline,
+            selectedIcon: Icons.person,
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: Spacing.s2_5,
-          vertical: Spacing.s0_5,
-        ),
-        child: Text(
-          context.l10n.environmentBadge(flavor.name),
-          style: context.type.labelSm.copyWith(color: colors.accentEmberText),
+    );
+  }
+}
+
+/// A tab or screen whose milestone is still to come (cart M-A13, orders M-A14, product
+/// M-A12): its title and a "coming in the next update" note. No fake data.
+class ComingSoonPage extends StatelessWidget {
+  const ComingSoonPage({required this.title, this.root = true, super.key});
+
+  final String title;
+
+  /// A tab root (no back button) or a pushed screen.
+  final bool root;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Scaffold(
+      appBar: MobileAppBar(
+        title: title,
+        leading: root ? AppBarLeading.none : AppBarLeading.back,
+        onLeading: root
+            ? null
+            : () => context.canPop()
+                  ? context.pop()
+                  : context.go(Routes.home.path),
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: EmptyState(
+            icon: Icons.construction_outlined,
+            title: l10n.comingSoonTitle,
+            body: l10n.comingSoonBody,
+          ),
         ),
       ),
     );
   }
 }
 
-/// Foundation home: token-styled placeholder until the home feature ships (M-A11).
-class FoundationHomePage extends ConsumerWidget {
-  const FoundationHomePage({super.key});
+/// Account tab until M-A16: the account card (sign in, biometric unlock switch, sign out), the
+/// display currency (03.5) and the language.
+class AccountTabPage extends ConsumerWidget {
+  const AccountTabPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final colors = context.colors;
-    final type = context.type;
-    final width = MediaQuery.sizeOf(context).width;
-    return SingleChildScrollView(
-      padding: EdgeInsetsDirectional.all(LayoutTokens.marginFor(width)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final currency = ref.watch(displayCurrencyProvider);
+    final arabic = AppLocales.isRtl(Localizations.localeOf(context));
+    return Scaffold(
+      appBar: MobileAppBar(
+        title: l10n.accountTitle,
+        leading: AppBarLeading.none,
+      ),
+      body: ListView(
+        padding: EdgeInsetsDirectional.all(
+          LayoutTokens.marginFor(MediaQuery.sizeOf(context).width),
+        ),
         children: [
-          DecoratedBox(
-            decoration: ShapeDecoration(
-              color: colors.surfaceRaised,
-              shape: KeyCut.cardShape(
-                side: BorderSide(color: colors.lineSubtle),
-              ),
-              shadows: ElevationTokens.card,
-            ),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.all(Spacing.s6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    type.overlineText(l10n.homeOverline),
-                    style: type.overline.copyWith(color: colors.accentText),
-                  ),
-                  const SizedBox(height: Spacing.s2),
-                  Text(l10n.homeTitle, style: type.displaySm),
-                  const SizedBox(height: Spacing.s3),
-                  Text(
-                    l10n.homeBody,
-                    style: type.bodyLg.copyWith(color: colors.contentSecondary),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: Spacing.s6),
           const AccountCard(),
-          const SizedBox(height: Spacing.s6),
+          const SizedBox(height: Spacing.s4),
+          AppListTile(
+            title: l10n.displayCurrencyLabel,
+            icon: Icons.payments_outlined,
+            value: currency,
+            showChevron: true,
+            onTap: () => unawaited(showCurrencySheet(context)),
+          ),
+          AppListTile(
+            title: l10n.languageSetting,
+            icon: Icons.language,
+            value: arabic ? l10n.languageArabic : l10n.languageEnglish,
+          ),
+          const SizedBox(height: Spacing.s3),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: AppButton(
@@ -133,11 +145,7 @@ class FoundationHomePage extends ConsumerWidget {
               variant: AppButtonVariant.secondary,
               onPressed: () => ref
                   .read(appLocaleProvider.notifier)
-                  .select(
-                    AppLocales.isRtl(Localizations.localeOf(context))
-                        ? AppLocales.english
-                        : AppLocales.arabic,
-                  ),
+                  .select(arabic ? AppLocales.english : AppLocales.arabic),
             ),
           ),
         ],

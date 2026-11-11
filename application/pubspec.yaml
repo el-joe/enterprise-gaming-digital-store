@@ -11,6 +11,7 @@ environment:
 
 dependencies:
   biometric_signature: 13.3.0
+  cached_network_image: 4.0.5
   decimal: ^3.2.6
   dio: ^5.11.1
   flutter:

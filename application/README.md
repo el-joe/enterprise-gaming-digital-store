@@ -3,11 +3,14 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A10 auth and onboarding UI** (2026-11-11) on the M-A7 data layers and the M-A1 foundation.
-The app starts on the splash (app config check: force update, maintenance, offline), runs onboarding
-(language, display currency) once, and has sign in, two-step verification, register, verify email,
-forgot password (web page), sign out, the rooted-device warning and biometric unlock (owner decision 6).
-Home is still the foundation placeholder with an account card; catalog screens arrive with M-A11.
+Status: **M-A11 home, catalog and search UI** (2026-11-11) on M-A10 (auth and onboarding), the M-A7
+data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
+maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
+(Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
+(categories and platforms), product listings with filters, sort and infinite scroll, search with
+suggestions, popular terms and a local history, and the display currency switcher. Cart, Orders and
+the product page are "coming in the next update" placeholders until M-A12 to M-A14; the Account tab
+holds the M-A10 account card, the currency and the language until M-A16.
 
 ## Requirements
 
@@ -91,9 +94,9 @@ test/fixtures/api/               committed copy of docs/api-fixtures (backend co
 tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 ```
 
-`presentation/` (controllers, pages, widgets) exists for `auth` and the new `launch` feature (splash,
-force update, maintenance, onboarding, rooted-device sheet) since M-A10; the other features get theirs
-in M-A11 onwards. `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
+`presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10) and for `home`,
+`catalog` and `search` (M-A11); the other features get theirs in M-A12 onwards.
+`features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
 app lock at a cold start, biometric offer), called by the launch feature after the config check.
 
 ## Auth, onboarding and launch (M-A10)
@@ -118,6 +121,69 @@ app lock at a cold start, biometric offer), called by the launch feature after t
   jailbreak paths and a write outside the sandbox) behind the same channel; a sheet is shown once
   (`prefs.integrity_warning_shown`) and nothing is blocked (owner decision 5). `deviceIntegrityProvider`
   gives the `X-Device-Integrity` value for M-A14. Bypassable by design: a signal, not a control.
+
+## Home, catalog and search (M-A11)
+
+- **Shell.** `StatefulShellRoute.indexedStack` (`core/router/app_router.dart`) with the Mobile Bottom
+  Nav (`shared/widgets/app_bottom_nav.dart`, Figma `75:568`); each tab keeps its stack. Routes:
+  `/` home, `/browse`, `/browse/platforms`, `/browse/products?category=&platform=&sort=`,
+  `/search?q=`, `/cart`, `/orders`, `/account`, `/products/:slug` (placeholder above the tabs).
+- **Controllers** (Riverpod codegen, no logic in widgets): `HomeController`, `PlatformsController`,
+  `CategoriesController`, `ListingController` (family by base query), `listingTitle`,
+  `CurrencySwitcherController`, `StoreSearchController`. They expose `Loadable<T>`
+  (`core/state/loadable.dart`: loading, loaded, failed with a typed `Failure`) instead of
+  `AsyncValue`, so a failure stays until the customer retries (Riverpod 3 would retry a throwing
+  provider on its own). Offline (`NetworkFailure`, `TimeoutFailure`) shows the offline banner and
+  "No connection"; other failures show the error state with the request id (`FailureView`).
+- **Prices and currency (owner decision 1).** Prices are only the server's money objects: the
+  `formatted` string of `price_from` (else the string formatter with the currency's exponent; never
+  `double`), shown as LTR islands with Western digits. `pricingContextProvider`
+  (`core/money/pricing_context.dart`) is the display currency (`X-Currency`) plus the language;
+  every priced provider watches it, so a currency switch reloads home and every open listing from
+  page 1. The switcher (Home header, Account tab) lists `GET /storefront/currencies` (falls back to
+  the app config currencies); signed in it saves the profile first (`UpdateRegionalSettings`),
+  signed out the local preference.
+- **Pagination.** `ListingController` requests `page`/`per_page` (20), appends while
+  `meta.current_page < last_page`, ignores a second load while one runs, keeps the items when a
+  page fails (04.5 bar with Retry, no automatic retry loop) and restarts at page 1 on any filter or
+  sort change. The page loads the next page 600 px before the end and also when a short page does
+  not fill the screen.
+- **Filters.** Delivery (`instant_code`, `direct_topup`), sort (`popular`, `price_asc`,
+  `price_desc`, `newest`, `name`) and a price range sent as decimal strings in the display
+  currency, validated with `Decimal` (`validatePriceRange`). No region filter: the API has no
+  region list to offer.
+- **Search.** Suggestions after a 300 ms pause for 2 to 100 characters; submit sends `commit=1`
+  and is saved in the **local history** (`features/search/data/search_history_store.dart`:
+  `shared_preferences` key `prefs.search_history`, not secure storage; newest first, duplicates
+  collapsed case-insensitively, at most 10 terms of 100 characters; remove one or clear all). The
+  API has no full-text results endpoint, so results are the suggestions for the committed term:
+  products open the product, platforms and categories open the listing.
+- **Links.** Banner and home item links (`LinkTargetResolver` targets) map in
+  `core/router/link_targets.dart`: `product` -> product page, `category` and `platform` -> listing,
+  `search` -> search with the term, `url` -> system browser (https only), `order` -> Orders tab;
+  anything else is ignored.
+- **Hero carousel (owner decision 8).** `CarouselAutoplay` (`core/utils/carousel_autoplay.dart`)
+  owns the timer: every 5 s; paused while a finger is down (touch or swipe) or a slide has focus,
+  and a full interval restarts when the interaction ends; stopped when not visible (inactive tab or
+  covered route through `TickerMode`, app in the background, scrolled out of the viewport); never
+  with `MediaQuery.disableAnimations`; never with one slide.
+- **Images.** Only `image.url` / logo URLs from the API, through `NetworkImageBox`
+  (`shared/widgets/network_image_box.dart`), decoded at the laid-out width. While loading, on error
+  or without an image, tiles show a plain-text tile on a `color/field/*` token chosen by slug, and
+  outside production an empty Logo Slot (BD8). No bundled or generated art.
+- **Components.** Product Tile (`76:385`, `shared/widgets/product_tile.dart`), Platform Chip
+  (`81:358`, `platform_tile.dart`), Bottom Nav, Skeleton (`76:324`, `skeleton.dart`), Logo Slot,
+  `PillButton`, `StoreHeader`, `EmptyState`/`FailureView`/`SectionHeader` (`state_views.dart`).
+
+### Image cache package
+
+**`cached_network_image` 4.0.5** (pinned exactly; MIT; `github.com/Baseflow/flutter_cached_network_image`).
+Why: the roadmap's package for catalog media (section 3); it adds a disk cache (`flutter_cache_manager`,
+sqflite) on top of Flutter's memory cache so the catalog does not re-download every image on each
+launch or scroll, with no Firebase or native setup. 4.0.5 (published 2026-10-21) is the newest
+release more than two weeks old; 4.0.7 was published on the day of this milestone. It is used only
+through `catalogImagesProvider` for catalog media and never for anything code-related; tests override
+that provider, so no plugin or network runs in tests. No other package was added in M-A11.
 
 ## Biometric unlock (owner decision 6)
 
@@ -229,6 +295,17 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A11 additions)
+
+`test/features/storefront/storefront_controllers_test.dart` (controllers, pagination, currency
+invalidation, search history, link targets), `hero_carousel_test.dart` (auto-advance, touch, swipe,
+focus, reduce motion, inactive tab, scrolled away, single slide, RTL), `storefront_pages_test.dart`
+(every page in `en` and `ar`, infinite scroll, load-more retry, filters, sort, search, currency
+switch, tabs, tap-target and label guidelines) and goldens of the key states in LTR and RTL
+(`test/goldens/m_a11/`). `test/helpers/catalog_fakes.dart` holds fake home, catalog and search
+repositories answering with the contract fixtures and an image loader that records URLs; the harness
+(`pumpHarness(arrange: ...)`) wires them by default.
 
 ## Tests (M-A10 additions)
 

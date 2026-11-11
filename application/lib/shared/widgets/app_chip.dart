@@ -56,12 +56,16 @@ class AppChip extends StatelessWidget {
                     Icon(Icons.check, size: 16, color: colors.contentOnAccent),
                     const SizedBox(width: Spacing.s1_5),
                   ],
-                  Text(
-                    label,
-                    style: type.labelMd.copyWith(
-                      color: selected
-                          ? colors.contentOnAccent
-                          : colors.contentPrimary,
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: type.labelMd.copyWith(
+                        color: selected
+                            ? colors.contentOnAccent
+                            : colors.contentPrimary,
+                      ),
                     ),
                   ),
                 ],
