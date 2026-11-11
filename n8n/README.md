@@ -103,6 +103,25 @@ php artisan automation:workflows list
 
 Tasks driven by n8n instead of the scheduler (ADR-014) are switched in `settings.automation.task_drivers`, for example `{"catalog_sync": "n8n"}`. The scheduler then skips that task and the job endpoint accepts it. Leave the default (`scheduler`) unless you mean to move a task.
 
+## Local development (Apache, `boxcards.loc` and `n8n.boxcards.loc`)
+
+This runs a local n8n of its own on `127.0.0.1:5679`, so it doesn't clash with any other n8n on the machine. It lives in `n8n/runtime/`, where `node_modules/`, `data/` and `.env` are git-ignored, and uses n8n 1.123.92, pinned.
+
+1. Install n8n: `cd n8n/runtime && npm ci`.
+2. Start it as a user service. This creates `.env` with a random `N8N_ENCRYPTION_KEY`; back that key up. Run `./install-user-service.sh`, then check it with `systemctl --user status n8n-boxcards`.
+3. Set up Apache and the hosts file once, as root: `sudo deploy/setup-local-sudo.sh`. Add `--linger` to keep n8n running when you are logged out. This installs `deploy/apache/boxcards.loc.conf` (pointing at `backend/public`; `admin.boxcards.loc` is an alias) and `deploy/apache/000-n8n.boxcards.loc.conf` (a reverse proxy with WebSocket support), and replaces the old `admin.boxcards.loc` vhost.
+4. In `backend/.env`, set:
+   - `APP_URL=http://boxcards.loc`
+   - `N8N_WEBHOOK_URL=http://n8n.boxcards.loc/webhook/egs-events`
+   - `N8N_OUTBOUND_SECRET` and `N8N_WEBHOOK_AUTH_TOKEN`.
+
+   In `n8n/runtime/.env`, set:
+   - `EGS_OUTBOUND_SECRET` (equal to `N8N_OUTBOUND_SECRET`);
+   - `EGS_AUTOMATION_HMAC_SECRET` (from `php artisan automation:credentials issue`).
+
+   Then restart n8n with `systemctl --user restart n8n-boxcards`.
+5. Open `http://n8n.boxcards.loc`, create the owner account, and import the workflows in the order below.
+
 ## Import order
 
 Workflow ids are fixed in the files (`egs<ID>automation`), so references survive import: every workflow's error workflow is `egsZ01automation`, every notification calls `egsZ02automation`, and Z03 calls `egsD01automation` to `egsD05automation`. Importing a file whose id already exists overwrites that workflow.
