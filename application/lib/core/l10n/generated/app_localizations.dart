@@ -1777,6 +1777,783 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image {index} of {count}'**
   String galleryImage(int index, int count);
+
+  /// Cart line block_reason unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer available. Remove it to continue.'**
+  String get blockUnavailable;
+
+  /// Cart line block_reason out_of_stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock. Remove it to continue.'**
+  String get blockOutOfStock;
+
+  /// Cart line block_reason custom_amount_unsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This amount can\'t be bought. Remove it to continue.'**
+  String get blockCustomAmount;
+
+  /// Cart line block_reason quantity_limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Above the quantity limit. Lower the quantity.'**
+  String get blockQuantityLimit;
+
+  /// Cart line block_reason not_sold_in_country.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sold in your country. Remove it to continue.'**
+  String get blockNotSoldInCountry;
+
+  /// Cart line pricing block reason (rate_stale, rate_missing).
+  ///
+  /// In en, this message translates to:
+  /// **'The price is being updated. Try again shortly.'**
+  String get blockPricing;
+
+  /// Cart line with another block reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available right now. Remove it to continue.'**
+  String get blockOther;
+
+  /// Cart app bar title with the number of units.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart ({count})'**
+  String cartTitleCount(int count);
+
+  /// Empty cart title (06.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart is empty'**
+  String get cartEmptyTitle;
+
+  /// Empty cart body.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift cards and top-ups you add will show here.'**
+  String get cartEmptyBody;
+
+  /// Empty cart action.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the store'**
+  String get cartBrowseStore;
+
+  /// Cart error title (06.5).
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your cart'**
+  String get cartLoadFailedTitle;
+
+  /// Remove button of a cart line.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String cartRemoveItem(String name);
+
+  /// A cart line for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {variant}, {price}, quantity {quantity}'**
+  String cartLineSemantics(
+    String name,
+    String variant,
+    String price,
+    int quantity,
+  );
+
+  /// Coupon field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon code'**
+  String get cartCouponLabel;
+
+  /// Apply the coupon.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get cartCouponApply;
+
+  /// Remove the applied coupon.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get cartCouponRemove;
+
+  /// Coupon applied note.
+  ///
+  /// In en, this message translates to:
+  /// **'{code} applied.'**
+  String cartCouponApplied(String code);
+
+  /// Coupon limited_by_margin note.
+  ///
+  /// In en, this message translates to:
+  /// **'The discount was limited for this order.'**
+  String get cartCouponLimited;
+
+  /// Cart subtotal label.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get cartSubtotal;
+
+  /// Cart discount label.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get cartDiscount;
+
+  /// Cart discount label with the coupon code.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount ({code})'**
+  String cartDiscountCode(String code);
+
+  /// Cart total label.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get cartTotal;
+
+  /// Cart checkout button.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get cartCheckout;
+
+  /// Checkout button in web checkout mode (owner decision 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Complete purchase on boxcards.shop'**
+  String get cartCheckoutWeb;
+
+  /// Hint above the web checkout button.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens boxcards.shop in your browser.'**
+  String get cartCheckoutWebHint;
+
+  /// Checkout disabled by the app config.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout isn\'t available in the app right now.'**
+  String get cartCheckoutDisabled;
+
+  /// Checkout disabled because a line is blocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove or fix the marked items to continue.'**
+  String get cartCheckoutBlocked;
+
+  /// Hint for guests above the checkout button (owner decision 4).
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll sign in first. Your cart is kept.'**
+  String get cartSignInHint;
+
+  /// Cart notice after price_changed or a stale rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices were updated'**
+  String get cartPricesUpdatedTitle;
+
+  /// Cart notice body after price_changed.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rates changed since you added these items. Review the new total.'**
+  String get cartPricesUpdatedBody;
+
+  /// Cart price_may_vary notice title.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices may change'**
+  String get cartPriceMayVaryTitle;
+
+  /// Cart price_may_vary notice body.
+  ///
+  /// In en, this message translates to:
+  /// **'The final price is confirmed at checkout.'**
+  String get cartPriceMayVaryBody;
+
+  /// Checkout app bar title.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get checkoutTitle;
+
+  /// Note under the account email on checkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Order emails go to this address'**
+  String get checkoutEmailNote;
+
+  /// Country field label and sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get checkoutCountry;
+
+  /// Country field placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your country'**
+  String get checkoutChooseCountry;
+
+  /// Shown before a country is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your country to see the payment options.'**
+  String get checkoutCountryHint;
+
+  /// Country sheet search hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search countries'**
+  String get checkoutSearchCountries;
+
+  /// Country sheet without results.
+  ///
+  /// In en, this message translates to:
+  /// **'No country matches your search.'**
+  String get checkoutNoCountryMatch;
+
+  /// Payment section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get checkoutPayment;
+
+  /// Payment option detail when it charges another currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Charged in {currency}'**
+  String checkoutChargedIn(String currency);
+
+  /// charged_in_payment_currency notice title.
+  ///
+  /// In en, this message translates to:
+  /// **'{gateway} charges in {currency}'**
+  String checkoutChargeNoticeTitle(String gateway, String currency);
+
+  /// charged_in_payment_currency notice body.
+  ///
+  /// In en, this message translates to:
+  /// **'You see prices in {display}, but {gateway} will charge {amount}. Your bank may add a conversion fee.'**
+  String checkoutChargeNoticeBody(
+    String display,
+    String gateway,
+    String amount,
+  );
+
+  /// Payment option disabled (payment_currency_below_margin).
+  ///
+  /// In en, this message translates to:
+  /// **'Not available for this amount'**
+  String get optionBelowMargin;
+
+  /// Payment option disabled (available false).
+  ///
+  /// In en, this message translates to:
+  /// **'Not available right now'**
+  String get optionUnavailable;
+
+  /// Stripe option: the app has no card payment SDK.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available in the app yet'**
+  String get optionNotInApp;
+
+  /// Banner when an option is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Some options are unavailable'**
+  String get checkoutSomeUnavailableTitle;
+
+  /// Banner body when an option is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Options shown are the ones the store offers for {country}.'**
+  String checkoutSomeUnavailableBody(String country);
+
+  /// No option can be chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment option for this order'**
+  String get checkoutNoOptionsTitle;
+
+  /// No option can be chosen, body.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another country, or complete the purchase on boxcards.shop.'**
+  String get checkoutNoOptionsBody;
+
+  /// Terms checkbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Terms of Sale'**
+  String get checkoutAcceptTerms;
+
+  /// Terms not accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the Terms of Sale to continue.'**
+  String get checkoutTermsRequired;
+
+  /// Opens the terms link.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the Terms of Sale'**
+  String get checkoutReadTerms;
+
+  /// Units in the checkout summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String checkoutItems(int count);
+
+  /// The exact amount and currency charged (owner decision 1).
+  ///
+  /// In en, this message translates to:
+  /// **'You will be charged {amount} in {currency} by {gateway}.'**
+  String checkoutChargedLine(String amount, String currency, String gateway);
+
+  /// Checkout summary note.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices include all fees. Codes are delivered to your account.'**
+  String get checkoutFeesNote;
+
+  /// Pay button before an option is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get checkoutPayButton;
+
+  /// Pay button with the charged amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount}'**
+  String checkoutPay(String amount);
+
+  /// Pay button for the wallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {amount} with wallet'**
+  String checkoutPayWallet(String amount);
+
+  /// Pay button for PayPal.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to {gateway}'**
+  String checkoutContinueTo(String gateway);
+
+  /// price_changed dialog title (07.5).
+  ///
+  /// In en, this message translates to:
+  /// **'The price changed'**
+  String get checkoutPriceChangedTitle;
+
+  /// price_changed dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your total is now {current} (was {previous}). Nothing was charged. Review the total and try again.'**
+  String checkoutPriceChangedBody(String current, String previous);
+
+  /// price_changed dialog body when the new total could not be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your total changed (it was {previous}). Nothing was charged. Review the total and try again.'**
+  String checkoutPriceChangedBodyUnknown(String previous);
+
+  /// price_changed dialog primary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Review new total'**
+  String get checkoutReviewNewTotal;
+
+  /// Back to the cart.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to cart'**
+  String get checkoutBackToCart;
+
+  /// idempotency_in_progress banner title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order is still being placed'**
+  String get checkoutInProgressTitle;
+
+  /// idempotency_in_progress banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait a moment, then tap Pay again. You won\'t be charged twice.'**
+  String get checkoutInProgressBody;
+
+  /// An item in the cart blocks the order.
+  ///
+  /// In en, this message translates to:
+  /// **'Some items need attention'**
+  String get checkoutCartAttentionTitle;
+
+  /// rate_stale banner title.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are being updated'**
+  String get checkoutRateStaleTitle;
+
+  /// rate_stale banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rates are being refreshed. Try again in a moment.'**
+  String get checkoutRateStaleBody;
+
+  /// Place-order failure banner title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t place your order'**
+  String get checkoutFailedTitle;
+
+  /// Checkout load failure title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load the payment options'**
+  String get checkoutQuoteFailedTitle;
+
+  /// Checkout in web checkout mode (owner decision 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your purchase on the web'**
+  String get checkoutWebTitle;
+
+  /// Checkout in web checkout mode, body.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases are completed on boxcards.shop in your browser. Sign in there with the same account.'**
+  String get checkoutWebBody;
+
+  /// Checkout disabled by the app config.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout is unavailable'**
+  String get checkoutDisabledTitle;
+
+  /// Gateway name when unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'the payment provider'**
+  String get paymentProviderFallback;
+
+  /// Payment in progress title (07.6).
+  ///
+  /// In en, this message translates to:
+  /// **'Payment in progress'**
+  String get paymentInProgressTitle;
+
+  /// Payment in progress body.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish paying in the {gateway} window. We confirm the payment with {gateway} before showing it as paid.'**
+  String paymentInProgressBody(String gateway);
+
+  /// The browser could not open the provider page.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open the payment page. Try again.'**
+  String get paymentOpenFailed;
+
+  /// In-progress notice title.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t pay twice'**
+  String get paymentDontPayTwiceTitle;
+
+  /// In-progress notice body.
+  ///
+  /// In en, this message translates to:
+  /// **'If you close the app, we resume here and check the payment again.'**
+  String get paymentDontPayTwiceBody;
+
+  /// Reopen the provider page.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to {gateway}'**
+  String paymentReturnTo(String gateway);
+
+  /// Ask the server for the payment status.
+  ///
+  /// In en, this message translates to:
+  /// **'Check payment status'**
+  String get paymentCheckStatus;
+
+  /// While verifying and polling.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your payment'**
+  String get paymentConfirmingTitle;
+
+  /// While verifying and polling, body.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re confirming the payment with the provider. This can take a minute.'**
+  String get paymentConfirmingBody;
+
+  /// Result paid (08.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Payment confirmed'**
+  String get paymentPaidTitle;
+
+  /// Result paid body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your codes are being delivered. We\'ll let you know when they\'re ready.'**
+  String get paymentPaidBody;
+
+  /// Paid notice title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your codes are in Orders'**
+  String get paymentReceiptTitle;
+
+  /// Paid notice body.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the order to see each code once it\'s delivered.'**
+  String get paymentReceiptBody;
+
+  /// Paid primary action.
+  ///
+  /// In en, this message translates to:
+  /// **'View order'**
+  String get paymentViewOrder;
+
+  /// Paid secondary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep shopping'**
+  String get paymentKeepShopping;
+
+  /// Result processing (08.2).
+  ///
+  /// In en, this message translates to:
+  /// **'Still processing'**
+  String get paymentProcessingTitle;
+
+  /// Result processing body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your payment provider hasn\'t confirmed yet. You don\'t need to pay again; the order updates as soon as it\'s confirmed.'**
+  String get paymentProcessingBody;
+
+  /// Time of the last status check.
+  ///
+  /// In en, this message translates to:
+  /// **'Last checked {time}'**
+  String paymentLastChecked(String time);
+
+  /// Processing primary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get paymentCheckAgain;
+
+  /// Processing secondary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to orders'**
+  String get paymentGoToOrders;
+
+  /// Result failed (08.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Payment not completed'**
+  String get paymentFailedTitle;
+
+  /// Result failed body (retryable).
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t confirm a payment for this order. You can try again with the same method.'**
+  String get paymentFailedBody;
+
+  /// Result failed after the cancel link.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the payment page before paying. You can try again with the same method.'**
+  String get paymentCancelledBody;
+
+  /// Result failed, order closed.
+  ///
+  /// In en, this message translates to:
+  /// **'This order can\'t be paid any more. Place the order again from your cart.'**
+  String get paymentFailedFinalBody;
+
+  /// End of the payment window.
+  ///
+  /// In en, this message translates to:
+  /// **'Your order is held until {time}.'**
+  String paymentHeldUntil(String time);
+
+  /// Payment attempt number.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempt {number}'**
+  String paymentAttempt(int number);
+
+  /// Failed notice title without an attempt number.
+  ///
+  /// In en, this message translates to:
+  /// **'Want another method?'**
+  String get paymentAnotherMethodTitle;
+
+  /// Failed notice body.
+  ///
+  /// In en, this message translates to:
+  /// **'To use another payment method, place the order again from your cart.'**
+  String get paymentAnotherMethodBody;
+
+  /// payment_attempts_exhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'All payment attempts for this order were used. Place the order again from your cart.'**
+  String get paymentAttemptsExhausted;
+
+  /// Retry payment action.
+  ///
+  /// In en, this message translates to:
+  /// **'Try payment again'**
+  String get paymentTryAgain;
+
+  /// Result expired (08.4).
+  ///
+  /// In en, this message translates to:
+  /// **'Order expired'**
+  String get paymentExpiredTitle;
+
+  /// Result expired body.
+  ///
+  /// In en, this message translates to:
+  /// **'This order wasn\'t paid in time, so we released the items. Nothing was charged.'**
+  String get paymentExpiredBody;
+
+  /// Expired primary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to cart'**
+  String get paymentReturnToCart;
+
+  /// Expired secondary action.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get paymentContactSupport;
+
+  /// No attempt could be started (07.7).
+  ///
+  /// In en, this message translates to:
+  /// **'Payment provider unavailable'**
+  String get paymentNotStartedTitle;
+
+  /// No attempt could be started, body.
+  ///
+  /// In en, this message translates to:
+  /// **'{gateway} could not start the payment. Try again; your order is kept.'**
+  String paymentNotStartedBody(String gateway);
+
+  /// A payment call failed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t check the payment'**
+  String get paymentCallFailedTitle;
+
+  /// A step the app cannot launch (Stripe, unknown).
+  ///
+  /// In en, this message translates to:
+  /// **'This payment can\'t be completed in the app'**
+  String get paymentUnsupportedTitle;
+
+  /// Unsupported step body.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the payment status, or place the order again with another method.'**
+  String get paymentUnsupportedBody;
+
+  /// Payment screen before any check.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment status'**
+  String get paymentIdleTitle;
+
+  /// Payment screen before any check, body.
+  ///
+  /// In en, this message translates to:
+  /// **'Check this order\'s payment with the store.'**
+  String get paymentIdleBody;
+
+  /// Summary row.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get paymentSummaryOrder;
+
+  /// Summary row.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get paymentSummaryAmount;
+
+  /// Summary row.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid with'**
+  String get paymentSummaryPaidWith;
+
+  /// Summary row.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get paymentSummaryStatus;
+
+  /// Status chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting payment'**
+  String get paymentStatusAwaiting;
+
+  /// Status chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment processing'**
+  String get paymentStatusProcessing;
+
+  /// Status chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paymentStatusPaid;
+
+  /// Status chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get paymentStatusFailed;
+
+  /// Status chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get paymentStatusExpired;
+
+  /// Status chip before a check.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked yet'**
+  String get paymentStatusUnknown;
 }
 
 class _AppLocalizationsDelegate

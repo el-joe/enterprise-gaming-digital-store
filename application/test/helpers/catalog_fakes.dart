@@ -156,8 +156,14 @@ class FakeCatalogRepository implements CatalogRepository {
   @override
   Future<Result<List<Category>>> categories() async => categoriesResult;
 
+  /// Checkout countries (M-A13): `catalog/countries_en` plus Egypt by default.
+  Result<List<Country>> countriesResult = const Ok([
+    Country(code: 'EG', name: 'Egypt', defaultCurrency: 'EGP'),
+    Country(code: 'US', name: 'United States', defaultCurrency: 'USD'),
+  ]);
+
   @override
-  Future<Result<List<Country>>> countries() async => const Ok([]);
+  Future<Result<List<Country>>> countries() async => countriesResult;
 
   @override
   Future<Result<List<DisplayCurrencyOption>>> currencies() async {

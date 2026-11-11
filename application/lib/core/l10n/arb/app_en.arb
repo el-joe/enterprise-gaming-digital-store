@@ -1338,5 +1338,654 @@
         "type": "int"
       }
     }
+  },
+  "blockUnavailable": "No longer available. Remove it to continue.",
+  "@blockUnavailable": {
+    "description": "Cart line block_reason unavailable."
+  },
+  "blockOutOfStock": "Out of stock. Remove it to continue.",
+  "@blockOutOfStock": {
+    "description": "Cart line block_reason out_of_stock."
+  },
+  "blockCustomAmount": "This amount can't be bought. Remove it to continue.",
+  "@blockCustomAmount": {
+    "description": "Cart line block_reason custom_amount_unsupported."
+  },
+  "blockQuantityLimit": "Above the quantity limit. Lower the quantity.",
+  "@blockQuantityLimit": {
+    "description": "Cart line block_reason quantity_limit."
+  },
+  "blockNotSoldInCountry": "Not sold in your country. Remove it to continue.",
+  "@blockNotSoldInCountry": {
+    "description": "Cart line block_reason not_sold_in_country."
+  },
+  "blockPricing": "The price is being updated. Try again shortly.",
+  "@blockPricing": {
+    "description": "Cart line pricing block reason (rate_stale, rate_missing)."
+  },
+  "blockOther": "Not available right now. Remove it to continue.",
+  "@blockOther": {
+    "description": "Cart line with another block reason."
+  },
+  "cartTitleCount": "Cart ({count})",
+  "@cartTitleCount": {
+    "description": "Cart app bar title with the number of units.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cartEmptyTitle": "Your cart is empty",
+  "@cartEmptyTitle": {
+    "description": "Empty cart title (06.3)."
+  },
+  "cartEmptyBody": "Gift cards and top-ups you add will show here.",
+  "@cartEmptyBody": {
+    "description": "Empty cart body."
+  },
+  "cartBrowseStore": "Browse the store",
+  "@cartBrowseStore": {
+    "description": "Empty cart action."
+  },
+  "cartLoadFailedTitle": "We couldn't load your cart",
+  "@cartLoadFailedTitle": {
+    "description": "Cart error title (06.5)."
+  },
+  "cartRemoveItem": "Remove {name}",
+  "@cartRemoveItem": {
+    "description": "Remove button of a cart line.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartLineSemantics": "{name}, {variant}, {price}, quantity {quantity}",
+  "@cartLineSemantics": {
+    "description": "A cart line for screen readers.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "variant": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "int"
+      }
+    }
+  },
+  "cartCouponLabel": "Coupon code",
+  "@cartCouponLabel": {
+    "description": "Coupon field label."
+  },
+  "cartCouponApply": "Apply",
+  "@cartCouponApply": {
+    "description": "Apply the coupon."
+  },
+  "cartCouponRemove": "Remove",
+  "@cartCouponRemove": {
+    "description": "Remove the applied coupon."
+  },
+  "cartCouponApplied": "{code} applied.",
+  "@cartCouponApplied": {
+    "description": "Coupon applied note.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "cartCouponLimited": "The discount was limited for this order.",
+  "@cartCouponLimited": {
+    "description": "Coupon limited_by_margin note."
+  },
+  "cartSubtotal": "Subtotal",
+  "@cartSubtotal": {
+    "description": "Cart subtotal label."
+  },
+  "cartDiscount": "Discount",
+  "@cartDiscount": {
+    "description": "Cart discount label."
+  },
+  "cartDiscountCode": "Discount ({code})",
+  "@cartDiscountCode": {
+    "description": "Cart discount label with the coupon code.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "cartTotal": "Total",
+  "@cartTotal": {
+    "description": "Cart total label."
+  },
+  "cartCheckout": "Checkout",
+  "@cartCheckout": {
+    "description": "Cart checkout button."
+  },
+  "cartCheckoutWeb": "Complete purchase on boxcards.shop",
+  "@cartCheckoutWeb": {
+    "description": "Checkout button in web checkout mode (owner decision 3)."
+  },
+  "cartCheckoutWebHint": "Opens boxcards.shop in your browser.",
+  "@cartCheckoutWebHint": {
+    "description": "Hint above the web checkout button."
+  },
+  "cartCheckoutDisabled": "Checkout isn't available in the app right now.",
+  "@cartCheckoutDisabled": {
+    "description": "Checkout disabled by the app config."
+  },
+  "cartCheckoutBlocked": "Remove or fix the marked items to continue.",
+  "@cartCheckoutBlocked": {
+    "description": "Checkout disabled because a line is blocked."
+  },
+  "cartSignInHint": "You'll sign in first. Your cart is kept.",
+  "@cartSignInHint": {
+    "description": "Hint for guests above the checkout button (owner decision 4)."
+  },
+  "cartPricesUpdatedTitle": "Prices were updated",
+  "@cartPricesUpdatedTitle": {
+    "description": "Cart notice after price_changed or a stale rate."
+  },
+  "cartPricesUpdatedBody": "Exchange rates changed since you added these items. Review the new total.",
+  "@cartPricesUpdatedBody": {
+    "description": "Cart notice body after price_changed."
+  },
+  "cartPriceMayVaryTitle": "Prices may change",
+  "@cartPriceMayVaryTitle": {
+    "description": "Cart price_may_vary notice title."
+  },
+  "cartPriceMayVaryBody": "The final price is confirmed at checkout.",
+  "@cartPriceMayVaryBody": {
+    "description": "Cart price_may_vary notice body."
+  },
+  "checkoutTitle": "Checkout",
+  "@checkoutTitle": {
+    "description": "Checkout app bar title."
+  },
+  "checkoutEmailNote": "Order emails go to this address",
+  "@checkoutEmailNote": {
+    "description": "Note under the account email on checkout."
+  },
+  "checkoutCountry": "Country",
+  "@checkoutCountry": {
+    "description": "Country field label and sheet title."
+  },
+  "checkoutChooseCountry": "Choose your country",
+  "@checkoutChooseCountry": {
+    "description": "Country field placeholder."
+  },
+  "checkoutCountryHint": "Choose your country to see the payment options.",
+  "@checkoutCountryHint": {
+    "description": "Shown before a country is chosen."
+  },
+  "checkoutSearchCountries": "Search countries",
+  "@checkoutSearchCountries": {
+    "description": "Country sheet search hint."
+  },
+  "checkoutNoCountryMatch": "No country matches your search.",
+  "@checkoutNoCountryMatch": {
+    "description": "Country sheet without results."
+  },
+  "checkoutPayment": "Payment",
+  "@checkoutPayment": {
+    "description": "Payment section heading."
+  },
+  "checkoutChargedIn": "Charged in {currency}",
+  "@checkoutChargedIn": {
+    "description": "Payment option detail when it charges another currency.",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutChargeNoticeTitle": "{gateway} charges in {currency}",
+  "@checkoutChargeNoticeTitle": {
+    "description": "charged_in_payment_currency notice title.",
+    "placeholders": {
+      "gateway": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutChargeNoticeBody": "You see prices in {display}, but {gateway} will charge {amount}. Your bank may add a conversion fee.",
+  "@checkoutChargeNoticeBody": {
+    "description": "charged_in_payment_currency notice body.",
+    "placeholders": {
+      "display": {
+        "type": "String"
+      },
+      "gateway": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "optionBelowMargin": "Not available for this amount",
+  "@optionBelowMargin": {
+    "description": "Payment option disabled (payment_currency_below_margin)."
+  },
+  "optionUnavailable": "Not available right now",
+  "@optionUnavailable": {
+    "description": "Payment option disabled (available false)."
+  },
+  "optionNotInApp": "Not available in the app yet",
+  "@optionNotInApp": {
+    "description": "Stripe option: the app has no card payment SDK."
+  },
+  "checkoutSomeUnavailableTitle": "Some options are unavailable",
+  "@checkoutSomeUnavailableTitle": {
+    "description": "Banner when an option is disabled."
+  },
+  "checkoutSomeUnavailableBody": "Options shown are the ones the store offers for {country}.",
+  "@checkoutSomeUnavailableBody": {
+    "description": "Banner body when an option is disabled.",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutNoOptionsTitle": "No payment option for this order",
+  "@checkoutNoOptionsTitle": {
+    "description": "No option can be chosen."
+  },
+  "checkoutNoOptionsBody": "Try another country, or complete the purchase on boxcards.shop.",
+  "@checkoutNoOptionsBody": {
+    "description": "No option can be chosen, body."
+  },
+  "checkoutAcceptTerms": "I accept the Terms of Sale",
+  "@checkoutAcceptTerms": {
+    "description": "Terms checkbox."
+  },
+  "checkoutTermsRequired": "Accept the Terms of Sale to continue.",
+  "@checkoutTermsRequired": {
+    "description": "Terms not accepted."
+  },
+  "checkoutReadTerms": "Read the Terms of Sale",
+  "@checkoutReadTerms": {
+    "description": "Opens the terms link."
+  },
+  "checkoutItems": "{count, plural, =1{1 item} other{{count} items}}",
+  "@checkoutItems": {
+    "description": "Units in the checkout summary.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "checkoutChargedLine": "You will be charged {amount} in {currency} by {gateway}.",
+  "@checkoutChargedLine": {
+    "description": "The exact amount and currency charged (owner decision 1).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "gateway": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutFeesNote": "Prices include all fees. Codes are delivered to your account.",
+  "@checkoutFeesNote": {
+    "description": "Checkout summary note."
+  },
+  "checkoutPayButton": "Pay",
+  "@checkoutPayButton": {
+    "description": "Pay button before an option is chosen."
+  },
+  "checkoutPay": "Pay {amount}",
+  "@checkoutPay": {
+    "description": "Pay button with the charged amount.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutPayWallet": "Pay {amount} with wallet",
+  "@checkoutPayWallet": {
+    "description": "Pay button for the wallet.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutContinueTo": "Continue to {gateway}",
+  "@checkoutContinueTo": {
+    "description": "Pay button for PayPal.",
+    "placeholders": {
+      "gateway": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutPriceChangedTitle": "The price changed",
+  "@checkoutPriceChangedTitle": {
+    "description": "price_changed dialog title (07.5)."
+  },
+  "checkoutPriceChangedBody": "Your total is now {current} (was {previous}). Nothing was charged. Review the total and try again.",
+  "@checkoutPriceChangedBody": {
+    "description": "price_changed dialog body.",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutPriceChangedBodyUnknown": "Your total changed (it was {previous}). Nothing was charged. Review the total and try again.",
+  "@checkoutPriceChangedBodyUnknown": {
+    "description": "price_changed dialog body when the new total could not be loaded.",
+    "placeholders": {
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutReviewNewTotal": "Review new total",
+  "@checkoutReviewNewTotal": {
+    "description": "price_changed dialog primary action."
+  },
+  "checkoutBackToCart": "Back to cart",
+  "@checkoutBackToCart": {
+    "description": "Back to the cart."
+  },
+  "checkoutInProgressTitle": "Your order is still being placed",
+  "@checkoutInProgressTitle": {
+    "description": "idempotency_in_progress banner title."
+  },
+  "checkoutInProgressBody": "Wait a moment, then tap Pay again. You won't be charged twice.",
+  "@checkoutInProgressBody": {
+    "description": "idempotency_in_progress banner body."
+  },
+  "checkoutCartAttentionTitle": "Some items need attention",
+  "@checkoutCartAttentionTitle": {
+    "description": "An item in the cart blocks the order."
+  },
+  "checkoutRateStaleTitle": "Prices are being updated",
+  "@checkoutRateStaleTitle": {
+    "description": "rate_stale banner title."
+  },
+  "checkoutRateStaleBody": "Exchange rates are being refreshed. Try again in a moment.",
+  "@checkoutRateStaleBody": {
+    "description": "rate_stale banner body."
+  },
+  "checkoutFailedTitle": "We couldn't place your order",
+  "@checkoutFailedTitle": {
+    "description": "Place-order failure banner title."
+  },
+  "checkoutQuoteFailedTitle": "We couldn't load the payment options",
+  "@checkoutQuoteFailedTitle": {
+    "description": "Checkout load failure title."
+  },
+  "checkoutWebTitle": "Complete your purchase on the web",
+  "@checkoutWebTitle": {
+    "description": "Checkout in web checkout mode (owner decision 3)."
+  },
+  "checkoutWebBody": "Purchases are completed on boxcards.shop in your browser. Sign in there with the same account.",
+  "@checkoutWebBody": {
+    "description": "Checkout in web checkout mode, body."
+  },
+  "checkoutDisabledTitle": "Checkout is unavailable",
+  "@checkoutDisabledTitle": {
+    "description": "Checkout disabled by the app config."
+  },
+  "paymentProviderFallback": "the payment provider",
+  "@paymentProviderFallback": {
+    "description": "Gateway name when unknown."
+  },
+  "paymentInProgressTitle": "Payment in progress",
+  "@paymentInProgressTitle": {
+    "description": "Payment in progress title (07.6)."
+  },
+  "paymentInProgressBody": "Finish paying in the {gateway} window. We confirm the payment with {gateway} before showing it as paid.",
+  "@paymentInProgressBody": {
+    "description": "Payment in progress body.",
+    "placeholders": {
+      "gateway": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentOpenFailed": "We couldn't open the payment page. Try again.",
+  "@paymentOpenFailed": {
+    "description": "The browser could not open the provider page."
+  },
+  "paymentDontPayTwiceTitle": "Don't pay twice",
+  "@paymentDontPayTwiceTitle": {
+    "description": "In-progress notice title."
+  },
+  "paymentDontPayTwiceBody": "If you close the app, we resume here and check the payment again.",
+  "@paymentDontPayTwiceBody": {
+    "description": "In-progress notice body."
+  },
+  "paymentReturnTo": "Return to {gateway}",
+  "@paymentReturnTo": {
+    "description": "Reopen the provider page.",
+    "placeholders": {
+      "gateway": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentCheckStatus": "Check payment status",
+  "@paymentCheckStatus": {
+    "description": "Ask the server for the payment status."
+  },
+  "paymentConfirmingTitle": "Checking your payment",
+  "@paymentConfirmingTitle": {
+    "description": "While verifying and polling."
+  },
+  "paymentConfirmingBody": "We're confirming the payment with the provider. This can take a minute.",
+  "@paymentConfirmingBody": {
+    "description": "While verifying and polling, body."
+  },
+  "paymentPaidTitle": "Payment confirmed",
+  "@paymentPaidTitle": {
+    "description": "Result paid (08.1)."
+  },
+  "paymentPaidBody": "Your codes are being delivered. We'll let you know when they're ready.",
+  "@paymentPaidBody": {
+    "description": "Result paid body."
+  },
+  "paymentReceiptTitle": "Your codes are in Orders",
+  "@paymentReceiptTitle": {
+    "description": "Paid notice title."
+  },
+  "paymentReceiptBody": "Open the order to see each code once it's delivered.",
+  "@paymentReceiptBody": {
+    "description": "Paid notice body."
+  },
+  "paymentViewOrder": "View order",
+  "@paymentViewOrder": {
+    "description": "Paid primary action."
+  },
+  "paymentKeepShopping": "Keep shopping",
+  "@paymentKeepShopping": {
+    "description": "Paid secondary action."
+  },
+  "paymentProcessingTitle": "Still processing",
+  "@paymentProcessingTitle": {
+    "description": "Result processing (08.2)."
+  },
+  "paymentProcessingBody": "Your payment provider hasn't confirmed yet. You don't need to pay again; the order updates as soon as it's confirmed.",
+  "@paymentProcessingBody": {
+    "description": "Result processing body."
+  },
+  "paymentLastChecked": "Last checked {time}",
+  "@paymentLastChecked": {
+    "description": "Time of the last status check.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentCheckAgain": "Check again",
+  "@paymentCheckAgain": {
+    "description": "Processing primary action."
+  },
+  "paymentGoToOrders": "Go to orders",
+  "@paymentGoToOrders": {
+    "description": "Processing secondary action."
+  },
+  "paymentFailedTitle": "Payment not completed",
+  "@paymentFailedTitle": {
+    "description": "Result failed (08.3)."
+  },
+  "paymentFailedBody": "We couldn't confirm a payment for this order. You can try again with the same method.",
+  "@paymentFailedBody": {
+    "description": "Result failed body (retryable)."
+  },
+  "paymentCancelledBody": "You left the payment page before paying. You can try again with the same method.",
+  "@paymentCancelledBody": {
+    "description": "Result failed after the cancel link."
+  },
+  "paymentFailedFinalBody": "This order can't be paid any more. Place the order again from your cart.",
+  "@paymentFailedFinalBody": {
+    "description": "Result failed, order closed."
+  },
+  "paymentHeldUntil": "Your order is held until {time}.",
+  "@paymentHeldUntil": {
+    "description": "End of the payment window.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentAttempt": "Attempt {number}",
+  "@paymentAttempt": {
+    "description": "Payment attempt number.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "paymentAnotherMethodTitle": "Want another method?",
+  "@paymentAnotherMethodTitle": {
+    "description": "Failed notice title without an attempt number."
+  },
+  "paymentAnotherMethodBody": "To use another payment method, place the order again from your cart.",
+  "@paymentAnotherMethodBody": {
+    "description": "Failed notice body."
+  },
+  "paymentAttemptsExhausted": "All payment attempts for this order were used. Place the order again from your cart.",
+  "@paymentAttemptsExhausted": {
+    "description": "payment_attempts_exhausted."
+  },
+  "paymentTryAgain": "Try payment again",
+  "@paymentTryAgain": {
+    "description": "Retry payment action."
+  },
+  "paymentExpiredTitle": "Order expired",
+  "@paymentExpiredTitle": {
+    "description": "Result expired (08.4)."
+  },
+  "paymentExpiredBody": "This order wasn't paid in time, so we released the items. Nothing was charged.",
+  "@paymentExpiredBody": {
+    "description": "Result expired body."
+  },
+  "paymentReturnToCart": "Return to cart",
+  "@paymentReturnToCart": {
+    "description": "Expired primary action."
+  },
+  "paymentContactSupport": "Contact support",
+  "@paymentContactSupport": {
+    "description": "Expired secondary action."
+  },
+  "paymentNotStartedTitle": "Payment provider unavailable",
+  "@paymentNotStartedTitle": {
+    "description": "No attempt could be started (07.7)."
+  },
+  "paymentNotStartedBody": "{gateway} could not start the payment. Try again; your order is kept.",
+  "@paymentNotStartedBody": {
+    "description": "No attempt could be started, body.",
+    "placeholders": {
+      "gateway": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentCallFailedTitle": "We couldn't check the payment",
+  "@paymentCallFailedTitle": {
+    "description": "A payment call failed."
+  },
+  "paymentUnsupportedTitle": "This payment can't be completed in the app",
+  "@paymentUnsupportedTitle": {
+    "description": "A step the app cannot launch (Stripe, unknown)."
+  },
+  "paymentUnsupportedBody": "Check the payment status, or place the order again with another method.",
+  "@paymentUnsupportedBody": {
+    "description": "Unsupported step body."
+  },
+  "paymentIdleTitle": "Payment status",
+  "@paymentIdleTitle": {
+    "description": "Payment screen before any check."
+  },
+  "paymentIdleBody": "Check this order's payment with the store.",
+  "@paymentIdleBody": {
+    "description": "Payment screen before any check, body."
+  },
+  "paymentSummaryOrder": "Order",
+  "@paymentSummaryOrder": {
+    "description": "Summary row."
+  },
+  "paymentSummaryAmount": "Amount",
+  "@paymentSummaryAmount": {
+    "description": "Summary row."
+  },
+  "paymentSummaryPaidWith": "Paid with",
+  "@paymentSummaryPaidWith": {
+    "description": "Summary row."
+  },
+  "paymentSummaryStatus": "Status",
+  "@paymentSummaryStatus": {
+    "description": "Summary row."
+  },
+  "paymentStatusAwaiting": "Awaiting payment",
+  "@paymentStatusAwaiting": {
+    "description": "Status chip."
+  },
+  "paymentStatusProcessing": "Payment processing",
+  "@paymentStatusProcessing": {
+    "description": "Status chip."
+  },
+  "paymentStatusPaid": "Paid",
+  "@paymentStatusPaid": {
+    "description": "Status chip."
+  },
+  "paymentStatusFailed": "Failed",
+  "@paymentStatusFailed": {
+    "description": "Status chip."
+  },
+  "paymentStatusExpired": "Expired",
+  "@paymentStatusExpired": {
+    "description": "Status chip."
+  },
+  "paymentStatusUnknown": "Not checked yet",
+  "@paymentStatusUnknown": {
+    "description": "Status chip before a check."
   }
 }

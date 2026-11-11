@@ -2,6 +2,14 @@ import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/network/failure.dart';
 import 'package:application/shared/widgets/countdown.dart';
 
+/// [failureMessage], with the request id for a server error (never the body), for banners.
+String failureDetail(AppLocalizations l10n, Failure failure) =>
+    switch (failure) {
+      ServerFailure(:final requestId?) ||
+      DecodingFailure(:final requestId?) => l10n.errorServerBody(requestId),
+      _ => failureMessage(l10n, failure),
+    };
+
 /// The localized message for a [Failure] (MOBILE_APP_ROADMAP.md 2.3). Server text is never shown
 /// for 5xx; field messages of a 422 are shown beside their fields by the pages instead.
 String failureMessage(AppLocalizations l10n, Failure failure) =>

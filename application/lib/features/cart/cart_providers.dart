@@ -22,7 +22,8 @@ CartRepository cartRepository(Ref ref) => CartRepositoryImpl(
   ref.watch(secureStoreProvider),
 );
 
-/// Number of units in the cart, for the Cart tab badge (M-A12; the cart screen is M-A13).
+/// Number of units in the cart, for the Cart tab badge (M-A12; the cart screen (M-A13) calls
+/// [updateFrom] after each write).
 ///
 /// Read from `GET /storefront/cart` when there is a cart to read (a signed-in customer, or a
 /// guest holding a cart token), re-read when the session changes (sign-in adopts the guest cart,
@@ -39,7 +40,7 @@ class CartCount extends _$CartCount {
     return 0;
   }
 
-  /// Re-reads the cart (for example after the M-A13 cart screen changed it elsewhere).
+  /// Re-reads the cart (for example after an order was placed).
   Future<void> refresh() => _load(ref.read(sessionProvider));
 
   /// The count of [cart] as returned by a cart write.
@@ -63,6 +64,28 @@ class CartCount extends _$CartCount {
       state = unitsIn(value);
     }
   }
+}
+
+/// Bumped when the cart changed outside the cart screen (an order was placed, a payment
+/// finished, prices were re-quoted at checkout): the cart screen watches it and reloads.
+@Riverpod(keepAlive: true)
+class CartRevision extends _$CartRevision {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+/// Checkout found new prices (`price_changed`) and the customer went back to the cart: the cart
+/// shows "Prices were updated" until the next cart change (06.2).
+@Riverpod(keepAlive: true)
+class CartPricesUpdated extends _$CartPricesUpdated {
+  @override
+  bool build() => false;
+
+  void flag() => state = true;
+
+  void clear() => state = false;
 }
 
 /// Units across the cart's lines (0 without a cart).

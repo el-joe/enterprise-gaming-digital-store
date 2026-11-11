@@ -30,6 +30,25 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Verified app links (M-A13, ADR-039): payment return and cancel links and product
+                 pages on the flavor's APP_LINK_HOST (from lib/core/config/env_<flavor>.json via
+                 build.gradle.kts). Verification needs the owner's SHA-256 signing fingerprints in
+                 the server's /.well-known/assetlinks.json (MOBILE_ANDROID_SHA256_FINGERPRINTS);
+                 until then Android opens these links in the browser. Only these paths: other
+                 links on the domain stay in the browser. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"/>
+                <data android:host="${appLinkHost}"/>
+                <data android:pathPrefix="/app/payments/"/>
+                <data android:pathPrefix="/products/"/>
+                <data android:pathPrefix="/en/products/"/>
+                <data android:pathPrefix="/ar/products/"/>
+            </intent-filter>
+            <!-- Links go to the app_links listener only, not straight to the router. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

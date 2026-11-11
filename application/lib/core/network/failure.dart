@@ -26,9 +26,13 @@ final class TimeoutFailure extends Failure {
   bool get isRetryable => true;
 }
 
-/// 401 `unauthenticated` after the auth interceptor could not refresh the session.
+/// 401 `unauthenticated` after the auth interceptor could not refresh the session, or another
+/// 401 code such as `guest_checkout_disabled` (owner decision 4: sign in to check out).
 final class UnauthenticatedFailure extends Failure {
-  const UnauthenticatedFailure({super.requestId});
+  const UnauthenticatedFailure({this.code, super.requestId});
+
+  /// The envelope `code` (`unauthenticated`, `guest_checkout_disabled`, ...), when sent.
+  final String? code;
 }
 
 /// 403 `two_factor_required`.

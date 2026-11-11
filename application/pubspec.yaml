@@ -10,6 +10,7 @@ environment:
   sdk: ^3.13.7
 
 dependencies:
+  app_links: 7.2.2
   biometric_signature: 13.3.0
   cached_network_image: 4.0.5
   decimal: ^3.2.6

@@ -143,12 +143,16 @@ class FakeCartRepository implements CartRepository {
   final adds = <AddCall>[];
   int getCalls = 0;
 
+  /// When set, reads wait for it (loading state).
+  Completer<void>? getGate;
+
   /// When set, add-to-cart waits for it (busy state).
   Completer<void>? addGate;
 
   @override
   Future<Result<Cart?>> get() async {
     getCalls++;
+    await getGate?.future;
     return getResult;
   }
 
@@ -168,18 +172,45 @@ class FakeCartRepository implements CartRepository {
     return onAdd(call);
   }
 
-  @override
-  Future<Result<Cart>> updateItem(int itemId, {required int quantity}) =>
-      throw UnimplementedError('M-A13');
+  /// Cart screen writes (M-A13), recorded and answered by the handlers.
+  final updates = <({int id, int quantity})>[];
+  final removals = <int>[];
+  final coupons = <String>[];
+  int couponRemovals = 0;
+  Result<Cart> Function(int id, int quantity) onUpdate = (_, _) =>
+      Ok(fixtureCart());
+  Result<Cart> Function(int id) onRemove = (_) => Ok(fixtureCart());
+  Result<Cart> Function(String code) onApplyCoupon = (_) => Ok(fixtureCart());
+  Result<Cart> Function() onRemoveCoupon = () => Ok(fixtureCart());
+
+  /// When set, cart writes wait for it (busy state).
+  Completer<void>? writeGate;
 
   @override
-  Future<Result<Cart>> removeItem(int itemId) =>
-      throw UnimplementedError('M-A13');
+  Future<Result<Cart>> updateItem(int itemId, {required int quantity}) async {
+    updates.add((id: itemId, quantity: quantity));
+    await writeGate?.future;
+    return onUpdate(itemId, quantity);
+  }
 
   @override
-  Future<Result<Cart>> applyCoupon(String code) =>
-      throw UnimplementedError('M-A13');
+  Future<Result<Cart>> removeItem(int itemId) async {
+    removals.add(itemId);
+    await writeGate?.future;
+    return onRemove(itemId);
+  }
 
   @override
-  Future<Result<Cart>> removeCoupon() => throw UnimplementedError('M-A13');
+  Future<Result<Cart>> applyCoupon(String code) async {
+    coupons.add(code);
+    await writeGate?.future;
+    return onApplyCoupon(code);
+  }
+
+  @override
+  Future<Result<Cart>> removeCoupon() async {
+    couponRemovals++;
+    await writeGate?.future;
+    return onRemoveCoupon();
+  }
 }

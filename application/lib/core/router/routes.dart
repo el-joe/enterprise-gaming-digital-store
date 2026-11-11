@@ -100,8 +100,8 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
-  /// Bottom navigation tabs (M-A11). Cart, orders and account are placeholders until M-A13,
-  /// M-A14 and M-A16.
+  /// Bottom navigation tabs (M-A11). The cart is M-A13; orders and account are placeholders
+  /// until M-A14 and M-A16.
   static const browse = AppRoute(name: 'browse', path: '/browse');
 
   static const cart = AppRoute(name: 'cart', path: '/cart');
@@ -131,6 +131,21 @@ abstract final class Routes {
     path: '/products/:slug/reviews',
   );
 
+  /// Checkout (M-A13, 07.x), above the tabs. Signed-in only (owner decision 4): a guest is sent
+  /// to sign in and comes back here.
+  static const checkout = AppRoute(
+    name: 'checkout',
+    path: '/checkout',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Payment in progress and results of an order (07.6, 08.1 to 08.4), above the tabs.
+  static const payment = AppRoute(
+    name: 'payment',
+    path: '/payments/:order',
+    access: RouteAccess.signedIn,
+  );
+
   static const all = [
     home,
     browse,
@@ -142,6 +157,8 @@ abstract final class Routes {
     search,
     product,
     productReviews,
+    checkout,
+    payment,
     maintenance,
     updateRequired,
     splash,
@@ -199,6 +216,13 @@ abstract final class Routes {
   /// Location of [productReviews] for [slug].
   static String productReviewsLocation(String slug) =>
       '${productLocation(slug)}/reviews';
+
+  /// Location of [payment] for an order.
+  static String paymentLocation(String orderPublicId) =>
+      '/payments/${Uri.encodeComponent(orderPublicId)}';
+
+  /// Path parameter of [payment].
+  static const orderParameter = 'order';
 
   /// Path parameter of [product] and [productReviews].
   static const slugParameter = 'slug';

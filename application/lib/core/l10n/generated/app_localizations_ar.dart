@@ -1019,4 +1019,468 @@ class AppLocalizationsAr extends AppLocalizations {
   String galleryImage(int index, int count) {
     return 'الصورة $index من $count';
   }
+
+  @override
+  String get blockUnavailable => 'لم يعد متاحاً. أزله للمتابعة.';
+
+  @override
+  String get blockOutOfStock => 'نفد من المخزون. أزله للمتابعة.';
+
+  @override
+  String get blockCustomAmount => 'لا يمكن شراء هذا المبلغ. أزله للمتابعة.';
+
+  @override
+  String get blockQuantityLimit => 'الكمية أعلى من الحد المسموح. قلّل الكمية.';
+
+  @override
+  String get blockNotSoldInCountry => 'غير متاح للبيع في بلدك. أزله للمتابعة.';
+
+  @override
+  String get blockPricing => 'يجري تحديث السعر. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get blockOther => 'غير متاح حالياً. أزله للمتابعة.';
+
+  @override
+  String cartTitleCount(int count) {
+    return 'السلة ($count)';
+  }
+
+  @override
+  String get cartEmptyTitle => 'سلتك فارغة';
+
+  @override
+  String get cartEmptyBody =>
+      'ستظهر هنا بطاقات الهدايا وعمليات الشحن التي تضيفها.';
+
+  @override
+  String get cartBrowseStore => 'تصفّح المتجر';
+
+  @override
+  String get cartLoadFailedTitle => 'تعذّر تحميل سلتك';
+
+  @override
+  String cartRemoveItem(String name) {
+    return 'إزالة $name';
+  }
+
+  @override
+  String cartLineSemantics(
+    String name,
+    String variant,
+    String price,
+    int quantity,
+  ) {
+    return '$name، $variant، $price، الكمية $quantity';
+  }
+
+  @override
+  String get cartCouponLabel => 'رمز القسيمة';
+
+  @override
+  String get cartCouponApply => 'تطبيق';
+
+  @override
+  String get cartCouponRemove => 'إزالة';
+
+  @override
+  String cartCouponApplied(String code) {
+    return 'تم تطبيق $code.';
+  }
+
+  @override
+  String get cartCouponLimited => 'تم تقليل الخصم لهذا الطلب.';
+
+  @override
+  String get cartSubtotal => 'المجموع الفرعي';
+
+  @override
+  String get cartDiscount => 'الخصم';
+
+  @override
+  String cartDiscountCode(String code) {
+    return 'الخصم ($code)';
+  }
+
+  @override
+  String get cartTotal => 'الإجمالي';
+
+  @override
+  String get cartCheckout => 'إتمام الشراء';
+
+  @override
+  String get cartCheckoutWeb => 'أكمل الشراء على boxcards.shop';
+
+  @override
+  String get cartCheckoutWebHint => 'يفتح boxcards.shop في متصفحك.';
+
+  @override
+  String get cartCheckoutDisabled => 'إتمام الشراء غير متاح في التطبيق حالياً.';
+
+  @override
+  String get cartCheckoutBlocked => 'أزل العناصر المميزة أو عدّلها للمتابعة.';
+
+  @override
+  String get cartSignInHint => 'ستسجّل الدخول أولاً، وتبقى سلتك كما هي.';
+
+  @override
+  String get cartPricesUpdatedTitle => 'تم تحديث الأسعار';
+
+  @override
+  String get cartPricesUpdatedBody =>
+      'تغيّرت أسعار الصرف منذ أضفت هذه العناصر. راجع الإجمالي الجديد.';
+
+  @override
+  String get cartPriceMayVaryTitle => 'قد تتغير الأسعار';
+
+  @override
+  String get cartPriceMayVaryBody => 'يُؤكَّد السعر النهائي عند إتمام الشراء.';
+
+  @override
+  String get checkoutTitle => 'إتمام الشراء';
+
+  @override
+  String get checkoutEmailNote => 'تصل رسائل الطلب إلى هذا البريد';
+
+  @override
+  String get checkoutCountry => 'البلد';
+
+  @override
+  String get checkoutChooseCountry => 'اختر بلدك';
+
+  @override
+  String get checkoutCountryHint => 'اختر بلدك لعرض خيارات الدفع.';
+
+  @override
+  String get checkoutSearchCountries => 'ابحث عن بلد';
+
+  @override
+  String get checkoutNoCountryMatch => 'لا يوجد بلد يطابق بحثك.';
+
+  @override
+  String get checkoutPayment => 'الدفع';
+
+  @override
+  String checkoutChargedIn(String currency) {
+    return 'يُخصم بعملة $currency';
+  }
+
+  @override
+  String checkoutChargeNoticeTitle(String gateway, String currency) {
+    return 'يخصم $gateway بعملة $currency';
+  }
+
+  @override
+  String checkoutChargeNoticeBody(
+    String display,
+    String gateway,
+    String amount,
+  ) {
+    return 'تظهر لك الأسعار بعملة $display، لكن $gateway سيخصم $amount. قد يضيف بنكك رسوم تحويل.';
+  }
+
+  @override
+  String get optionBelowMargin => 'غير متاح لهذا المبلغ';
+
+  @override
+  String get optionUnavailable => 'غير متاح حالياً';
+
+  @override
+  String get optionNotInApp => 'غير متاح في التطبيق بعد';
+
+  @override
+  String get checkoutSomeUnavailableTitle => 'بعض الخيارات غير متاحة';
+
+  @override
+  String checkoutSomeUnavailableBody(String country) {
+    return 'الخيارات المعروضة هي التي يتيحها المتجر لـ $country.';
+  }
+
+  @override
+  String get checkoutNoOptionsTitle => 'لا يوجد خيار دفع لهذا الطلب';
+
+  @override
+  String get checkoutNoOptionsBody =>
+      'جرّب بلداً آخر، أو أكمل الشراء على boxcards.shop.';
+
+  @override
+  String get checkoutAcceptTerms => 'أوافق على شروط البيع';
+
+  @override
+  String get checkoutTermsRequired => 'وافق على شروط البيع للمتابعة.';
+
+  @override
+  String get checkoutReadTerms => 'اقرأ شروط البيع';
+
+  @override
+  String checkoutItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عنصر',
+      many: '$count عنصراً',
+      few: '$count عناصر',
+      two: 'عنصران',
+      one: 'عنصر واحد',
+      zero: 'لا عناصر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String checkoutChargedLine(String amount, String currency, String gateway) {
+    return 'سيُخصم منك $amount بعملة $currency عبر $gateway.';
+  }
+
+  @override
+  String get checkoutFeesNote =>
+      'الأسعار شاملة جميع الرسوم. تُسلَّم الأكواد إلى حسابك.';
+
+  @override
+  String get checkoutPayButton => 'ادفع';
+
+  @override
+  String checkoutPay(String amount) {
+    return 'ادفع $amount';
+  }
+
+  @override
+  String checkoutPayWallet(String amount) {
+    return 'ادفع $amount من المحفظة';
+  }
+
+  @override
+  String checkoutContinueTo(String gateway) {
+    return 'المتابعة إلى $gateway';
+  }
+
+  @override
+  String get checkoutPriceChangedTitle => 'تغيّر السعر';
+
+  @override
+  String checkoutPriceChangedBody(String current, String previous) {
+    return 'أصبح إجماليك $current (كان $previous). لم يُخصم أي مبلغ. راجع الإجمالي وحاول مرة أخرى.';
+  }
+
+  @override
+  String checkoutPriceChangedBodyUnknown(String previous) {
+    return 'تغيّر إجماليك (كان $previous). لم يُخصم أي مبلغ. راجع الإجمالي وحاول مرة أخرى.';
+  }
+
+  @override
+  String get checkoutReviewNewTotal => 'راجع الإجمالي الجديد';
+
+  @override
+  String get checkoutBackToCart => 'العودة إلى السلة';
+
+  @override
+  String get checkoutInProgressTitle => 'ما زال طلبك قيد الإنشاء';
+
+  @override
+  String get checkoutInProgressBody =>
+      'انتظر لحظة ثم اضغط ادفع مرة أخرى. لن يُخصم منك مرتين.';
+
+  @override
+  String get checkoutCartAttentionTitle => 'بعض العناصر تحتاج إلى مراجعة';
+
+  @override
+  String get checkoutRateStaleTitle => 'يجري تحديث الأسعار';
+
+  @override
+  String get checkoutRateStaleBody =>
+      'يجري تحديث أسعار الصرف. حاول مرة أخرى بعد لحظة.';
+
+  @override
+  String get checkoutFailedTitle => 'تعذّر إنشاء طلبك';
+
+  @override
+  String get checkoutQuoteFailedTitle => 'تعذّر تحميل خيارات الدفع';
+
+  @override
+  String get checkoutWebTitle => 'أكمل الشراء على الموقع';
+
+  @override
+  String get checkoutWebBody =>
+      'تتم عمليات الشراء على boxcards.shop في متصفحك. سجّل الدخول هناك بالحساب نفسه.';
+
+  @override
+  String get checkoutDisabledTitle => 'إتمام الشراء غير متاح';
+
+  @override
+  String get paymentProviderFallback => 'مزوّد الدفع';
+
+  @override
+  String get paymentInProgressTitle => 'الدفع قيد التنفيذ';
+
+  @override
+  String paymentInProgressBody(String gateway) {
+    return 'أكمل الدفع في نافذة $gateway. نتحقق من الدفع مع $gateway قبل عرضه كمدفوع.';
+  }
+
+  @override
+  String get paymentOpenFailed => 'تعذّر فتح صفحة الدفع. حاول مرة أخرى.';
+
+  @override
+  String get paymentDontPayTwiceTitle => 'لا تدفع مرتين';
+
+  @override
+  String get paymentDontPayTwiceBody =>
+      'إذا أغلقت التطبيق، نعود إلى هنا ونتحقق من الدفع مرة أخرى.';
+
+  @override
+  String paymentReturnTo(String gateway) {
+    return 'العودة إلى $gateway';
+  }
+
+  @override
+  String get paymentCheckStatus => 'تحقق من حالة الدفع';
+
+  @override
+  String get paymentConfirmingTitle => 'نتحقق من دفعتك';
+
+  @override
+  String get paymentConfirmingBody =>
+      'نتحقق من الدفع مع المزوّد. قد يستغرق ذلك دقيقة.';
+
+  @override
+  String get paymentPaidTitle => 'تم تأكيد الدفع';
+
+  @override
+  String get paymentPaidBody => 'يجري تسليم أكوادك. سنخبرك عندما تصبح جاهزة.';
+
+  @override
+  String get paymentReceiptTitle => 'أكوادك في الطلبات';
+
+  @override
+  String get paymentReceiptBody => 'افتح الطلب لعرض كل كود بعد تسليمه.';
+
+  @override
+  String get paymentViewOrder => 'عرض الطلب';
+
+  @override
+  String get paymentKeepShopping => 'متابعة التسوق';
+
+  @override
+  String get paymentProcessingTitle => 'ما زالت قيد المعالجة';
+
+  @override
+  String get paymentProcessingBody =>
+      'لم يؤكد مزوّد الدفع بعد. لا حاجة للدفع مرة أخرى؛ يتحدّث الطلب فور التأكيد.';
+
+  @override
+  String paymentLastChecked(String time) {
+    return 'آخر تحقق $time';
+  }
+
+  @override
+  String get paymentCheckAgain => 'تحقق مرة أخرى';
+
+  @override
+  String get paymentGoToOrders => 'الذهاب إلى الطلبات';
+
+  @override
+  String get paymentFailedTitle => 'لم يكتمل الدفع';
+
+  @override
+  String get paymentFailedBody =>
+      'لم نتمكن من تأكيد دفع لهذا الطلب. يمكنك المحاولة مرة أخرى بالطريقة نفسها.';
+
+  @override
+  String get paymentCancelledBody =>
+      'غادرت صفحة الدفع قبل الدفع. يمكنك المحاولة مرة أخرى بالطريقة نفسها.';
+
+  @override
+  String get paymentFailedFinalBody =>
+      'لم يعد بالإمكان دفع هذا الطلب. أنشئ الطلب مرة أخرى من سلتك.';
+
+  @override
+  String paymentHeldUntil(String time) {
+    return 'طلبك محجوز حتى $time.';
+  }
+
+  @override
+  String paymentAttempt(int number) {
+    return 'المحاولة $number';
+  }
+
+  @override
+  String get paymentAnotherMethodTitle => 'تريد طريقة أخرى؟';
+
+  @override
+  String get paymentAnotherMethodBody =>
+      'لاستخدام طريقة دفع أخرى، أنشئ الطلب مرة أخرى من سلتك.';
+
+  @override
+  String get paymentAttemptsExhausted =>
+      'استُنفدت كل محاولات الدفع لهذا الطلب. أنشئ الطلب مرة أخرى من سلتك.';
+
+  @override
+  String get paymentTryAgain => 'أعد محاولة الدفع';
+
+  @override
+  String get paymentExpiredTitle => 'انتهت صلاحية الطلب';
+
+  @override
+  String get paymentExpiredBody =>
+      'لم يُدفع هذا الطلب في الوقت المحدد، لذا أفرجنا عن العناصر. لم يُخصم أي مبلغ.';
+
+  @override
+  String get paymentReturnToCart => 'العودة إلى السلة';
+
+  @override
+  String get paymentContactSupport => 'تواصل مع الدعم';
+
+  @override
+  String get paymentNotStartedTitle => 'مزوّد الدفع غير متاح';
+
+  @override
+  String paymentNotStartedBody(String gateway) {
+    return 'تعذّر على $gateway بدء الدفع. حاول مرة أخرى؛ طلبك محفوظ.';
+  }
+
+  @override
+  String get paymentCallFailedTitle => 'تعذّر التحقق من الدفع';
+
+  @override
+  String get paymentUnsupportedTitle => 'لا يمكن إكمال هذا الدفع في التطبيق';
+
+  @override
+  String get paymentUnsupportedBody =>
+      'تحقق من حالة الدفع، أو أنشئ الطلب مرة أخرى بطريقة أخرى.';
+
+  @override
+  String get paymentIdleTitle => 'حالة الدفع';
+
+  @override
+  String get paymentIdleBody => 'تحقق من دفع هذا الطلب مع المتجر.';
+
+  @override
+  String get paymentSummaryOrder => 'الطلب';
+
+  @override
+  String get paymentSummaryAmount => 'المبلغ';
+
+  @override
+  String get paymentSummaryPaidWith => 'طريقة الدفع';
+
+  @override
+  String get paymentSummaryStatus => 'الحالة';
+
+  @override
+  String get paymentStatusAwaiting => 'بانتظار الدفع';
+
+  @override
+  String get paymentStatusProcessing => 'الدفع قيد المعالجة';
+
+  @override
+  String get paymentStatusPaid => 'مدفوع';
+
+  @override
+  String get paymentStatusFailed => 'فشل';
+
+  @override
+  String get paymentStatusExpired => 'منتهي';
+
+  @override
+  String get paymentStatusUnknown => 'لم يُتحقق بعد';
 }

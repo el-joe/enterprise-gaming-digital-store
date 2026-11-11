@@ -217,7 +217,7 @@ void main() {
         await tester.tap(find.text(l10n.navCart));
         await tester.pumpAndSettle();
         expect(find.text(l10n.cartTitle), findsWidgets);
-        expect(find.text(l10n.comingSoonTitle), findsOneWidget);
+        expect(find.text(l10n.cartEmptyTitle), findsOneWidget);
         await tester.tap(find.text(l10n.navOrders));
         await tester.pumpAndSettle();
         expect(find.text(l10n.ordersTitle), findsWidgets);

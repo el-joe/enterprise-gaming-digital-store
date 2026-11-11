@@ -117,7 +117,7 @@ final class ResolvePaymentProvider
         argument: null,
         retry: null,
         name: r'resolvePaymentProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -144,4 +144,4 @@ final class ResolvePaymentProvider
   }
 }
 
-String _$resolvePaymentHash() => r'be9179ceaea4a77b24c5c152ae999d2a371b6c55';
+String _$resolvePaymentHash() => r'5da43053cf6a48f38fd0c1edf2da2438104ce754';

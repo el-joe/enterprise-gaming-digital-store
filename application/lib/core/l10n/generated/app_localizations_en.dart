@@ -1001,4 +1001,475 @@ class AppLocalizationsEn extends AppLocalizations {
   String galleryImage(int index, int count) {
     return 'Image $index of $count';
   }
+
+  @override
+  String get blockUnavailable => 'No longer available. Remove it to continue.';
+
+  @override
+  String get blockOutOfStock => 'Out of stock. Remove it to continue.';
+
+  @override
+  String get blockCustomAmount =>
+      'This amount can\'t be bought. Remove it to continue.';
+
+  @override
+  String get blockQuantityLimit =>
+      'Above the quantity limit. Lower the quantity.';
+
+  @override
+  String get blockNotSoldInCountry =>
+      'Not sold in your country. Remove it to continue.';
+
+  @override
+  String get blockPricing => 'The price is being updated. Try again shortly.';
+
+  @override
+  String get blockOther => 'Not available right now. Remove it to continue.';
+
+  @override
+  String cartTitleCount(int count) {
+    return 'Cart ($count)';
+  }
+
+  @override
+  String get cartEmptyTitle => 'Your cart is empty';
+
+  @override
+  String get cartEmptyBody => 'Gift cards and top-ups you add will show here.';
+
+  @override
+  String get cartBrowseStore => 'Browse the store';
+
+  @override
+  String get cartLoadFailedTitle => 'We couldn\'t load your cart';
+
+  @override
+  String cartRemoveItem(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String cartLineSemantics(
+    String name,
+    String variant,
+    String price,
+    int quantity,
+  ) {
+    return '$name, $variant, $price, quantity $quantity';
+  }
+
+  @override
+  String get cartCouponLabel => 'Coupon code';
+
+  @override
+  String get cartCouponApply => 'Apply';
+
+  @override
+  String get cartCouponRemove => 'Remove';
+
+  @override
+  String cartCouponApplied(String code) {
+    return '$code applied.';
+  }
+
+  @override
+  String get cartCouponLimited => 'The discount was limited for this order.';
+
+  @override
+  String get cartSubtotal => 'Subtotal';
+
+  @override
+  String get cartDiscount => 'Discount';
+
+  @override
+  String cartDiscountCode(String code) {
+    return 'Discount ($code)';
+  }
+
+  @override
+  String get cartTotal => 'Total';
+
+  @override
+  String get cartCheckout => 'Checkout';
+
+  @override
+  String get cartCheckoutWeb => 'Complete purchase on boxcards.shop';
+
+  @override
+  String get cartCheckoutWebHint => 'Opens boxcards.shop in your browser.';
+
+  @override
+  String get cartCheckoutDisabled =>
+      'Checkout isn\'t available in the app right now.';
+
+  @override
+  String get cartCheckoutBlocked =>
+      'Remove or fix the marked items to continue.';
+
+  @override
+  String get cartSignInHint => 'You\'ll sign in first. Your cart is kept.';
+
+  @override
+  String get cartPricesUpdatedTitle => 'Prices were updated';
+
+  @override
+  String get cartPricesUpdatedBody =>
+      'Exchange rates changed since you added these items. Review the new total.';
+
+  @override
+  String get cartPriceMayVaryTitle => 'Prices may change';
+
+  @override
+  String get cartPriceMayVaryBody =>
+      'The final price is confirmed at checkout.';
+
+  @override
+  String get checkoutTitle => 'Checkout';
+
+  @override
+  String get checkoutEmailNote => 'Order emails go to this address';
+
+  @override
+  String get checkoutCountry => 'Country';
+
+  @override
+  String get checkoutChooseCountry => 'Choose your country';
+
+  @override
+  String get checkoutCountryHint =>
+      'Choose your country to see the payment options.';
+
+  @override
+  String get checkoutSearchCountries => 'Search countries';
+
+  @override
+  String get checkoutNoCountryMatch => 'No country matches your search.';
+
+  @override
+  String get checkoutPayment => 'Payment';
+
+  @override
+  String checkoutChargedIn(String currency) {
+    return 'Charged in $currency';
+  }
+
+  @override
+  String checkoutChargeNoticeTitle(String gateway, String currency) {
+    return '$gateway charges in $currency';
+  }
+
+  @override
+  String checkoutChargeNoticeBody(
+    String display,
+    String gateway,
+    String amount,
+  ) {
+    return 'You see prices in $display, but $gateway will charge $amount. Your bank may add a conversion fee.';
+  }
+
+  @override
+  String get optionBelowMargin => 'Not available for this amount';
+
+  @override
+  String get optionUnavailable => 'Not available right now';
+
+  @override
+  String get optionNotInApp => 'Not available in the app yet';
+
+  @override
+  String get checkoutSomeUnavailableTitle => 'Some options are unavailable';
+
+  @override
+  String checkoutSomeUnavailableBody(String country) {
+    return 'Options shown are the ones the store offers for $country.';
+  }
+
+  @override
+  String get checkoutNoOptionsTitle => 'No payment option for this order';
+
+  @override
+  String get checkoutNoOptionsBody =>
+      'Try another country, or complete the purchase on boxcards.shop.';
+
+  @override
+  String get checkoutAcceptTerms => 'I accept the Terms of Sale';
+
+  @override
+  String get checkoutTermsRequired => 'Accept the Terms of Sale to continue.';
+
+  @override
+  String get checkoutReadTerms => 'Read the Terms of Sale';
+
+  @override
+  String checkoutItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String checkoutChargedLine(String amount, String currency, String gateway) {
+    return 'You will be charged $amount in $currency by $gateway.';
+  }
+
+  @override
+  String get checkoutFeesNote =>
+      'Prices include all fees. Codes are delivered to your account.';
+
+  @override
+  String get checkoutPayButton => 'Pay';
+
+  @override
+  String checkoutPay(String amount) {
+    return 'Pay $amount';
+  }
+
+  @override
+  String checkoutPayWallet(String amount) {
+    return 'Pay $amount with wallet';
+  }
+
+  @override
+  String checkoutContinueTo(String gateway) {
+    return 'Continue to $gateway';
+  }
+
+  @override
+  String get checkoutPriceChangedTitle => 'The price changed';
+
+  @override
+  String checkoutPriceChangedBody(String current, String previous) {
+    return 'Your total is now $current (was $previous). Nothing was charged. Review the total and try again.';
+  }
+
+  @override
+  String checkoutPriceChangedBodyUnknown(String previous) {
+    return 'Your total changed (it was $previous). Nothing was charged. Review the total and try again.';
+  }
+
+  @override
+  String get checkoutReviewNewTotal => 'Review new total';
+
+  @override
+  String get checkoutBackToCart => 'Back to cart';
+
+  @override
+  String get checkoutInProgressTitle => 'Your order is still being placed';
+
+  @override
+  String get checkoutInProgressBody =>
+      'Wait a moment, then tap Pay again. You won\'t be charged twice.';
+
+  @override
+  String get checkoutCartAttentionTitle => 'Some items need attention';
+
+  @override
+  String get checkoutRateStaleTitle => 'Prices are being updated';
+
+  @override
+  String get checkoutRateStaleBody =>
+      'Exchange rates are being refreshed. Try again in a moment.';
+
+  @override
+  String get checkoutFailedTitle => 'We couldn\'t place your order';
+
+  @override
+  String get checkoutQuoteFailedTitle =>
+      'We couldn\'t load the payment options';
+
+  @override
+  String get checkoutWebTitle => 'Complete your purchase on the web';
+
+  @override
+  String get checkoutWebBody =>
+      'Purchases are completed on boxcards.shop in your browser. Sign in there with the same account.';
+
+  @override
+  String get checkoutDisabledTitle => 'Checkout is unavailable';
+
+  @override
+  String get paymentProviderFallback => 'the payment provider';
+
+  @override
+  String get paymentInProgressTitle => 'Payment in progress';
+
+  @override
+  String paymentInProgressBody(String gateway) {
+    return 'Finish paying in the $gateway window. We confirm the payment with $gateway before showing it as paid.';
+  }
+
+  @override
+  String get paymentOpenFailed =>
+      'We couldn\'t open the payment page. Try again.';
+
+  @override
+  String get paymentDontPayTwiceTitle => 'Don\'t pay twice';
+
+  @override
+  String get paymentDontPayTwiceBody =>
+      'If you close the app, we resume here and check the payment again.';
+
+  @override
+  String paymentReturnTo(String gateway) {
+    return 'Return to $gateway';
+  }
+
+  @override
+  String get paymentCheckStatus => 'Check payment status';
+
+  @override
+  String get paymentConfirmingTitle => 'Checking your payment';
+
+  @override
+  String get paymentConfirmingBody =>
+      'We\'re confirming the payment with the provider. This can take a minute.';
+
+  @override
+  String get paymentPaidTitle => 'Payment confirmed';
+
+  @override
+  String get paymentPaidBody =>
+      'Your codes are being delivered. We\'ll let you know when they\'re ready.';
+
+  @override
+  String get paymentReceiptTitle => 'Your codes are in Orders';
+
+  @override
+  String get paymentReceiptBody =>
+      'Open the order to see each code once it\'s delivered.';
+
+  @override
+  String get paymentViewOrder => 'View order';
+
+  @override
+  String get paymentKeepShopping => 'Keep shopping';
+
+  @override
+  String get paymentProcessingTitle => 'Still processing';
+
+  @override
+  String get paymentProcessingBody =>
+      'Your payment provider hasn\'t confirmed yet. You don\'t need to pay again; the order updates as soon as it\'s confirmed.';
+
+  @override
+  String paymentLastChecked(String time) {
+    return 'Last checked $time';
+  }
+
+  @override
+  String get paymentCheckAgain => 'Check again';
+
+  @override
+  String get paymentGoToOrders => 'Go to orders';
+
+  @override
+  String get paymentFailedTitle => 'Payment not completed';
+
+  @override
+  String get paymentFailedBody =>
+      'We couldn\'t confirm a payment for this order. You can try again with the same method.';
+
+  @override
+  String get paymentCancelledBody =>
+      'You left the payment page before paying. You can try again with the same method.';
+
+  @override
+  String get paymentFailedFinalBody =>
+      'This order can\'t be paid any more. Place the order again from your cart.';
+
+  @override
+  String paymentHeldUntil(String time) {
+    return 'Your order is held until $time.';
+  }
+
+  @override
+  String paymentAttempt(int number) {
+    return 'Attempt $number';
+  }
+
+  @override
+  String get paymentAnotherMethodTitle => 'Want another method?';
+
+  @override
+  String get paymentAnotherMethodBody =>
+      'To use another payment method, place the order again from your cart.';
+
+  @override
+  String get paymentAttemptsExhausted =>
+      'All payment attempts for this order were used. Place the order again from your cart.';
+
+  @override
+  String get paymentTryAgain => 'Try payment again';
+
+  @override
+  String get paymentExpiredTitle => 'Order expired';
+
+  @override
+  String get paymentExpiredBody =>
+      'This order wasn\'t paid in time, so we released the items. Nothing was charged.';
+
+  @override
+  String get paymentReturnToCart => 'Return to cart';
+
+  @override
+  String get paymentContactSupport => 'Contact support';
+
+  @override
+  String get paymentNotStartedTitle => 'Payment provider unavailable';
+
+  @override
+  String paymentNotStartedBody(String gateway) {
+    return '$gateway could not start the payment. Try again; your order is kept.';
+  }
+
+  @override
+  String get paymentCallFailedTitle => 'We couldn\'t check the payment';
+
+  @override
+  String get paymentUnsupportedTitle =>
+      'This payment can\'t be completed in the app';
+
+  @override
+  String get paymentUnsupportedBody =>
+      'Check the payment status, or place the order again with another method.';
+
+  @override
+  String get paymentIdleTitle => 'Payment status';
+
+  @override
+  String get paymentIdleBody => 'Check this order\'s payment with the store.';
+
+  @override
+  String get paymentSummaryOrder => 'Order';
+
+  @override
+  String get paymentSummaryAmount => 'Amount';
+
+  @override
+  String get paymentSummaryPaidWith => 'Paid with';
+
+  @override
+  String get paymentSummaryStatus => 'Status';
+
+  @override
+  String get paymentStatusAwaiting => 'Awaiting payment';
+
+  @override
+  String get paymentStatusProcessing => 'Payment processing';
+
+  @override
+  String get paymentStatusPaid => 'Paid';
+
+  @override
+  String get paymentStatusFailed => 'Failed';
+
+  @override
+  String get paymentStatusExpired => 'Expired';
+
+  @override
+  String get paymentStatusUnknown => 'Not checked yet';
 }

@@ -193,3 +193,44 @@ final class PlaceOrderProvider
 }
 
 String _$placeOrderHash() => r'a01a618a3016e12fe8e0e92c632cf33b40721a55';
+
+@ProviderFor(checkoutMode)
+final checkoutModeProvider = CheckoutModeProvider._();
+
+final class CheckoutModeProvider
+    extends $FunctionalProvider<CheckoutMode, CheckoutMode, CheckoutMode>
+    with $Provider<CheckoutMode> {
+  CheckoutModeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'checkoutModeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$checkoutModeHash();
+
+  @$internal
+  @override
+  $ProviderElement<CheckoutMode> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  CheckoutMode create(Ref ref) {
+    return checkoutMode(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CheckoutMode value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CheckoutMode>(value),
+    );
+  }
+}
+
+String _$checkoutModeHash() => r'551170891cfc60129630c39856835b5d37894b96';

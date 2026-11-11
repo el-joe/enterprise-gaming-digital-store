@@ -15,6 +15,6 @@ PaymentsRemoteDataSource paymentsRemoteDataSource(Ref ref) =>
 PaymentsRepository paymentsRepository(Ref ref) =>
     PaymentsRepositoryImpl(ref.watch(paymentsRemoteDataSourceProvider));
 
-@riverpod
+@Riverpod(keepAlive: true)
 ResolvePayment resolvePayment(Ref ref) =>
     ResolvePayment(ref.watch(paymentsRepositoryProvider));

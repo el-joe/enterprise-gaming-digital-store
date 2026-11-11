@@ -8,14 +8,17 @@ import 'package:application/features/auth/presentation/pages/login_page.dart';
 import 'package:application/features/auth/presentation/pages/register_page.dart';
 import 'package:application/features/auth/presentation/pages/two_factor_page.dart';
 import 'package:application/features/auth/presentation/pages/verify_email_page.dart';
+import 'package:application/features/cart/presentation/pages/cart_page.dart';
 import 'package:application/features/catalog/presentation/pages/browse_page.dart';
 import 'package:application/features/catalog/presentation/pages/listing_page.dart';
 import 'package:application/features/catalog/presentation/pages/platforms_page.dart';
 import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
+import 'package:application/features/checkout/presentation/pages/checkout_page.dart';
 import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:application/features/launch/presentation/pages/notice_pages.dart';
 import 'package:application/features/launch/presentation/pages/onboarding_pages.dart';
 import 'package:application/features/launch/presentation/pages/splash_page.dart';
+import 'package:application/features/payments/presentation/pages/payment_page.dart';
 import 'package:application/features/product/presentation/pages/product_page.dart';
 import 'package:application/features/product/presentation/pages/product_reviews_page.dart';
 import 'package:application/features/search/presentation/pages/search_page.dart';
@@ -110,8 +113,7 @@ GoRouter appRouter(Ref ref) {
               GoRoute(
                 path: Routes.cart.path,
                 name: Routes.cart.name,
-                builder: (context, state) =>
-                    ComingSoonPage(title: context.l10n.cartTitle),
+                builder: (context, state) => const CartPage(),
               ),
             ],
           ),
@@ -152,6 +154,22 @@ GoRouter appRouter(Ref ref) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: Routes.checkout.path,
+        name: Routes.checkout.name,
+        builder: (context, state) => const CheckoutPage(),
+      ),
+      GoRoute(
+        path: Routes.payment.path,
+        name: Routes.payment.name,
+        builder: (context, state) {
+          final order = state.pathParameters[Routes.orderParameter]!;
+          return PaymentPage(
+            key: ValueKey('payment-$order'),
+            orderPublicId: order,
+          );
+        },
       ),
       GoRoute(
         path: Routes.splash.path,

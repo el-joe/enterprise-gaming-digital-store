@@ -9,6 +9,7 @@ import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/features/app_config/app_config_providers.dart';
 import 'package:application/features/app_config/domain/entities/app_config.dart';
 import 'package:application/features/auth/auth_launch.dart';
+import 'package:application/features/payments/payment_flow.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -74,9 +75,18 @@ class StartupController extends _$StartupController {
           ref.read(latestAppConfigProvider.notifier).set(config);
           ref.read(availabilityProvider.notifier).update(_availability(config));
           await ref.read(authLaunchProvider.notifier).run();
+          final onboarded = ref
+              .read(preferencesStoreProvider)
+              .onboardingCompleted;
+          // A checkout interrupted after placement resumes at its payment screen (M-A13).
+          final resume = onboarded
+              ? await ref.read(paymentLaunchProvider.notifier).resumeOrder()
+              : null;
           state = StartupReady(
             config,
-            next: ref.read(preferencesStoreProvider).onboardingCompleted
+            next: resume != null
+                ? Routes.paymentLocation(resume)
+                : onboarded
                 ? Routes.home.path
                 : Routes.onboardingLanguage.path,
           );

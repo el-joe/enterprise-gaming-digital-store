@@ -50,7 +50,7 @@ final class StartupControllerProvider
   }
 }
 
-String _$startupControllerHash() => r'cdbe5388698966725e735b624b973472a4cc31cc';
+String _$startupControllerHash() => r'1ffc7002a2b5b015fa135383b94a28c15ca2ecbd';
 
 /// The launch check (01.1 to 01.4): `GET /app/config` with this build's platform and version,
 /// then force update (`update.required`), maintenance, or onward to onboarding or home. The guards

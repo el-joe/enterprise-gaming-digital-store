@@ -3,15 +3,16 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A12 product UI** (2026-11-11) on M-A11 (home, catalog and search), M-A10 (auth and
+Status: **M-A13 cart, checkout and payments UI** (2026-11-11) on M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
 onboarding), the M-A7 data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
 maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
 (Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
 (categories and platforms), product listings with filters, sort and infinite scroll, search with
 suggestions, popular terms and a local history, the display currency switcher, and the product
-page (variants, delivery fields, add to cart, reviews) with the cart count on the Cart tab. Cart and
-Orders are "coming in the next update" placeholders until M-A13 and M-A14; the Account tab holds the
-M-A10 account card, the currency and the language until M-A16.
+page (variants, delivery fields, add to cart, reviews) with the cart count on the Cart tab, the cart
+tab, the signed-in checkout, the payment hand-off to PayPal and Paymob in the system browser with the
+app-link return, and the payment results. Orders is a "coming in the next update" placeholder until
+M-A14; the Account tab holds the M-A10 account card, the currency and the language until M-A16.
 
 ## Requirements
 
@@ -96,7 +97,10 @@ tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 ```
 
 `presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10), for `home`,
-`catalog` and `search` (M-A11) and for `product` (M-A12); the other features get theirs in M-A13 onwards.
+`catalog` and `search` (M-A11), for `product` (M-A12) and for `cart`, `checkout` and `payments`
+(M-A13); the other features get theirs in M-A14 onwards.
+`features/payments/payment_flow.dart` is the payments feature's public entry (`PaymentFlow`,
+`PaymentLaunch`), used by checkout, the app-link listener and the launch check.
 `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
 app lock at a cold start, biometric offer), called by the launch feature after the config check.
 
@@ -190,8 +194,8 @@ that provider, so no plugin or network runs in tests. No other package was added
 
 - **Routes.** `/products/:slug` (above the tabs; pushed from tiles, search and links, back returns;
   opened directly it goes home on back) and `/products/:slug/reviews`. `parseDeepLink` returns
-  `ProductLink` for `https://<APP_LINK_HOST>/products/{slug}` and `/en|ar/products/{slug}`; the
-  platform intent filters and link listener come with the other app links (M-A13).
+  `ProductLink` for `https://<APP_LINK_HOST>/products/{slug}` and `/en|ar/products/{slug}`; since
+  M-A13 the app-link listener opens them (section below).
 - **Controllers** (`features/product/presentation/controllers/product_controllers.dart`):
   `ProductController` (family by slug) loads the detail and the variants together, watches
   `pricingContextProvider` (a currency or language change reloads), and holds the region and amount
@@ -227,6 +231,90 @@ that provider, so no plugin or network runs in tests. No other package was added
   `ltrIsolate` inside Arabic sentences (`ادفع \u2066USD10.00\u2069`); the footer shows the unit price
   ("× n"), never a client total. Ratings are decimal strings (`ratingLabel`, `ratingStars`).
 - No package was added in M-A12.
+
+## Cart, checkout and payments (M-A13)
+
+- **Routes.** `/cart` (tab), `/checkout` and `/payments/:order` (above the tabs, both
+  `RouteAccess.signedIn`). Owner decision 4: a guest who taps Checkout is sent to
+  `/login?from=/checkout` by the guard and comes back after signing in; the guest cart is adopted by
+  the first cart or checkout call with the bearer token (`X-Cart-Token` is sent once, then dropped).
+  A 401 from place-order (`guest_checkout_disabled`, now kept as `UnauthenticatedFailure.code`, or
+  an expired session) signs out, so the guard asks to sign in again.
+- **Cart** (`CartController`): lines with quantity (1 to 10, the request limit) and remove, coupon
+  apply and remove (the server's `coupon_invalid` reason under the field, `coupon.error`,
+  `limited_by_margin`), server totals only, `block_reason` text per line (checkout disabled until the
+  server says `checkout_ready`), "Prices were updated" after a `price_changed` at checkout or a
+  `rate_stale`/`rate_missing` line, `price_may_vary` notice; loading, empty, error (request id) and
+  offline states. Every write calls `CartCount.updateFrom`; `CartRevision` (bumped after placement and
+  after a final payment answer) and the session, currency and language reload it.
+- **Checkout mode** (`checkoutModeProvider`, owner decision 3): `features.web_checkout_redirect`
+  turns the cart button into "Complete purchase on boxcards.shop", which opens `links.web_checkout`
+  in the system browser; `/checkout` then shows the same state and loads nothing.
+  `features.checkout_enabled: false` disables checkout with a note.
+- **Checkout** (`CheckoutController`): countries (`GET /storefront/countries`), the profile's country
+  when it is one of them, the account email, the cart repriced for the country (`validate`) and the
+  payment options with the exact amount and currency each gateway charges (Paymob EGP, the others
+  USD; owner decision 1). The summary shows the display total and "You will be charged {amount} in
+  {currency} by {gateway}"; `charged_in_payment_currency` adds the notice under the selected option.
+  Options that cannot be chosen stay visible and disabled with their reason
+  (`payment_currency_below_margin`, `available: false`, Stripe "not in the app yet"). Terms must be
+  accepted. Place order goes through the M-A7 `PlaceOrder` use case unchanged (key per body hash in the
+  pending checkout, reused across retries and restarts; duplicate goes to the existing order;
+  `next: null` calls retry-payment once). `price_changed` re-quotes and shows the old and new totals
+  (Review new total / Back to cart; the next attempt has a new body and so a new key); `cart_empty`
+  returns to the cart; `idempotency_in_progress` explains and keeps the key; `rate_stale` re-quotes;
+  item errors point back to the cart; other domain errors show the server's localized text.
+- **Payment hand-off** (`PaymentFlow`, keep-alive): PayPal `approve_url` and Paymob `redirect_url`
+  open in the system browser through the app's own channel (`NativeBridge.openExternalUrl`, https
+  only), so no URL launcher package was needed. Wallet goes straight to the status. The screen (07.6)
+  offers "Return to PayPal" and "Check payment status". A return link, "Check payment status" or a
+  resume runs `ResolvePayment` (PayPal capture for a step started in this session, else
+  `verify-payment`, which also captures an approved PayPal order server-side; then 2 s, 3 s, 5 s and
+  every 10 s for 2 minutes). Results: paid only on `payment_status: paid` (08.1); "still processing"
+  after 2 minutes (08.2); failed (08.3) for a `failed` order (final), the cancel link, or a latest
+  attempt that ended (`failed`, `cancelled`, `expired` in the order detail) while the order is still
+  `pending_payment`, with "Try payment again" (`retry-payment`, `client: app`); expired (08.4) for a
+  `cancelled` order or 409 `order_expired`; "Payment provider unavailable" when no attempt could be
+  started. Leaving a result clears the pending checkout. The order detail
+  (`GET /account/orders/{id}`) fills the summary (number, amount, gateway, attempt).
+- **Resume after a restart.** The launch check (`StartupController`) asks `PaymentLaunch`: a
+  signed-in customer with a pending checkout that has an order goes straight to that order's payment
+  screen, which verifies again.
+- **Stripe.** Not launched in the app: the API gives Stripe app attempts only a PaymentSheet
+  `client_secret` (no hosted page), and `flutter_stripe` is a large native SDK whose launch also
+  depends on BD1 and open decision 12. The Stripe option is shown disabled ("Not available in the app
+  yet"); a Stripe `next` (only possible from a retry) shows "can't be completed in the app" with
+  "Check payment status". Adding PaymentSheet later is a contained change in `PaymentFlow._launch`.
+- **App links** (`core/router/app_link_listener.dart`, `AppLinkListener`): `https://<APP_LINK_HOST>
+  /app/payments/{return,cancel}/{order}` (query ignored: `attempt`, Paymob's `success`, ...) hands
+  the order to `PaymentFlow` and opens its screen (signed out: the guard asks to sign in and nothing
+  is verified); `/products/{slug}` and `/en|ar/products/{slug}` push the product page. Links that
+  arrive during the launch check, onboarding, maintenance or force update wait until the app shows a
+  normal page. Guest access, email verification and reset links are parsed but not routed (they are
+  not in the intent filters, so they keep opening in the browser).
+- **Android** (`android/app/src/main/AndroidManifest.xml`): an `autoVerify` intent filter for
+  `https://${appLinkHost}` with the path prefixes `/app/payments/`, `/products/`, `/en/products/`,
+  `/ar/products/`; `appLinkHost` is read per flavor from `lib/core/config/env_<flavor>.json`
+  (`APP_LINK_HOST`) in `build.gradle.kts`, never hard-coded. `flutter_deeplinking_enabled` is false so
+  links reach only the listener. **iOS**: `ios/Runner/Runner.entitlements` holds
+  `applinks:$(APP_LINK_HOST)` as a placeholder (not referenced by the Xcode project yet) and
+  `FlutterDeepLinkingEnabled` is false in `Info.plist`.
+- **Owner actions for verified links.** No keystore or signing config was created. The owner must
+  supply the SHA-256 signing-certificate fingerprints of each Android flavor that should open links
+  (server `MOBILE_ANDROID_SHA256_FINGERPRINTS`, packages in `MOBILE_ANDROID_PACKAGES`) and the Apple
+  Team ID (`MOBILE_IOS_APP_IDS` as `TEAMID.<bundle id>`); on the macOS host (M-A20) set
+  `APP_LINK_HOST` per scheme, `CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements` and the
+  Associated Domains capability. Until then the links open in the browser and the web return page
+  applies; "Check payment status" in the app still works.
+
+### App links package
+
+**`app_links` 7.2.2** (pinned exactly; Apache-2.0; `github.com/llfbandit/app_links`). Why: the
+roadmap's package for deep links (section 3); it delivers Android App Links and iOS Universal Links,
+including the link that cold-starts the app (kept until the first listen) and scene-based iOS apps
+(this app uses `SceneDelegate`), with no setup code in `MainActivity` or the delegates. 7.2.2
+(published 2026-10-06) is the newest release and more than two weeks old. It is used only through
+`linkSourceProvider` (tests feed a fake stream). No other package was added in M-A13.
 
 ## Biometric unlock (owner decision 6)
 
@@ -338,6 +426,26 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A13 additions)
+
+`test/features/commerce/cart_checkout_controllers_test.dart` (cart load, guest without token,
+quantity, remove, 422 quantity, coupon applied/refused/removed, blocked line, revision reload;
+checkout mode and web redirect; the checkout guard redirect and return; checkout country from the
+profile, options display versus charge, disabled options, terms, place order body and PayPal launch,
+key reuse across a retry and across a restart, `next: null`, provider unavailable, duplicate,
+`price_changed` with a new key, `cart_empty`, `idempotency_in_progress`, 401
+`guest_checkout_disabled`, item errors), `payment_flow_test.dart` (wallet, PayPal and Paymob launch,
+browser failure, capture on return, a return link never marks paid, the polling schedule and
+2-minute end with the fake clock, early paid, failed attempt, final answers, cancel link, retry,
+`order_expired`, attempts exhausted, Stripe not launched, close, resume from the pending checkout at
+launch, app links: return, cancel, foreign host, queued during launch, signed out),
+`commerce_pages_test.dart` (06.1 to 06.5, offline, guest sign-in, web mode, 07.2 to 07.7, pay with
+PayPal to 07.6, 08.1 to 08.4, close, tap-target and label guidelines, 360 wide; `en` and `ar`) and
+goldens in LTR and RTL (`test/goldens/m_a13/`, 18 states incl. the 19.3 checkout at 360x800).
+`test/helpers/checkout_fakes.dart` holds the checkout, payments and orders fakes and the fake link
+source; the harness wires them, with `PlaceOrder` on the real secure pending store and
+`ResolvePayment` on the test clock.
 
 ## Tests (M-A12 additions)
 

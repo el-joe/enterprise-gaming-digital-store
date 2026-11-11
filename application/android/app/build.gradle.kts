@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -26,9 +28,20 @@ android {
 
     flavorDimensions += "environment"
 
+    // The verified app-link host of each flavor comes from its env file (APP_LINK_HOST in
+    // lib/core/config/env_<flavor>.json), the same value the Dart side parses links with, so the
+    // intent filters are never hard-coded to production.
+    fun appLinkHost(flavor: String): String {
+        val env = file("../../lib/core/config/env_$flavor.json")
+        @Suppress("UNCHECKED_CAST")
+        val values = JsonSlurper().parse(env) as Map<String, Any?>
+        return values["APP_LINK_HOST"] as String
+    }
+
     productFlavors {
         create("dev") {
             dimension = "environment"
+            manifestPlaceholders["appLinkHost"] = appLinkHost("dev")
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             manifestPlaceholders["appLabel"] = "boxcards.shop Dev"
@@ -37,6 +50,7 @@ android {
         }
         create("staging") {
             dimension = "environment"
+            manifestPlaceholders["appLinkHost"] = appLinkHost("staging")
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             manifestPlaceholders["appLabel"] = "boxcards.shop Staging"
@@ -44,6 +58,7 @@ android {
         }
         create("prod") {
             dimension = "environment"
+            manifestPlaceholders["appLinkHost"] = appLinkHost("prod")
             manifestPlaceholders["appLabel"] = "boxcards.shop"
             manifestPlaceholders["usesCleartextTraffic"] = "false"
         }

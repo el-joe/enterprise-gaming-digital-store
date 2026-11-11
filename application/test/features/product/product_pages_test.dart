@@ -4,7 +4,8 @@ import 'package:application/core/network/failure.dart';
 import 'package:application/core/network/result.dart';
 import 'package:application/core/router/app_router.dart';
 import 'package:application/core/router/routes.dart';
-import 'package:application/core/router/shell_pages.dart';
+import 'package:application/core/storage/secure_store.dart';
+import 'package:application/features/cart/presentation/pages/cart_page.dart';
 import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:application/features/product/domain/delivery_field_rules.dart';
 import 'package:application/features/product/domain/entities/product.dart';
@@ -393,13 +394,14 @@ void main() {
           await tapAdd(tester);
           expect(h.cart.adds, hasLength(1));
           expect(find.text(l10n.addedToCart), findsOneWidget);
+          // The guest now holds a cart token and the server has the cart (M-A13 cart tab).
+          h.secure[SecureStore.cartTokenKey] = 'fixture-cart-token';
+          h.cart.getResult = Ok(fixtureCart());
           await tester.tap(find.text(l10n.viewCart));
           await tester.pumpAndSettle();
           expect(find.byType(ProductPage), findsNothing);
-          expect(find.byType(ComingSoonPage), findsOneWidget);
-          expect(find.text(l10n.cartTitle), findsWidgets);
-          // The bottom nav's Cart tab carries the count.
-          expect(find.text('1'), findsOneWidget);
+          expect(find.byType(CartPage), findsOneWidget);
+          expect(find.text(l10n.cartTitleCount(1)), findsOneWidget);
           expect(
             find.bySemanticsLabel(
               '${l10n.navCart}, ${l10n.cartBadgeSemantics(1)}',

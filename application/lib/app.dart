@@ -1,4 +1,5 @@
 import 'package:application/core/l10n/l10n.dart';
+import 'package:application/core/router/app_link_listener.dart';
 import 'package:application/core/router/app_router.dart';
 import 'package:application/core/theme/app_theme.dart';
 import 'package:application/features/auth/presentation/widgets/biometric_widgets.dart';
@@ -12,6 +13,8 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Payment return and product app links (M-A13); kept alive for the app's lifetime.
+    ref.watch(appLinkListenerProvider);
     final locale = ref.watch(appLocaleProvider);
     final theme = AppTheme.dark(arabic: AppLocales.isRtl(locale));
     return MaterialApp.router(

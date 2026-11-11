@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:application/app.dart';
 import 'package:application/core/config/app_env.dart';
 import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/network/result.dart';
 import 'package:application/core/platform/native_bridge.dart';
+import 'package:application/core/router/app_link_listener.dart';
 import 'package:application/core/router/guards.dart';
 import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/core/storage/secure_store.dart';
@@ -14,7 +17,13 @@ import 'package:application/features/auth/auth_providers.dart';
 import 'package:application/features/auth/domain/entities/biometric.dart';
 import 'package:application/features/cart/cart_providers.dart';
 import 'package:application/features/catalog/catalog_providers.dart';
+import 'package:application/features/checkout/checkout_providers.dart';
+import 'package:application/features/checkout/data/repositories/checkout_repository_impl.dart';
+import 'package:application/features/checkout/domain/usecases/place_order.dart';
 import 'package:application/features/home/home_providers.dart';
+import 'package:application/features/orders/orders_providers.dart';
+import 'package:application/features/payments/domain/usecases/resolve_payment.dart';
+import 'package:application/features/payments/payments_providers.dart';
 import 'package:application/features/product/product_providers.dart';
 import 'package:application/features/search/search_providers.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
@@ -23,8 +32,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override, ProviderListenable;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 import 'catalog_fakes.dart';
+import 'checkout_fakes.dart';
 import 'fakes.dart';
 import 'memory_stores.dart';
 import 'product_fakes.dart';
@@ -75,6 +86,11 @@ final class TestHarness {
     required this.images,
     required this.product,
     required this.cart,
+    required this.checkout,
+    required this.payments,
+    required this.orders,
+    required this.links,
+    required this.issuedKeys,
   });
 
   final ProviderContainer container;
@@ -102,11 +118,21 @@ final class TestHarness {
   final FakeProductRepository product;
   final FakeCartRepository cart;
 
+  /// Cart, checkout and payments (M-A13): checkout and payment calls, the account order detail,
+  /// incoming app links, and every idempotency key `PlaceOrder` issued (`key-1`, `key-2`, ...).
+  /// Status polling waits move [now] instead of real time.
+  final FakeCheckoutRepository checkout;
+  final FakePaymentsRepository payments;
+  final FakeOrdersRepository orders;
+  final FakeLinkSource links;
+  final List<String> issuedKeys;
+
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
   void dispose() {
     container.dispose();
     now.dispose();
+    unawaited(links.controller.close());
   }
 }
 
@@ -123,6 +149,7 @@ TestHarness buildHarness({
   String integrity = 'ok',
   Map<String, Object> preferences = const {},
   List<Override> overrides = const [],
+  Map<String, String> secureData = const {},
 }) {
   final prefsBackend = InMemoryPreferencesBackend({
     PreferencesStore.localeKey: ?languageCode,
@@ -135,6 +162,7 @@ TestHarness buildHarness({
       SecureStore.refreshTokenKey: 'test-refresh',
     },
     if (biometricEnabled) SecureStore.biometricEnabledKey: 'true',
+    ...secureData,
   };
   final appConfig = FakeAppConfigRepository(config);
   final auth = FakeAuthRepository();
@@ -150,6 +178,12 @@ TestHarness buildHarness({
   final images = RecordingImages();
   final product = FakeProductRepository();
   final cart = FakeCartRepository();
+  final checkout = FakeCheckoutRepository();
+  final payments = FakePaymentsRepository();
+  final orders = FakeOrdersRepository();
+  final links = FakeLinkSource();
+  final issuedKeys = <String>[];
+  when(account.profile).thenAnswer((_) async => Ok(fixtureProfile()));
 
   final container = ProviderContainer(
     overrides: [
@@ -184,6 +218,29 @@ TestHarness buildHarness({
       catalogImagesProvider.overrideWithValue(images.call),
       productRepositoryProvider.overrideWithValue(product),
       cartRepositoryProvider.overrideWithValue(cart),
+      checkoutRepositoryProvider.overrideWithValue(checkout),
+      paymentsRepositoryProvider.overrideWithValue(payments),
+      ordersRepositoryProvider.overrideWithValue(orders),
+      linkSourceProvider.overrideWithValue(links),
+      placeOrderProvider.overrideWith(
+        (ref) => PlaceOrder(
+          checkout: checkout,
+          payments: payments,
+          pending: SecurePendingCheckoutStore(ref.watch(secureStoreProvider)),
+          newKey: () {
+            final key = 'key-${issuedKeys.length + 1}';
+            issuedKeys.add(key);
+            return key;
+          },
+        ),
+      ),
+      resolvePaymentProvider.overrideWith(
+        (ref) => ResolvePayment(
+          payments,
+          wait: (delay) async => now.value = now.value.add(delay),
+          now: () => now.value,
+        ),
+      ),
       ...overrides,
     ],
   );
@@ -204,6 +261,11 @@ TestHarness buildHarness({
     images: images,
     product: product,
     cart: cart,
+    checkout: checkout,
+    payments: payments,
+    orders: orders,
+    links: links,
+    issuedKeys: issuedKeys,
   );
 }
 
@@ -223,6 +285,7 @@ Future<TestHarness> pumpHarness(
   Map<String, Object> preferences = const {},
   List<Override> overrides = const [],
   bool settle = true,
+  Map<String, String> secureData = const {},
   void Function(TestHarness harness)? arrange,
 }) async {
   tester.view
@@ -240,6 +303,7 @@ Future<TestHarness> pumpHarness(
     integrity: integrity,
     preferences: preferences,
     overrides: overrides,
+    secureData: secureData,
   );
   addTearDown(harness.dispose);
   arrange?.call(harness);

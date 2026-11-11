@@ -17,6 +17,7 @@ import 'package:application/shared/widgets/logo_slot.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:application/shared/widgets/option_tile.dart';
 import 'package:application/shared/widgets/product_tile.dart';
+import 'package:application/shared/widgets/quantity_stepper.dart';
 import 'package:application/shared/widgets/sheet_header.dart';
 import 'package:application/shared/widgets/skeleton.dart';
 import 'package:flutter/material.dart';
@@ -675,82 +676,6 @@ class TextSection extends StatelessWidget {
       child,
     ],
   );
-}
-
-/// Quantity stepper (05.1 footer): 48dp minus and plus buttons around the count; the buttons
-/// disable at 1 and at the per-order limit.
-class QuantityStepper extends StatelessWidget {
-  const QuantityStepper({
-    required this.quantity,
-    required this.max,
-    required this.onIncrement,
-    required this.onDecrement,
-    this.enabled = true,
-    super.key,
-  });
-
-  final int quantity;
-  final int max;
-  final VoidCallback onIncrement;
-  final VoidCallback onDecrement;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final colors = context.colors;
-    Widget button(IconData icon, String tooltip, VoidCallback? onPressed) =>
-        SizedBox.square(
-          dimension: 48,
-          child: IconButton(
-            tooltip: tooltip,
-            icon: Icon(icon, size: 18),
-            color: colors.contentPrimary,
-            disabledColor: colors.contentDisabled,
-            onPressed: onPressed,
-          ),
-        );
-    // Minus, count, plus read left to right in both languages (as drawn in the AR frames).
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.surfaceRaised,
-          border: Border.all(color: colors.lineDefault),
-          borderRadius: _tileRadius,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            button(
-              Icons.remove,
-              l10n.decreaseQuantity,
-              enabled && quantity > 1 ? onDecrement : null,
-            ),
-            Semantics(
-              liveRegion: true,
-              label: l10n.quantitySemantics(quantity),
-              excludeSemantics: true,
-              child: SizedBox(
-                width: 32,
-                child: Text(
-                  '$quantity',
-                  textAlign: TextAlign.center,
-                  textDirection: TextDirection.ltr,
-                  style: context.type.labelMd,
-                ),
-              ),
-            ),
-            button(
-              Icons.add,
-              l10n.increaseQuantity,
-              enabled && quantity < max ? onIncrement : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 /// Sticky footer of the product page: the selected amount's server price, the quantity and

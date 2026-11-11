@@ -14,6 +14,27 @@ void main() {
     );
   });
 
+  test('payment cancel is its own link; other app paths are not payments', () {
+    expect(
+      parse(
+        'https://boxcards.shop/app/payments/cancel/ord_01JABC?attempt=01JPAY',
+      ),
+      const PaymentReturnLink('ord_01JABC', cancelled: true),
+    );
+    expect(
+      const PaymentReturnLink('ord_01JABC', cancelled: true),
+      isNot(const PaymentReturnLink('ord_01JABC')),
+    );
+    expect(
+      parse('https://boxcards.shop/app/payments/refund/ord_01JABC'),
+      isNull,
+    );
+    expect(
+      parse('https://boxcards.shop/app/payments/return/ord_1/extra'),
+      isNull,
+    );
+  });
+
   test('signed guest access keeps the full signed URL', () {
     const link =
         'https://boxcards.shop/api/v1/checkout/guest/orders/ord_1/access?expires=1700000000&signature=abc';

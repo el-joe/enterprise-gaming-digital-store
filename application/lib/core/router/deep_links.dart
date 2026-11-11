@@ -6,19 +6,25 @@ sealed class DeepLink {
   const DeepLink();
 }
 
-/// `https://<host>/app/payments/return/{order}` (gap G8). Every query parameter added by a
-/// provider (for example Paymob's `success`) is ignored: the app always verifies with the server.
+/// `https://<host>/app/payments/return/{order}` and `/app/payments/cancel/{order}` (gap G8,
+/// ADR-039). Every query parameter added by a provider (for example Paymob's `success`, or the
+/// `attempt` id) is ignored: the link proves nothing and the app always asks the server.
 final class PaymentReturnLink extends DeepLink {
-  const PaymentReturnLink(this.orderPublicId);
+  const PaymentReturnLink(this.orderPublicId, {this.cancelled = false});
 
   final String orderPublicId;
 
-  @override
-  bool operator ==(Object other) =>
-      other is PaymentReturnLink && other.orderPublicId == orderPublicId;
+  /// The provider's cancel link (PayPal `cancel_url`): the customer left the payment page.
+  final bool cancelled;
 
   @override
-  int get hashCode => orderPublicId.hashCode;
+  bool operator ==(Object other) =>
+      other is PaymentReturnLink &&
+      other.orderPublicId == orderPublicId &&
+      other.cancelled == cancelled;
+
+  @override
+  int get hashCode => Object.hash(orderPublicId, cancelled);
 }
 
 /// Signed guest access link `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=`.
@@ -113,9 +119,9 @@ DeepLink? parseDeepLink(Uri uri, {required String appLinkHost}) {
   if (s.length == 4 &&
       s[0] == 'app' &&
       s[1] == 'payments' &&
-      s[2] == 'return' &&
+      (s[2] == 'return' || s[2] == 'cancel') &&
       valid([s[3]])) {
-    return PaymentReturnLink(s[3]);
+    return PaymentReturnLink(s[3], cancelled: s[2] == 'cancel');
   }
   if (s.length == 7 &&
       s[0] == 'api' &&

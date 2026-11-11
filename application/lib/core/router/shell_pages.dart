@@ -18,7 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// The tab shell (M-A11; the Cart tab shows the cart's unit count since M-A12): Home, Browse, Cart, Orders, Account with the Mobile Bottom Nav
+/// The tab shell (M-A11; the Cart tab shows the cart's unit count since M-A12 and the cart since M-A13): Home, Browse, Cart, Orders, Account with the Mobile Bottom Nav
 /// (`75:568`). Each tab keeps its own navigation stack; tapping the current tab returns to its
 /// first page.
 class MainShell extends ConsumerWidget {
@@ -70,7 +70,7 @@ class MainShell extends ConsumerWidget {
   }
 }
 
-/// A tab whose milestone is still to come (cart M-A13, orders M-A14): its title and a "coming in the next update" note. No fake data.
+/// A tab whose milestone is still to come (orders M-A14): its title and a "coming in the next update" note. No fake data.
 class ComingSoonPage extends StatelessWidget {
   const ComingSoonPage({required this.title, this.root = true, super.key});
 

@@ -64,7 +64,7 @@ Failure mapErrorResponse({
 
   switch (statusCode) {
     case 401:
-      return UnauthenticatedFailure(requestId: requestId);
+      return UnauthenticatedFailure(code: code, requestId: requestId);
     case 403:
       return switch (code) {
         'two_factor_required' => TwoFactorRequiredFailure(requestId: requestId),
