@@ -778,13 +778,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountTitle => 'حسابي';
 
   @override
-  String get comingSoonTitle => 'قادم في التحديث القادم';
-
-  @override
-  String get comingSoonBody =>
-      'هذا القسم قيد الإعداد. يمكنك حتى ذلك الحين استخدام boxcards.shop على الويب.';
-
-  @override
   String get languageSetting => 'اللغة';
 
   @override
@@ -794,9 +787,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get verifiedPurchase => 'شراء مؤكد';
-
-  @override
-  String get notificationsComingSoon => 'الإشعارات';
 
   @override
   String get productLoadErrorTitle => 'تعذّر تحميل هذا المنتج';
@@ -2444,4 +2434,457 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get displayCurrencyAutomatic => 'تلقائي';
+
+  @override
+  String get listMoreFailed => 'تعذّر تحميل المزيد';
+
+  @override
+  String get myReviewsTitle => 'مراجعاتي';
+
+  @override
+  String get myReviewsLoadError => 'تعذّر تحميل مراجعاتك';
+
+  @override
+  String get myReviewsEmptyTitle => 'لا توجد مراجعات بعد';
+
+  @override
+  String get myReviewsEmptyBody => 'بعد تسليم الكود يمكنك تقييمه هنا.';
+
+  @override
+  String get reviewsReadyTitle => 'جاهزة للمراجعة';
+
+  @override
+  String get reviewsYoursTitle => 'مراجعاتك';
+
+  @override
+  String reviewOrderNumber(String number) {
+    return 'الطلب $number';
+  }
+
+  @override
+  String get reviewWriteHint => 'يفتح نموذج المراجعة';
+
+  @override
+  String get reviewWriteAction => 'اكتب مراجعة';
+
+  @override
+  String reviewWriteSemantics(String product) {
+    return 'اكتب مراجعة لـ $product';
+  }
+
+  @override
+  String get reviewWriteTitle => 'اكتب مراجعة';
+
+  @override
+  String get reviewEditTitle => 'تعديل المراجعة';
+
+  @override
+  String get reviewEditAction => 'تعديل';
+
+  @override
+  String reviewEditSemantics(String product) {
+    return 'عدّل مراجعتك لـ $product';
+  }
+
+  @override
+  String get reviewEditNoticeTitle => 'تُراجع التعديلات من جديد';
+
+  @override
+  String get reviewEditNoticeBody =>
+      'تعود مراجعتك إلى المراجعة وتبقى مخفية حتى تتم الموافقة عليها.';
+
+  @override
+  String get reviewStatusPending => 'قيد المراجعة';
+
+  @override
+  String get reviewStatusApproved => 'منشورة';
+
+  @override
+  String get reviewStatusRejected => 'غير منشورة';
+
+  @override
+  String get reviewRatingLabel => 'تقييمك';
+
+  @override
+  String reviewRateStars(int count) {
+    return '$count من 5 نجوم';
+  }
+
+  @override
+  String get reviewRatingRequired => 'اختر تقييمًا من 1 إلى 5 نجوم.';
+
+  @override
+  String get reviewTitleLabel => 'العنوان (اختياري)';
+
+  @override
+  String get reviewBodyLabel => 'المراجعة (اختياري)';
+
+  @override
+  String get reviewModerationNote => 'تُراجع المراجعات قبل نشرها.';
+
+  @override
+  String get reviewSubmitAction => 'إرسال المراجعة';
+
+  @override
+  String get reviewSaveAction => 'حفظ التغييرات';
+
+  @override
+  String get reviewSubmitted => 'شكرًا لك. ستظهر مراجعتك بعد الموافقة عليها.';
+
+  @override
+  String get reviewUpdated =>
+      'تم الحفظ. ستظهر مراجعتك مجددًا بعد الموافقة عليها.';
+
+  @override
+  String get reviewLoadError => 'تعذّر تحميل هذه المراجعة';
+
+  @override
+  String get reviewNotFoundTitle => 'لم يتم العثور على المراجعة';
+
+  @override
+  String get reviewNotEligibleTitle => 'لا يمكن مراجعة هذا المنتج';
+
+  @override
+  String get reviewNotEligibleBody =>
+      'يمكن مراجعة المنتجات التي اشتريتها واستلمتها فقط، مرة واحدة لكل منتج.';
+
+  @override
+  String get reviewEmailUnverifiedTitle =>
+      'وثّق بريدك الإلكتروني لكتابة المراجعات';
+
+  @override
+  String get reviewEmailUnverifiedBody =>
+      'افتح الرابط الذي أرسلناه إلى بريدك الإلكتروني ثم حاول مجددًا.';
+
+  @override
+  String get reviewExistsTitle => 'لقد راجعت هذا المنتج من قبل';
+
+  @override
+  String get reviewExistsBody =>
+      'يمكن مراجعة كل منتج مشترى مرة واحدة. يمكنك تعديل مراجعتك من مراجعاتي.';
+
+  @override
+  String supportOrderNumber(String number) {
+    return 'الطلب $number';
+  }
+
+  @override
+  String get supportSignedOutTitle => 'سجّل الدخول للتواصل مع الدعم';
+
+  @override
+  String get supportSignedOutBody => 'ترتبط طلبات الدعم بحسابك وطلباتك.';
+
+  @override
+  String get supportUnavailableTitle => 'الدعم غير متاح في التطبيق';
+
+  @override
+  String get supportUnavailableBody =>
+      'لا يزال بإمكانك التواصل معنا عبر مركز المساعدة.';
+
+  @override
+  String get ticketsLoadError => 'تعذّر تحميل طلباتك';
+
+  @override
+  String get ticketsEmptyTitle => 'لا توجد طلبات بعد';
+
+  @override
+  String get ticketsEmptyBody => 'لديك سؤال عن طلب أو دفع أو حسابك؟ نحن هنا.';
+
+  @override
+  String get ticketNewAction => 'طلب جديد';
+
+  @override
+  String get ticketNewTitle => 'طلب جديد';
+
+  @override
+  String get ticketStatusOpen => 'مفتوح';
+
+  @override
+  String get ticketStatusWaiting => 'بانتظار ردّنا';
+
+  @override
+  String get ticketStatusAnswered => 'تم الرد';
+
+  @override
+  String get ticketStatusResolved => 'تم الحل';
+
+  @override
+  String get ticketStatusClosed => 'مغلق';
+
+  @override
+  String get ticketCategoryOrder => 'طلب';
+
+  @override
+  String get ticketCategoryPayment => 'الدفع';
+
+  @override
+  String get ticketCategoryRefund => 'الاسترداد';
+
+  @override
+  String get ticketCategoryAccount => 'الحساب';
+
+  @override
+  String get ticketCategoryOther => 'أخرى';
+
+  @override
+  String ticketUpdated(String topic, String date) {
+    return '$topic · آخر تحديث $date';
+  }
+
+  @override
+  String get ticketTopicLabel => 'الموضوع';
+
+  @override
+  String get ticketOrderLabel => 'الطلب (اختياري)';
+
+  @override
+  String get ticketOrderNone => 'بدون طلب';
+
+  @override
+  String get ticketOrderLinked => 'طلب مرتبط';
+
+  @override
+  String get ticketOrdersFailed =>
+      'تعذّر تحميل طلباتك. يمكنك إرسال الطلب بدون طلب مرتبط.';
+
+  @override
+  String get ticketSubjectLabel => 'العنوان';
+
+  @override
+  String ticketSubjectTooShort(int min) {
+    return 'استخدم $min أحرف على الأقل.';
+  }
+
+  @override
+  String get ticketMessageLabel => 'الرسالة';
+
+  @override
+  String get ticketMessageHelper =>
+      'لا تشارك الأكواد أو كلمات المرور أبدًا. المرفقات غير مدعومة، لذا صف المشكلة هنا.';
+
+  @override
+  String get ticketSendAction => 'إرسال الطلب';
+
+  @override
+  String ticketThreadSemantics(String number) {
+    return 'طلب الدعم $number';
+  }
+
+  @override
+  String get ticketFromYou => 'أنت';
+
+  @override
+  String get ticketFromSupport => 'الدعم';
+
+  @override
+  String get ticketReplyHint => 'اكتب ردًا…';
+
+  @override
+  String get ticketSendReply => 'إرسال الرد';
+
+  @override
+  String get ticketReplyRequired => 'اكتب رسالة أولًا.';
+
+  @override
+  String get ticketLoadError => 'تعذّر تحميل هذا الطلب';
+
+  @override
+  String get ticketNotFoundTitle => 'لم يتم العثور على الطلب';
+
+  @override
+  String get ticketClosedTitle => 'هذا الطلب مغلق';
+
+  @override
+  String get ticketClosedBody =>
+      'الردود متوقفة. ابدأ طلبًا جديدًا إذا كنت لا تزال بحاجة إلى المساعدة.';
+
+  @override
+  String get refundRequestsTitle => 'طلبات الاسترداد';
+
+  @override
+  String get refundRequestsLoadError => 'تعذّر تحميل طلبات الاسترداد';
+
+  @override
+  String get refundRequestsEmptyTitle => 'لا توجد طلبات استرداد';
+
+  @override
+  String get refundRequestsEmptyBody => 'يمكنك طلب استرداد من صفحة طلب مدفوع.';
+
+  @override
+  String get refundRequestUnknownOrder => 'طلب';
+
+  @override
+  String get refundStatusRequested => 'مُرسل';
+
+  @override
+  String get refundStatusApproved => 'تمت الموافقة';
+
+  @override
+  String get refundStatusRejected => 'لم تتم الموافقة';
+
+  @override
+  String get refundStatusCompleted => 'مكتمل';
+
+  @override
+  String refundOrderPaid(String amount, String date) {
+    return 'مدفوع $amount · $date';
+  }
+
+  @override
+  String get refundReasonLabel => 'ما المشكلة؟';
+
+  @override
+  String refundReasonHelper(int min, int max) {
+    return 'من $min إلى $max حرف. قد لا تُسترد الأكواد التي تم كشفها.';
+  }
+
+  @override
+  String refundReasonTooShort(int min) {
+    return 'استخدم $min أحرف على الأقل.';
+  }
+
+  @override
+  String get refundTicketLabel => 'ربط طلب دعم (اختياري)';
+
+  @override
+  String get refundTicketNone => 'لا شيء';
+
+  @override
+  String get refundHowTitle => 'كيف يتم الاسترداد';
+
+  @override
+  String get refundHowBody =>
+      'نراجع كل طلب. تذهب المبالغ المستردة الموافق عليها إلى محفظتك أو وسيلة الدفع الأصلية.';
+
+  @override
+  String get refundSendAction => 'إرسال الطلب';
+
+  @override
+  String get refundSentTitle => 'تم إرسال الطلب';
+
+  @override
+  String get refundSentBody => 'يمكنك متابعة حالته هنا.';
+
+  @override
+  String get refundOpenTitle => 'يوجد طلب مفتوح لهذا الطلب بالفعل';
+
+  @override
+  String get refundOpenBody =>
+      'يمكنك متابعته في طلبات الاسترداد. طلب مفتوح واحد لكل طلب.';
+
+  @override
+  String get refundNotAllowedTitle => 'لا يمكن استرداد هذا الطلب';
+
+  @override
+  String get refundOrderRefusedTitle =>
+      'لا يمكن استخدام هذا الطلب لطلب استرداد';
+
+  @override
+  String orderRefundRequestStatus(String status) {
+    return 'طلب الاسترداد: $status';
+  }
+
+  @override
+  String orderRefundRequestSent(String date) {
+    return 'أُرسل في $date. اضغط لعرض طلبات الاسترداد.';
+  }
+
+  @override
+  String notificationBellUnread(int count) {
+    return 'الإشعارات، $count غير مقروءة';
+  }
+
+  @override
+  String notificationsNewCount(int count) {
+    return '$count جديدة';
+  }
+
+  @override
+  String notificationsUnreadCount(int count) {
+    return '$count غير مقروءة';
+  }
+
+  @override
+  String get notificationsAllRead => 'كلها مقروءة';
+
+  @override
+  String get notificationsMarkAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get notificationsLoadError => 'تعذّر تحميل إشعاراتك';
+
+  @override
+  String get notificationsEmptyTitle => 'لا جديد لديك';
+
+  @override
+  String get notificationsEmptyBody => 'ستظهر هنا تحديثات الطلبات وردود الدعم.';
+
+  @override
+  String get notificationUnread => 'غير مقروء';
+
+  @override
+  String get notificationOpenHint => 'يفتح التفاصيل';
+
+  @override
+  String get notificationJustNow => 'الآن';
+
+  @override
+  String notificationMinutesAgo(int count) {
+    return 'قبل $count دقيقة';
+  }
+
+  @override
+  String notificationHoursAgo(int count) {
+    return 'قبل $count ساعة';
+  }
+
+  @override
+  String get notificationSettingsTitle => 'إعدادات الإشعارات';
+
+  @override
+  String get preferencesLoadError => 'تعذّر تحميل إعدادات الإشعارات';
+
+  @override
+  String get preferenceCategoryOrders => 'الطلبات';
+
+  @override
+  String get preferenceCategorySupport => 'الدعم';
+
+  @override
+  String get preferenceCategoryMarketing => 'العروض والأخبار';
+
+  @override
+  String get preferenceCategorySecurity => 'الأمان';
+
+  @override
+  String get preferenceChannelInbox => 'داخل التطبيق';
+
+  @override
+  String get preferenceChannelMail => 'البريد الإلكتروني';
+
+  @override
+  String get preferenceChannelSms => 'رسائل SMS';
+
+  @override
+  String get preferenceRequired => 'إلزامي';
+
+  @override
+  String get preferenceSmsNote => 'فقط إلى رقم الهاتف في ملفك الشخصي';
+
+  @override
+  String preferenceSemantics(String category, String channel) {
+    return '$category، $channel';
+  }
+
+  @override
+  String preferenceSaveFailed(String reason) {
+    return 'لم يتم الحفظ. $reason';
+  }
+
+  @override
+  String get preferencePushTitle => 'الإشعارات الفورية';
+
+  @override
+  String get preferencePushBody =>
+      'قريبًا. حتى ذلك الحين تظهر التحديثات في صندوق الإشعارات وعبر البريد.';
 }

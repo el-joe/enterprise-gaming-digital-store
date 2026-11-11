@@ -2,7 +2,7 @@ import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:flutter/material.dart';
 
-enum StatusPillTone { success, warning, neutral }
+enum StatusPillTone { success, warning, neutral, info, danger, accent }
 
 /// Library `Badge` (`6:161`): a short label on the tone's tint with the small key-cut (the large
 /// corner on the top end, so it mirrors in RTL).
@@ -28,6 +28,9 @@ class StatusPill extends StatelessWidget {
         colors.surfaceOverlay,
         colors.contentSecondary,
       ),
+      StatusPillTone.info => (colors.statusInfoTint, colors.statusInfo),
+      StatusPillTone.danger => (colors.statusDangerTint, colors.statusDanger),
+      StatusPillTone.accent => (colors.accentPrimaryTint, colors.accentText),
     };
     return Container(
       padding: const EdgeInsetsDirectional.symmetric(

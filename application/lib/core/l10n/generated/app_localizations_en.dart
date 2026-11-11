@@ -768,13 +768,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountTitle => 'Account';
 
   @override
-  String get comingSoonTitle => 'Coming in the next update';
-
-  @override
-  String get comingSoonBody =>
-      'This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.';
-
-  @override
   String get languageSetting => 'Language';
 
   @override
@@ -784,9 +777,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifiedPurchase => 'Verified purchase';
-
-  @override
-  String get notificationsComingSoon => 'Notifications';
 
   @override
   String get productLoadErrorTitle => 'We couldn\'t load this product';
@@ -2433,4 +2423,465 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get displayCurrencyAutomatic => 'Automatic';
+
+  @override
+  String get listMoreFailed => 'We couldn\'t load more';
+
+  @override
+  String get myReviewsTitle => 'My reviews';
+
+  @override
+  String get myReviewsLoadError => 'We couldn\'t load your reviews';
+
+  @override
+  String get myReviewsEmptyTitle => 'No reviews yet';
+
+  @override
+  String get myReviewsEmptyBody =>
+      'After a code is delivered you can rate it here.';
+
+  @override
+  String get reviewsReadyTitle => 'Ready to review';
+
+  @override
+  String get reviewsYoursTitle => 'Your reviews';
+
+  @override
+  String reviewOrderNumber(String number) {
+    return 'Order $number';
+  }
+
+  @override
+  String get reviewWriteHint => 'Opens the review form';
+
+  @override
+  String get reviewWriteAction => 'Write a review';
+
+  @override
+  String reviewWriteSemantics(String product) {
+    return 'Write a review of $product';
+  }
+
+  @override
+  String get reviewWriteTitle => 'Write a review';
+
+  @override
+  String get reviewEditTitle => 'Edit review';
+
+  @override
+  String get reviewEditAction => 'Edit';
+
+  @override
+  String reviewEditSemantics(String product) {
+    return 'Edit your review of $product';
+  }
+
+  @override
+  String get reviewEditNoticeTitle => 'Edits are checked again';
+
+  @override
+  String get reviewEditNoticeBody =>
+      'Your review goes back to moderation and is hidden until it is approved.';
+
+  @override
+  String get reviewStatusPending => 'Pending';
+
+  @override
+  String get reviewStatusApproved => 'Published';
+
+  @override
+  String get reviewStatusRejected => 'Not published';
+
+  @override
+  String get reviewRatingLabel => 'Your rating';
+
+  @override
+  String reviewRateStars(int count) {
+    return '$count of 5 stars';
+  }
+
+  @override
+  String get reviewRatingRequired => 'Choose a rating from 1 to 5 stars.';
+
+  @override
+  String get reviewTitleLabel => 'Title (optional)';
+
+  @override
+  String get reviewBodyLabel => 'Review (optional)';
+
+  @override
+  String get reviewModerationNote =>
+      'Reviews are checked before they\'re published.';
+
+  @override
+  String get reviewSubmitAction => 'Submit review';
+
+  @override
+  String get reviewSaveAction => 'Save changes';
+
+  @override
+  String get reviewSubmitted =>
+      'Thank you. Your review will appear once it\'s approved.';
+
+  @override
+  String get reviewUpdated =>
+      'Saved. Your review will appear again once it\'s approved.';
+
+  @override
+  String get reviewLoadError => 'We couldn\'t load this review';
+
+  @override
+  String get reviewNotFoundTitle => 'Review not found';
+
+  @override
+  String get reviewNotEligibleTitle => 'This item can\'t be reviewed';
+
+  @override
+  String get reviewNotEligibleBody =>
+      'Only items you bought and received can be reviewed, once each.';
+
+  @override
+  String get reviewEmailUnverifiedTitle => 'Verify your email to write reviews';
+
+  @override
+  String get reviewEmailUnverifiedBody =>
+      'Open the link we sent to your email address, then try again.';
+
+  @override
+  String get reviewExistsTitle => 'You already reviewed this item';
+
+  @override
+  String get reviewExistsBody =>
+      'Each purchased item can be reviewed once. You can edit your review in My reviews.';
+
+  @override
+  String supportOrderNumber(String number) {
+    return 'Order $number';
+  }
+
+  @override
+  String get supportSignedOutTitle => 'Sign in to contact support';
+
+  @override
+  String get supportSignedOutBody =>
+      'Support requests are linked to your account and orders.';
+
+  @override
+  String get supportUnavailableTitle => 'Support isn\'t available in the app';
+
+  @override
+  String get supportUnavailableBody =>
+      'You can still reach us through our help centre.';
+
+  @override
+  String get ticketsLoadError => 'We couldn\'t load your requests';
+
+  @override
+  String get ticketsEmptyTitle => 'No requests yet';
+
+  @override
+  String get ticketsEmptyBody =>
+      'Questions about an order, payment or your account? We\'re here.';
+
+  @override
+  String get ticketNewAction => 'New request';
+
+  @override
+  String get ticketNewTitle => 'New request';
+
+  @override
+  String get ticketStatusOpen => 'Open';
+
+  @override
+  String get ticketStatusWaiting => 'Waiting for us';
+
+  @override
+  String get ticketStatusAnswered => 'Answered';
+
+  @override
+  String get ticketStatusResolved => 'Resolved';
+
+  @override
+  String get ticketStatusClosed => 'Closed';
+
+  @override
+  String get ticketCategoryOrder => 'Order';
+
+  @override
+  String get ticketCategoryPayment => 'Payment';
+
+  @override
+  String get ticketCategoryRefund => 'Refund';
+
+  @override
+  String get ticketCategoryAccount => 'Account';
+
+  @override
+  String get ticketCategoryOther => 'Other';
+
+  @override
+  String ticketUpdated(String topic, String date) {
+    return '$topic · updated $date';
+  }
+
+  @override
+  String get ticketTopicLabel => 'Topic';
+
+  @override
+  String get ticketOrderLabel => 'Order (optional)';
+
+  @override
+  String get ticketOrderNone => 'No order';
+
+  @override
+  String get ticketOrderLinked => 'Linked order';
+
+  @override
+  String get ticketOrdersFailed =>
+      'Your orders couldn\'t be loaded. You can send the request without one.';
+
+  @override
+  String get ticketSubjectLabel => 'Subject';
+
+  @override
+  String ticketSubjectTooShort(int min) {
+    return 'Use at least $min characters.';
+  }
+
+  @override
+  String get ticketMessageLabel => 'Message';
+
+  @override
+  String get ticketMessageHelper =>
+      'Never share codes or passwords. Attachments aren\'t supported, so describe the problem here.';
+
+  @override
+  String get ticketSendAction => 'Send request';
+
+  @override
+  String ticketThreadSemantics(String number) {
+    return 'Support request $number';
+  }
+
+  @override
+  String get ticketFromYou => 'You';
+
+  @override
+  String get ticketFromSupport => 'Support';
+
+  @override
+  String get ticketReplyHint => 'Write a reply…';
+
+  @override
+  String get ticketSendReply => 'Send reply';
+
+  @override
+  String get ticketReplyRequired => 'Write a message first.';
+
+  @override
+  String get ticketLoadError => 'We couldn\'t load this request';
+
+  @override
+  String get ticketNotFoundTitle => 'Request not found';
+
+  @override
+  String get ticketClosedTitle => 'This request is closed';
+
+  @override
+  String get ticketClosedBody =>
+      'Replies are turned off. Start a new request if you still need help.';
+
+  @override
+  String get refundRequestsTitle => 'Refund requests';
+
+  @override
+  String get refundRequestsLoadError =>
+      'We couldn\'t load your refund requests';
+
+  @override
+  String get refundRequestsEmptyTitle => 'No refund requests';
+
+  @override
+  String get refundRequestsEmptyBody =>
+      'You can ask for a refund from a paid order\'s page.';
+
+  @override
+  String get refundRequestUnknownOrder => 'Order';
+
+  @override
+  String get refundStatusRequested => 'Requested';
+
+  @override
+  String get refundStatusApproved => 'Approved';
+
+  @override
+  String get refundStatusRejected => 'Not approved';
+
+  @override
+  String get refundStatusCompleted => 'Completed';
+
+  @override
+  String refundOrderPaid(String amount, String date) {
+    return 'Paid $amount · $date';
+  }
+
+  @override
+  String get refundReasonLabel => 'What went wrong?';
+
+  @override
+  String refundReasonHelper(int min, int max) {
+    return '$min to $max characters. Revealed codes may not be refundable.';
+  }
+
+  @override
+  String refundReasonTooShort(int min) {
+    return 'Use at least $min characters.';
+  }
+
+  @override
+  String get refundTicketLabel => 'Link a support request (optional)';
+
+  @override
+  String get refundTicketNone => 'None';
+
+  @override
+  String get refundHowTitle => 'How refunds work';
+
+  @override
+  String get refundHowBody =>
+      'We review each request. Approved refunds go to your wallet or the original payment method.';
+
+  @override
+  String get refundSendAction => 'Send request';
+
+  @override
+  String get refundSentTitle => 'Request sent';
+
+  @override
+  String get refundSentBody => 'You can follow its status here.';
+
+  @override
+  String get refundOpenTitle => 'A request is already open for this order';
+
+  @override
+  String get refundOpenBody =>
+      'You can follow it in Refund requests. One open request per order.';
+
+  @override
+  String get refundNotAllowedTitle => 'This order can\'t be refunded';
+
+  @override
+  String get refundOrderRefusedTitle =>
+      'This order can\'t be used for a refund request';
+
+  @override
+  String orderRefundRequestStatus(String status) {
+    return 'Refund request: $status';
+  }
+
+  @override
+  String orderRefundRequestSent(String date) {
+    return 'Sent $date. Tap to see your refund requests.';
+  }
+
+  @override
+  String notificationBellUnread(int count) {
+    return 'Notifications, $count unread';
+  }
+
+  @override
+  String notificationsNewCount(int count) {
+    return '$count new';
+  }
+
+  @override
+  String notificationsUnreadCount(int count) {
+    return '$count unread';
+  }
+
+  @override
+  String get notificationsAllRead => 'All read';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all read';
+
+  @override
+  String get notificationsLoadError => 'We couldn\'t load your notifications';
+
+  @override
+  String get notificationsEmptyTitle => 'You\'re all caught up';
+
+  @override
+  String get notificationsEmptyBody =>
+      'Order updates and support replies will appear here.';
+
+  @override
+  String get notificationUnread => 'Unread';
+
+  @override
+  String get notificationOpenHint => 'Opens the details';
+
+  @override
+  String get notificationJustNow => 'Just now';
+
+  @override
+  String notificationMinutesAgo(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String notificationHoursAgo(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String get notificationSettingsTitle => 'Notification settings';
+
+  @override
+  String get preferencesLoadError =>
+      'We couldn\'t load your notification settings';
+
+  @override
+  String get preferenceCategoryOrders => 'Orders';
+
+  @override
+  String get preferenceCategorySupport => 'Support';
+
+  @override
+  String get preferenceCategoryMarketing => 'Offers and news';
+
+  @override
+  String get preferenceCategorySecurity => 'Security';
+
+  @override
+  String get preferenceChannelInbox => 'In the app';
+
+  @override
+  String get preferenceChannelMail => 'Email';
+
+  @override
+  String get preferenceChannelSms => 'SMS';
+
+  @override
+  String get preferenceRequired => 'Required';
+
+  @override
+  String get preferenceSmsNote => 'Only to a phone number on your profile';
+
+  @override
+  String preferenceSemantics(String category, String channel) {
+    return '$category, $channel';
+  }
+
+  @override
+  String preferenceSaveFailed(String reason) {
+    return 'Not saved. $reason';
+  }
+
+  @override
+  String get preferencePushTitle => 'Push notifications';
+
+  @override
+  String get preferencePushBody =>
+      'Coming later. Until then, updates appear in this inbox and by email.';
 }

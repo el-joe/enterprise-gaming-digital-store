@@ -3,7 +3,7 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A16 account and security UI** (2026-11-11) on M-A15 (wallet UI), M-A14 (orders and code reveal UI), M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
+Status: **M-A17 support, reviews, refund requests and notifications UI** (2026-11-11; tests written, not yet run) on M-A16 (account and security UI), M-A15 (wallet UI), M-A14 (orders and code reveal UI), M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
 onboarding), the M-A7 data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
 maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
 (Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
@@ -13,7 +13,9 @@ page (variants, delivery fields, add to cart, reviews) with the cart count on th
 tab, the signed-in checkout, the payment hand-off to PayPal and Paymob in the system browser with the
 app-link return, the payment results, the Orders tab with the order detail, the protected code
 reveal, guest order access by email code, the wallet (balance and statement) and the Account hub
-with profile, settings, change password, two-step verification, biometric unlock and devices.
+with profile, settings, change password, two-step verification, biometric unlock and devices, and
+(M-A17) reviews, support tickets, refund requests, the notifications inbox and preferences with
+the home bell.
 
 ## Requirements
 
@@ -100,8 +102,11 @@ tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 
 `presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10), for `home`,
 `catalog` and `search` (M-A11), for `product` (M-A12), for `cart`, `checkout` and `payments`
-(M-A13), for `orders` and `code_reveal` (M-A14), for `wallet` (M-A15) and for `account` and
-`security` (M-A16); the other features get theirs in M-A17 onwards.
+(M-A13), for `orders` and `code_reveal` (M-A14), for `wallet` (M-A15), for `account` and
+`security` (M-A16) and for `reviews`, `support` and `notifications` (M-A17).
+Public entries other features use: `features/reviews/review_eligibility.dart` (which order items
+may be reviewed), `features/support/refund_status.dart` (an order's latest refund request) and
+`features/notifications/notification_badge.dart` (the unread count).
 `features/payments/payment_flow.dart` is the payments feature's public entry (`PaymentFlow`,
 `PaymentLaunch`), used by checkout, the app-link listener and the launch check.
 `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
@@ -322,8 +327,8 @@ including the link that cold-starts the app (kept until the first listen) and sc
 ## Orders and code reveal (M-A14)
 
 - **Routes.** `/orders` (tab: 09.1 to 09.3), `/orders/:order` (detail, 09.4, 09.5),
-  `/orders/:order/units/:unit` (code, 10.1 to 10.6), `/orders/:order/refund` (placeholder until the
-  M-A17 form), all three `RouteAccess.signedIn`; `/guest-orders` (paste the delivery link),
+  `/orders/:order/units/:unit` (code, 10.1 to 10.6), `/orders/:order/refund` (the M-A17 refund
+  request form), all three `RouteAccess.signedIn`; `/guest-orders` (paste the delivery link),
   `/guest-orders/:order` (11.1 to 11.5) and `/guest-orders/:order/units/:unit` (guest code), public.
   "View order" on a paid result opens the detail and "Go to orders" the tab; notification and
   banner `order` targets open the detail.
@@ -339,8 +344,9 @@ including the link that cold-starts the app (kept until the first listen) and sc
   and the charged amount when the payment currency differs (owner decision 1), payment status,
   provider and attempt, timeline. "Retry payment" for a `pending_payment` order whose latest attempt
   ended goes through the M-A13 `PaymentFlow.retryFromOrder` (`retry-payment`, `client: app`) to the
-  payment screen. "Get help" opens `links.support`; "Request refund" opens the M-A17 placeholder
-  when the order is paid and no refund is pending or complete.
+  payment screen. "Get help" opens a new support request about the order (M-A17; `links.support`
+  when `support_enabled` is off); "Request refund" opens the M-A17 form when the order is paid, no
+  refund is pending or complete and no refund request is open.
 - **Code reveal** (`RevealController`, auto-disposed family per order, unit and guest flag): masked by
   default (the stored mask, `****7777`, never a code from a list). "Reveal code" runs the M-A7
   `RevealCode` with `X-Device-Integrity` from `deviceIntegrityProvider` (owner decision 5; a
@@ -441,13 +447,13 @@ including the link that cold-starts the app (kept until the first listen) and sc
 - **Routes.** `/account` (tab: the hub, 17.1), above the tabs: `/account/profile` (17.2),
   `/account/settings` (17.3, public), `/account/security` (18.1), `/account/security/password`
   (18.7), `/account/security/two-factor` (18.2, 18.3), `/account/security/devices` (18.5, 18.6),
-  and the M-A17 placeholders `/account/notifications` and `/account/support`. Everything but
+  and since M-A17 `/account/notifications` and `/account/support` (below). Everything but
   Settings and Support is `RouteAccess.signedIn`.
 - **Hub** (`AccountHubPage`): signed in, the profile header (volt avatar with the initials,
   `initialsOf`, Arabic letters kept apart; name, email as an LTR island, Verified / Not verified
   badge), then Orders (switches to the tab), Wallet (only with `features.wallet_enabled`; the
   balance from `GET /account/wallet` as the row value, `accountWalletBalanceProvider`),
-  Notifications and Support (placeholders until M-A17), Profile, Security ("Two-step verification
+  Notifications and Support (M-A17 screens since), Profile, Security ("Two-step verification
   on/off") and Settings, then Sign out (17.4 dialog). Signed out: sign in and create account
   (`from=/account`), guest order access (M-A14), Support and Settings. The M-A10 account card and
   the M-A11 language button are gone; `confirmSignOut` lives in `account_widgets.dart`.
@@ -498,6 +504,70 @@ including the link that cold-starts the app (kept until the first listen) and sc
 - **Shared**: `AppButtonVariant.danger`, `StatusPill` (library Badge), `QrCodeView`,
   `PasswordActionSheet` (security widgets), `showConfirmDialog` and `LanguageSheet` (account
   widgets). No package was added; no backend change.
+
+## Support, reviews, refund requests and notifications (M-A17)
+
+- **Routes** (all `RouteAccess.signedIn` except `/account/support`): `/account/reviews` (13.1),
+  `/account/reviews/new/:item` (13.2, the `order_item_id`), `/account/reviews/:review/edit`;
+  `/account/support` (14.1, 14.4; public: signed out it asks to sign in and offers
+  `links.support`), `/account/support/new?order=&category=` (14.2), `/account/support/:ticket`
+  (14.3); `/orders/:order/refund` (15.1, replaces the M-A14 placeholder), `/account/refunds?sent=1`
+  (15.2); `/account/notifications` (16.1, 16.2), `/account/notifications/settings` (16.3). The
+  Account hub has Notifications (with "n new"), My reviews (only with `features.reviews_enabled`),
+  Refund requests and Support; Settings' Notifications row opens the preferences.
+- **Paging** for every list here is `PagedLoader` (`core/state/paged_list.dart`) with
+  `PagedListView` (`shared/widgets/paged_list_view.dart`): 20 per page, `meta` driven, the next
+  page 600 px before the end, a failed page kept with a retry bar (no retry loop), pull to
+  refresh keeps the list, a late answer from before a reload is dropped.
+- **Reviews.** `ReviewEligibility` reads `GET /reviews/eligible` (paid orders with a delivered
+  unit and no review: a verified purchase). "Write a review" shows on the product page (the
+  newest eligible item of that product) and on a delivered order line (its `order_item_id`) only
+  when the API lists it; signed out, with `reviews_enabled` off or after a failed read nothing is
+  shown. The form takes its subject from that list (or, to edit, from the customer's reviews,
+  50 per page until found), checks the 1 to 5 rating first, trims the text (empty becomes null)
+  and sends `POST /reviews` or `PATCH /reviews/{id}` (new in the data layer; the review goes back
+  to `pending`). 403 `email_unverified` (banner with "Verify email"), 409 `review_exists`, 422
+  `review_not_eligible` as banners; 422 field messages beside `rating`, `title`, `body`. A saved
+  review refreshes the eligible list and My reviews.
+- **Support.** Tickets show number (LTR mono), status (Open, Waiting for us = `pending_staff`,
+  Answered = `pending_customer`, Resolved, Closed), subject, order or topic and last activity.
+  New request: topic chips (`order`, `payment`, `refund`, `account`, `other`), the optional
+  linked order from the customer's first 50 orders (a failed order list only hides the choices),
+  subject 3 to 190, message up to 10000; a 422 for an order that is not the customer's shows
+  under the picker. The thread puts the customer's messages on the end side; a reply is checked
+  for text, then `POST /tickets/{id}/messages`; a `closed` ticket or a 409 `ticket_closed`
+  removes the composer and offers "New request" with the same order and topic. Internal staff
+  notes never reach the app (the server excludes them). **No attachments**: the API has no
+  upload endpoint (the `support_ticket_attachments` table has no route), so the message helper
+  asks the customer to describe the problem and never to send codes or passwords.
+  `features.support_enabled` off: the support screen says so and "Get help" on the order detail
+  opens `links.support`; otherwise "Get help" opens a new request about the order.
+- **Refund requests.** The form shows the order (number, paid amount, date), the reason (10 to
+  2000 characters, checked first) and an optional open ticket about the order to link. **No unit
+  choice**: `POST /refund-requests` takes the order only; staff choose the units when they
+  approve. Banners: 409 `refund_request_open` (with "Refund requests"), 409 `refund_not_allowed`,
+  422 `order_public_id` (another customer's or an unknown order). Sent: the list with "Request
+  sent". The order detail shows the order's latest request (status and date; found in the first
+  50 of `GET /refund-requests`, `orderRefundRequestProvider`) and hides "Request refund" while one
+  is `requested` or `approved`.
+- **Notifications.** The inbox (unread on a raised card with the volt dot, age from the clock)
+  marks a notification read on tap (`POST /notifications/{id}/read`; the badge goes down when the
+  server agreed) and opens its link through the shared targets: `order` to the order detail,
+  `ticket` (new) to the thread, pushed so back returns to the inbox (`openLocation` now pushes
+  `/orders/` and `/account/` locations). "Mark all read" (`POST /notifications/read-all`) sets
+  every loaded item read and the badge to 0. `UnreadNotifications` (keep-alive) reads
+  `GET /notifications/unread-count` at sign-in, takes `meta.unread_count` from every inbox page,
+  is 0 signed out and keeps the last count on a failed read; the home header's bell (48dp,
+  "Notifications, n unread") and the hub row show it; home pull to refresh reads it again.
+  Preferences: categories orders, support, offers, security x channels in the app (`database`),
+  email, SMS, exactly the API's matrix; required cells (`orders.mail`, `security.mail`) are on
+  and locked; a switch is saved at once with that one cell and reverts with the server's message
+  when refused (`notification_preference_mandatory` or any failure). Push is M-A18: a note says
+  it is coming; no Firebase was added.
+- **Shared**: `SelectField` (field and option sheet), `SubjectCard`, `NotificationBell`,
+  `AppTextField` multi-line (`minLines`, `maxLines`, `maxLength`), `AppListTile.semanticsLabel`,
+  `StatusPill` tones `info`, `danger`, `accent`. `ComingSoonPage` is gone. No package and no
+  backend change.
 
 ## Biometric unlock (owner decision 6)
 
@@ -614,6 +684,21 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A17 additions, written, not yet run)
+
+By owner instruction the M-A17 tests were written but not executed; they run in the next full
+`flutter test` (goldens with `flutter test --update-goldens test/goldens`, which also refreshes
+the earlier goldens that now show the home bell and the new hub rows: `m_a11` home states,
+`shell_home_*`, `m_a16` hub states, the `m_a15` Account entry).
+`test/features/engagement/engagement_controllers_test.dart` (review eligibility gating, create,
+edit, 422 and domain codes; ticket create, foreign order 422, reply, `ticket_closed`; refund
+create, foreign order 422, `refund_request_open`, `refund_not_allowed`, the order detail's
+request; inbox paging, unread badge, mark read and all, link targets; preferences save, locked
+and refused), `engagement_pages_test.dart` (every M-A17 screen and state in `en` and `ar`,
+tap-target and label guidelines), `test/goldens/engagement_golden_test.dart` (`m_a17/`, 20
+states in LTR and RTL), `account_repositories_test.dart` (+1, review PATCH) and the updated hub
+and order-detail tests. Fakes: `test/helpers/engagement_fakes.dart`, wired into the harness.
 
 ## Tests (M-A16 additions)
 

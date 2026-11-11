@@ -2317,7 +2317,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ## App (Flutter)
 
-65 files, 786 declared test cases.
+68 files, 864 declared test cases.
 
 | Area | Files | Declared cases |
 |---|---:|---:|
@@ -2329,11 +2329,12 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 | `core/storage` | 2 | 7 |
 | `core/theme` | 1 | 6 |
 | `core/utils` | 2 | 6 |
-| `features` | 5 | 53 |
+| `features` | 5 | 54 |
 | `features/account` | 2 | 38 |
 | `features/auth` | 6 | 71 |
 | `features/code_reveal` | 1 | 8 |
 | `features/commerce` | 3 | 81 |
+| `features/engagement` | 2 | 57 |
 | `features/launch` | 2 | 20 |
 | `features/orders` | 3 | 60 |
 | `features/product` | 3 | 65 |
@@ -2341,7 +2342,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 | `features/storefront` | 3 | 51 |
 | `features/usecases` | 3 | 25 |
 | `features/wallet` | 2 | 42 |
-| `goldens` | 8 | 106 |
+| `goldens` | 9 | 126 |
 
 ### `core/config`
 
@@ -2614,7 +2615,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ### `features`
 
-<details><summary><code>application/test/features/account_repositories_test.dart</code> (20)</summary>
+<details><summary><code>application/test/features/account_repositories_test.dart</code> (21)</summary>
 
 - **AuthRepository**
   - register stores the token pair in secure storage
@@ -2632,6 +2633,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 - **WalletRepository**
   - reads the wallet and the statement
 - **ReviewsRepository**
+  - edits a review: PATCH /reviews/{id}, back to pending (M-A17)
   - lists eligible items, submits and maps review errors
 - **SupportRepository**
   - opens, reads and answers tickets, and maps their errors
@@ -2746,7 +2748,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 - **account hub ($lang)**
   - signed in: header, rows and the wallet balance
-  - placeholders for notifications and support (M-A17)
+  - M-A17 rows open notifications, reviews, refunds, support
   - wallet_enabled off hides the wallet row
   - an unverified email shows its badge
   - signed out: sign in, register, guest orders and settings
@@ -3014,6 +3016,85 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 </details>
 
+### `features/engagement`
+
+<details><summary><code>application/test/features/engagement/engagement_controllers_test.dart</code> (30)</summary>
+
+- **review eligibility (verified purchase gating)**
+  - the product and the order line only get the API-listed item
+  - signed out or reviews_enabled off: nothing is asked or shown
+  - a failed read shows no entry
+- **review form**
+  - create: subject from the eligible list, rating first, then sent
+  - an item the API does not list cannot be reviewed
+  - 422 field errors beside the fields, domain codes in the banner
+  - edit: found in my reviews, PATCH with the new rating
+  - edit of a review that is not the customer's is not found
+  - my reviews: pages through meta, signed out loads nothing
+- **support tickets**
+  - create: topic, linked order, subject and message; local checks first
+  - 422 for another customer's order shows beside the order picker
+  - reply: appended, composer cleared; empty reply is a local check
+  - 409 ticket_closed turns the thread into the closed state
+  - a ticket loaded as closed is closed
+  - tickets list pages; support_enabled off or signed out loads nothing
+- **refund requests**
+  - create: order loaded, reason checked, ticket linked, then sent
+  - 422 for a foreign or ineligible order, 409 open and not allowed
+  - the order detail finds the order's latest request
+  - a failed list leaves the order detail without a request
+- **notifications**
+  - inbox pages through meta and sets the unread badge
+  - unread badge: read at sign-in, 0 signed out, kept on failure
+  - open marks an unread notification read and leads to its target
+  - a failed mark read keeps the item unread and the badge
+  - mark all read: every item read, badge 0; a failure is returned
+  - link targets: ticket and order are in-app, others go nowhere
+  - notification age: just now, minutes, hours, date
+- **notification preferences**
+  - save one switch: PATCH with the cell, the server matrix kept
+  - mandatory cells are never switched off
+  - a refused save puts the switch back and returns the failure
+  - a failed load until retry
+
+</details>
+
+<details><summary><code>application/test/features/engagement/engagement_pages_test.dart</code> (27)</summary>
+
+- **reviews ($lang)**
+  - my reviews: ready to review, statuses, edit
+  - write a review: rating required, then submitted
+  - errors: email unverified, already reviewed, 422 beside the field
+  - an item that is not eligible, and the empty list
+  - my reviews offline and retry
+  - product page: "Write a review" only for an eligible purchase
+  - product page without an eligible purchase has no entry
+  - order detail: a delivered line gets "Write a review"
+- **support ($lang)**
+  - tickets: statuses, open a thread, reply
+  - reply to a closed ticket: closed state and new request
+  - new request: topic, order picker, checks, then the thread
+  - new request: another customer's order is refused beside the picker
+  - order detail "Get help" opens a request about the order
+  - signed out: sign in and the web help page
+  - empty, error with request id and retry
+- **refund requests ($lang)**
+  - form from the order detail, sent, then the list
+  - 409 open, 409 not allowed and 422 foreign order banners
+  - order detail shows an open request and hides the button
+  - the Account hub opens the list (empty)
+- **notifications ($lang)**
+  - home bell with the unread badge opens the inbox
+  - tap marks read and opens the ticket; back returns
+  - an order notification opens the order detail
+  - mark all read
+  - empty and offline
+  - settings: required locked on, a switch saves
+  - settings: a refused save shows the server message
+  - tap targets and labels
+
+</details>
+
 ### `features/launch`
 
 <details><summary><code>application/test/features/launch/launch_controllers_test.dart</code> (12)</summary>
@@ -3089,7 +3170,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - offline, then retry
   - signed out: sign in and guest access
 - **order detail ($lang)**
-  - a unit opens its code screen; refund opens the placeholder
+  - a unit opens its code screen; refund opens the request form
   - retry payment goes through the payment flow
   - not found
   - "View order" on a paid result lands on the detail
@@ -3525,6 +3606,32 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - 08.3 failed ($dir)
   - 08.4 expired ($dir)
   - 19.3 checkout at 360x800 ($dir)
+
+</details>
+
+<details><summary><code>application/test/goldens/engagement_golden_test.dart</code> (20)</summary>
+
+- **M-A17 goldens ($dir)**
+  - 13.1 my reviews
+  - 13.2 write a review
+  - 13.3 review email unverified
+  - 13.3 my reviews empty
+  - 14.1 support tickets
+  - 14.2 new request
+  - 14.3 ticket thread
+  - 14.4 ticket closed
+  - 14.4 tickets empty
+  - 15.1 refund request
+  - 15.2 refund request open
+  - 15.2 refund requests, sent
+  - 16.1 notifications
+  - 16.2 notifications offline
+  - 16.2 notifications empty
+  - 16.3 notification settings
+  - home header bell with unread badge
+  - 17.1 hub with the M-A17 rows
+  - order detail with a refund request and a review entry
+  - 360 wide ticket thread
 
 </details>
 

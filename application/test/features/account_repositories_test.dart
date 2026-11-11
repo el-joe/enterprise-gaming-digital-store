@@ -27,6 +27,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/fake_http_adapter.dart';
+import '../helpers/fixtures.dart';
 import '../helpers/pump_app.dart';
 import '../helpers/repo_harness.dart';
 
@@ -370,6 +371,54 @@ void main() {
   });
 
   group('ReviewsRepository', () {
+    test(
+      'edits a review: PATCH /reviews/{id}, back to pending (M-A17)',
+      () async {
+        final h = Harness(stored: signedIn());
+        final repo = ReviewsRepositoryImpl(ReviewsRemoteDataSource(h.dio));
+        final created = ApiFixture.load('reviews/create_created');
+        final review =
+            Map<String, dynamic>.of(
+              created.dataMap['review'] as Map<String, dynamic>,
+            )..addAll({
+              'rating': 3,
+              'title': null,
+              'body': 'Second code was slow.',
+            });
+        final adapter = FakeHttpAdapter(
+          (options, _) async => jsonBody({
+            'success': true,
+            'message':
+                'Thank you. Your changes will appear once they are approved.',
+            'data': {'review': review},
+            'meta': <String, Object?>{},
+          }),
+        );
+        h.dio.httpClientAdapter = adapter;
+        final updated = okValue(
+          await repo.update(1, rating: 3, body: 'Second code was slow.'),
+        );
+        expect(updated.status, 'pending');
+        expect(updated.rating, 3);
+        final request = adapter.requests.single;
+        expect(request.method, 'PATCH');
+        expect(request.uri.path, '/api/v1/mobile/account/reviews/1');
+        expect(request.data, {
+          'rating': 3,
+          'title': null,
+          'body': 'Second code was slow.',
+        });
+
+        h.dio.httpClientAdapter = FakeHttpAdapter(
+          (options, _) async => jsonBody(
+            errorEnvelope('not_found', message: 'Not found.'),
+            status: 404,
+          ),
+        );
+        failureOf<NotFoundFailure>(await repo.update(9, rating: 4));
+      },
+    );
+
     test('lists eligible items, submits and maps review errors', () async {
       final h = Harness(stored: signedIn());
       final repo = ReviewsRepositoryImpl(ReviewsRemoteDataSource(h.dio));

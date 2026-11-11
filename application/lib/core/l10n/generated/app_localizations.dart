@@ -1418,18 +1418,6 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get accountTitle;
 
-  /// Placeholder of a screen not built yet.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming in the next update'**
-  String get comingSoonTitle;
-
-  /// Placeholder text.
-  ///
-  /// In en, this message translates to:
-  /// **'This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.'**
-  String get comingSoonBody;
-
   /// Account settings row.
   ///
   /// In en, this message translates to:
@@ -1447,12 +1435,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verified purchase'**
   String get verifiedPurchase;
-
-  /// Notifications button tooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Notifications'**
-  String get notificationsComingSoon;
 
   /// Product page error title.
   ///
@@ -4214,6 +4196,804 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatic'**
   String get displayCurrencyAutomatic;
+
+  /// Banner when a next page of a list failed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load more'**
+  String get listMoreFailed;
+
+  /// My reviews screen title and Account row.
+  ///
+  /// In en, this message translates to:
+  /// **'My reviews'**
+  String get myReviewsTitle;
+
+  /// Error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your reviews'**
+  String get myReviewsLoadError;
+
+  /// Empty state (13.3).
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get myReviewsEmptyTitle;
+
+  /// Empty state body.
+  ///
+  /// In en, this message translates to:
+  /// **'After a code is delivered you can rate it here.'**
+  String get myReviewsEmptyBody;
+
+  /// Section of eligible items (13.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to review'**
+  String get reviewsReadyTitle;
+
+  /// Section of the customer's reviews (13.1).
+  ///
+  /// In en, this message translates to:
+  /// **'Your reviews'**
+  String get reviewsYoursTitle;
+
+  /// Order line under a reviewable item; number is an LTR island.
+  ///
+  /// In en, this message translates to:
+  /// **'Order {number}'**
+  String reviewOrderNumber(String number);
+
+  /// Screen-reader hint of a reviewable item.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the review form'**
+  String get reviewWriteHint;
+
+  /// Button on the product page and delivered order lines.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a review'**
+  String get reviewWriteAction;
+
+  /// Screen-reader label of the order line button.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a review of {product}'**
+  String reviewWriteSemantics(String product);
+
+  /// Review form title (13.2).
+  ///
+  /// In en, this message translates to:
+  /// **'Write a review'**
+  String get reviewWriteTitle;
+
+  /// Review form title when editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit review'**
+  String get reviewEditTitle;
+
+  /// Edit button on a review card.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get reviewEditAction;
+
+  /// Screen-reader label of Edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your review of {product}'**
+  String reviewEditSemantics(String product);
+
+  /// Info banner on the edit form.
+  ///
+  /// In en, this message translates to:
+  /// **'Edits are checked again'**
+  String get reviewEditNoticeTitle;
+
+  /// Info banner body on the edit form.
+  ///
+  /// In en, this message translates to:
+  /// **'Your review goes back to moderation and is hidden until it is approved.'**
+  String get reviewEditNoticeBody;
+
+  /// Review status pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get reviewStatusPending;
+
+  /// Review status approved.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get reviewStatusApproved;
+
+  /// Review status rejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not published'**
+  String get reviewStatusRejected;
+
+  /// Label above the star input.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rating'**
+  String get reviewRatingLabel;
+
+  /// Screen-reader label of one star button.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 5 stars'**
+  String reviewRateStars(int count);
+
+  /// Local check: no rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a rating from 1 to 5 stars.'**
+  String get reviewRatingRequired;
+
+  /// Review title field.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (optional)'**
+  String get reviewTitleLabel;
+
+  /// Review text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Review (optional)'**
+  String get reviewBodyLabel;
+
+  /// Helper under the review text.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews are checked before they\'re published.'**
+  String get reviewModerationNote;
+
+  /// Footer button.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit review'**
+  String get reviewSubmitAction;
+
+  /// Footer button when editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get reviewSaveAction;
+
+  /// Snackbar after submitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you. Your review will appear once it\'s approved.'**
+  String get reviewSubmitted;
+
+  /// Snackbar after editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Your review will appear again once it\'s approved.'**
+  String get reviewUpdated;
+
+  /// Error title of the form.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load this review'**
+  String get reviewLoadError;
+
+  /// Edit form for an unknown review.
+  ///
+  /// In en, this message translates to:
+  /// **'Review not found'**
+  String get reviewNotFoundTitle;
+
+  /// Not eligible (13.3).
+  ///
+  /// In en, this message translates to:
+  /// **'This item can\'t be reviewed'**
+  String get reviewNotEligibleTitle;
+
+  /// Not eligible body.
+  ///
+  /// In en, this message translates to:
+  /// **'Only items you bought and received can be reviewed, once each.'**
+  String get reviewNotEligibleBody;
+
+  /// Banner for 403 email_unverified (13.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email to write reviews'**
+  String get reviewEmailUnverifiedTitle;
+
+  /// Banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the link we sent to your email address, then try again.'**
+  String get reviewEmailUnverifiedBody;
+
+  /// Banner for 409 review_exists (13.3).
+  ///
+  /// In en, this message translates to:
+  /// **'You already reviewed this item'**
+  String get reviewExistsTitle;
+
+  /// Banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Each purchased item can be reviewed once. You can edit your review in My reviews.'**
+  String get reviewExistsBody;
+
+  /// Order label in support screens; number is an LTR island.
+  ///
+  /// In en, this message translates to:
+  /// **'Order {number}'**
+  String supportOrderNumber(String number);
+
+  /// Support signed out.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to contact support'**
+  String get supportSignedOutTitle;
+
+  /// Support signed out body.
+  ///
+  /// In en, this message translates to:
+  /// **'Support requests are linked to your account and orders.'**
+  String get supportSignedOutBody;
+
+  /// support_enabled off.
+  ///
+  /// In en, this message translates to:
+  /// **'Support isn\'t available in the app'**
+  String get supportUnavailableTitle;
+
+  /// support_enabled off body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can still reach us through our help centre.'**
+  String get supportUnavailableBody;
+
+  /// Error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your requests'**
+  String get ticketsLoadError;
+
+  /// Empty tickets (14.4).
+  ///
+  /// In en, this message translates to:
+  /// **'No requests yet'**
+  String get ticketsEmptyTitle;
+
+  /// Empty tickets body.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions about an order, payment or your account? We\'re here.'**
+  String get ticketsEmptyBody;
+
+  /// Button.
+  ///
+  /// In en, this message translates to:
+  /// **'New request'**
+  String get ticketNewAction;
+
+  /// New ticket title (14.2).
+  ///
+  /// In en, this message translates to:
+  /// **'New request'**
+  String get ticketNewTitle;
+
+  /// Ticket status open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get ticketStatusOpen;
+
+  /// Ticket status pending_staff.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for us'**
+  String get ticketStatusWaiting;
+
+  /// Ticket status pending_customer.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered'**
+  String get ticketStatusAnswered;
+
+  /// Ticket status resolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get ticketStatusResolved;
+
+  /// Ticket status closed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get ticketStatusClosed;
+
+  /// Ticket topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get ticketCategoryOrder;
+
+  /// Ticket topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get ticketCategoryPayment;
+
+  /// Ticket topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get ticketCategoryRefund;
+
+  /// Ticket topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get ticketCategoryAccount;
+
+  /// Ticket topic.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get ticketCategoryOther;
+
+  /// Ticket row meta.
+  ///
+  /// In en, this message translates to:
+  /// **'{topic} · updated {date}'**
+  String ticketUpdated(String topic, String date);
+
+  /// Label above the topic chips.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get ticketTopicLabel;
+
+  /// Order picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Order (optional)'**
+  String get ticketOrderLabel;
+
+  /// Order picker: none.
+  ///
+  /// In en, this message translates to:
+  /// **'No order'**
+  String get ticketOrderNone;
+
+  /// Order picker value when the linked order is not in the list.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked order'**
+  String get ticketOrderLinked;
+
+  /// Order picker helper when the list failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your orders couldn\'t be loaded. You can send the request without one.'**
+  String get ticketOrdersFailed;
+
+  /// Subject field.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get ticketSubjectLabel;
+
+  /// Local check.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least {min} characters.'**
+  String ticketSubjectTooShort(int min);
+
+  /// Message field.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get ticketMessageLabel;
+
+  /// Helper under the message.
+  ///
+  /// In en, this message translates to:
+  /// **'Never share codes or passwords. Attachments aren\'t supported, so describe the problem here.'**
+  String get ticketMessageHelper;
+
+  /// Footer button.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get ticketSendAction;
+
+  /// Thread title for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Support request {number}'**
+  String ticketThreadSemantics(String number);
+
+  /// Author of a customer message.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get ticketFromYou;
+
+  /// Author of a staff message.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get ticketFromSupport;
+
+  /// Composer hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reply…'**
+  String get ticketReplyHint;
+
+  /// Send button tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reply'**
+  String get ticketSendReply;
+
+  /// Local check of the composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message first.'**
+  String get ticketReplyRequired;
+
+  /// Error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load this request'**
+  String get ticketLoadError;
+
+  /// Unknown ticket.
+  ///
+  /// In en, this message translates to:
+  /// **'Request not found'**
+  String get ticketNotFoundTitle;
+
+  /// Closed banner (14.4).
+  ///
+  /// In en, this message translates to:
+  /// **'This request is closed'**
+  String get ticketClosedTitle;
+
+  /// Closed banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies are turned off. Start a new request if you still need help.'**
+  String get ticketClosedBody;
+
+  /// Refund requests title and Account row.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund requests'**
+  String get refundRequestsTitle;
+
+  /// Error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your refund requests'**
+  String get refundRequestsLoadError;
+
+  /// Empty state.
+  ///
+  /// In en, this message translates to:
+  /// **'No refund requests'**
+  String get refundRequestsEmptyTitle;
+
+  /// Empty body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can ask for a refund from a paid order\'s page.'**
+  String get refundRequestsEmptyBody;
+
+  /// Row title when the order is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get refundRequestUnknownOrder;
+
+  /// Refund request status.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get refundStatusRequested;
+
+  /// Refund request status.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get refundStatusApproved;
+
+  /// Refund request status.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved'**
+  String get refundStatusRejected;
+
+  /// Refund request status.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get refundStatusCompleted;
+
+  /// Order card of the refund form; amount is an LTR island.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {amount} · {date}'**
+  String refundOrderPaid(String amount, String date);
+
+  /// Reason field.
+  ///
+  /// In en, this message translates to:
+  /// **'What went wrong?'**
+  String get refundReasonLabel;
+
+  /// Helper under the reason.
+  ///
+  /// In en, this message translates to:
+  /// **'{min} to {max} characters. Revealed codes may not be refundable.'**
+  String refundReasonHelper(int min, int max);
+
+  /// Local check.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least {min} characters.'**
+  String refundReasonTooShort(int min);
+
+  /// Ticket picker label.
+  ///
+  /// In en, this message translates to:
+  /// **'Link a support request (optional)'**
+  String get refundTicketLabel;
+
+  /// Ticket picker: none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get refundTicketNone;
+
+  /// Info banner.
+  ///
+  /// In en, this message translates to:
+  /// **'How refunds work'**
+  String get refundHowTitle;
+
+  /// Info banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'We review each request. Approved refunds go to your wallet or the original payment method.'**
+  String get refundHowBody;
+
+  /// Footer button.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get refundSendAction;
+
+  /// Success banner (15.2).
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get refundSentTitle;
+
+  /// Success banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can follow its status here.'**
+  String get refundSentBody;
+
+  /// 409 refund_request_open.
+  ///
+  /// In en, this message translates to:
+  /// **'A request is already open for this order'**
+  String get refundOpenTitle;
+
+  /// 409 body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can follow it in Refund requests. One open request per order.'**
+  String get refundOpenBody;
+
+  /// 409 refund_not_allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This order can\'t be refunded'**
+  String get refundNotAllowedTitle;
+
+  /// 422 for an order that is not the customer's.
+  ///
+  /// In en, this message translates to:
+  /// **'This order can\'t be used for a refund request'**
+  String get refundOrderRefusedTitle;
+
+  /// Order detail note.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund request: {status}'**
+  String orderRefundRequestStatus(String status);
+
+  /// Order detail note body.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent {date}. Tap to see your refund requests.'**
+  String orderRefundRequestSent(String date);
+
+  /// Bell and Account row for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications, {count} unread'**
+  String notificationBellUnread(int count);
+
+  /// Account row value.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new'**
+  String notificationsNewCount(int count);
+
+  /// Inbox header.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread'**
+  String notificationsUnreadCount(int count);
+
+  /// Inbox header with nothing unread.
+  ///
+  /// In en, this message translates to:
+  /// **'All read'**
+  String get notificationsAllRead;
+
+  /// Inbox action.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get notificationsMarkAllRead;
+
+  /// Error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your notifications'**
+  String get notificationsLoadError;
+
+  /// Empty inbox (16.2).
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up'**
+  String get notificationsEmptyTitle;
+
+  /// Empty inbox body.
+  ///
+  /// In en, this message translates to:
+  /// **'Order updates and support replies will appear here.'**
+  String get notificationsEmptyBody;
+
+  /// Screen-reader prefix of an unread notification.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationUnread;
+
+  /// Screen-reader hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the details'**
+  String get notificationOpenHint;
+
+  /// Age.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get notificationJustNow;
+
+  /// Age in minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String notificationMinutesAgo(int count);
+
+  /// Age in hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String notificationHoursAgo(int count);
+
+  /// Preferences title (16.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings'**
+  String get notificationSettingsTitle;
+
+  /// Error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your notification settings'**
+  String get preferencesLoadError;
+
+  /// Preference section.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get preferenceCategoryOrders;
+
+  /// Preference section.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get preferenceCategorySupport;
+
+  /// Preference section.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers and news'**
+  String get preferenceCategoryMarketing;
+
+  /// Preference section.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get preferenceCategorySecurity;
+
+  /// Channel database (the inbox).
+  ///
+  /// In en, this message translates to:
+  /// **'In the app'**
+  String get preferenceChannelInbox;
+
+  /// Channel mail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get preferenceChannelMail;
+
+  /// Channel sms.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS'**
+  String get preferenceChannelSms;
+
+  /// Subtitle of a mandatory cell.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get preferenceRequired;
+
+  /// Subtitle of SMS rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Only to a phone number on your profile'**
+  String get preferenceSmsNote;
+
+  /// Switch label for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'{category}, {channel}'**
+  String preferenceSemantics(String category, String channel);
+
+  /// Snackbar when a switch could not be saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved. {reason}'**
+  String preferenceSaveFailed(String reason);
+
+  /// Info banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get preferencePushTitle;
+
+  /// Info banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming later. Until then, updates appear in this inbox and by email.'**
+  String get preferencePushBody;
 }
 
 class _AppLocalizationsDelegate

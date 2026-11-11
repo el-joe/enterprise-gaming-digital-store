@@ -84,7 +84,7 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.notifications_none,
               showChevron: true,
               onTap: () =>
-                  unawaited(context.push(Routes.accountNotifications.path)),
+                  unawaited(context.push(Routes.notificationSettings.path)),
             ),
           ],
           const SizedBox(height: Spacing.s2),

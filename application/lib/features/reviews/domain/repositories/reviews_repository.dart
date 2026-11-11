@@ -14,4 +14,13 @@ abstract interface class ReviewsRepository {
     String? title,
     String? body,
   });
+
+  /// `PATCH /reviews/{id}`: the review returns to `pending` (moderation). 404 for an unknown id
+  /// or another customer's review.
+  Future<Result<MyReview>> update(
+    int id, {
+    required int rating,
+    String? title,
+    String? body,
+  });
 }

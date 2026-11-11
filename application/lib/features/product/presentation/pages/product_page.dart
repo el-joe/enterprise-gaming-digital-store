@@ -12,6 +12,7 @@ import 'package:application/features/product/domain/variant_options.dart';
 import 'package:application/features/product/presentation/controllers/product_controllers.dart';
 import 'package:application/features/product/presentation/widgets/product_widgets.dart';
 import 'package:application/features/product/presentation/widgets/review_widgets.dart';
+import 'package:application/features/reviews/review_eligibility.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
 import 'package:application/shared/widgets/html_text.dart';
@@ -342,6 +343,8 @@ class ProductReviewsSection extends ConsumerWidget {
         ],
       );
     }
+    // Only for a verified purchase the API lists as ready to review (M-A17).
+    final eligible = ref.watch(eligibleReviewForProductProvider(slug));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -351,6 +354,19 @@ class ProductReviewsSection extends ConsumerWidget {
         ),
         const SizedBox(height: Spacing.s2),
         body,
+        if (eligible != null) ...[
+          const SizedBox(height: Spacing.s3),
+          AppButton(
+            key: const ValueKey('product-write-review'),
+            label: l10n.reviewWriteAction,
+            icon: Icons.rate_review_outlined,
+            variant: AppButtonVariant.secondary,
+            expand: true,
+            onPressed: () => unawaited(
+              context.push(Routes.writeReviewLocation(eligible.orderItemId)),
+            ),
+          ),
+        ],
       ],
     );
   }

@@ -160,7 +160,7 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
-  /// Refund request entry (the form is M-A17; a placeholder until then).
+  /// Refund request form (M-A17, 15.1), pushed from the order detail.
   static const refundRequest = AppRoute(
     name: 'refund-request',
     path: '/orders/:order/refund',
@@ -188,17 +188,68 @@ abstract final class Routes {
     path: '/account/settings',
   );
 
-  /// Notifications (placeholder until M-A17).
+  /// Notifications inbox (M-A17, 16.1, 16.2); the home bell and the Account hub open it.
   static const accountNotifications = AppRoute(
     name: 'account-notifications',
     path: '/account/notifications',
     access: RouteAccess.signedIn,
   );
 
-  /// Support (placeholder until M-A17).
+  /// Notification preferences (16.3): the channels and categories of the API.
+  static const notificationSettings = AppRoute(
+    name: 'notification-settings',
+    path: '/account/notifications/settings',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Support tickets (M-A17, 14.1, 14.4). Public: signed out it asks to sign in and offers the
+  /// web help page.
   static const accountSupport = AppRoute(
     name: 'account-support',
     path: '/account/support',
+  );
+
+  /// New support request (14.2); query parameters `order` (prefills the linked order) and
+  /// `category`.
+  static const newTicket = AppRoute(
+    name: 'new-ticket',
+    path: '/account/support/new',
+    access: RouteAccess.signedIn,
+  );
+
+  /// A ticket's thread (14.3, 14.4 closed); inbox `ticket` links land here.
+  static const ticket = AppRoute(
+    name: 'ticket',
+    path: '/account/support/:ticket',
+    access: RouteAccess.signedIn,
+  );
+
+  /// My reviews (M-A17, 13.1, 13.3): items ready to review and the reviews with their status.
+  static const myReviews = AppRoute(
+    name: 'my-reviews',
+    path: '/account/reviews',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Write a review of an eligible order item (13.2); the path holds the `order_item_id`.
+  static const writeReview = AppRoute(
+    name: 'write-review',
+    path: '/account/reviews/new/:item',
+    access: RouteAccess.signedIn,
+  );
+
+  /// Edit one of the customer's reviews (it goes back to moderation).
+  static const editReview = AppRoute(
+    name: 'edit-review',
+    path: '/account/reviews/:review/edit',
+    access: RouteAccess.signedIn,
+  );
+
+  /// The customer's refund requests and their status (15.2).
+  static const refundRequests = AppRoute(
+    name: 'refund-requests',
+    path: '/account/refunds',
+    access: RouteAccess.signedIn,
   );
 
   /// Security (18.1): two-step verification, password, biometric unlock, devices.
@@ -269,7 +320,14 @@ abstract final class Routes {
     accountProfile,
     accountSettings,
     accountNotifications,
+    notificationSettings,
     accountSupport,
+    newTicket,
+    ticket,
+    myReviews,
+    writeReview,
+    editReview,
+    refundRequests,
     security,
     changePassword,
     twoFactorSetup,
@@ -350,6 +408,32 @@ abstract final class Routes {
   /// Location of [refundRequest].
   static String refundRequestLocation(String orderPublicId) =>
       '${orderLocation(orderPublicId)}/refund';
+
+  /// Location of [newTicket], with the order to link and the topic.
+  static String newTicketLocation({String? order, String? category}) {
+    final query = {orderParameter: ?order, categoryParameter: ?category};
+    return Uri(
+      path: newTicket.path,
+      queryParameters: query.isEmpty ? null : query,
+    ).toString();
+  }
+
+  /// Location of [ticket].
+  static String ticketLocation(String ticketPublicId) =>
+      '/account/support/${Uri.encodeComponent(ticketPublicId)}';
+
+  /// Location of [writeReview] for an order item.
+  static String writeReviewLocation(int orderItemId) =>
+      '/account/reviews/new/$orderItemId';
+
+  /// Location of [editReview].
+  static String editReviewLocation(int reviewId) =>
+      '/account/reviews/$reviewId/edit';
+
+  /// Path parameters of [ticket], [writeReview] and [editReview].
+  static const ticketParameter = 'ticket';
+  static const itemParameter = 'item';
+  static const reviewParameter = 'review';
 
   /// Location of [guestOrder].
   static String guestOrderLocation(String orderPublicId) =>

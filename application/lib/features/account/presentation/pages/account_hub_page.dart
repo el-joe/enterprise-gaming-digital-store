@@ -9,6 +9,8 @@ import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/account/presentation/controllers/account_controllers.dart';
 import 'package:application/features/account/presentation/widgets/account_widgets.dart';
 import 'package:application/features/auth/presentation/controllers/sign_out_controller.dart';
+import 'package:application/features/notifications/notification_badge.dart';
+import 'package:application/features/reviews/reviews_providers.dart';
 import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_list_tile.dart';
@@ -18,8 +20,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// The Account tab (M-A16, 17.1). Signed in: the profile header and the rows Orders, Wallet
-/// (only with `features.wallet_enabled`), Notifications and Support (placeholders until M-A17),
-/// Profile, Security and Settings, then sign out. Signed out: sign in or create an account,
+/// (only with `features.wallet_enabled`), Notifications (the unread count), My reviews (only
+/// with `features.reviews_enabled`), Refund requests, Support (M-A17), Profile, Security and
+/// Settings, then sign out. Signed out: sign in or create an account,
 /// guest order access (M-A14) and Settings (language, currency, legal pages).
 class AccountHubPage extends ConsumerWidget {
   const AccountHubPage({super.key});
@@ -61,6 +64,8 @@ class _SignedInHub extends ConsumerWidget {
         ? ref.watch(accountWalletBalanceProvider).value
         : null;
     final signingOut = ref.watch(signOutControllerProvider);
+    final unread = ref.watch(unreadNotificationsProvider);
+    final reviewsEnabled = ref.watch(reviewsEnabledProvider);
     final rows = <Widget>[
       AppListTile(
         key: const ValueKey('account-orders'),
@@ -83,8 +88,25 @@ class _SignedInHub extends ConsumerWidget {
         key: const ValueKey('account-notifications'),
         title: l10n.accountNotifications,
         icon: Icons.notifications_none,
+        value: unread > 0 ? l10n.notificationsNewCount(unread) : null,
+        semanticsLabel: unread > 0 ? l10n.notificationBellUnread(unread) : null,
         showChevron: true,
         onTap: () => _push(context, Routes.accountNotifications.path),
+      ),
+      if (reviewsEnabled)
+        AppListTile(
+          key: const ValueKey('account-reviews'),
+          title: l10n.myReviewsTitle,
+          icon: Icons.rate_review_outlined,
+          showChevron: true,
+          onTap: () => _push(context, Routes.myReviews.path),
+        ),
+      AppListTile(
+        key: const ValueKey('account-refunds'),
+        title: l10n.refundRequestsTitle,
+        icon: Icons.currency_exchange,
+        showChevron: true,
+        onTap: () => _push(context, Routes.refundRequests.path),
       ),
       AppListTile(
         key: const ValueKey('account-support'),

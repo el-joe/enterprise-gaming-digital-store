@@ -11,6 +11,7 @@ import 'package:application/features/home/domain/entities/home.dart';
 import 'package:application/features/home/presentation/controllers/home_controller.dart';
 import 'package:application/features/home/presentation/widgets/hero_carousel.dart';
 import 'package:application/features/home/presentation/widgets/home_sections.dart';
+import 'package:application/features/notifications/notification_badge.dart';
 import 'package:application/shared/widgets/skeleton.dart';
 import 'package:application/shared/widgets/state_views.dart';
 import 'package:application/shared/widgets/store_header.dart';
@@ -50,6 +51,9 @@ class HomeScreen extends ConsumerWidget {
               onSearch: () => context.go(Routes.search.path),
               currencyCode: currency,
               onCurrency: () => unawaited(openCurrencySwitcher(context)),
+              unreadNotifications: ref.watch(unreadNotificationsProvider),
+              onNotifications: () =>
+                  unawaited(context.push(Routes.accountNotifications.path)),
             ),
             Expanded(
               child: switch (state) {
@@ -60,7 +64,12 @@ class HomeScreen extends ConsumerWidget {
                   onRetry: () => unawaited(controller.retry()),
                 ),
                 Loaded(:final value) => RefreshIndicator(
-                  onRefresh: controller.refresh,
+                  onRefresh: () async {
+                    unawaited(
+                      ref.read(unreadNotificationsProvider.notifier).refresh(),
+                    );
+                    await controller.refresh();
+                  },
                   child: _HomeContent(page: value),
                 ),
               },

@@ -39,4 +39,18 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
       'body': ?body,
     })).toEntity(),
   );
+
+  @override
+  Future<Result<MyReview>> update(
+    int id, {
+    required int rating,
+    String? title,
+    String? body,
+  }) => guardRequest(
+    () async => (await _remote.update(id, {
+      'rating': rating,
+      'title': title,
+      'body': body,
+    })).toEntity(),
+  );
 }

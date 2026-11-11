@@ -98,17 +98,35 @@ void main() {
         expect(path(h), Routes.orders.path);
       });
 
-      testWidgets('placeholders for notifications and support (M-A17)', (
+      testWidgets('M-A17 rows open notifications, reviews, refunds, support', (
         tester,
       ) async {
         final h = await at(tester, Routes.account.path);
-        await tapKey(tester, 'account-notifications');
-        expect(path(h), Routes.accountNotifications.path);
-        expect(find.text(l10n.comingSoonTitle), findsOneWidget);
-        await tester.tap(find.byTooltip(l10n.actionBack).first);
-        await tester.pumpAndSettle();
-        await tapKey(tester, 'account-support');
-        expect(find.text(l10n.comingSoonTitle), findsOneWidget);
+        for (final (row, location, title) in [
+          (
+            'account-notifications',
+            Routes.accountNotifications.path,
+            l10n.notificationsEmptyTitle,
+          ),
+          ('account-reviews', Routes.myReviews.path, l10n.myReviewsEmptyTitle),
+          (
+            'account-refunds',
+            Routes.refundRequests.path,
+            l10n.refundRequestsEmptyTitle,
+          ),
+          (
+            'account-support',
+            Routes.accountSupport.path,
+            l10n.ticketsEmptyTitle,
+          ),
+        ]) {
+          await tapKey(tester, row);
+          expect(path(h), location, reason: row);
+          expect(find.text(title), findsOneWidget, reason: row);
+          await tester.tap(find.byTooltip(l10n.actionBack).first);
+          await tester.pumpAndSettle();
+          expect(path(h), Routes.account.path);
+        }
       });
 
       testWidgets('wallet_enabled off hides the wallet row', (tester) async {

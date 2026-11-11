@@ -24,12 +24,15 @@ import 'package:application/features/checkout/data/repositories/checkout_reposit
 import 'package:application/features/checkout/domain/usecases/place_order.dart';
 import 'package:application/features/code_reveal/code_reveal_providers.dart';
 import 'package:application/features/home/home_providers.dart';
+import 'package:application/features/notifications/notifications_providers.dart';
 import 'package:application/features/orders/orders_providers.dart';
 import 'package:application/features/payments/domain/usecases/resolve_payment.dart';
 import 'package:application/features/payments/payments_providers.dart';
 import 'package:application/features/product/product_providers.dart';
+import 'package:application/features/reviews/reviews_providers.dart';
 import 'package:application/features/search/search_providers.dart';
 import 'package:application/features/security/security_providers.dart';
+import 'package:application/features/support/support_providers.dart';
 import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +44,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'catalog_fakes.dart';
 import 'checkout_fakes.dart';
+import 'engagement_fakes.dart';
 import 'fakes.dart';
 import 'memory_stores.dart';
 import 'product_fakes.dart';
@@ -104,6 +108,9 @@ final class TestHarness {
     required this.clipboard,
     required this.wallet,
     required this.twoFactor,
+    required this.reviews,
+    required this.support,
+    required this.notifications,
   });
 
   final ProviderContainer container;
@@ -152,6 +159,11 @@ final class TestHarness {
   /// Account and security (M-A16): two-step verification. Profile, password and devices are on
   /// [account] (a mocktail mock).
   final FakeSecurityRepository twoFactor;
+
+  /// Support, reviews, refund requests and notifications (M-A17).
+  final FakeReviewsRepository reviews;
+  final FakeSupportRepository support;
+  final FakeNotificationsRepository notifications;
 
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
@@ -215,6 +227,9 @@ TestHarness buildHarness({
   final clipboard = FakeClipboardGuard();
   final wallet = FakeWalletRepository();
   final twoFactor = FakeSecurityRepository();
+  final reviews = FakeReviewsRepository();
+  final support = FakeSupportRepository();
+  final notifications = FakeNotificationsRepository();
   when(account.devices).thenAnswer((_) async => Ok(fixtureDevices()));
   when(account.profile).thenAnswer((_) async => Ok(fixtureProfile()));
 
@@ -260,6 +275,9 @@ TestHarness buildHarness({
       clipboardGuardProvider.overrideWithValue(clipboard),
       walletRepositoryProvider.overrideWithValue(wallet),
       securityRepositoryProvider.overrideWithValue(twoFactor),
+      reviewsRepositoryProvider.overrideWithValue(reviews),
+      supportRepositoryProvider.overrideWithValue(support),
+      notificationsRepositoryProvider.overrideWithValue(notifications),
       placeOrderProvider.overrideWith(
         (ref) => PlaceOrder(
           checkout: checkout,
@@ -309,6 +327,9 @@ TestHarness buildHarness({
     clipboard: clipboard,
     wallet: wallet,
     twoFactor: twoFactor,
+    reviews: reviews,
+    support: support,
+    notifications: notifications,
   );
 }
 

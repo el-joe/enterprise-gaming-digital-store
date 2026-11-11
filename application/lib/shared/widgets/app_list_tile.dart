@@ -15,6 +15,7 @@ class AppListTile extends StatelessWidget {
     this.onSwitchChanged,
     this.onTap,
     this.showChevron = false,
+    this.semanticsLabel,
     super.key,
   });
 
@@ -28,6 +29,10 @@ class AppListTile extends StatelessWidget {
   final ValueChanged<bool>? onSwitchChanged;
   final VoidCallback? onTap;
   final bool showChevron;
+
+  /// Replaces the spoken "title, subtitle" when the row needs more context (a switch whose
+  /// title repeats in several sections).
+  final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +100,7 @@ class AppListTile extends StatelessWidget {
     return Semantics(
       button: !isSwitch && tap != null,
       toggled: isSwitch ? switchValue : null,
-      label: subtitle == null ? title : '$title, $subtitle',
+      label: semanticsLabel ?? (subtitle == null ? title : '$title, $subtitle'),
       excludeSemantics: true,
       onTap: tap,
       child: Material(

@@ -13,6 +13,10 @@ import 'package:application/features/app_config/app_config_providers.dart';
 import 'package:application/features/orders/domain/entities/orders.dart';
 import 'package:application/features/orders/presentation/controllers/orders_controllers.dart';
 import 'package:application/features/orders/presentation/widgets/order_widgets.dart';
+import 'package:application/features/reviews/review_eligibility.dart';
+import 'package:application/features/support/domain/entities/support.dart';
+import 'package:application/features/support/refund_status.dart';
+import 'package:application/features/support/support_providers.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
@@ -22,7 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Opens the store's support page in the browser (no in-app support until M-A17).
+/// Opens the store's web help page in the browser (when in-app support is turned off).
 Future<void> openSupport(BuildContext context, WidgetRef ref) async {
   final message = context.l10n.linkOpenFailed;
   final url = ref.read(latestAppConfigProvider)?.links.support;
@@ -51,6 +55,10 @@ class OrderDetailPage extends ConsumerWidget {
     final state = ref.watch(provider);
     final controller = ref.read(provider.notifier);
     final number = state.valueOrNull?.summary.number;
+    final supportEnabled = ref.watch(supportEnabledProvider);
+    final refundRequest = ref
+        .watch(orderRefundRequestProvider(orderPublicId))
+        .value;
     return Scaffold(
       appBar: MobileAppBar(
         onLeading: () => _back(context),
@@ -105,12 +113,33 @@ class OrderDetailPage extends ConsumerWidget {
               controller.retryPayment();
               context.go(Routes.paymentLocation(orderPublicId));
             },
-            onHelp: () => unawaited(openSupport(context, ref)),
+            onHelp: supportEnabled
+                ? () => unawaited(
+                    context.push(
+                      Routes.newTicketLocation(
+                        order: orderPublicId,
+                        category: 'order',
+                      ),
+                    ),
+                  )
+                : () => unawaited(openSupport(context, ref)),
             onRefund: () => unawaited(
               context.push(Routes.refundRequestLocation(orderPublicId)),
             ),
+            onOpenRefundRequests: () =>
+                unawaited(context.push(Routes.refundRequests.path)),
             hasSupport:
+                supportEnabled ||
                 ref.watch(latestAppConfigProvider)?.links.support != null,
+            refundRequest: refundRequest,
+            reviewableLines: {
+              for (final line in value.items)
+                if (ref.watch(eligibleReviewForOrderItemProvider(line.id)) !=
+                    null)
+                  line.id,
+            },
+            onWriteReview: (line) =>
+                unawaited(context.push(Routes.writeReviewLocation(line.id))),
           ),
         ),
       },
@@ -125,11 +154,17 @@ class OrderDetailBody extends StatelessWidget {
     required this.onOpenUnit,
     this.header = const [],
     this.footer = const [],
+    this.reviewableLines = const {},
+    this.onWriteReview,
     super.key,
   });
 
   final OrderDetail detail;
   final void Function(OrderUnit unit)? onOpenUnit;
+
+  /// Order item ids the API lists as ready to review (M-A17).
+  final Set<int> reviewableLines;
+  final void Function(OrderLine line)? onWriteReview;
   final List<Widget> header;
   final List<Widget> footer;
 
@@ -196,7 +231,14 @@ class OrderDetailBody extends StatelessWidget {
         ],
         for (final line in detail.items) ...[
           const SizedBox(height: Spacing.s3),
-          OrderLineCard(line: line, onOpenUnit: onOpenUnit),
+          OrderLineCard(
+            line: line,
+            onOpenUnit: onOpenUnit,
+            onWriteReview:
+                onWriteReview == null || !reviewableLines.contains(line.id)
+                ? null
+                : () => onWriteReview!(line),
+          ),
         ],
         const SizedBox(height: Spacing.s3),
         OrderCard(
@@ -249,7 +291,11 @@ class _Detail extends StatelessWidget {
     required this.onRetryPayment,
     required this.onHelp,
     required this.onRefund,
+    required this.onOpenRefundRequests,
     required this.hasSupport,
+    required this.refundRequest,
+    required this.reviewableLines,
+    required this.onWriteReview,
   });
 
   final OrderDetail detail;
@@ -257,16 +303,28 @@ class _Detail extends StatelessWidget {
   final VoidCallback onRetryPayment;
   final VoidCallback onHelp;
   final VoidCallback onRefund;
+  final VoidCallback onOpenRefundRequests;
   final bool hasSupport;
+
+  /// The customer's latest refund request for this order (M-A17), if any.
+  final RefundRequest? refundRequest;
+  final Set<int> reviewableLines;
+  final void Function(OrderLine line) onWriteReview;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final retry = canRetryPayment(detail);
-    final refund = canRequestRefund(detail);
+    final request = refundRequest;
+    final refund =
+        canRequestRefund(detail) &&
+        (request == null ||
+            !openRefundRequestStatuses.contains(request.status));
     return OrderDetailBody(
       detail: detail,
       onOpenUnit: onOpenUnit,
+      reviewableLines: reviewableLines,
+      onWriteReview: onWriteReview,
       header: [
         if (retry) ...[
           StatusBanner(
@@ -274,6 +332,10 @@ class _Detail extends StatelessWidget {
             title: l10n.orderStatusAwaitingPayment,
             body: l10n.orderAwaitingPaymentNote,
           ),
+          const SizedBox(height: Spacing.s3),
+        ],
+        if (request != null) ...[
+          _RefundRequestNote(request: request, onOpen: onOpenRefundRequests),
           const SizedBox(height: Spacing.s3),
         ],
       ],
@@ -306,6 +368,36 @@ class _Detail extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// The latest refund request of the order (M-A17): its status and date; opens the list.
+class _RefundRequestNote extends StatelessWidget {
+  const _RefundRequestNote({required this.request, required this.onOpen});
+
+  final RefundRequest request;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final (status, tone) = refundRequestBanner(l10n, request.status);
+    return Semantics(
+      button: true,
+      onTap: onOpen,
+      child: GestureDetector(
+        key: const ValueKey('order-refund-request'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onOpen,
+        child: StatusBanner(
+          tone: tone,
+          title: l10n.orderRefundRequestStatus(status),
+          body: l10n.orderRefundRequestSent(
+            AppDates.day(context, request.createdAt),
+          ),
+        ),
+      ),
     );
   }
 }

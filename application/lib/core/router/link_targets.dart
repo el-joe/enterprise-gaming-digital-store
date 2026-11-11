@@ -50,8 +50,10 @@ LinkDestination? destinationFor(LinkTarget link) {
     'category' => InAppDestination(Routes.listingLocation(category: value)),
     'platform' => InAppDestination(Routes.listingLocation(platform: value)),
     'search' => InAppDestination(Routes.searchLocation(value)),
-    // The order detail (M-A14); the value is the order's public id. Tickets arrive with M-A17.
+    // Inbox links (API_DOCUMENTATION.md 4c): the order detail (M-A14) and the ticket thread
+    // (M-A17); the value is the public id.
     'order' => InAppDestination(Routes.orderLocation(value)),
+    'ticket' => InAppDestination(Routes.ticketLocation(value)),
     'url' => _external(value),
     _ => null,
   };

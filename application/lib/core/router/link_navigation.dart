@@ -33,10 +33,12 @@ void followLink(BuildContext context, WidgetRef ref, LinkTarget link) {
   }
 }
 
-/// Opens an in-app [location]: product detail is pushed above the tabs (back returns here);
-/// tab locations switch to their tab.
+/// Opens an in-app [location]: screens above the tabs (product, order detail, account screens
+/// such as a ticket) are pushed, so back returns here; tab locations switch to their tab.
 void openLocation(BuildContext context, String location) {
-  if (location.startsWith('/products/')) {
+  if (location.startsWith('/products/') ||
+      location.startsWith('/orders/') ||
+      location.startsWith('/account/')) {
     unawaited(context.push(location));
   } else {
     context.go(location);

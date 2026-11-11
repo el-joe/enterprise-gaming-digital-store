@@ -103,3 +103,54 @@ final class ReviewsRepositoryProvider
 }
 
 String _$reviewsRepositoryHash() => r'49d11fd2862cedb61b22556084d23743a743ea1d';
+
+/// `features.reviews_enabled` of `GET /app/config`. Off: no "Write a review" entries and no
+/// "My reviews" row. Before the launch check has a configuration reviews are shown (the server
+/// still decides).
+
+@ProviderFor(reviewsEnabled)
+final reviewsEnabledProvider = ReviewsEnabledProvider._();
+
+/// `features.reviews_enabled` of `GET /app/config`. Off: no "Write a review" entries and no
+/// "My reviews" row. Before the launch check has a configuration reviews are shown (the server
+/// still decides).
+
+final class ReviewsEnabledProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// `features.reviews_enabled` of `GET /app/config`. Off: no "Write a review" entries and no
+  /// "My reviews" row. Before the launch check has a configuration reviews are shown (the server
+  /// still decides).
+  ReviewsEnabledProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'reviewsEnabledProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$reviewsEnabledHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return reviewsEnabled(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$reviewsEnabledHash() => r'00382c32f5ab4a769d6fe61feafce630936cb53e';

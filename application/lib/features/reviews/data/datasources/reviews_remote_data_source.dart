@@ -45,4 +45,17 @@ class ReviewsRemoteDataSource {
       (data) => MyReviewDto.fromJson(objectAt(data, 'review')),
     ).data;
   }
+
+  /// `PATCH /reviews/{id}` (API_DOCUMENTATION.md 4d): the edit goes back to moderation.
+  Future<MyReviewDto> update(int id, Map<String, Object?> body) async {
+    final response = await _dio.patch<Object?>(
+      '/mobile/account/reviews/$id',
+      data: body,
+      options: Options(extra: {RequestExtras.noRetry: true}),
+    );
+    return decodeEnvelope(
+      response.data,
+      (data) => MyReviewDto.fromJson(objectAt(data, 'review')),
+    ).data;
+  }
 }

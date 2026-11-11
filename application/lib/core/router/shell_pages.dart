@@ -6,8 +6,6 @@ import 'package:application/features/cart/cart_providers.dart';
 import 'package:application/shared/widgets/app_bottom_nav.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/brand_logo.dart';
-import 'package:application/shared/widgets/mobile_app_bar.dart';
-import 'package:application/shared/widgets/state_views.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,41 +57,6 @@ class MainShell extends ConsumerWidget {
             selectedIcon: Icons.person,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// A screen whose milestone is still to come (refund request, notifications and support, M-A17): its title and a "coming in the next update" note. No fake data.
-class ComingSoonPage extends StatelessWidget {
-  const ComingSoonPage({required this.title, this.root = true, super.key});
-
-  final String title;
-
-  /// A tab root (no back button) or a pushed screen.
-  final bool root;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Scaffold(
-      appBar: MobileAppBar(
-        title: title,
-        leading: root ? AppBarLeading.none : AppBarLeading.back,
-        onLeading: root
-            ? null
-            : () => context.canPop()
-                  ? context.pop()
-                  : context.go(Routes.home.path),
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: EmptyState(
-            icon: Icons.construction_outlined,
-            title: l10n.comingSoonTitle,
-            body: l10n.comingSoonBody,
-          ),
-        ),
       ),
     );
   }

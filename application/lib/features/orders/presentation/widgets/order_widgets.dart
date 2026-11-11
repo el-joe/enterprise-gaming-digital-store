@@ -10,6 +10,7 @@ import 'package:application/shared/widgets/logo_slot.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:application/shared/widgets/product_tile.dart';
 import 'package:application/shared/widgets/skeleton.dart';
+import 'package:application/shared/widgets/status_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -361,10 +362,14 @@ class OrderLineCard extends StatelessWidget {
   const OrderLineCard({
     required this.line,
     required this.onOpenUnit,
+    this.onWriteReview,
     super.key,
   });
 
   final OrderLine line;
+
+  /// "Write a review": only for a line the API lists as eligible (M-A17).
+  final VoidCallback? onWriteReview;
 
   /// Opens a unit's code screen; null for units that have no code yet.
   final void Function(OrderUnit unit)? onOpenUnit;
@@ -412,6 +417,25 @@ class OrderLineCard extends StatelessWidget {
               onTap: onOpenUnit == null || !_opens(line.units[i])
                   ? null
                   : () => onOpenUnit!(line.units[i]),
+            ),
+          ],
+          if (onWriteReview != null) ...[
+            const SizedBox(height: Spacing.s1),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                key: ValueKey('order-line-review-${line.id}'),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  foregroundColor: colors.accentText,
+                ),
+                onPressed: onWriteReview,
+                icon: const Icon(Icons.star_border, size: 18),
+                label: Text(
+                  l10n.reviewWriteAction,
+                  semanticsLabel: l10n.reviewWriteSemantics(line.name),
+                ),
+              ),
             ),
           ],
         ],
@@ -541,3 +565,14 @@ class SummaryRow extends StatelessWidget {
     );
   }
 }
+
+/// A refund request's status on the order detail (M-A17).
+(String, BannerTone) refundRequestBanner(
+  AppLocalizations l10n,
+  String status,
+) => switch (status) {
+  'approved' => (l10n.refundStatusApproved, BannerTone.info),
+  'rejected' => (l10n.refundStatusRejected, BannerTone.danger),
+  'completed' => (l10n.refundStatusCompleted, BannerTone.success),
+  _ => (l10n.refundStatusRequested, BannerTone.warning),
+};

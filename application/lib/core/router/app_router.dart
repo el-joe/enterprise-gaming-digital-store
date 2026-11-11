@@ -1,4 +1,3 @@
-import 'package:application/core/l10n/l10n.dart';
 import 'package:application/core/router/guards.dart';
 import 'package:application/core/router/routes.dart';
 import 'package:application/core/router/shell_pages.dart';
@@ -23,16 +22,24 @@ import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:application/features/launch/presentation/pages/notice_pages.dart';
 import 'package:application/features/launch/presentation/pages/onboarding_pages.dart';
 import 'package:application/features/launch/presentation/pages/splash_page.dart';
+import 'package:application/features/notifications/presentation/pages/notification_settings_page.dart';
+import 'package:application/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:application/features/orders/presentation/pages/guest_order_pages.dart';
 import 'package:application/features/orders/presentation/pages/order_detail_page.dart';
 import 'package:application/features/orders/presentation/pages/orders_page.dart';
 import 'package:application/features/payments/presentation/pages/payment_page.dart';
 import 'package:application/features/product/presentation/pages/product_page.dart';
 import 'package:application/features/product/presentation/pages/product_reviews_page.dart';
+import 'package:application/features/reviews/presentation/pages/my_reviews_page.dart';
+import 'package:application/features/reviews/presentation/pages/review_form_page.dart';
 import 'package:application/features/search/presentation/pages/search_page.dart';
 import 'package:application/features/security/presentation/pages/devices_page.dart';
 import 'package:application/features/security/presentation/pages/security_page.dart';
 import 'package:application/features/security/presentation/pages/two_factor_setup_page.dart';
+import 'package:application/features/support/presentation/pages/new_ticket_page.dart';
+import 'package:application/features/support/presentation/pages/refund_pages.dart';
+import 'package:application/features/support/presentation/pages/support_page.dart';
+import 'package:application/features/support/presentation/pages/ticket_thread_page.dart';
 import 'package:application/features/wallet/presentation/pages/wallet_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
@@ -204,9 +211,8 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: 'refund',
             name: Routes.refundRequest.name,
-            builder: (context, state) => ComingSoonPage(
-              title: context.l10n.refundRequestTitle,
-              root: false,
+            builder: (context, state) => RefundRequestPage(
+              orderPublicId: state.pathParameters[Routes.orderParameter]!,
             ),
           ),
         ],
@@ -229,16 +235,86 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: Routes.accountNotifications.path,
         name: Routes.accountNotifications.name,
-        builder: (context, state) => ComingSoonPage(
-          title: context.l10n.accountNotifications,
-          root: false,
-        ),
+        builder: (context, state) => const NotificationsPage(),
+        routes: [
+          GoRoute(
+            path: 'settings',
+            name: Routes.notificationSettings.name,
+            builder: (context, state) => const NotificationSettingsPage(),
+          ),
+        ],
       ),
       GoRoute(
         path: Routes.accountSupport.path,
         name: Routes.accountSupport.name,
-        builder: (context, state) =>
-            ComingSoonPage(title: context.l10n.accountSupport, root: false),
+        builder: (context, state) => const SupportPage(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            name: Routes.newTicket.name,
+            builder: (context, state) => NewTicketPage(
+              order: state.uri.queryParameters[Routes.orderParameter],
+              category: state.uri.queryParameters[Routes.categoryParameter],
+            ),
+          ),
+          GoRoute(
+            path: ':${Routes.ticketParameter}',
+            name: Routes.ticket.name,
+            builder: (context, state) {
+              final ticket = state.pathParameters[Routes.ticketParameter]!;
+              return TicketThreadPage(
+                key: ValueKey('ticket-$ticket'),
+                ticketPublicId: ticket,
+              );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: Routes.myReviews.path,
+        name: Routes.myReviews.name,
+        builder: (context, state) => const MyReviewsPage(),
+        routes: [
+          GoRoute(
+            path: 'new/:${Routes.itemParameter}',
+            name: Routes.writeReview.name,
+            builder: (context, state) {
+              final item = int.tryParse(
+                state.pathParameters[Routes.itemParameter]!,
+              );
+              return item == null
+                  ? const NoticePage(kind: NoticeKind.notFound)
+                  : ReviewFormPage(
+                      key: ValueKey('review-item-$item'),
+                      orderItemId: item,
+                    );
+            },
+          ),
+          GoRoute(
+            path: ':${Routes.reviewParameter}/edit',
+            name: Routes.editReview.name,
+            builder: (context, state) {
+              final review = int.tryParse(
+                state.pathParameters[Routes.reviewParameter]!,
+              );
+              return review == null
+                  ? const NoticePage(kind: NoticeKind.notFound)
+                  : ReviewFormPage(
+                      key: ValueKey('review-edit-$review'),
+                      reviewId: review,
+                    );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: Routes.refundRequests.path,
+        name: Routes.refundRequests.name,
+        builder: (context, state) => RefundRequestsPage(
+          sent:
+              state.uri.queryParameters[RefundRequestsPage.sentParameter] ==
+              '1',
+        ),
       ),
       GoRoute(
         path: Routes.security.path,

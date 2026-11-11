@@ -26,6 +26,9 @@ class AppTextField extends StatefulWidget {
     this.ltr = false,
     this.inputFormatters,
     this.textCapitalization = TextCapitalization.none,
+    this.minLines,
+    this.maxLines = 1,
+    this.maxLength,
     super.key,
   });
 
@@ -46,6 +49,14 @@ class AppTextField extends StatefulWidget {
   final bool ltr;
   final List<TextInputFormatter>? inputFormatters;
   final TextCapitalization textCapitalization;
+
+  /// Multi-line fields (messages, reviews): [minLines] to [maxLines] lines; null [maxLines]
+  /// grows without a limit.
+  final int? minLines;
+  final int? maxLines;
+
+  /// Stops typing at this many characters (no counter is drawn; the helper text says it).
+  final int? maxLength;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -97,6 +108,10 @@ class _AppTextFieldState extends State<AppTextField> {
       onChanged: widget.onChanged,
       inputFormatters: widget.inputFormatters,
       textCapitalization: widget.textCapitalization,
+      minLines: widget.minLines,
+      maxLines: widget.obscure ? 1 : widget.maxLines,
+      maxLength: widget.maxLength,
+      maxLengthEnforcement: MaxLengthEnforcement.enforced,
       textDirection: widget.ltr ? TextDirection.ltr : null,
       style: type.bodyMd,
       cursorColor: colors.accentPrimary,
@@ -121,6 +136,7 @@ class _AppTextFieldState extends State<AppTextField> {
         // The label and error are drawn outside the field (design), so the field itself carries
         // them for screen readers.
         semanticCounterText: '',
+        counterText: widget.maxLength == null ? null : '',
       ),
     );
 

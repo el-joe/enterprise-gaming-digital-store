@@ -1007,14 +1007,6 @@
   "@accountTitle": {
     "description": "Account tab title."
   },
-  "comingSoonTitle": "Coming in the next update",
-  "@comingSoonTitle": {
-    "description": "Placeholder of a screen not built yet."
-  },
-  "comingSoonBody": "This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.",
-  "@comingSoonBody": {
-    "description": "Placeholder text."
-  },
   "languageSetting": "Language",
   "@languageSetting": {
     "description": "Account settings row."
@@ -1031,10 +1023,6 @@
   "verifiedPurchase": "Verified purchase",
   "@verifiedPurchase": {
     "description": "Review badge."
-  },
-  "notificationsComingSoon": "Notifications",
-  "@notificationsComingSoon": {
-    "description": "Notifications button tooltip."
   },
   "productLoadErrorTitle": "We couldn't load this product",
   "@productLoadErrorTitle": {
@@ -3276,5 +3264,649 @@
   "displayCurrencyAutomatic": "Automatic",
   "@displayCurrencyAutomatic": {
     "description": "Display currency row value when the server picks the currency (owner decision 1: the country's currency, else USD)."
+  },
+  "listMoreFailed": "We couldn't load more",
+  "@listMoreFailed": {
+    "description": "Banner when a next page of a list failed."
+  },
+  "myReviewsTitle": "My reviews",
+  "@myReviewsTitle": {
+    "description": "My reviews screen title and Account row."
+  },
+  "myReviewsLoadError": "We couldn't load your reviews",
+  "@myReviewsLoadError": {
+    "description": "Error title."
+  },
+  "myReviewsEmptyTitle": "No reviews yet",
+  "@myReviewsEmptyTitle": {
+    "description": "Empty state (13.3)."
+  },
+  "myReviewsEmptyBody": "After a code is delivered you can rate it here.",
+  "@myReviewsEmptyBody": {
+    "description": "Empty state body."
+  },
+  "reviewsReadyTitle": "Ready to review",
+  "@reviewsReadyTitle": {
+    "description": "Section of eligible items (13.1)."
+  },
+  "reviewsYoursTitle": "Your reviews",
+  "@reviewsYoursTitle": {
+    "description": "Section of the customer's reviews (13.1)."
+  },
+  "reviewOrderNumber": "Order {number}",
+  "@reviewOrderNumber": {
+    "description": "Order line under a reviewable item; number is an LTR island.",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewWriteHint": "Opens the review form",
+  "@reviewWriteHint": {
+    "description": "Screen-reader hint of a reviewable item."
+  },
+  "reviewWriteAction": "Write a review",
+  "@reviewWriteAction": {
+    "description": "Button on the product page and delivered order lines."
+  },
+  "reviewWriteSemantics": "Write a review of {product}",
+  "@reviewWriteSemantics": {
+    "description": "Screen-reader label of the order line button.",
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewWriteTitle": "Write a review",
+  "@reviewWriteTitle": {
+    "description": "Review form title (13.2)."
+  },
+  "reviewEditTitle": "Edit review",
+  "@reviewEditTitle": {
+    "description": "Review form title when editing."
+  },
+  "reviewEditAction": "Edit",
+  "@reviewEditAction": {
+    "description": "Edit button on a review card."
+  },
+  "reviewEditSemantics": "Edit your review of {product}",
+  "@reviewEditSemantics": {
+    "description": "Screen-reader label of Edit.",
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewEditNoticeTitle": "Edits are checked again",
+  "@reviewEditNoticeTitle": {
+    "description": "Info banner on the edit form."
+  },
+  "reviewEditNoticeBody": "Your review goes back to moderation and is hidden until it is approved.",
+  "@reviewEditNoticeBody": {
+    "description": "Info banner body on the edit form."
+  },
+  "reviewStatusPending": "Pending",
+  "@reviewStatusPending": {
+    "description": "Review status pending."
+  },
+  "reviewStatusApproved": "Published",
+  "@reviewStatusApproved": {
+    "description": "Review status approved."
+  },
+  "reviewStatusRejected": "Not published",
+  "@reviewStatusRejected": {
+    "description": "Review status rejected."
+  },
+  "reviewRatingLabel": "Your rating",
+  "@reviewRatingLabel": {
+    "description": "Label above the star input."
+  },
+  "reviewRateStars": "{count} of 5 stars",
+  "@reviewRateStars": {
+    "description": "Screen-reader label of one star button.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewRatingRequired": "Choose a rating from 1 to 5 stars.",
+  "@reviewRatingRequired": {
+    "description": "Local check: no rating."
+  },
+  "reviewTitleLabel": "Title (optional)",
+  "@reviewTitleLabel": {
+    "description": "Review title field."
+  },
+  "reviewBodyLabel": "Review (optional)",
+  "@reviewBodyLabel": {
+    "description": "Review text field."
+  },
+  "reviewModerationNote": "Reviews are checked before they're published.",
+  "@reviewModerationNote": {
+    "description": "Helper under the review text."
+  },
+  "reviewSubmitAction": "Submit review",
+  "@reviewSubmitAction": {
+    "description": "Footer button."
+  },
+  "reviewSaveAction": "Save changes",
+  "@reviewSaveAction": {
+    "description": "Footer button when editing."
+  },
+  "reviewSubmitted": "Thank you. Your review will appear once it's approved.",
+  "@reviewSubmitted": {
+    "description": "Snackbar after submitting."
+  },
+  "reviewUpdated": "Saved. Your review will appear again once it's approved.",
+  "@reviewUpdated": {
+    "description": "Snackbar after editing."
+  },
+  "reviewLoadError": "We couldn't load this review",
+  "@reviewLoadError": {
+    "description": "Error title of the form."
+  },
+  "reviewNotFoundTitle": "Review not found",
+  "@reviewNotFoundTitle": {
+    "description": "Edit form for an unknown review."
+  },
+  "reviewNotEligibleTitle": "This item can't be reviewed",
+  "@reviewNotEligibleTitle": {
+    "description": "Not eligible (13.3)."
+  },
+  "reviewNotEligibleBody": "Only items you bought and received can be reviewed, once each.",
+  "@reviewNotEligibleBody": {
+    "description": "Not eligible body."
+  },
+  "reviewEmailUnverifiedTitle": "Verify your email to write reviews",
+  "@reviewEmailUnverifiedTitle": {
+    "description": "Banner for 403 email_unverified (13.3)."
+  },
+  "reviewEmailUnverifiedBody": "Open the link we sent to your email address, then try again.",
+  "@reviewEmailUnverifiedBody": {
+    "description": "Banner body."
+  },
+  "reviewExistsTitle": "You already reviewed this item",
+  "@reviewExistsTitle": {
+    "description": "Banner for 409 review_exists (13.3)."
+  },
+  "reviewExistsBody": "Each purchased item can be reviewed once. You can edit your review in My reviews.",
+  "@reviewExistsBody": {
+    "description": "Banner body."
+  },
+  "supportOrderNumber": "Order {number}",
+  "@supportOrderNumber": {
+    "description": "Order label in support screens; number is an LTR island.",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "supportSignedOutTitle": "Sign in to contact support",
+  "@supportSignedOutTitle": {
+    "description": "Support signed out."
+  },
+  "supportSignedOutBody": "Support requests are linked to your account and orders.",
+  "@supportSignedOutBody": {
+    "description": "Support signed out body."
+  },
+  "supportUnavailableTitle": "Support isn't available in the app",
+  "@supportUnavailableTitle": {
+    "description": "support_enabled off."
+  },
+  "supportUnavailableBody": "You can still reach us through our help centre.",
+  "@supportUnavailableBody": {
+    "description": "support_enabled off body."
+  },
+  "ticketsLoadError": "We couldn't load your requests",
+  "@ticketsLoadError": {
+    "description": "Error title."
+  },
+  "ticketsEmptyTitle": "No requests yet",
+  "@ticketsEmptyTitle": {
+    "description": "Empty tickets (14.4)."
+  },
+  "ticketsEmptyBody": "Questions about an order, payment or your account? We're here.",
+  "@ticketsEmptyBody": {
+    "description": "Empty tickets body."
+  },
+  "ticketNewAction": "New request",
+  "@ticketNewAction": {
+    "description": "Button."
+  },
+  "ticketNewTitle": "New request",
+  "@ticketNewTitle": {
+    "description": "New ticket title (14.2)."
+  },
+  "ticketStatusOpen": "Open",
+  "@ticketStatusOpen": {
+    "description": "Ticket status open."
+  },
+  "ticketStatusWaiting": "Waiting for us",
+  "@ticketStatusWaiting": {
+    "description": "Ticket status pending_staff."
+  },
+  "ticketStatusAnswered": "Answered",
+  "@ticketStatusAnswered": {
+    "description": "Ticket status pending_customer."
+  },
+  "ticketStatusResolved": "Resolved",
+  "@ticketStatusResolved": {
+    "description": "Ticket status resolved."
+  },
+  "ticketStatusClosed": "Closed",
+  "@ticketStatusClosed": {
+    "description": "Ticket status closed."
+  },
+  "ticketCategoryOrder": "Order",
+  "@ticketCategoryOrder": {
+    "description": "Ticket topic."
+  },
+  "ticketCategoryPayment": "Payment",
+  "@ticketCategoryPayment": {
+    "description": "Ticket topic."
+  },
+  "ticketCategoryRefund": "Refund",
+  "@ticketCategoryRefund": {
+    "description": "Ticket topic."
+  },
+  "ticketCategoryAccount": "Account",
+  "@ticketCategoryAccount": {
+    "description": "Ticket topic."
+  },
+  "ticketCategoryOther": "Other",
+  "@ticketCategoryOther": {
+    "description": "Ticket topic."
+  },
+  "ticketUpdated": "{topic} · updated {date}",
+  "@ticketUpdated": {
+    "description": "Ticket row meta.",
+    "placeholders": {
+      "topic": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketTopicLabel": "Topic",
+  "@ticketTopicLabel": {
+    "description": "Label above the topic chips."
+  },
+  "ticketOrderLabel": "Order (optional)",
+  "@ticketOrderLabel": {
+    "description": "Order picker label."
+  },
+  "ticketOrderNone": "No order",
+  "@ticketOrderNone": {
+    "description": "Order picker: none."
+  },
+  "ticketOrderLinked": "Linked order",
+  "@ticketOrderLinked": {
+    "description": "Order picker value when the linked order is not in the list."
+  },
+  "ticketOrdersFailed": "Your orders couldn't be loaded. You can send the request without one.",
+  "@ticketOrdersFailed": {
+    "description": "Order picker helper when the list failed."
+  },
+  "ticketSubjectLabel": "Subject",
+  "@ticketSubjectLabel": {
+    "description": "Subject field."
+  },
+  "ticketSubjectTooShort": "Use at least {min} characters.",
+  "@ticketSubjectTooShort": {
+    "description": "Local check.",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "ticketMessageLabel": "Message",
+  "@ticketMessageLabel": {
+    "description": "Message field."
+  },
+  "ticketMessageHelper": "Never share codes or passwords. Attachments aren't supported, so describe the problem here.",
+  "@ticketMessageHelper": {
+    "description": "Helper under the message."
+  },
+  "ticketSendAction": "Send request",
+  "@ticketSendAction": {
+    "description": "Footer button."
+  },
+  "ticketThreadSemantics": "Support request {number}",
+  "@ticketThreadSemantics": {
+    "description": "Thread title for screen readers.",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketFromYou": "You",
+  "@ticketFromYou": {
+    "description": "Author of a customer message."
+  },
+  "ticketFromSupport": "Support",
+  "@ticketFromSupport": {
+    "description": "Author of a staff message."
+  },
+  "ticketReplyHint": "Write a reply…",
+  "@ticketReplyHint": {
+    "description": "Composer hint."
+  },
+  "ticketSendReply": "Send reply",
+  "@ticketSendReply": {
+    "description": "Send button tooltip."
+  },
+  "ticketReplyRequired": "Write a message first.",
+  "@ticketReplyRequired": {
+    "description": "Local check of the composer."
+  },
+  "ticketLoadError": "We couldn't load this request",
+  "@ticketLoadError": {
+    "description": "Error title."
+  },
+  "ticketNotFoundTitle": "Request not found",
+  "@ticketNotFoundTitle": {
+    "description": "Unknown ticket."
+  },
+  "ticketClosedTitle": "This request is closed",
+  "@ticketClosedTitle": {
+    "description": "Closed banner (14.4)."
+  },
+  "ticketClosedBody": "Replies are turned off. Start a new request if you still need help.",
+  "@ticketClosedBody": {
+    "description": "Closed banner body."
+  },
+  "refundRequestsTitle": "Refund requests",
+  "@refundRequestsTitle": {
+    "description": "Refund requests title and Account row."
+  },
+  "refundRequestsLoadError": "We couldn't load your refund requests",
+  "@refundRequestsLoadError": {
+    "description": "Error title."
+  },
+  "refundRequestsEmptyTitle": "No refund requests",
+  "@refundRequestsEmptyTitle": {
+    "description": "Empty state."
+  },
+  "refundRequestsEmptyBody": "You can ask for a refund from a paid order's page.",
+  "@refundRequestsEmptyBody": {
+    "description": "Empty body."
+  },
+  "refundRequestUnknownOrder": "Order",
+  "@refundRequestUnknownOrder": {
+    "description": "Row title when the order is unknown."
+  },
+  "refundStatusRequested": "Requested",
+  "@refundStatusRequested": {
+    "description": "Refund request status."
+  },
+  "refundStatusApproved": "Approved",
+  "@refundStatusApproved": {
+    "description": "Refund request status."
+  },
+  "refundStatusRejected": "Not approved",
+  "@refundStatusRejected": {
+    "description": "Refund request status."
+  },
+  "refundStatusCompleted": "Completed",
+  "@refundStatusCompleted": {
+    "description": "Refund request status."
+  },
+  "refundOrderPaid": "Paid {amount} · {date}",
+  "@refundOrderPaid": {
+    "description": "Order card of the refund form; amount is an LTR island.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "refundReasonLabel": "What went wrong?",
+  "@refundReasonLabel": {
+    "description": "Reason field."
+  },
+  "refundReasonHelper": "{min} to {max} characters. Revealed codes may not be refundable.",
+  "@refundReasonHelper": {
+    "description": "Helper under the reason.",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "refundReasonTooShort": "Use at least {min} characters.",
+  "@refundReasonTooShort": {
+    "description": "Local check.",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "refundTicketLabel": "Link a support request (optional)",
+  "@refundTicketLabel": {
+    "description": "Ticket picker label."
+  },
+  "refundTicketNone": "None",
+  "@refundTicketNone": {
+    "description": "Ticket picker: none."
+  },
+  "refundHowTitle": "How refunds work",
+  "@refundHowTitle": {
+    "description": "Info banner."
+  },
+  "refundHowBody": "We review each request. Approved refunds go to your wallet or the original payment method.",
+  "@refundHowBody": {
+    "description": "Info banner body."
+  },
+  "refundSendAction": "Send request",
+  "@refundSendAction": {
+    "description": "Footer button."
+  },
+  "refundSentTitle": "Request sent",
+  "@refundSentTitle": {
+    "description": "Success banner (15.2)."
+  },
+  "refundSentBody": "You can follow its status here.",
+  "@refundSentBody": {
+    "description": "Success banner body."
+  },
+  "refundOpenTitle": "A request is already open for this order",
+  "@refundOpenTitle": {
+    "description": "409 refund_request_open."
+  },
+  "refundOpenBody": "You can follow it in Refund requests. One open request per order.",
+  "@refundOpenBody": {
+    "description": "409 body."
+  },
+  "refundNotAllowedTitle": "This order can't be refunded",
+  "@refundNotAllowedTitle": {
+    "description": "409 refund_not_allowed."
+  },
+  "refundOrderRefusedTitle": "This order can't be used for a refund request",
+  "@refundOrderRefusedTitle": {
+    "description": "422 for an order that is not the customer's."
+  },
+  "orderRefundRequestStatus": "Refund request: {status}",
+  "@orderRefundRequestStatus": {
+    "description": "Order detail note.",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "orderRefundRequestSent": "Sent {date}. Tap to see your refund requests.",
+  "@orderRefundRequestSent": {
+    "description": "Order detail note body.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationBellUnread": "Notifications, {count} unread",
+  "@notificationBellUnread": {
+    "description": "Bell and Account row for screen readers.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsNewCount": "{count} new",
+  "@notificationsNewCount": {
+    "description": "Account row value.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsUnreadCount": "{count} unread",
+  "@notificationsUnreadCount": {
+    "description": "Inbox header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsAllRead": "All read",
+  "@notificationsAllRead": {
+    "description": "Inbox header with nothing unread."
+  },
+  "notificationsMarkAllRead": "Mark all read",
+  "@notificationsMarkAllRead": {
+    "description": "Inbox action."
+  },
+  "notificationsLoadError": "We couldn't load your notifications",
+  "@notificationsLoadError": {
+    "description": "Error title."
+  },
+  "notificationsEmptyTitle": "You're all caught up",
+  "@notificationsEmptyTitle": {
+    "description": "Empty inbox (16.2)."
+  },
+  "notificationsEmptyBody": "Order updates and support replies will appear here.",
+  "@notificationsEmptyBody": {
+    "description": "Empty inbox body."
+  },
+  "notificationUnread": "Unread",
+  "@notificationUnread": {
+    "description": "Screen-reader prefix of an unread notification."
+  },
+  "notificationOpenHint": "Opens the details",
+  "@notificationOpenHint": {
+    "description": "Screen-reader hint."
+  },
+  "notificationJustNow": "Just now",
+  "@notificationJustNow": {
+    "description": "Age."
+  },
+  "notificationMinutesAgo": "{count} min ago",
+  "@notificationMinutesAgo": {
+    "description": "Age in minutes.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationHoursAgo": "{count} h ago",
+  "@notificationHoursAgo": {
+    "description": "Age in hours.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationSettingsTitle": "Notification settings",
+  "@notificationSettingsTitle": {
+    "description": "Preferences title (16.3)."
+  },
+  "preferencesLoadError": "We couldn't load your notification settings",
+  "@preferencesLoadError": {
+    "description": "Error title."
+  },
+  "preferenceCategoryOrders": "Orders",
+  "@preferenceCategoryOrders": {
+    "description": "Preference section."
+  },
+  "preferenceCategorySupport": "Support",
+  "@preferenceCategorySupport": {
+    "description": "Preference section."
+  },
+  "preferenceCategoryMarketing": "Offers and news",
+  "@preferenceCategoryMarketing": {
+    "description": "Preference section."
+  },
+  "preferenceCategorySecurity": "Security",
+  "@preferenceCategorySecurity": {
+    "description": "Preference section."
+  },
+  "preferenceChannelInbox": "In the app",
+  "@preferenceChannelInbox": {
+    "description": "Channel database (the inbox)."
+  },
+  "preferenceChannelMail": "Email",
+  "@preferenceChannelMail": {
+    "description": "Channel mail."
+  },
+  "preferenceChannelSms": "SMS",
+  "@preferenceChannelSms": {
+    "description": "Channel sms."
+  },
+  "preferenceRequired": "Required",
+  "@preferenceRequired": {
+    "description": "Subtitle of a mandatory cell."
+  },
+  "preferenceSmsNote": "Only to a phone number on your profile",
+  "@preferenceSmsNote": {
+    "description": "Subtitle of SMS rows."
+  },
+  "preferenceSemantics": "{category}, {channel}",
+  "@preferenceSemantics": {
+    "description": "Switch label for screen readers.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "preferenceSaveFailed": "Not saved. {reason}",
+  "@preferenceSaveFailed": {
+    "description": "Snackbar when a switch could not be saved.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "preferencePushTitle": "Push notifications",
+  "@preferencePushTitle": {
+    "description": "Info banner."
+  },
+  "preferencePushBody": "Coming later. Until then, updates appear in this inbox and by email.",
+  "@preferencePushBody": {
+    "description": "Info banner body."
   }
 }

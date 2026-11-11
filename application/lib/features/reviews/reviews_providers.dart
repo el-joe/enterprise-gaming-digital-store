@@ -1,4 +1,5 @@
 import 'package:application/core/network/dio_client.dart';
+import 'package:application/features/app_config/app_config_providers.dart';
 import 'package:application/features/reviews/data/datasources/reviews_remote_data_source.dart';
 import 'package:application/features/reviews/data/repositories/reviews_repository_impl.dart';
 import 'package:application/features/reviews/domain/repositories/reviews_repository.dart';
@@ -13,3 +14,10 @@ ReviewsRemoteDataSource reviewsRemoteDataSource(Ref ref) =>
 @Riverpod(keepAlive: true)
 ReviewsRepository reviewsRepository(Ref ref) =>
     ReviewsRepositoryImpl(ref.watch(reviewsRemoteDataSourceProvider));
+
+/// `features.reviews_enabled` of `GET /app/config`. Off: no "Write a review" entries and no
+/// "My reviews" row. Before the launch check has a configuration reviews are shown (the server
+/// still decides).
+@riverpod
+bool reviewsEnabled(Ref ref) =>
+    ref.watch(latestAppConfigProvider)?.features.reviewsEnabled ?? true;

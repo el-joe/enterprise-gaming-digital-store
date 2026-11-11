@@ -493,7 +493,7 @@ final class ReviewsState {
 }
 
 /// Reviews of a product, 10 per page, appended by [loadMore] while `meta` has more pages.
-/// Writing a review is M-A17.
+/// Writing a review: `features/reviews` (M-A17).
 @riverpod
 class ProductReviewsController extends _$ProductReviewsController {
   static const perPage = 10;

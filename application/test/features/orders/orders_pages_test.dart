@@ -135,7 +135,7 @@ void main() {
 
     group('order detail ($lang)', () {
       testWidgets(
-        'a unit opens its code screen; refund opens the placeholder',
+        'a unit opens its code screen; refund opens the request form',
         (tester) async {
           final h = await at(tester, Routes.orderLocation(orderId));
           expect(find.text('****0000'), findsOneWidget);
@@ -147,7 +147,7 @@ void main() {
           await tester.tap(find.text(l10n.orderRequestRefund));
           await tester.pumpAndSettle();
           expect(path(h), Routes.refundRequestLocation(orderId));
-          expect(find.text(l10n.comingSoonTitle), findsOneWidget);
+          expect(find.text(l10n.refundReasonLabel), findsOneWidget);
         },
       );
 

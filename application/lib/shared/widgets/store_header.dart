@@ -4,16 +4,20 @@ import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/radii.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/shared/widgets/brand_logo.dart';
+import 'package:application/shared/widgets/notification_bell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Root header of the Home and Browse tabs (`App Bar` Root): the logo, outside prod the
-/// environment badge, the display currency button (03.5) and search. 56dp, 48dp actions.
+/// environment badge, the display currency button (03.5), search and, on Home, the
+/// notifications bell with the unread count (M-A17). 56dp, 48dp actions.
 class StoreHeader extends ConsumerWidget {
   const StoreHeader({
     required this.onSearch,
     this.currencyCode,
     this.onCurrency,
+    this.onNotifications,
+    this.unreadNotifications = 0,
     super.key,
   });
 
@@ -22,6 +26,10 @@ class StoreHeader extends ConsumerWidget {
   /// The display currency shown on the currency button; hidden when null.
   final String? currencyCode;
   final VoidCallback? onCurrency;
+
+  /// Shows the bell when set.
+  final VoidCallback? onNotifications;
+  final int unreadNotifications;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -78,6 +86,11 @@ class StoreHeader extends ConsumerWidget {
                 onPressed: onSearch,
               ),
             ),
+            if (onNotifications != null)
+              NotificationBell(
+                unread: unreadNotifications,
+                onPressed: onNotifications!,
+              ),
           ],
         ),
       ),

@@ -134,17 +134,17 @@ abstract class _$ProductController extends $Notifier<ProductPageState> {
 }
 
 /// Reviews of a product, 10 per page, appended by [loadMore] while `meta` has more pages.
-/// Writing a review is M-A17.
+/// Writing a review: `features/reviews` (M-A17).
 
 @ProviderFor(ProductReviewsController)
 final productReviewsControllerProvider = ProductReviewsControllerFamily._();
 
 /// Reviews of a product, 10 per page, appended by [loadMore] while `meta` has more pages.
-/// Writing a review is M-A17.
+/// Writing a review: `features/reviews` (M-A17).
 final class ProductReviewsControllerProvider
     extends $NotifierProvider<ProductReviewsController, ReviewsState> {
   /// Reviews of a product, 10 per page, appended by [loadMore] while `meta` has more pages.
-  /// Writing a review is M-A17.
+  /// Writing a review: `features/reviews` (M-A17).
   ProductReviewsControllerProvider._({
     required ProductReviewsControllerFamily super.from,
     required String super.argument,
@@ -194,7 +194,7 @@ String _$productReviewsControllerHash() =>
     r'502e36ae231399b90993897b5c937f89dad03f4b';
 
 /// Reviews of a product, 10 per page, appended by [loadMore] while `meta` has more pages.
-/// Writing a review is M-A17.
+/// Writing a review: `features/reviews` (M-A17).
 
 final class ProductReviewsControllerFamily extends $Family
     with
@@ -215,7 +215,7 @@ final class ProductReviewsControllerFamily extends $Family
       );
 
   /// Reviews of a product, 10 per page, appended by [loadMore] while `meta` has more pages.
-  /// Writing a review is M-A17.
+  /// Writing a review: `features/reviews` (M-A17).
 
   ProductReviewsControllerProvider call(String slug) =>
       ProductReviewsControllerProvider._(argument: slug, from: this);
@@ -225,7 +225,7 @@ final class ProductReviewsControllerFamily extends $Family
 }
 
 /// Reviews of a product, 10 per page, appended by [loadMore] while `meta` has more pages.
-/// Writing a review is M-A17.
+/// Writing a review: `features/reviews` (M-A17).
 
 abstract class _$ProductReviewsController extends $Notifier<ReviewsState> {
   late final _$args = ref.$arg as String;
