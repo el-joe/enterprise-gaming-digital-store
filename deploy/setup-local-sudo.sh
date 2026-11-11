@@ -30,7 +30,7 @@ install -m 0644 -o root -g root "$DIR/apache/000-n8n.boxcards.loc.conf" "$AVAIL/
 a2ensite -q boxcards.loc 000-n8n.boxcards.loc
 
 for host in boxcards.loc admin.boxcards.loc n8n.boxcards.loc; do
-  grep -qE "^[[:space:]]*127\.0\.0\.1[[:space:]].*[[:space:]]${host//./\\.}([[:space:]]|$)" /etc/hosts || echo "127.0.0.1 $host" >> /etc/hosts
+  grep -qE "^[[:space:]]*127\.0\.0\.1([[:space:]]+[^[:space:]]+)*[[:space:]]+${host//./\\.}([[:space:]]|$)" /etc/hosts || echo "127.0.0.1 $host" >> /etc/hosts
 done
 
 apache2ctl configtest
