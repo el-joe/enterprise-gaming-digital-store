@@ -403,7 +403,7 @@ void main() {
         );
         expect(find.text(l10n.ticketsLoadError), findsOneWidget);
         h.support.ticketPages = {1: Ok(pagedOf(const <SupportTicket>[]))};
-        await tester.tap(find.text(l10n.actionRetry));
+        await tester.tap(find.text(l10n.actionTryAgain));
         await tester.pumpAndSettle();
         expect(find.text(l10n.ticketsEmptyTitle), findsOneWidget);
         expect(key('ticket-new'), findsOneWidget);
@@ -607,7 +607,7 @@ void main() {
         await tapKey(tester, 'notifications-settings');
         expect(path(h), Routes.notificationSettings.path);
         expect(find.text(l10n.preferenceRequired), findsNWidgets(2));
-        expect(find.text(l10n.preferencePushTitle), findsOneWidget);
+        expect(find.text(l10n.preferencePushUnavailable), findsOneWidget);
         await tapKey(tester, 'preference-orders-mail');
         expect(h.notifications.updates, isEmpty);
         await tapKey(tester, 'preference-marketing-mail');

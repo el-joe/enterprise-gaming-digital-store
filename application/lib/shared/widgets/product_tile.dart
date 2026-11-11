@@ -106,8 +106,16 @@ class ProductTile extends StatelessWidget {
                               children: [
                                 if (showLogoSlot && product.image == null)
                                   const LogoSlot(),
-                                const Spacer(),
-                                if (badge != null) TileBadge(label: badge),
+                                // The badge keeps to the end and shortens with large text.
+                                Expanded(
+                                  child: Align(
+                                    alignment: AlignmentDirectional.topEnd,
+                                    heightFactor: 1,
+                                    child: badge == null
+                                        ? null
+                                        : TileBadge(label: badge),
+                                  ),
+                                ),
                               ],
                             ),
                             const Spacer(),
@@ -216,6 +224,8 @@ class TileBadge extends StatelessWidget {
       child: Text(
         label,
         style: context.type.labelSm.copyWith(color: colors.accentText),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

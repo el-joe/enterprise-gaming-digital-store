@@ -1,4 +1,5 @@
 import 'package:application/core/router/guards.dart';
+import 'package:application/core/router/material_route.dart';
 import 'package:application/core/router/routes.dart';
 import 'package:application/core/router/shell_pages.dart';
 import 'package:application/features/account/presentation/pages/account_hub_page.dart';
@@ -78,11 +79,15 @@ GoRouter appRouter(Ref ref) {
     ),
     routes: [
       StatefulShellRoute.indexedStack(
-        builder: (context, state, shell) => MainShell(shell: shell),
+        // The shell is the app's base, never pushed over another page, and its navigation shell
+        // has one global key: an old shell still animating out next to a new one would clash, so
+        // it appears without a transition. Pages pushed over it animate (materialRoute).
+        pageBuilder: (context, state, shell) =>
+            instantPage(state, MainShell(shell: shell)),
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              materialRoute(
                 path: Routes.home.path,
                 name: Routes.home.name,
                 builder: (context, state) =>
@@ -92,17 +97,17 @@ GoRouter appRouter(Ref ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              materialRoute(
                 path: Routes.browse.path,
                 name: Routes.browse.name,
                 builder: (context, state) => const BrowsePage(),
                 routes: [
-                  GoRoute(
+                  materialRoute(
                     path: 'platforms',
                     name: Routes.platforms.name,
                     builder: (context, state) => const PlatformsPage(),
                   ),
-                  GoRoute(
+                  materialRoute(
                     path: 'products',
                     name: Routes.listing.name,
                     builder: (context, state) {
@@ -117,7 +122,7 @@ GoRouter appRouter(Ref ref) {
                   ),
                 ],
               ),
-              GoRoute(
+              materialRoute(
                 path: Routes.search.path,
                 name: Routes.search.name,
                 builder: (context, state) => SearchPage(
@@ -129,7 +134,7 @@ GoRouter appRouter(Ref ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              materialRoute(
                 path: Routes.cart.path,
                 name: Routes.cart.name,
                 builder: (context, state) => const CartPage(),
@@ -138,7 +143,7 @@ GoRouter appRouter(Ref ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              materialRoute(
                 path: Routes.orders.path,
                 name: Routes.orders.name,
                 builder: (context, state) => const OrdersPage(),
@@ -147,7 +152,7 @@ GoRouter appRouter(Ref ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              materialRoute(
                 path: Routes.account.path,
                 name: Routes.account.name,
                 builder: (context, state) => const AccountHubPage(),
@@ -156,7 +161,7 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.product.path,
         name: Routes.product.name,
         builder: (context, state) {
@@ -164,7 +169,7 @@ GoRouter appRouter(Ref ref) {
           return ProductPage(key: ValueKey('product-$slug'), slug: slug);
         },
         routes: [
-          GoRoute(
+          materialRoute(
             path: 'reviews',
             name: Routes.productReviews.name,
             builder: (context, state) => ProductReviewsScreen(
@@ -173,12 +178,12 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.checkout.path,
         name: Routes.checkout.name,
         builder: (context, state) => const CheckoutPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.payment.path,
         name: Routes.payment.name,
         builder: (context, state) {
@@ -189,7 +194,7 @@ GoRouter appRouter(Ref ref) {
           );
         },
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.orderDetail.path,
         name: Routes.orderDetail.name,
         builder: (context, state) {
@@ -200,7 +205,7 @@ GoRouter appRouter(Ref ref) {
           );
         },
         routes: [
-          GoRoute(
+          materialRoute(
             path: 'units/:${Routes.unitParameter}',
             name: Routes.codeReveal.name,
             builder: (context, state) => RevealPage(
@@ -208,7 +213,7 @@ GoRouter appRouter(Ref ref) {
               unitPublicId: state.pathParameters[Routes.unitParameter]!,
             ),
           ),
-          GoRoute(
+          materialRoute(
             path: 'refund',
             name: Routes.refundRequest.name,
             builder: (context, state) => RefundRequestPage(
@@ -217,39 +222,39 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.wallet.path,
         name: Routes.wallet.name,
         builder: (context, state) => const WalletPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.accountProfile.path,
         name: Routes.accountProfile.name,
         builder: (context, state) => const ProfilePage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.accountSettings.path,
         name: Routes.accountSettings.name,
         builder: (context, state) => const SettingsPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.accountNotifications.path,
         name: Routes.accountNotifications.name,
         builder: (context, state) => const NotificationsPage(),
         routes: [
-          GoRoute(
+          materialRoute(
             path: 'settings',
             name: Routes.notificationSettings.name,
             builder: (context, state) => const NotificationSettingsPage(),
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.accountSupport.path,
         name: Routes.accountSupport.name,
         builder: (context, state) => const SupportPage(),
         routes: [
-          GoRoute(
+          materialRoute(
             path: 'new',
             name: Routes.newTicket.name,
             builder: (context, state) => NewTicketPage(
@@ -257,7 +262,7 @@ GoRouter appRouter(Ref ref) {
               category: state.uri.queryParameters[Routes.categoryParameter],
             ),
           ),
-          GoRoute(
+          materialRoute(
             path: ':${Routes.ticketParameter}',
             name: Routes.ticket.name,
             builder: (context, state) {
@@ -270,12 +275,12 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.myReviews.path,
         name: Routes.myReviews.name,
         builder: (context, state) => const MyReviewsPage(),
         routes: [
-          GoRoute(
+          materialRoute(
             path: 'new/:${Routes.itemParameter}',
             name: Routes.writeReview.name,
             builder: (context, state) {
@@ -290,7 +295,7 @@ GoRouter appRouter(Ref ref) {
                     );
             },
           ),
-          GoRoute(
+          materialRoute(
             path: ':${Routes.reviewParameter}/edit',
             name: Routes.editReview.name,
             builder: (context, state) {
@@ -307,7 +312,7 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.refundRequests.path,
         name: Routes.refundRequests.name,
         builder: (context, state) => RefundRequestsPage(
@@ -316,34 +321,34 @@ GoRouter appRouter(Ref ref) {
               '1',
         ),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.security.path,
         name: Routes.security.name,
         builder: (context, state) => const SecurityPage(),
         routes: [
-          GoRoute(
+          materialRoute(
             path: 'password',
             name: Routes.changePassword.name,
             builder: (context, state) => const ChangePasswordPage(),
           ),
-          GoRoute(
+          materialRoute(
             path: 'two-factor',
             name: Routes.twoFactorSetup.name,
             builder: (context, state) => const TwoFactorSetupPage(),
           ),
-          GoRoute(
+          materialRoute(
             path: 'devices',
             name: Routes.devices.name,
             builder: (context, state) => const DevicesPage(),
           ),
         ],
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.guestAccess.path,
         name: Routes.guestAccess.name,
         builder: (context, state) => const GuestAccessPage(),
         routes: [
-          GoRoute(
+          materialRoute(
             path: ':${Routes.orderParameter}',
             name: Routes.guestOrder.name,
             builder: (context, state) {
@@ -354,7 +359,7 @@ GoRouter appRouter(Ref ref) {
               );
             },
             routes: [
-              GoRoute(
+              materialRoute(
                 path: 'units/:${Routes.unitParameter}',
                 name: Routes.guestReveal.name,
                 builder: (context, state) => RevealPage(
@@ -367,57 +372,61 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
-      GoRoute(
+      // The splash is the cold start (or a relaunch of the config check): it replaces the app
+      // at once and hands over to home within a frame or two, so it has no transition of its
+      // own (an animated splash would keep the old shell next to the new one).
+      materialRoute(
         path: Routes.splash.path,
         name: Routes.splash.name,
+        transition: false,
         builder: (context, state) => const SplashPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.maintenance.path,
         name: Routes.maintenance.name,
         builder: (context, state) => const MaintenancePage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.updateRequired.path,
         name: Routes.updateRequired.name,
         builder: (context, state) => const UpdateRequiredPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.onboardingLanguage.path,
         name: Routes.onboardingLanguage.name,
         builder: (context, state) => const OnboardingLanguagePage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.onboardingCurrency.path,
         name: Routes.onboardingCurrency.name,
         builder: (context, state) => const OnboardingCurrencyPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.login.path,
         name: Routes.login.name,
         builder: (context, state) => LoginPage(from: from(state)),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.twoFactor.path,
         name: Routes.twoFactor.name,
         builder: (context, state) => TwoFactorPage(from: from(state)),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.register.path,
         name: Routes.register.name,
         builder: (context, state) => RegisterPage(from: from(state)),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.forgotPassword.path,
         name: Routes.forgotPassword.name,
         builder: (context, state) => const ForgotPasswordPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.verifyEmail.path,
         name: Routes.verifyEmail.name,
         builder: (context, state) => const VerifyEmailPage(),
       ),
-      GoRoute(
+      materialRoute(
         path: Routes.biometricOffer.path,
         name: Routes.biometricOffer.name,
         builder: (context, state) => BiometricOfferPage(

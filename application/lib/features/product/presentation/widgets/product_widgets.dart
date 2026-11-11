@@ -20,6 +20,7 @@ import 'package:application/shared/widgets/product_tile.dart';
 import 'package:application/shared/widgets/quantity_stepper.dart';
 import 'package:application/shared/widgets/sheet_header.dart';
 import 'package:application/shared/widgets/skeleton.dart';
+import 'package:application/shared/widgets/trailing_limit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -91,6 +92,8 @@ class _ProductGalleryState extends State<ProductGallery> {
               Text(
                 card.category!.name,
                 style: type.labelSm.copyWith(color: colors.contentSecondary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
           ],
         ),
@@ -218,14 +221,25 @@ class ProductTitleBlock extends StatelessWidget {
                       ),
                     ),
             ),
-            if (minutes != null) ...[
-              Icon(Icons.bolt, size: 16, color: colors.accentText),
-              const SizedBox(width: Spacing.s1),
-              Text(
-                l10n.deliveryTime(minutes),
-                style: type.bodySm.copyWith(color: colors.contentSecondary),
+            if (minutes != null)
+              TrailingLimit(
+                widthFactor: 0.5,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.bolt, size: 16, color: colors.accentText),
+                    const SizedBox(width: Spacing.s1),
+                    Flexible(
+                      child: Text(
+                        l10n.deliveryTime(minutes),
+                        style: type.bodySm.copyWith(
+                          color: colors.contentSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
           ],
         ),
       ],

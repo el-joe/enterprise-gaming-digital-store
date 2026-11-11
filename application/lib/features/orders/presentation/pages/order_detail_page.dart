@@ -69,7 +69,12 @@ class OrderDetailPage extends ConsumerWidget {
                 excludeSemantics: true,
                 child: Directionality(
                   textDirection: TextDirection.ltr,
-                  child: Text(number, style: context.type.headingMd),
+                  child: Text(
+                    number,
+                    style: context.type.headingMd,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
       ),

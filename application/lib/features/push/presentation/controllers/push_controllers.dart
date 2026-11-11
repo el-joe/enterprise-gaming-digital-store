@@ -82,6 +82,9 @@ class PushNotifications extends _$PushNotifications {
   Future<void> start() => _starting ??= _start();
 
   Future<void> _start() async {
+    if (!ref.mounted) {
+      return;
+    }
     final messaging = ref.read(pushMessagingProvider);
     if (!await messaging.start() || !ref.mounted) {
       return;
@@ -165,7 +168,10 @@ class PushNotifications extends _$PushNotifications {
   /// forgets it on the device. Failures are ignored (the server drops it with the sign-in).
   Future<void> unregister() async {
     _registeredToken = null;
-    if (!state.started) {
+    // A sign-out right after launch may come before the deferred start: start (once) first, so
+    // the state says whether this build runs push at all and a registered token is removed.
+    await start();
+    if (!ref.mounted || !state.started) {
       return;
     }
     if (ref.read(sessionProvider) == SessionStatus.signedIn) {

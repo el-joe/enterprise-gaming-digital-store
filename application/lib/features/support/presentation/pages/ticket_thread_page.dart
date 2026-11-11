@@ -76,6 +76,7 @@ class _TicketThreadPageState extends ConsumerState<TicketThreadPage> {
                 ticket.ticketNumber,
                 textDirection: TextDirection.ltr,
                 style: context.type.headingMd,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -187,10 +188,14 @@ class _Thread extends StatelessWidget {
           ),
           const SizedBox(height: Spacing.s3),
         ],
-        Row(
+        // The status at the start and the order link at the end; on a narrow screen or with
+        // large text the link wraps under the status instead of overflowing.
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: Spacing.s2,
           children: [
             StatusPill(label: status, tone: tone),
-            const Spacer(),
             if (orderNumber != null && orderId != null)
               TextButton(
                 key: const ValueKey('ticket-order-link'),
@@ -295,6 +300,8 @@ class _Composer extends StatelessWidget {
                           hintText: l10n.ticketReplyHint,
                           counterText: '',
                           isDense: true,
+                          // A 48dp tap target even on one line (Android and WCAG target size).
+                          constraints: const BoxConstraints(minHeight: 48),
                           filled: true,
                           fillColor: colors.surfaceSunken,
                           contentPadding: const EdgeInsetsDirectional.symmetric(

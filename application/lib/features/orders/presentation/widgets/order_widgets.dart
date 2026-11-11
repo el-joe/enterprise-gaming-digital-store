@@ -6,11 +6,13 @@ import 'package:application/core/theme/tokens/semantic_colors.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/core/utils/date_format.dart';
 import 'package:application/features/orders/domain/entities/orders.dart';
+import 'package:application/shared/widgets/fit_amount.dart';
 import 'package:application/shared/widgets/logo_slot.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:application/shared/widgets/product_tile.dart';
 import 'package:application/shared/widgets/skeleton.dart';
 import 'package:application/shared/widgets/status_banner.dart';
+import 'package:application/shared/widgets/trailing_limit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -120,7 +122,13 @@ class StatusPill extends StatelessWidget {
             ),
             const SizedBox(width: Spacing.s1_5),
           ],
-          Text(label, style: context.type.labelSm.copyWith(color: ink)),
+          // Wraps inside the pill when its row limits the width (large text).
+          Flexible(
+            child: Text(
+              label,
+              style: context.type.labelSm.copyWith(color: ink),
+            ),
+          ),
         ],
       ),
     );
@@ -227,16 +235,20 @@ class OrderTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: Spacing.s2),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    StatusPill(label: status, tone: tone),
-                    const SizedBox(height: Spacing.s1),
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Text(total, style: type.priceSm),
-                    ),
-                  ],
+                TrailingLimit(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      StatusPill(label: status, tone: tone),
+                      const SizedBox(height: Spacing.s1),
+                      FitAmount(
+                        child: Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Text(total, style: type.priceSm),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: Spacing.s1),
                 // chevron_right mirrors itself in RTL (matchTextDirection).
@@ -341,7 +353,9 @@ class UnitRow extends StatelessWidget {
                       ],
                     ),
                   ),
-                  StatusPill(label: status, tone: tone, dot: false),
+                  TrailingLimit(
+                    child: StatusPill(label: status, tone: tone, dot: false),
+                  ),
                   if (onTap != null) ...[
                     const SizedBox(width: Spacing.s1),
                     // chevron_right mirrors itself in RTL (matchTextDirection).

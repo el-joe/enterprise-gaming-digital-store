@@ -27,7 +27,7 @@ class StaticStars extends StatelessWidget {
 
   final int rating;
 
-  /// Star size in logical pixels (`num`: feature code keeps `double` out, rule 6).
+  /// Star size in logical pixels (`num`: feature code keeps floating-point types out, rule 6).
   final num size;
 
   @override

@@ -47,21 +47,34 @@ class StoreHeader extends ConsumerWidget {
         child: Row(
           children: [
             Expanded(
-              child: Row(
-                children: [
-                  const Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
+              child: flavor == Flavor.prod
+                  ? const Align(
                       alignment: AlignmentDirectional.centerStart,
-                      child: BrandLogo.full(),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: BrandLogo.full(),
+                      ),
+                    )
+                  : CustomMultiChildLayout(
+                      delegate: _LogoAndBadgeLayout(
+                        textDirection: Directionality.of(context),
+                      ),
+                      children: [
+                        LayoutId(
+                          id: _LogoAndBadgeLayout.logo,
+                          child: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: BrandLogo.full(),
+                          ),
+                        ),
+                        LayoutId(
+                          id: _LogoAndBadgeLayout.badge,
+                          child: EnvironmentBadge(flavor: flavor),
+                        ),
+                      ],
                     ),
-                  ),
-                  if (flavor != Flavor.prod) ...[
-                    const SizedBox(width: Spacing.s2),
-                    Flexible(child: EnvironmentBadge(flavor: flavor)),
-                  ],
-                ],
-              ),
             ),
             if (code != null && onCurrency != null)
               Semantics(
@@ -101,6 +114,50 @@ class StoreHeader extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The logo and, after it, the environment badge. The badge keeps its full label while the logo
+/// still has [minLogoWidth] (the logo scales down first); only when even that is not left (very
+/// large text) does the badge shorten its label.
+class _LogoAndBadgeLayout extends MultiChildLayoutDelegate {
+  _LogoAndBadgeLayout({required this.textDirection});
+
+  static const logo = 'logo';
+  static const badge = 'badge';
+  static const minLogoWidth = 72.0;
+
+  final TextDirection textDirection;
+
+  @override
+  void performLayout(Size size) {
+    final badgeMax = (size.width - Spacing.s2 - minLogoWidth).clamp(
+      0.0,
+      size.width,
+    );
+    final badgeSize = layoutChild(
+      badge,
+      BoxConstraints(maxWidth: badgeMax, maxHeight: size.height),
+    );
+    final logoMax = (size.width - Spacing.s2 - badgeSize.width).clamp(
+      0.0,
+      size.width,
+    );
+    final logoSize = layoutChild(
+      logo,
+      BoxConstraints(maxWidth: logoMax, maxHeight: size.height),
+    );
+    final ltr = textDirection == TextDirection.ltr;
+    final logoX = ltr ? 0.0 : size.width - logoSize.width;
+    final badgeX = ltr
+        ? logoSize.width + Spacing.s2
+        : size.width - logoSize.width - Spacing.s2 - badgeSize.width;
+    positionChild(logo, Offset(logoX, (size.height - logoSize.height) / 2));
+    positionChild(badge, Offset(badgeX, (size.height - badgeSize.height) / 2));
+  }
+
+  @override
+  bool shouldRelayout(_LogoAndBadgeLayout oldDelegate) =>
+      oldDelegate.textDirection != textDirection;
 }
 
 /// "Development" / "Staging" badge shown outside production.

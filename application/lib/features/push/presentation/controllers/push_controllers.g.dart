@@ -117,7 +117,7 @@ final class PushNotificationsProvider
   }
 }
 
-String _$pushNotificationsHash() => r'e8e6794587e3df150e5ac51b178abdcb6a0afbc3';
+String _$pushNotificationsHash() => r'd43d54637a5eae34cb28e7046c86872fdbccaa7f';
 
 /// Push notifications (M-A18, owner decision 9, API_DOCUMENTATION.md 1h). Kept alive by the app.
 ///

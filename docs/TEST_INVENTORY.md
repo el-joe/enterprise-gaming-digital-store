@@ -1,6 +1,6 @@
 # Test inventory
 
-Generated 2026-11-11 by `python3 tools/test_inventory.py` from the test sources. No test was run to produce it. Regenerate before the final run.
+Generated 2026-11-12 by `python3 tools/test_inventory.py` from the test sources. No test was run to produce it. Regenerate before the final run.
 
 Owner instruction (2026-11-11): tests are written with each milestone but are run only once, after every milestone is finished. The commands for that single run are at the end of this file.
 
@@ -1870,7 +1870,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 <details><summary><code>backend/tests/Feature/Schema/SeederTest.php</code> (10)</summary>
 
-  - seeds reference data, no rates, no users and no orders
+  - seeds reference data, no rates, no customers and no orders, and only the configured Super Admin
   - can be seeded twice without duplicates
   - seeds gateways inactive with no credentials
   - restricts Paymob to Egypt, in EGP, with a matching IP
@@ -3970,7 +3970,7 @@ The journeys are declared once each in `integration_test/journeys/` and called f
 
 ## App golden images
 
-236 committed reference images under `application/test/goldens/`. Goldens written after the no-run rule have no image yet; the final run creates them with `--update-goldens`, and each new image must be reviewed before it is committed.
+256 committed reference images under `application/test/goldens/`. Goldens written after the no-run rule have no image yet; the final run creates them with `--update-goldens`, and each new image must be reviewed before it is committed.
 
 ## The single final run
 

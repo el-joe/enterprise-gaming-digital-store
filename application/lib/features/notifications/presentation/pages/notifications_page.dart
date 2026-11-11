@@ -86,18 +86,21 @@ class NotificationsPage extends ConsumerWidget {
           skeletonHeight: 80,
           header: [
             if (state.content is Loaded)
-              Row(
+              // The count at the start, "Mark all as read" at the end; with large text the
+              // button wraps under the count instead of overflowing.
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: Spacing.s2,
                 children: [
-                  Expanded(
-                    child: Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        unread > 0
-                            ? l10n.notificationsUnreadCount(unread)
-                            : l10n.notificationsAllRead,
-                        style: context.type.bodySm.copyWith(
-                          color: colors.contentSecondary,
-                        ),
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      unread > 0
+                          ? l10n.notificationsUnreadCount(unread)
+                          : l10n.notificationsAllRead,
+                      style: context.type.bodySm.copyWith(
+                        color: colors.contentSecondary,
                       ),
                     ),
                   ),

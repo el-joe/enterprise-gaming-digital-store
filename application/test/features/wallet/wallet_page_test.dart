@@ -77,7 +77,10 @@ void main() {
       if (settle) {
         await tester.pumpAndSettle();
       } else {
+        // Let the page transition finish (its first frame keeps the new page offstage, and
+        // screen readers get the page once it is in place); the page is still loading.
         await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
       }
       return h;
     }

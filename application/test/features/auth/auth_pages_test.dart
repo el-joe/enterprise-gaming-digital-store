@@ -352,6 +352,11 @@ void main() {
         find.byKey(const ValueKey('account-sign-out')),
         200,
       );
+      // Built is not yet on screen: bring it fully into view above the tab bar.
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('account-sign-out')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('account-sign-out')));
       await tester.pumpAndSettle();
       expect(find.text(l10n.signOutConfirmTitle), findsOneWidget);

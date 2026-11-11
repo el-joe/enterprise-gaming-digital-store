@@ -6,6 +6,7 @@ import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/core/utils/carousel_autoplay.dart';
 import 'package:application/features/home/domain/entities/home.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
+import 'package:application/shared/widgets/text_measure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -147,29 +148,35 @@ class _HeroCarouselState extends State<HeroCarousel> {
           onPointerCancel: (_) => _autoplay.touchEnded(),
           child: Column(
             children: [
-              SizedBox(
-                height: HeroCarousel.height,
-                child: PageView.builder(
-                  controller: _pages,
-                  itemCount: banners.length,
-                  onPageChanged: (index) {
-                    setState(() => _index = index);
-                    _autoplay.pageChanged();
-                  },
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsetsDirectional.symmetric(
-                      horizontal: Spacing.s4,
-                    ),
-                    child: _HeroSlide(
-                      banner: banners[index],
-                      label: l10n.heroSlideLabel(
-                        index + 1,
-                        banners.length,
-                        banners[index].title ?? '',
+              LayoutBuilder(
+                builder: (context, constraints) => SizedBox(
+                  height: _HeroSlide.heightFor(
+                    context,
+                    banners,
+                    constraints.maxWidth - 2 * Spacing.s4,
+                  ).toDouble(),
+                  child: PageView.builder(
+                    controller: _pages,
+                    itemCount: banners.length,
+                    onPageChanged: (index) {
+                      setState(() => _index = index);
+                      _autoplay.pageChanged();
+                    },
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsetsDirectional.symmetric(
+                        horizontal: Spacing.s4,
                       ),
-                      onOpen: banners[index].link == null
-                          ? null
-                          : () => widget.onOpen(banners[index]),
+                      child: _HeroSlide(
+                        banner: banners[index],
+                        label: l10n.heroSlideLabel(
+                          index + 1,
+                          banners.length,
+                          banners[index].title ?? '',
+                        ),
+                        onOpen: banners[index].link == null
+                            ? null
+                            : () => widget.onOpen(banners[index]),
+                      ),
                     ),
                   ),
                 ),
@@ -221,6 +228,66 @@ class _HeroSlide extends StatelessWidget {
   final String label;
   final VoidCallback? onOpen;
 
+  static const _padding = Spacing.s5;
+
+  /// The carousel's height: the design's [HeroCarousel.height], or more when the text of a slide
+  /// needs it at the customer's text size (up to 200%), so a title, subtitle and call to action
+  /// are never cut. Every page of a [PageView] has the same height, so the tallest slide decides.
+  static num heightFor(
+    BuildContext context,
+    List<HomeBanner> banners,
+    num slideWidth,
+  ) {
+    num height = HeroCarousel.height;
+    final textWidth = (slideWidth - 2 * _padding).toDouble();
+    if (textWidth <= 0) {
+      return height;
+    }
+    final type = context.type;
+    for (final banner in banners) {
+      num content = 2 * _padding;
+      final title = banner.title;
+      final subtitle = banner.subtitle;
+      final cta = banner.ctaLabel;
+      if (title != null) {
+        content += measureTextHeight(
+          context,
+          title,
+          type.displaySm,
+          maxWidth: textWidth,
+          maxLines: 2,
+        );
+      }
+      if (subtitle != null) {
+        content +=
+            Spacing.s2 +
+            measureTextHeight(
+              context,
+              subtitle,
+              type.bodyMd,
+              maxWidth: textWidth,
+              maxLines: 2,
+            );
+      }
+      if (cta != null && banner.link != null) {
+        // The call to action sits in a box with s3 side and s2 top and bottom padding.
+        content +=
+            Spacing.s4 +
+            2 * Spacing.s2 +
+            measureTextHeight(
+              context,
+              cta,
+              type.labelMd,
+              maxWidth: textWidth - 2 * Spacing.s3,
+            );
+      }
+      if (content > height) {
+        height = content;
+      }
+    }
+    return height.ceil();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -267,7 +334,7 @@ class _HeroSlide extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsetsDirectional.all(Spacing.s5),
+                padding: const EdgeInsetsDirectional.all(_padding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,

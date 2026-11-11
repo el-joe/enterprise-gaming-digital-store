@@ -71,7 +71,11 @@ class MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
                 child: titleWidget != null
                     ? Align(
                         alignment: AlignmentDirectional.centerStart,
-                        child: titleWidget,
+                        // The same 180% cap as [title], so a custom title is not cut either.
+                        child: MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: titleMaxTextScale,
+                          child: titleWidget!,
+                        ),
                       )
                     : title == null
                     ? const SizedBox.shrink()

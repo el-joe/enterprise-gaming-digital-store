@@ -6,6 +6,7 @@ import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/core/utils/date_format.dart';
 import 'package:application/features/support/domain/entities/support.dart';
 import 'package:application/shared/widgets/status_pill.dart';
+import 'package:application/shared/widgets/trailing_limit.dart';
 import 'package:flutter/material.dart';
 
 /// A ticket status as the customer reads it (14.1): open and `pending_staff` wait for the
@@ -109,7 +110,9 @@ class TicketTile extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: Spacing.s2),
-                          StatusPill(label: status, tone: tone),
+                          TrailingLimit(
+                            child: StatusPill(label: status, tone: tone),
+                          ),
                         ],
                       ),
                       const SizedBox(height: Spacing.s1),

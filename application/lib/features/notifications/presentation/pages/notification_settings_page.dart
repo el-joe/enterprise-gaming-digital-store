@@ -139,89 +139,94 @@ class _NotificationSettingsView extends StatelessWidget {
             errorTitle: l10n.preferencesLoadError,
             onRetry: () => unawaited(controller.retry()),
           ),
-          Loaded() => ListView(
+          // A short, fixed form: every cell and the push banner are built at once (no lazy list),
+          // so a screen reader and the "Turn on" button reach all of them.
+          Loaded() => SingleChildScrollView(
             padding: const EdgeInsetsDirectional.fromSTEB(
               Spacing.s4,
               Spacing.s2,
               Spacing.s4,
               Spacing.s6,
             ),
-            children: [
-              for (final category in preferenceCategories) ...[
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 36),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Semantics(
-                      header: true,
-                      child: Text(
-                        _categoryTitle(l10n, category),
-                        style: context.type.labelMd.copyWith(
-                          color: context.colors.contentSecondary,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final category in preferenceCategories) ...[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 36),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Semantics(
+                        header: true,
+                        child: Text(
+                          _categoryTitle(l10n, category),
+                          style: context.type.labelMd.copyWith(
+                            color: context.colors.contentSecondary,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                for (final channel in preferenceChannels)
-                  if (state.cell(category, channel) case final cell?) ...[
-                    AppListTile(
-                      key: ValueKey('preference-$category-$channel'),
-                      title: _channelTitle(l10n, channel),
-                      subtitle: cell.mandatory
-                          ? l10n.preferenceRequired
-                          : switch (channel) {
-                              'sms' => l10n.preferenceSmsNote,
-                              'push' => l10n.preferencePushNote,
-                              _ => null,
-                            },
-                      semanticsLabel: [
-                        l10n.preferenceSemantics(
-                          _categoryTitle(l10n, category),
-                          _channelTitle(l10n, channel),
-                        ),
-                        if (cell.mandatory) l10n.preferenceRequired,
-                      ].join(', '),
-                      switchValue: cell.enabled,
-                      onSwitchChanged: cell.mandatory
-                          ? null
-                          : (value) => unawaited(
-                              _toggle(context, ref, category, channel, value),
-                            ),
-                    ),
-                    const SizedBox(height: Spacing.s2),
-                  ],
-                const SizedBox(height: Spacing.s2),
-              ],
-              if (!push.started)
-                StatusBanner(
-                  tone: BannerTone.info,
-                  title: l10n.preferencePushTitle,
-                  body: l10n.preferencePushUnavailable,
-                )
-              else if (!push.granted) ...[
-                StatusBanner(
-                  tone: BannerTone.warning,
-                  title: l10n.preferencePushOffTitle,
-                  body: push.permission == PushPermission.denied
-                      ? l10n.preferencePushDeniedBody
-                      : l10n.preferencePushOffBody,
-                ),
-                const SizedBox(height: Spacing.s3),
-                AppButton(
-                  key: const ValueKey('push-allow'),
-                  label: l10n.pushExplainerAllow,
-                  icon: Icons.notifications_active_outlined,
-                  variant: AppButtonVariant.secondary,
-                  expand: true,
-                  onPressed: () => unawaited(
-                    ref
-                        .read(pushNotificationsProvider.notifier)
-                        .requestPermission(),
+                  for (final channel in preferenceChannels)
+                    if (state.cell(category, channel) case final cell?) ...[
+                      AppListTile(
+                        key: ValueKey('preference-$category-$channel'),
+                        title: _channelTitle(l10n, channel),
+                        subtitle: cell.mandatory
+                            ? l10n.preferenceRequired
+                            : switch (channel) {
+                                'sms' => l10n.preferenceSmsNote,
+                                'push' => l10n.preferencePushNote,
+                                _ => null,
+                              },
+                        semanticsLabel: [
+                          l10n.preferenceSemantics(
+                            _categoryTitle(l10n, category),
+                            _channelTitle(l10n, channel),
+                          ),
+                          if (cell.mandatory) l10n.preferenceRequired,
+                        ].join(', '),
+                        switchValue: cell.enabled,
+                        onSwitchChanged: cell.mandatory
+                            ? null
+                            : (value) => unawaited(
+                                _toggle(context, ref, category, channel, value),
+                              ),
+                      ),
+                      const SizedBox(height: Spacing.s2),
+                    ],
+                  const SizedBox(height: Spacing.s2),
+                ],
+                if (!push.started)
+                  StatusBanner(
+                    tone: BannerTone.info,
+                    title: l10n.preferencePushTitle,
+                    body: l10n.preferencePushUnavailable,
+                  )
+                else if (!push.granted) ...[
+                  StatusBanner(
+                    tone: BannerTone.warning,
+                    title: l10n.preferencePushOffTitle,
+                    body: push.permission == PushPermission.denied
+                        ? l10n.preferencePushDeniedBody
+                        : l10n.preferencePushOffBody,
                   ),
-                ),
+                  const SizedBox(height: Spacing.s3),
+                  AppButton(
+                    key: const ValueKey('push-allow'),
+                    label: l10n.pushExplainerAllow,
+                    icon: Icons.notifications_active_outlined,
+                    variant: AppButtonVariant.secondary,
+                    expand: true,
+                    onPressed: () => unawaited(
+                      ref
+                          .read(pushNotificationsProvider.notifier)
+                          .requestPermission(),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         },
       ),

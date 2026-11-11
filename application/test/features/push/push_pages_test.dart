@@ -214,8 +214,9 @@ void main() {
           final h = await launch(tester, permission: PushPermission.granted);
           final before = h.notifications.unreadCalls;
           h.push.foreground.add(orderPush(orderId));
-          await tester.pump();
-          await tester.pump(const Duration(milliseconds: 300));
+          // The stream delivers, the badge refreshes, then the snackbar slides in: let it finish
+          // before tapping its action.
+          await tester.pumpAndSettle();
 
           expect(find.textContaining('Order BX-1001 is ready'), findsOneWidget);
           expect(h.notifications.unreadCalls, greaterThan(before));

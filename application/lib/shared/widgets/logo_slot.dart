@@ -29,10 +29,16 @@ class LogoSlot extends StatelessWidget {
               color: colors.contentPrimary.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(Radii.xs),
             ),
-            child: Text(
-              'LOGO',
-              style: context.type.bodyCaption.copyWith(
-                color: colors.contentSecondary,
+            // A stand-in for a logo image, which does not grow with the text size: the word
+            // shrinks to fit the fixed slot instead of wrapping out of it at large text.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'LOGO',
+                maxLines: 1,
+                style: context.type.bodyCaption.copyWith(
+                  color: colors.contentSecondary,
+                ),
               ),
             ),
           ),

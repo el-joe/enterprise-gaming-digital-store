@@ -123,6 +123,10 @@ void main() {
         at(tester, order, find.text(l10n.revealHide)),
         at(tester, order, find.text(l10n.revealHowTo)),
       ]);
+      // Mask the code again, as the customer would: this also ends the auto-hide timer.
+      await tester.tap(find.text(l10n.revealHide));
+      await tester.pumpAndSettle();
+      expect(find.text(canaryCode), findsNothing);
       handle.dispose();
     });
   }
