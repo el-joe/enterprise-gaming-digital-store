@@ -56,5 +56,10 @@ final class TaskSchedule
 
         // Automation (M17)
         $schedule->command('automation:flush-outbox')->everyMinute()->withoutOverlapping()->onOneServer();
+
+        // SEO and analytics (M18): sitemaps, GA4 Measurement Protocol retries, Search Console.
+        $schedule->command('seo:generate-sitemaps')->hourlyAt(40)->withoutOverlapping()->onOneServer();
+        $schedule->command('analytics:dispatch-pending')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+        $schedule->command('seo:fetch-search-console')->dailyAt('06:15')->withoutOverlapping()->onOneServer();
     }
 }

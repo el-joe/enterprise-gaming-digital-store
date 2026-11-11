@@ -50,6 +50,42 @@ final class LocalizedRoutes
     }
 
     /**
+     * Hreflang alternates of a canonical page (SEO_STRATEGY.md section 6, M18): the same route
+     * in every supported language, carrying only the canonical URL's query string (at most
+     * `page`), so filters, sort, tracking and currency never reach an alternate. Empty when the
+     * page is not its own canonical (an override elsewhere) or has no localized twin.
+     *
+     * @return array<string, string> locale => URL
+     */
+    public static function alternates(Request $request, string $canonical): array
+    {
+        $route = $request->route();
+        $base = $route instanceof Route ? self::baseName((string) $route->getName()) : null;
+
+        if ($base === null) {
+            return [];
+        }
+
+        $current = route((string) $route->getName(), $route->parameters());
+        $canonicalPath = explode('?', $canonical, 2)[0];
+
+        if (rtrim($canonicalPath, '/') !== rtrim($current, '/')) {
+            return [];
+        }
+
+        $query = parse_url($canonical, PHP_URL_QUERY);
+        $alternates = [];
+
+        foreach ((array) config('app.supported_locales') as $locale) {
+            if (app('router')->has(self::name($base, $locale))) {
+                $alternates[$locale] = route(self::name($base, $locale), $route->parameters()).(is_string($query) && $query !== '' ? '?'.$query : '');
+            }
+        }
+
+        return count($alternates) > 1 ? $alternates : [];
+    }
+
+    /**
      * Supported languages other than the default one, each served under its own prefix.
      *
      * @return list<string>

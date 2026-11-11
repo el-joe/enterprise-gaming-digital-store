@@ -839,6 +839,25 @@ The declarative list, create and edit screens post to the existing 5a/5d resourc
 
 **Scheduled.** `admin:prune-exports` (hourly at :20) deletes the files of expired table exports and keeps the rows.
 
+### 5g. Built SEO and analytics routes (M18)
+
+Admin JSON under `/admin/api` (group `admin`, envelope as 5e). Responses never contain a token, code or secret.
+
+| Route | Body and behaviour | Permission |
+|---|---|---|
+| `DELETE seo/search-console/connection` | Asks Google to revoke the stored Search Console refresh token (best effort) and deletes it. `{ connected: false }`. Audited `seo.search_console.disconnected`. 10 per minute | `settings.manage_critical` (E) |
+| `POST seo/search-console/sync` | Fetches the last 3 days of final Search Console data (totals, queries, pages) into `search_console_metrics`. `{ rows }`. 502 `search_console_unavailable` when Google refuses (expired consent, quota) or is unreachable. 5 per minute | `seo.manage` |
+| `PUT settings/analytics` | (5f) now also `browser_events` (bool), `server_purchase` (bool), `mp_region` (`global`\|`eu`), `search_console_property` (`sc-domain:host` or `https://host/`), `search_console_client_id` (`*.apps.googleusercontent.com`), `search_console_verification` (meta tag token), `faq_schema` (bool, default off) | `settings.manage` |
+| `PUT settings/analytics/secrets/{key}` | (5f) keys `ga4_api_secret` and `search_console_client_secret` | `settings.manage_critical` (E) |
+
+Admin pages (Blade, `admin.web`): `GET /admin/seo/search-console?days=7|28|90` (report, `seo.manage`, Content > Search Console tab); `GET /admin/seo/search-console/connect` (redirect to Google consent with state and PKCE S256, scope `webmasters.readonly`, offline access) and `GET /admin/seo/search-console/callback?state&code|error` (stores the refresh token encrypted, back to Settings > Analytics), both `settings.manage_critical` and 10 per minute.
+
+Public, outside the session (`routes/seo.php`, `storefront` limiter): `GET /robots.txt` (text), `GET /sitemap.xml` (index; generated on the first request when none exists), `GET /sitemaps/{type}-{locale}-{n}.xml` (children: `static`, `categories`, `platforms`, `products`, `pages`, `blog` per language, with `xhtml:link` hreflang alternates and `lastmod`), all `Cache-Control: public, max-age=3600`; sitemaps carry `X-Robots-Tag: noindex`. New storefront pages: `/blog`, `/blog/{slug}` and their `/ar` twins.
+
+Runtime URL rules (global middleware `ResolveSeoUrls`, storefront GET and HEAD only, never `/api`, `/admin`, `/webhooks`): trailing slash 301; after a 404, admin redirects (301, 302, 410), 410 for a soft-deleted product, 301 to the lower-case path; other misses are counted in `not_found_logs`.
+
+**Scheduled.** `seo:generate-sitemaps` (hourly at :40), `analytics:dispatch-pending` (every 5 minutes; queues `SendAnalyticsEvent` for pending GA4 rows, nothing while awaiting credentials), `seo:fetch-search-console {--days=3}` (daily 06:15; nothing while not connected).
+
 ## 6. Webhooks
 
 | Path | Verification | Response |

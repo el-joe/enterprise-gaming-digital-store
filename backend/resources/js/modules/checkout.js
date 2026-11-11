@@ -2,6 +2,7 @@ import { config, t } from '../lib/config.js';
 import { fragment, get, post } from '../lib/http.js';
 import { busy, clearErrors, formValues, showErrors, showFormError } from '../lib/forms.js';
 import { continuePayment } from '../lib/payment.js';
+import { consent, gaClientId } from '../lib/analytics.js';
 
 /**
  * Checkout (spec 8, API 3a/3b). Payment options come from `GET /api/v1/checkout/payment-options`
@@ -185,6 +186,13 @@ export default function checkout(form) {
 
         if (selected.method) {
             body.method = selected.method.code;
+        }
+
+        // M18: joins the server-side GA4 purchase to the browser session, only with consent.
+        const clientId = consent() === 'granted' ? gaClientId() : null;
+
+        if (clientId) {
+            body.ga_client_id = clientId;
         }
 
         if (values.email !== undefined) {

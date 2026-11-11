@@ -18,6 +18,7 @@ use App\Domains\Pricing\Services\PricingEngine;
 use App\Domains\Seo\Models\SeoMetadata;
 use App\Domains\Shared\ValueObjects\Money;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
@@ -43,6 +44,16 @@ class StorefrontCatalogService
         $page->through(fn (Product $product): ProductCard => $this->card($product, $displayCurrency, $base));
 
         return $page;
+    }
+
+    /**
+     * Every listed product (id, slug, update time) for the sitemap (M18).
+     *
+     * @return Builder<Product>
+     */
+    public function sitemapProducts(): Builder
+    {
+        return $this->products->listedForSitemap();
     }
 
     /**

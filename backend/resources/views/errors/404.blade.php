@@ -20,6 +20,7 @@
                 <a href="{{ url()->localized('storefront.home') }}" class="btn-primary">{{ __('storefront.common.back_to_store') }}</a>
                 <a href="{{ url()->localized('storefront.search') }}" class="btn-secondary"><x-store.icon name="search" :size="18" /> {{ __('storefront.errors.search') }}</a>
             </div>
+            @include('errors.partials.popular')
         </div>
     </section>
 @endsection

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Seo\Models;
 
+use App\Domains\Seo\Services\RedirectResolver;
 use Database\Factories\Seo\RedirectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -16,6 +17,20 @@ class Redirect extends Model
 {
     /** @use HasFactory<RedirectFactory> */
     use HasFactory;
+
+    /**
+     * Every change invalidates the cached runtime lookups (M18). Hit counting updates through
+     * the query builder and fires no event.
+     */
+    protected static function booted(): void
+    {
+        static::saved(static function (): void {
+            RedirectResolver::flush();
+        });
+        static::deleted(static function (): void {
+            RedirectResolver::flush();
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

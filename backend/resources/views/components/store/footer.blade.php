@@ -44,7 +44,12 @@
             @endforeach
         </div>
         <div class="mt-10 flex flex-col gap-4 border-t border-line-subtle pt-6 md:flex-row md:items-center md:justify-between">
-            <p class="text-xs text-content-muted">© {{ now()->year }} {{ config('brand.name') }}</p>
+            <div class="flex flex-wrap items-center gap-4">
+                <p class="text-xs text-content-muted">© {{ now()->year }} {{ config('brand.name') }}</p>
+                @if (app(\App\Domains\Analytics\Services\AnalyticsSettings::class)->browserTagEnabled())
+                    <button type="button" class="text-xs text-content-secondary underline hover:text-content-primary" data-consent-open>{{ __('storefront.consent.settings') }}</button>
+                @endif
+            </div>
             <ul class="flex flex-wrap gap-2" aria-label="{{ __('storefront.footer.payments') }}">
                 @foreach (['Cards', 'PayPal', 'Paymob'] as $method)
                     <li class="rounded-xs border border-line-default px-2 py-0.5 font-mono text-xs text-content-secondary">{{ $method }}</li>

@@ -1,6 +1,7 @@
 @extends('layouts.storefront')
 
-@section('description', __('storefront.meta.description'))
+@section('title', $seo->title)
+@section('description', (string) $seo->description)
 
 @section('content')
     @if ($emailVerification)

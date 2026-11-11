@@ -43,6 +43,7 @@ use App\Http\Controllers\Admin\Promotions\CouponController;
 use App\Http\Controllers\Admin\Promotions\PromotionController;
 use App\Http\Controllers\Admin\Reviews\ReviewController;
 use App\Http\Controllers\Admin\Seo\RedirectController;
+use App\Http\Controllers\Admin\Seo\SearchConsoleController;
 use App\Http\Controllers\Admin\Seo\SeoMetadataController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\Settings\SettingsController;
@@ -297,6 +298,9 @@ foreach ((array) config('admin.translations') as $type => $translatable) {
         ->middleware('permission:'.$translatable['permission'])->name("translations.{$type}.update")->defaults('translation_type', $type);
 }
 // SEO fields (M15)
+// M18: Search Console (INTEGRATIONS.md section 7). The token is never returned.
+Route::delete('seo/search-console/connection', [SearchConsoleController::class, 'disconnect'])->middleware(['permission:settings.manage_critical', 'throttle:10,1'])->name('seo.search-console.disconnect');
+Route::post('seo/search-console/sync', [SearchConsoleController::class, 'sync'])->middleware(['permission:seo.manage', 'throttle:5,1'])->name('seo.search-console.sync');
 Route::put('seo/{type}/{id}', [SeoMetadataController::class, 'update'])->whereIn('type', array_keys((array) config('admin.seo')))->whereNumber('id')
     ->middleware('permission:seo.manage')->name('seo.update');
 

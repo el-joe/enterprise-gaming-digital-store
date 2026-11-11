@@ -1,5 +1,8 @@
 @props(['items'])
 
+{{-- M18: the same trail as BreadcrumbList JSON-LD (printed once by the storefront layout). --}}
+@php(app(\App\Domains\Seo\StructuredData\PageSchema::class)->add(app(\App\Domains\Seo\StructuredData\StructuredDataBuilder::class)->breadcrumbs($items, url()->current())))
+
 <nav aria-label="{{ __('storefront.common.breadcrumb') }}" {{ $attributes }}>
     <ol class="flex flex-wrap items-center gap-2 text-sm text-content-muted">
         @foreach ($items as $label => $href)

@@ -10,12 +10,15 @@
     $availability = $product['availability'] ?? 'out_of_stock';
 @endphp
 
-@section('title', $product['seo']['title'])
-@section('description', \Illuminate\Support\Str::limit((string) ($product['seo']['description'] ?? $product['short_description']), 155))
-@section('robots', $product['seo']['robots'] ?: 'index,follow')
+@section('title', $seo->title)
+@section('description', \Illuminate\Support\Str::limit((string) ($seo->description ?? $product['short_description']), 155))
+@section('robots', $seo->robots ?: 'index,follow')
+@if ($seo->canonical)
+    @section('canonical', $seo->canonical)
+@endif
 
 @push('head')
-    @if ($product['seo']['image'])<meta property="og:image" content="{{ $product['seo']['image'] }}">@endif
+    @if ($seo->image)<meta property="og:image" content="{{ $seo->image }}">@endif
 @endpush
 
 @section('content')

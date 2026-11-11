@@ -1,6 +1,6 @@
 {{-- Product buy box (variables from storefront/product.blade.php). --}}
 <div class="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
-                <form class="flex flex-col gap-6" data-module="product" data-product-form novalidate>
+                <form class="flex flex-col gap-6" data-module="product" data-product-form data-item-name="{{ $product['name'] }}" data-item-category="{{ $product['category']['name'] ?? '' }}" data-item-brand="{{ $product['platform']['name'] ?? '' }}" novalidate>
                     <div>
                         <div class="flex flex-wrap gap-2">
                             @if ($product['platform']['slug'])
@@ -44,7 +44,7 @@
                             <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
                                 @foreach ($variants as $variant)
                                     <button type="button" data-variant-option="{{ $variant['public_id'] }}" data-variant-region="{{ $variant['region'] ?? 'global' }}"
-                                        data-price="{{ $variant['price']['formatted'] ?? '' }}" data-sku="{{ $variant['sku'] }}"
+                                        data-price="{{ $variant['price']['formatted'] ?? '' }}" data-sku="{{ $variant['sku'] }}" data-amount="{{ $variant['price']['amount'] ?? '' }}" data-currency="{{ $variant['price']['currency'] ?? '' }}" data-title="{{ $variant['title'] }}"
                                         aria-pressed="{{ $selected && $variant['public_id'] === $selected['public_id'] ? 'true' : 'false' }}" @disabled(! $variant['purchasable'])
                                         @if ($variant['region'] !== $selectedRegion) hidden @endif
                                         class="flex min-h-[72px] flex-col items-center justify-center gap-0.5 rounded-md border border-line-default bg-surface-raised px-2 py-2 hover:border-line-strong disabled:cursor-not-allowed disabled:opacity-40 aria-pressed:border-accent-primary aria-pressed:bg-accent-tint">

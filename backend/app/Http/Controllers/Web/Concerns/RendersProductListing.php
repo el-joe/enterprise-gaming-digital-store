@@ -7,9 +7,16 @@ use App\Domains\Catalog\DTOs\ProductListingFilter;
 use App\Domains\Catalog\Models\Product;
 use App\Domains\Catalog\Services\ContentTranslator;
 use App\Domains\Catalog\Services\StorefrontCatalogService;
+use App\Domains\Seo\DTOs\ResolvedSeo;
+use App\Domains\Seo\Enums\SeoTemplatePageType;
+use App\Domains\Seo\Services\SeoResolver;
+use App\Domains\Seo\StructuredData\PageSchema;
+use App\Domains\Seo\StructuredData\StructuredDataBuilder;
 use App\Http\Requests\Web\ListingPageRequest;
 use App\Http\Resources\Storefront\ProductCardResource;
+use App\Http\Support\LocalizedRoutes;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * A page of product cards for a listing page, filtered and priced exactly as the listing JSON
@@ -53,5 +60,28 @@ trait RendersProductListing
         $page->setCollection(collect($cards));
 
         return ['products' => $page->withQueryString(), 'filters' => $filters, 'currency' => $currency];
+    }
+
+    /**
+     * SEO values of a category or platform listing (M18: `seo_metadata`, then templates, then
+     * the default) and its CollectionPage JSON-LD listing the products on this page.
+     *
+     * @param  LengthAwarePaginator<int, array<string, mixed>>  $products
+     */
+    protected function listingSeo(SeoTemplatePageType $type, Model $model, string $name, string $defaultTitle, string $defaultDescription, LengthAwarePaginator $products, string $url): ResolvedSeo
+    {
+        $seo = app(SeoResolver::class)->resolve($type, $model, [
+            'name' => $name,
+            $type === SeoTemplatePageType::Category ? 'category' : 'platform' => $name,
+        ], $defaultTitle, $defaultDescription);
+
+        $items = collect($products->items())->map(static fn (array $card): array => [
+            'name' => (string) $card['name'],
+            'url' => LocalizedRoutes::url('storefront.products.show', ['slug' => $card['slug']]),
+        ])->values()->all();
+
+        app(PageSchema::class)->add(app(StructuredDataBuilder::class)->collectionPage($seo->title, $seo->description, $url, app()->getLocale(), $items));
+
+        return $seo;
     }
 }

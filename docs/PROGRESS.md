@@ -25,7 +25,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M15 | Admin remaining | Complete (2026-11-11, not committed; every spec Phase 9 module in EN/AR; some settings stored for later milestones, see the M15 open items) |
 | M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
 | M17 | n8n workflows | Complete (run before M14 and BD9 by PM decision; Laravel automation API, outbox and heartbeats built and tested; 58 workflows authored and validated, **not executed**: n8n is not installed here; admin screen is M15) |
-| M18 | SEO and analytics | Not started |
+| M18 | SEO and analytics | Complete (2026-11-11, not committed; GA4 Measurement Protocol and Search Console mocked only, awaiting credentials; Lighthouse not run: not installed, manual headless-Chrome check recorded) |
 | M19 | Full test pass | Not started |
 | M20 | Production readiness | Not started |
 
@@ -40,8 +40,8 @@ Status values: Not started, In progress, Blocked (state why), Complete.
 | PayPal | Built (`PayPalPaymentGateway`) | Yes (`Http::fake` only) | **Awaiting sandbox verification**; no credentials; never called live | No |
 | Paymob | Built (`PaymobPaymentGateway`) | Yes (`Http::fake` only) | **Awaiting sandbox verification**; no credentials; never called live | No |
 | Open Exchange Rates | Built | Yes (`Http::fake` only) | Awaiting credentials; OXR has no sandbox | No |
-| GA4 Measurement Protocol | Not built (M10 queues the `purchase` row once; sending is M18) | No | Awaiting credentials | No |
-| Google Search Console | Not built | No | Awaiting credentials | No |
+| GA4 Measurement Protocol | Built (M18: `AnalyticsEventDispatcher`, `SendAnalyticsEvent`, server `purchase` once per order) | Yes (`Http::fake` only) | **Awaiting credentials**; never called live | No |
+| Google Search Console | Built (M18: OAuth connect on the Laravel HTTP client, daily fetch, admin report) | Yes (`Http::fake` only) | **Awaiting credentials**; OAuth and API never called live | No |
 | n8n | Automation API, outbox and 58 workflows built (M17) | Laravel side: yes (`tests/Feature/Automation`); workflows: static validation only | **Not executed**: n8n is not installed on this machine; SMS provider, alert channel and LLM key not chosen (BD9) | No |
 | GeoIP | Contract built; `null` (default) and trusted-header drivers. GeoLite2 not built: needs `geoip2/geoip2` and a MaxMind database (BD9) | Yes (header parsing) | Not applicable | No |
 
@@ -1646,3 +1646,104 @@ The backend side of `OWNER_DECISIONS.md` decisions 1, 3, 4, 5 and 6 (the impleme
 ### Next milestone
 
 M13 (customer account), per the build order.
+
+---
+
+## M18: SEO and analytics
+
+Status: Complete (2026-11-11, not committed). Scope `SEO_STRATEGY.md`. Blade, Tailwind and plain JS; no Livewire; no new composer or npm packages.
+
+### Summary of completed work
+
+Server-built JSON-LD on every storefront page; hreflang and canonical rules centralised and tested; a sitemap index with per-type, per-language children and a `robots.txt` route; the redirects runtime (admin 301/302/410, removed products 410, slug-change 301s, trailing slash and case normalisation, 404 logging); a `SeoResolver` (metadata, then templates, then defaults); blog pages; GA4/GTM behind a consent banner with a nonce-safe loader; the server-side GA4 `purchase` through the Measurement Protocol from the M10 queue row; Search Console OAuth, daily fetch and admin report. GA4 and Search Console are mocked with `Http::fake` only and **awaiting credentials**.
+
+### Files created
+
+- Domain: `Seo/DTOs/{ResolvedSeo,RedirectMatch}`, `Seo/Services/{SeoResolver,RedirectResolver,NotFoundLogger,SlugRedirectRecorder}`, `Seo/StructuredData/{StructuredDataBuilder,PageSchema}`, `Seo/Sitemaps/{SitemapEntry,SitemapSource,SitemapGenerator}`, `Seo/SearchConsole/{SearchConsoleClient,SearchConsoleConnection,SearchConsoleSync,SearchConsoleReport,SearchConsoleException}`, `Analytics/Services/{AnalyticsSettings,PageAnalytics,MeasurementProtocolClient,AnalyticsEventDispatcher}`, `Analytics/Jobs/SendAnalyticsEvent`, `Analytics/Exceptions/MeasurementProtocolException`.
+- HTTP: `Middleware/Storefront/ResolveSeoUrls` (global), `Controllers/Web/BlogController`, `Controllers/Web/Seo/{SitemapController,RobotsController}`, `Controllers/Admin/Pages/SearchConsolePageController`, `Controllers/Admin/Seo/SearchConsoleController`, `Requests/Admin/Seo/{SearchConsoleReportRequest,SearchConsoleCallbackRequest}`; `routes/seo.php`.
+- Console: `seo:generate-sitemaps` (hourly at :40), `analytics:dispatch-pending` (every 5 minutes), `seo:fetch-search-console {--days=3}` (daily 06:15), all in `TaskSchedule`.
+- Config: `config/seo.php`; `.env.example` `SEO_BLOCK_ALL_CRAWLERS`, `SEO_SITEMAP_DISK` (no real values).
+- Views: `storefront/blog/{index,show}`, `storefront/partials/consent`, `errors/410`, `errors/partials/popular`, `admin/content/search-console`. JS: `lib/analytics.js`, `modules/consent.js`.
+- Tests: `tests/Feature/Seo/{StructuredDataTest,CanonicalRulesTest,RedirectRuntimeTest,SitemapTest,AnalyticsTest,MeasurementProtocolTest,SearchConsoleTest}.php`, `tests/Support/SeoFixtures.php`.
+
+### Files changed
+
+`bootstrap/app.php` (global `ResolveSeoUrls`, `routes/seo.php`, storefront CSP `:storefront`), `ContentSecurityPolicy` (Google hosts only on storefront pages and only while a tag is configured), `LocalizedRoutes::alternates`, `StorefrontServiceProvider` (scoped page state, slug-change listeners), `Web/{Home,Category,Platform,Product,Page,Checkout}Controller`, `RendersProductListing::listingSeo`, `RecordPurchaseEvent` (queues the send after commit), `RedirectService` (chain collapse on save), `Redirect` (cache invalidation), `BlogPostService` (visible posts), `ProductRepository::listedForSitemap` and `StorefrontCatalogService::sitemapProducts`, `config/admin_settings.php` (analytics group applied, new fields and secret), `config/admin.php` (Content > Search Console tab), `routes/{storefront_pages,admin,admin_pages}.php`, layout `storefront` (canonical, hreflang from the canonical, verification meta, JSON-LD, analytics config and events, consent banner), `components/store/{breadcrumbs,footer}`, views category, platform show, product, page, home, buy box, 404, admin settings, `resources/js/modules/{product,checkout}.js`, `lang/{en,ar}/{storefront,admin}.php`. **Deleted `public/robots.txt`** (the web server would serve it before Laravel; the route replaces it).
+
+### Migrations
+
+None (the M4 tables `redirects`, `not_found_logs`, `seo_metadata`, `seo_templates`, `analytics_event_dispatches`, `search_console_metrics` and `settings` are used as designed).
+
+### Features implemented
+
+- **Structured data** (`StructuredDataBuilder`, printed once per page by the layout as `application/ld+json` with the CSP nonce, `JSON_HEX_TAG` so catalog text cannot close the script): Organization and WebSite with SearchAction on every page (localized URL and `inLanguage`); BreadcrumbList from the visible breadcrumb; Product with Offer (one priced variant) or AggregateOffer (low/high, `offerCount`, each Offer) at the rendered display-currency price, availability, `priceValidUntil` (7 days); AggregateRating only when `rating_count` (approved reviews only) is above zero; CollectionPage with the page's products on categories and platforms; BlogPosting on posts; FAQPage from the home FAQ section only while `analytics.faq_schema` is on (default off, strategy section 4). EN and AR.
+- **Canonical and hreflang**: hreflang links (en, ar, x-default) are generated from the canonical URL, so filters, sort, tracking parameters and currency never reach an alternate; only `page` is kept. One filter or sort canonicalizes to the unfiltered listing; two or more filters, an empty (thin) listing and search are `noindex,follow` without canonical or hreflang; paginated pages are self-canonical with "Page N". Admin `seo_metadata` robots, canonical override (hreflang then omitted), title, description and Open Graph image win; then `seo_templates` with tokens; then defaults (`SeoResolver`, per language).
+- **URLs**: trailing slash removed with a 301 (query kept); after a 404, an upper-case path whose lower-case form is a storefront page gets a 301; no country segment anywhere (`/eg`, `/us/...` are 404).
+- **Redirects runtime** (`ResolveSeoUrls` + `RedirectResolver`): after a route miss, active admin redirects answer 301 or 302 (query kept when the target has none) or 410 with the designed page in the path's language; lookups cached per path (misses too) under a version bumped on every save or delete; chains followed up to 5 hops, loops and longer chains fall back to 404; `hits` counted. Admin saves collapse chains (`RedirectService::afterSave`); a slug change on a product, platform, category, page or blog post creates 301s for every language and collapses or removes old ones. Soft-deleted products are 410. Other storefront misses are upserted into `not_found_logs` (normalised path, no query string; file probes and JSON paths skipped); the 404 and 410 pages show popular searches.
+- **Sitemaps**: `/sitemap.xml` index, children `{static,categories,platforms,products,pages,blog}-{en,ar}-{n}.xml` with `xhtml:link` alternates (en, ar, x-default) and `lastmod`; chunked at `seo.sitemaps.chunk_size` (50,000); written to the `local` disk in a run directory and swapped in; generated hourly and on the first request when missing. Excludes drafts, inactive or empty listings, unpublished pages and posts, and any URL `noindex` in that language. **robots.txt** route: allows public content, disallows `/admin`, `/api`, `/checkout`, `/cart`, `/account`, `/search`, `/orders` (and the `/ar` twins), never CSS/JS, references the index; `SEO_BLOCK_ALL_CRAWLERS=true` answers `Disallow: /`.
+- **Blog pages** `/blog`, `/blog/{slug}` (EN/AR, translations, sanitized body, cover with width/height), so the strategy's blog URLs, sitemap and Article markup exist.
+- **Analytics (browser)**: settings group `analytics` is now read (`AnalyticsSettings`). With a GTM id (or a GA4 id alone) the page gets the public ids in `#store-config`, a consent banner (SECURITY.md: cookie consent gates GTM and GA; cookie `bc_consent`, 180 days, footer "Cookie settings"), and `lib/analytics.js` inserts the tag with the page nonce only after "Accept" and when idle. CSP adds `https://www.googletagmanager.com`, `https://*.google-analytics.com`, `https://*.analytics.google.com` only then, and never on admin pages. Events `view_item` (product), `add_to_cart` (after the bag accepted it), `begin_checkout` (checkout) from server values; `PageAnalytics` and the JS allow-list refuse `purchase` and `refund`. Checkout sends the `_ga` client id with place-order only after consent.
+- **Analytics (server)**: `purchase` from the M10 `analytics_event_dispatches` row through the Measurement Protocol (`AnalyticsEventDispatcher`, queued `SendAnalyticsEvent` with backoff 60 s/5 min/15 min/1 h, re-queued by `analytics:dispatch-pending`); a per-row lock and the `sent` status make it exactly once; 5 failed attempts mark it `failed`; while awaiting credentials or with `server_purchase` off the row stays `pending` without spending attempts. EU region option. No personal data; pseudonymous client id with ad consent denied when the browser sent none.
+- **Search Console**: Settings > Analytics card with connect (Google OAuth with offline access, read-only scope, session state, PKCE S256), the redirect URI to register, and disconnect (revoke and delete). Refresh token encrypted, write-only, audited without the value; access tokens cached encrypted. `seo:fetch-search-console` stores totals, queries and pages per day; Content > Search Console report (7/28/90 days: clicks, impressions, CTR, average position, top 20 queries and pages, "top rows only" notice). Laravel HTTP client only.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Structured data validated on samples | Met | `StructuredDataTest` parses the JSON-LD of real pages (product one and several variants, display currency, rating, Arabic, script-breaking name, category, platform, blog post, FAQ on/off) and checks the required properties. Not run through Google's Rich Results Test (needs a public URL) |
+| Sitemap index | Met | `SitemapTest`: index, children per type and language, alternates, lastmod, exclusions, chunking, regeneration, schedule |
+| Hreflang | Met | `CanonicalRulesTest` and `SitemapTest` (en, ar, x-default; query handling) |
+| Redirects, 404 and 410 | Met | `RedirectRuntimeTest` (14 cases) |
+| Canonical rules tested | Met | `CanonicalRulesTest` (17 cases incl. datasets) |
+| Lighthouse run recorded, not claimed | **Not run** | Lighthouse is not installed and no packages may be added. A manual headless-Chrome check is recorded below instead; these are not Lighthouse scores |
+| GA4 and GTM settings | Met | Admin analytics group applied; `AnalyticsTest` (config only when set, CSP, consent, events, validation, verification tag) |
+| Search Console OAuth and reporting, mocked | Met, awaiting credentials | `SearchConsoleTest` (11 cases, `Http::fake`) |
+| The browser never sends `purchase` | Met | `AnalyticsTest`: no `purchase` literal in any JS or Blade file, the JS allow-list, server refusal, and an end-to-end paid order (product, bag, checkout, return, order pages) with no `purchase` on any page while the server sends exactly one Measurement Protocol `purchase` with the browser's client id |
+
+### Lighthouse and performance check
+
+Lighthouse: **not run** (no Lighthouse CLI on this machine; installing packages is not allowed). Instead, a manual check with the installed Google Chrome 157 headless over the DevTools protocol (pipe, no packages): mobile viewport 412x915 at DPR 2.625, 4x CPU slowdown, 150 ms RTT and 1.6 Mbps down, cache disabled, `php artisan serve` on the production Vite build with preview data in the testing database (8 products), analytics not configured. Measured (ms):
+
+| Page | FCP | LCP | LCP element | CLS | Requests / KB | Console errors |
+|---|---|---|---|---|---|---|
+| `/` | 2340 | 2340 | hero `img[fetchpriority=high]` | 0 | 22 / 462 | none |
+| `/ar` | 2332 | 2332 | hero `img[fetchpriority=high]` | 0 | 21 / 453 | none |
+| `/products/steam-wallet-20` | 1772 | 1772 | price `p` (no product image in preview data) | 0 | 22 / 347 | none |
+| `/ar/products/steam-wallet-20` | 1800 | 1800 | price `p` | 0 | 22 / 352 | none |
+| `/gift-cards` | 1828 | 1828 | banner `img[fetchpriority=high]` | 0 | 21 / 355 | none |
+| `/ar/gift-cards` | 1872 | 1872 | banner `img[fetchpriority=high]` | 0 | 21 / 360 | none |
+
+Every page: 4 font preloads, no image without width and height, one JSON-LD script. With a GTM id configured (banner shown, tag not loaded before consent) the English product page measured LCP 2296 ms, CLS 0, no CSP violations. `php artisan serve` is single-threaded; numbers are indicative only. Finding: the home page and listings mark 2 to 3 images `fetchpriority=high` (hero slides or banner plus card art); only the LCP image should be (open item).
+
+### Tests and results
+
+- New: 77 cases in `tests/Feature/Seo` (StructuredData 11, CanonicalRules 17, RedirectRuntime 14, Sitemap 7, Analytics 10, MeasurementProtocol 7, SearchConsole 11).
+- Full suite: `php artisan test --compact` (sequential, MySQL) **2835 passed, 0 failed, 20772 assertions, about 201 s**. `vendor/bin/pint --dirty --format agent`: passed. `npm run build`: passed.
+- No existing test changed or weakened. Two failures in the first full run were fixed in code: the architecture rule (Seo used a Catalog repository; now through `StorefrontCatalogService`) and app payment return links with upper-case ids (now excluded: prefixes `app` and `checkout`, and case normalisation only redirects to storefront page routes).
+
+### Deviations
+
+- Sitemaps are plain XML on the `local` disk, served by Laravel (strategy said static gzip files); the web server or CDN can compress. Child names include the language (`products-en-1.xml`).
+- Robots also disallows `/orders` (order result pages are personal).
+- Hreflang alternates are emitted only on indexable pages that are their own canonical.
+- Listings with no products are `noindex,follow` (thin content) and are left out of the sitemap.
+- Inactive-but-returning products still 404 (the storefront detail only shows active products); the strategy's "200 with OutOfStock" needs a product-page change (open item). A soft-deleted product is 410; "301 to the platform when a replacement exists" is done with an admin redirect (no replacement field in the schema).
+
+### Outstanding requirements
+
+- Credentials: GA4 measurement id and Measurement Protocol secret, GTM container, Search Console OAuth client and property; then verify against `/debug/mp/collect` and a live OAuth consent (M20). Register the redirect URI shown on Settings > Analytics.
+- Server `refund` event (no row is written yet); browser `view_item_list`, `select_item`, `remove_from_cart`, `add_payment_info`.
+- Lighthouse run when Lighthouse is available (M20 requires recorded results).
+- Only the LCP image should carry `fetchpriority=high` on home and listings.
+- Inactive products at 200 with OutOfStock (strategy section 7).
+- Rich Results Test on a public staging URL.
+- `seo_templates` have no admin screen (rows can be seeded); `not_found_logs` has no admin list yet.
+
+### Design changes made
+
+- `API_DOCUMENTATION.md` section 5g; `INTEGRATIONS.md` sections 6.1 and 7.1 (built, awaiting credentials); `SEO_STRATEGY.md` status line; integration status table above.
+
+### Next milestone
+
+M19 (full test pass), or the app milestones per the build order.
+

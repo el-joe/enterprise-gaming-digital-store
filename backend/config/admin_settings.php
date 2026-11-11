@@ -126,16 +126,27 @@ return [
             ],
         ],
 
+        // M18 (SEO_STRATEGY.md section 12, INTEGRATIONS.md sections 6 and 7): read by
+        // AnalyticsSettings. Public ids reach the browser; secrets and the Search Console token
+        // (written only by the OAuth flow) never do.
         'analytics' => [
             'store' => 'analytics',
             'permission' => 'settings.manage',
-            'applied' => false,
+            'applied' => true,
             'fields' => [
                 'ga4_measurement_id' => ['type' => 'string', 'rules' => ['nullable', 'string', 'regex:/^G-[A-Z0-9]{4,20}$/'], 'default' => null],
                 'gtm_container_id' => ['type' => 'string', 'rules' => ['nullable', 'string', 'regex:/^GTM-[A-Z0-9]{4,12}$/'], 'default' => null],
+                'browser_events' => ['type' => 'bool', 'rules' => ['required', 'boolean'], 'default' => true],
+                'server_purchase' => ['type' => 'bool', 'rules' => ['required', 'boolean'], 'default' => true],
+                'mp_region' => ['type' => 'select', 'options' => ['global', 'eu'], 'rules' => ['required', 'in:global,eu'], 'default' => 'global'],
+                'search_console_property' => ['type' => 'string', 'rules' => ['nullable', 'string', 'max:190', 'regex:~^(sc-domain:[a-z0-9.-]+|https://[^\s/]+/)$~'], 'default' => null],
+                'search_console_client_id' => ['type' => 'string', 'rules' => ['nullable', 'string', 'max:190', 'regex:/^[A-Za-z0-9._-]+\.apps\.googleusercontent\.com$/'], 'default' => null],
+                'search_console_verification' => ['type' => 'string', 'rules' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{10,100}$/'], 'default' => null],
+                'faq_schema' => ['type' => 'bool', 'rules' => ['required', 'boolean'], 'default' => false],
             ],
             'secrets' => [
                 'ga4_api_secret' => ['rules' => ['string', 'min:8', 'max:120']],
+                'search_console_client_secret' => ['rules' => ['string', 'min:8', 'max:190']],
             ],
         ],
 

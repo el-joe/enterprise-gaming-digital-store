@@ -1,6 +1,11 @@
 @extends('layouts.storefront')
 
-@section('title', $title)
+@section('title', $seo->title)
+@section('description', (string) $seo->description)
+@section('robots', $seo->robots ?: 'index,follow')
+@if ($seo->canonical)
+    @section('canonical', $seo->canonical)
+@endif
 
 @section('content')
     <div class="container-page max-w-3xl pt-6 md:pt-10">

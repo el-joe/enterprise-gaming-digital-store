@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware\Storefront;
 
+use App\Domains\Analytics\Services\AnalyticsSettings;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -13,20 +14,24 @@ use Symfony\Component\HttpFoundation\Response;
  * this origin (Vite build) or carry the per-request nonce; the only third party is Stripe.js,
  * loaded on checkout when Stripe is offered. Inline scripts and styles without the nonce are
  * refused, so page data travels in nonced `application/json` blocks and data attributes.
+ *
+ * M18: on storefront pages (`:storefront`) and only while a GTM or GA4 tag is configured, the
+ * Google Tag Manager script host and the GA4 collection hosts are added (the tag itself loads
+ * only after analytics consent). Admin pages never allow them.
  */
 class ContentSecurityPolicy
 {
     /**
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $surface = 'admin'): Response
     {
         $nonce = Vite::useCspNonce();
 
         $response = $next($request);
 
         if (str_contains((string) $response->headers->get('Content-Type'), 'text/html')) {
-            $response->headers->set('Content-Security-Policy', $this->policy($nonce));
+            $response->headers->set('Content-Security-Policy', $this->policy($nonce, $surface === 'storefront'));
             $response->headers->set('X-Content-Type-Options', 'nosniff');
             $response->headers->set('Referrer-Policy', $response->headers->get('Referrer-Policy') ?? 'strict-origin-when-cross-origin');
         }
@@ -34,17 +39,18 @@ class ContentSecurityPolicy
         return $response;
     }
 
-    private function policy(string $nonce): string
+    private function policy(string $nonce, bool $storefront): string
     {
         $dev = $this->viteDevServer();
+        $analytics = $storefront ? app(AnalyticsSettings::class)->cspSources() : ['script' => [], 'connect' => [], 'img' => []];
 
         $directives = [
             'default-src' => ["'self'"],
-            'script-src' => ["'self'", "'nonce-{$nonce}'", 'https://js.stripe.com', ...$dev],
+            'script-src' => ["'self'", "'nonce-{$nonce}'", 'https://js.stripe.com', ...$analytics['script'], ...$dev],
             'style-src' => ["'self'", "'nonce-{$nonce}'", ...$dev],
             'img-src' => ["'self'", 'data:', 'https:'],
             'font-src' => ["'self'", ...$dev],
-            'connect-src' => ["'self'", 'https://api.stripe.com', ...$dev, ...array_map(static fn (string $origin): string => preg_replace('/^http/', 'ws', $origin), $dev)],
+            'connect-src' => ["'self'", 'https://api.stripe.com', ...$analytics['connect'], ...$dev, ...array_map(static fn (string $origin): string => preg_replace('/^http/', 'ws', $origin), $dev)],
             'frame-src' => ['https://js.stripe.com', 'https://hooks.stripe.com'],
             'form-action' => ["'self'"],
             'base-uri' => ["'self'"],

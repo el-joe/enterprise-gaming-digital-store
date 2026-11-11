@@ -74,6 +74,27 @@ class RedirectService extends CrudService
     }
 
     /**
+     * Chains are collapsed on save (SEO_STRATEGY.md section 7, M18): redirects that pointed at
+     * this source now point at its target, or become 410 when this source is gone.
+     *
+     * @param  Redirect  $model
+     */
+    protected function afterSave(Model $model, array $attributes): void
+    {
+        if (! $model->is_active) {
+            return;
+        }
+
+        Redirect::query()
+            ->where('target_path', $model->source_path)
+            ->whereKeyNot($model->id)
+            ->get()
+            ->each(static fn (Redirect $redirect) => $redirect->update($model->status_code === 410
+                ? ['target_path' => null, 'status_code' => 410]
+                : ['target_path' => $model->target_path]));
+    }
+
+    /**
      * A target that is itself a redirect source could create a loop or a long chain.
      */
     private function assertNoLoop(Redirect $redirect, string $source, ?string $target): void

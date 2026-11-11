@@ -72,6 +72,8 @@ export default function product(form) {
             return;
         }
 
+        trackAddToCart(form, variantButtons.find((option) => option.dataset.variantOption === body.variant_id), body.quantity);
+
         const count = (result.body?.data?.cart?.items ?? []).reduce((sum, item) => sum + Number(item.quantity), 0);
         document.querySelectorAll('[data-bag-count]').forEach((badge) => {
             badge.textContent = String(count);
@@ -86,4 +88,35 @@ export default function product(form) {
 
         toast(t('added_to_bag'));
     });
+}
+
+/**
+ * `add_to_cart` for browser analytics (M18): the server-formatted amount of the chosen variant,
+ * handed to lib/analytics.js through a DOM event (ignored when analytics is off).
+ */
+function trackAddToCart(form, option, quantity) {
+    if (!option || !option.dataset.amount) {
+        return;
+    }
+
+    const price = Number(option.dataset.amount);
+    const item = {
+        item_id: option.dataset.sku,
+        item_name: form.dataset.itemName,
+        item_variant: option.dataset.title,
+        price,
+        quantity,
+    };
+
+    if (form.dataset.itemCategory) {
+        item.item_category = form.dataset.itemCategory;
+    }
+
+    if (form.dataset.itemBrand) {
+        item.item_brand = form.dataset.itemBrand;
+    }
+
+    document.dispatchEvent(new CustomEvent('store:analytics', {
+        detail: { event: 'add_to_cart', ecommerce: { currency: option.dataset.currency, value: price * quantity, items: [item] } },
+    }));
 }

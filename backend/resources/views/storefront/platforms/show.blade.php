@@ -6,10 +6,11 @@
     $page = $products->currentPage();
 @endphp
 
-@section('title', __('storefront.platforms.page_title', ['name' => $platform['name']]).($page > 1 ? ' — '.__('storefront.listing.page', ['page' => $page]) : ''))
-@section('description', $platform['description'] ? \Illuminate\Support\Str::limit($platform['description'], 155) : __('storefront.meta.platform', ['name' => $platform['name']]))
-@section('robots', $filtered > 1 ? 'noindex,follow' : 'index,follow')
-@section('canonical', $filtered === 0 && $page > 1 ? url()->current().'?page='.$page : url()->current())
+{{-- Canonical and robots rules as the category page (SEO_STRATEGY.md section 2, M18). --}}
+@section('title', $seo->title.($page > 1 ? ' — '.__('storefront.listing.page', ['page' => $page]) : ''))
+@section('description', \Illuminate\Support\Str::limit((string) $seo->description, 155))
+@section('robots', $seo->robots ?: ($filtered > 1 || $products->isEmpty() ? 'noindex,follow' : 'index,follow'))
+@section('canonical', $seo->canonical ?: ($filtered === 0 && $page > 1 ? url()->current().'?page='.$page : url()->current()))
 
 @section('content')
     <div class="container-page pt-6 md:pt-10">

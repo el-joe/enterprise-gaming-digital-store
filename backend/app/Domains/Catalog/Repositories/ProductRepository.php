@@ -124,6 +124,17 @@ class ProductRepository
     }
 
     /**
+     * Every listed product (same visibility as the listing), id, slug and update time only, for
+     * the sitemap (M18).
+     *
+     * @return Builder<Product>
+     */
+    public function listedForSitemap(): Builder
+    {
+        return $this->listed(ProductListingFilter::all())->select(['products.id', 'products.slug', 'products.updated_at']);
+    }
+
+    /**
      * Listed products per category id (primary or secondary), as the category filter counts them.
      *
      * @param  list<int>  $categoryIds

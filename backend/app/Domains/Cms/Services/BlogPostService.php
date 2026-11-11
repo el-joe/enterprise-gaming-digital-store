@@ -8,6 +8,8 @@ use App\Domains\Cms\Models\BlogPost;
 use App\Domains\Shared\Services\CrudService;
 use App\Domains\Shared\Services\HtmlSanitizer;
 use App\Domains\Shared\Services\ListQueryApplier;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
@@ -21,6 +23,33 @@ class BlogPostService extends CrudService
     public function __construct(ListQueryApplier $lists, AuditLogger $audit, private HtmlSanitizer $sanitizer)
     {
         parent::__construct($lists, $audit);
+    }
+
+    /**
+     * Posts visible on the storefront (M18): published, or scheduled with a publication time
+     * that has passed. Soft-deleted posts are excluded by the model.
+     *
+     * @return Builder<BlogPost>
+     */
+    public function visibleQuery(): Builder
+    {
+        return BlogPost::query()
+            ->where(static fn (Builder $query) => $query
+                ->where('status', BlogPostStatus::Published)
+                ->orWhere(static fn (Builder $scheduled) => $scheduled->where('status', BlogPostStatus::Scheduled)->where('published_at', '<=', now())));
+    }
+
+    public function findVisible(string $slug): ?BlogPost
+    {
+        return $this->visibleQuery()->with('coverMedia')->where('slug', $slug)->first();
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, BlogPost>
+     */
+    public function visiblePage(int $page, int $perPage): LengthAwarePaginator
+    {
+        return $this->visibleQuery()->with('coverMedia')->orderByDesc('published_at')->orderByDesc('id')->paginate($perPage, ['*'], 'page', $page);
     }
 
     protected function model(): string

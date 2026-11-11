@@ -4,6 +4,7 @@ namespace App\Domains\Analytics\Listeners;
 
 use App\Domains\Analytics\Enums\AnalyticsEventDispatchEventName;
 use App\Domains\Analytics\Enums\AnalyticsEventDispatchStatus;
+use App\Domains\Analytics\Jobs\SendAnalyticsEvent;
 use App\Domains\Analytics\Models\AnalyticsEventDispatch;
 use App\Domains\Orders\Enums\OrderStatus;
 use App\Domains\Orders\Events\OrderStatusChanged;
@@ -13,8 +14,9 @@ use App\Domains\Orders\Models\OrderItem;
 /**
  * Queues the GA4 `purchase` event once per order, server side, when the order is verified paid
  * (the browser never sends `purchase`). The unique `dedupe_key` (`purchase:{order_number}`)
- * makes a repeated paid transition harmless. Sending it to the Measurement Protocol is M18; rows
- * stay `pending` until then. The payload holds no personal data.
+ * makes a repeated paid transition harmless. M18: the new row is sent by SendAnalyticsEvent after
+ * the transaction commits (and retried by `analytics:dispatch-pending`); it stays `pending` while
+ * the Measurement Protocol awaits credentials. The payload holds no personal data.
  */
 class RecordPurchaseEvent
 {
@@ -27,7 +29,7 @@ class RecordPurchaseEvent
         $order = Order::query()->findOrFail($event->orderId);
         $items = OrderItem::query()->where('order_id', $order->id)->orderBy('id')->get(['product_variant_id', 'sku_snapshot', 'quantity']);
 
-        AnalyticsEventDispatch::query()->insertOrIgnore([
+        $inserted = AnalyticsEventDispatch::query()->insertOrIgnore([
             'event_name' => AnalyticsEventDispatchEventName::Purchase->value,
             'order_id' => $order->id,
             'dedupe_key' => 'purchase:'.$order->order_number,
@@ -43,5 +45,10 @@ class RecordPurchaseEvent
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        if ($inserted === 1) {
+            $id = AnalyticsEventDispatch::query()->where('dedupe_key', 'purchase:'.$order->order_number)->value('id');
+            SendAnalyticsEvent::dispatch((int) $id)->afterCommit();
+        }
     }
 }

@@ -81,6 +81,7 @@ return [
             ['key' => 'faq-groups', 'route' => 'admin.content.faq-groups.index', 'permissions' => ['content.faq']],
             ['key' => 'menus', 'route' => 'admin.content.menus.index', 'permissions' => ['content.menus']],
             ['key' => 'redirects', 'route' => 'admin.content.redirects.index', 'permissions' => ['seo.redirects']],
+            ['key' => 'search-console', 'route' => 'admin.content.search-console', 'permissions' => ['seo.manage']],
             ['key' => 'media', 'route' => 'admin.content.media.index', 'permissions' => ['content.media']],
         ],
         'support' => [

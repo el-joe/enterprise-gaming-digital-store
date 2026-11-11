@@ -45,6 +45,26 @@ return [
         'sign_in' => 'Sign in',
     ],
 
+    'consent' => [
+        'title' => 'Analytics cookies',
+        'text' => 'We would like to measure visits and purchases with Google Analytics to improve the store. Nothing is measured unless you accept.',
+        'privacy' => 'Privacy policy',
+        'accept' => 'Accept',
+        'decline' => 'Decline',
+        'settings' => 'Cookie settings',
+    ],
+
+    'blog' => [
+        'title' => 'Blog',
+        'intro' => 'Guides, news and tips for gift cards, wallets and top-ups.',
+        'empty' => 'No posts yet.',
+        'empty_text' => 'Check back soon for guides and news.',
+        'read' => 'Read the post',
+        'published' => 'Published :date',
+        'page' => 'Page :page',
+        'meta' => 'Guides, news and tips from :site.',
+    ],
+
     'footer' => [
         'tagline' => 'A premium store for game credit, gift cards and top-ups. Delivered securely, worldwide.',
         'shop' => 'Shop',
@@ -489,6 +509,9 @@ return [
     ],
 
     'errors' => [
+        '410_title' => 'This page was removed.',
+        '410_text' => 'The page you are looking for is gone for good. Browse the store or search for what you need.',
+        'popular' => 'Popular searches',
         '404_title' => 'This vault is empty.',
         '404_text' => 'The page moved or never existed. Try search, or head back to the store.',
         'search' => 'Search products',

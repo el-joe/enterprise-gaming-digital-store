@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\Account\TicketController;
 use App\Http\Controllers\Web\Account\WalletController;
 use App\Http\Controllers\Web\Account\WishlistController;
 use App\Http\Controllers\Web\AuthPageController;
+use App\Http\Controllers\Web\BlogController;
 use App\Http\Controllers\Web\CartController;
 use App\Http\Controllers\Web\CategoryController;
 use App\Http\Controllers\Web\CheckoutController;
@@ -36,6 +37,8 @@ Route::middleware('throttle:storefront')->group(function (): void {
     Route::get('/products/{slug}', [ProductController::class, 'show'])->name('storefront.products.show');
     Route::get('/search', [SearchController::class, 'show'])->middleware('throttle:search')->name('storefront.search');
     Route::get('/pages/{slug}', [PageController::class, 'show'])->name('storefront.pages.show');
+    Route::get('/blog', [BlogController::class, 'index'])->name('storefront.blog.index');
+    Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('storefront.blog.show');
 
     Route::get('/cart', [CartController::class, 'show'])->name('storefront.cart');
     Route::get('/checkout', [CheckoutController::class, 'show'])->name('storefront.checkout');

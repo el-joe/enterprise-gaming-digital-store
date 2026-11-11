@@ -1,6 +1,6 @@
 # SEO Strategy
 
-Status: planned. A Lighthouse SEO score is a technical quality signal and does not guarantee rankings; no document or report in this project may claim otherwise.
+Status: built in M18 (see `PROGRESS.md` M18 for what was built and the deviations). A Lighthouse SEO score is a technical quality signal and does not guarantee rankings; no document or report in this project may claim otherwise.
 
 ## 1. Rendering
 

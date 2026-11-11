@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Domains\Analytics\Services\PageAnalytics;
 use App\Domains\Catalog\Services\StorefrontCatalogService;
 use App\Domains\Identity\Models\User;
 use App\Domains\Orders\Services\CartService;
@@ -22,6 +23,7 @@ use Illuminate\View\View;
  * `GET /api/v1/checkout/payment-options` and the order from `POST /api/v1/checkout/place-order`,
  * whose responses decide the payment currency and amount the page shows. While guest checkout
  * is off (owner decision 4, `storefront.guest_checkout`), a guest is sent to sign in and back.
+ * M18: the browser `begin_checkout` event from the same cart values (never `purchase`).
  */
 class CheckoutController extends Controller
 {
@@ -46,8 +48,11 @@ class CheckoutController extends Controller
         $preferred = collect([$cart->country_code, $user?->country_code, $geoIp->countryFor($request)])
             ->first(static fn (?string $code): bool => $code !== null && in_array($code, $codes, true));
 
+        $cartData = (new CartResource($carts->quote($cart)))->resolve($request);
+        app(PageAnalytics::class)->beginCheckout($cartData);
+
         return view('storefront.checkout', [
-            'cart' => (new CartResource($carts->quote($cart)))->resolve($request),
+            'cart' => $cartData,
             'countries' => $active->map(static fn (Country $country): array => ['code' => $country->code, 'name' => $countries->localizedName($country)])
                 ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)->values()->all(),
             'country' => $preferred,

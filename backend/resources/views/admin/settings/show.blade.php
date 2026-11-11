@@ -101,6 +101,29 @@
                 </x-admin.card>
             @endforeach
 
+            @if ($group === 'analytics')
+                @php($searchConsole = app(\App\Domains\Analytics\Services\AnalyticsSettings::class))
+                <x-admin.card :title="__('admin.search_console.connection')" :subtitle="__('admin.search_console.connect_help')">
+                    @if (session('search_console_status'))<div class="alert-success mb-3" role="status"><x-store.icon name="check" class="mt-0.5" /><p>{{ session('search_console_status') }}</p></div>@endif
+                    @if (session('search_console_error'))<div class="alert-danger mb-3" role="alert"><x-store.icon name="alert" class="mt-0.5" /><p>{{ session('search_console_error') }}</p></div>@endif
+                    <p class="flex items-center justify-between gap-3 text-sm">
+                        <span>{{ __('admin.search_console.title') }}</span>
+                        <x-admin.badge :tone="$searchConsole->searchConsoleConnected() ? 'success' : 'neutral'" :dot="false">{{ $searchConsole->searchConsoleConnected() ? __('admin.search_console.connected') : __('admin.search_console.not_connected') }}</x-admin.badge>
+                    </p>
+                    <p class="mt-3 text-xs text-content-muted">{{ __('admin.search_console.redirect_uri') }}</p>
+                    <p class="font-mono text-xs break-all" dir="ltr">{{ route('admin.content.search-console.callback') }}</p>
+                    <div class="mt-4 flex flex-wrap gap-2" data-module="action">
+                        @if ($canSecrets)
+                            <a href="{{ route('admin.content.search-console.connect') }}" class="admin-btn-primary">{{ $searchConsole->searchConsoleConnected() ? __('admin.search_console.reconnect') : __('admin.search_console.connect') }}</a>
+                            @if ($searchConsole->searchConsoleConnected())
+                                <button type="button" class="admin-btn" data-action-url="{{ url('/admin/api/seo/search-console/connection') }}" data-action-method="DELETE" data-confirm-title="{{ __('admin.search_console.disconnect_confirm') }}" data-confirm-danger>{{ __('admin.search_console.disconnect') }}</button>
+                            @endif
+                        @endif
+                        @can('seo.manage')<a href="{{ route('admin.content.search-console') }}" class="admin-btn">{{ __('admin.search_console.report') }}</a>@endcan
+                    </div>
+                </x-admin.card>
+            @endif
+
             @if ($group === 'checkout')
                 <x-admin.card :title="__('admin.settings.payment_rules')">
                     <p class="text-sm text-content-secondary">{{ __('admin.settings.payment_rules_text') }}</p>

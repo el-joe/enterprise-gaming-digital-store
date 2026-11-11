@@ -1,8 +1,10 @@
 {{--
     Storefront layout (M12). Pages set: title, description, robots (default index,follow),
-    canonical (default: the URL without its query string) and optionally `header`: `minimal`
-    (checkout: logo and secure badge, no footer) or `none` (auth split screen).
-    Script data travels in the nonced JSON block below; no inline script or style is used.
+    canonical (default: the URL without its query string) and optionally
+    `header`: `minimal` (checkout: logo and secure badge, no footer) or `none` (auth split screen).
+    Script data travels in the nonced JSON blocks below; no inline script or style is used.
+    M18: hreflang alternates follow the canonical URL (LocalizedRoutes::alternates); JSON-LD comes
+    from PageSchema; analytics events from PageAnalytics, and the tag loads only after consent.
 --}}
 @php
     $title = trim($__env->yieldContent('title'));
@@ -10,6 +12,11 @@
     $description = trim($__env->yieldContent('description')) ?: __('storefront.meta.description');
     $robots = trim($__env->yieldContent('robots')) ?: 'index,follow';
     $canonical = trim($__env->yieldContent('canonical')) ?: url()->current();
+    $indexable = str_starts_with($robots, 'index');
+    $alternates = $indexable ? \App\Http\Support\LocalizedRoutes::alternates(request(), $canonical) : [];
+    $analytics = app(\App\Domains\Analytics\Services\AnalyticsSettings::class);
+    $analyticsConfig = $analytics->browserConfig();
+    $siteVerification = $analytics->searchConsoleVerification();
     $headerMode = trim($__env->yieldContent('header'));
     $minimal = $headerMode === 'minimal';
     $config = [
@@ -34,6 +41,7 @@
             'home' => url()->localized('storefront.home'),
         ],
         'i18n' => trans('storefront.js') + trans('account.js'),
+        'analytics' => $analyticsConfig,
     ];
 @endphp
 <!DOCTYPE html>
@@ -45,13 +53,16 @@
     <title>{{ $fullTitle }}</title>
     <meta name="description" content="{{ $description }}">
     <meta name="robots" content="{{ $robots }}">
-    @if (str_starts_with($robots, 'index'))
+    @if ($indexable)
         <link rel="canonical" href="{{ $canonical }}">
-        @foreach ($storefront['languages'] as $language)
-            <link rel="alternate" hreflang="{{ $language['code'] }}" href="{{ $language['url'] }}">
+        @foreach ($alternates as $code => $href)
+            <link rel="alternate" hreflang="{{ $code }}" href="{{ $href }}">
         @endforeach
-        <link rel="alternate" hreflang="x-default" href="{{ collect($storefront['languages'])->firstWhere('code', config('app.fallback_locale'))['url'] ?? url('/') }}">
+        @if (isset($alternates[config('app.fallback_locale')]))
+            <link rel="alternate" hreflang="x-default" href="{{ $alternates[config('app.fallback_locale')] }}">
+        @endif
     @endif
+    @if ($siteVerification)<meta name="google-site-verification" content="{{ $siteVerification }}">@endif
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ $fullTitle }}">
     <meta property="og:description" content="{{ $description }}">
@@ -80,7 +91,15 @@
 
     <div class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4" aria-live="polite" role="status" data-toast-region></div>
 
+    @if ($analyticsConfig)
+        @include('storefront.partials.consent')
+    @endif
+
     <script type="application/json" id="store-config" nonce="{{ Vite::cspNonce() }}">@json($config)</script>
+    @if ($analyticsConfig)
+        <script type="application/json" id="analytics-events" nonce="{{ Vite::cspNonce() }}">@json(app(\App\Domains\Analytics\Services\PageAnalytics::class)->events())</script>
+    @endif
+    <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">{!! app(\App\Domains\Seo\StructuredData\PageSchema::class)->toJson($storefront['locale']) !!}</script>
     @stack('data')
 </body>
 </html>

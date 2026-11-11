@@ -361,6 +361,15 @@ Browser-side events via gtag/GTM: `view_item_list`, `select_item`, `view_item`, 
 
 GTM: container ID setting; loaded only after consent where required.
 
+### 6.1 Built (M18): awaiting credentials
+
+**Status: awaiting credentials. Tested with `Http::fake` only; never called live; the debug endpoint was not used.**
+
+- Settings > Analytics (`analytics` group): `ga4_measurement_id`, `gtm_container_id`, `browser_events`, `server_purchase`, `mp_region` (`global` = `www.google-analytics.com`, `eu` = `region1.google-analytics.com`); secret `ga4_api_secret` (write-only, encrypted). Read by `AnalyticsSettings`.
+- Server `purchase`: `RecordPurchaseEvent` (M10) writes one `analytics_event_dispatches` row per order (`dedupe_key` `purchase:{order_number}`) and queues `SendAnalyticsEvent` after commit; `analytics:dispatch-pending` (every 5 minutes) re-queues pending rows. `AnalyticsEventDispatcher` sends with a per-row lock and the `sent` status, so a retry or a second worker never sends twice; GA4 also deduplicates by `transaction_id`. Body: `client_id` (the `_ga` id the browser sent with `place-order` after consent, else a pseudonymous HMAC id with `consent.ad_user_data` and `ad_personalization` `DENIED`), `timestamp_micros` (when the row is under 72 hours old), one `purchase` event with `transaction_id`, `value`, `currency` (the payment currency and total), `items[{item_id: SKU, quantity}]`. Failure counts an attempt (job backoff 60 s, 5 min, 15 min, 1 h); after 5 attempts the row is `failed`. While the measurement id or secret is missing, or `server_purchase` is off, rows stay `pending` without spending attempts.
+- Browser: GTM (`gtm.js`) or, without a container, GA4 `gtag/js`, added by `resources/js/lib/analytics.js` with the page CSP nonce, only after the shopper accepts the analytics consent banner (cookie `bc_consent`, 180 days) and when idle. Events `view_item` (product page), `add_to_cart` (after the bag accepted the line), `begin_checkout` (checkout page) from server-rendered values; the allow-list refuses `purchase` and `refund` in JS and in `PageAnalytics` on the server. CSP adds `https://www.googletagmanager.com` (script, connect), `https://*.google-analytics.com` and `https://*.analytics.google.com` (connect) on storefront pages only while a tag is configured; admin pages never.
+- Not built: server `refund` (no row is written yet), the `/debug/mp/collect` validation in non-production, `view_item_list`, `select_item`, `remove_from_cart`, `add_payment_info`.
+
 ---
 
 ## 7. Google Search Console API
@@ -378,3 +387,12 @@ Response: `rows[]{keys[],clicks,impressions,ctr,position}`. The API returns top 
 Stored daily in `search_console_metrics` for clicks, impressions, CTR, average position, top queries and top landing pages.
 
 Verification: site verification meta tag from settings.
+
+### 7.1 Built (M18): awaiting credentials
+
+**Status: awaiting credentials. Tested with `Http::fake` only; the OAuth flow and the API have never been called live.** No Google package: Laravel HTTP client (`SearchConsoleClient`).
+
+- Settings > Analytics: `search_console_property` (`sc-domain:boxcards.shop` or `https://boxcards.shop/`), `search_console_client_id`, `search_console_verification` (printed as `google-site-verification` on storefront pages); secret `search_console_client_secret`. The OAuth client must list the redirect URI shown on that screen (`/admin/seo/search-console/callback`).
+- Connect (`settings.manage_critical`): `https://accounts.google.com/o/oauth2/v2/auth` with `access_type=offline`, `prompt=consent`, scope `webmasters.readonly`, a session `state` (10 minutes, single use) and PKCE S256. Callback exchanges the code at `https://oauth2.googleapis.com/token`; the refresh token is stored encrypted (`analytics.search_console_refresh_token`), never shown or returned; audited without the token. Access tokens are cached encrypted until 2 minutes before expiry. Disconnect revokes at `https://oauth2.googleapis.com/revoke` (best effort) and deletes the token.
+- `seo:fetch-search-console {--days=3}` (daily 06:15) reads `date`, `date+query` and `date+page` (5,000 rows each, `dataState: final`, window ending 3 days ago) into `search_console_metrics` (upsert per date, dimension and key). Report: Content > Search Console (`seo.manage`), 7, 28 or 90 days, with the "top rows only" notice.
+- `UNVERIFIED`: whether `prompt=consent` is needed on every reconnect to receive a new refresh token, and the exact error shape for an expired grant (handled generically as 502 `search_console_unavailable`).

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Pages\OrderPageController;
 use App\Http\Controllers\Admin\Pages\PaymentPageController;
 use App\Http\Controllers\Admin\Pages\PricingPageController;
 use App\Http\Controllers\Admin\Pages\ResourcePageController;
+use App\Http\Controllers\Admin\Pages\SearchConsolePageController;
 use App\Http\Controllers\Admin\Pages\SettingsPageController;
 use App\Http\Controllers\Admin\Pages\SupplierPageController;
 use App\Http\Controllers\Admin\Pages\SupportPageController;
@@ -87,6 +88,13 @@ Route::middleware(['auth', 'staff', 'two_factor:redirect', 'admin.idle', 'thrott
         Route::get('/users/staff/{staff:public_id}', [UsersPageController::class, 'show'])->whereUlid('staff')->name('users.staff.show');
     });
     Route::get('/users/roles', [UsersPageController::class, 'roles'])->middleware('permission:roles.manage|users.manage')->name('users.roles.index');
+
+    // M18: Search Console report and the one-time OAuth consent (INTEGRATIONS.md section 7).
+    Route::get('/seo/search-console', [SearchConsolePageController::class, 'report'])->middleware('permission:seo.manage')->name('content.search-console');
+    Route::middleware(['permission:settings.manage_critical', 'throttle:10,1'])->group(function (): void {
+        Route::get('/seo/search-console/connect', [SearchConsolePageController::class, 'connect'])->name('content.search-console.connect');
+        Route::get('/seo/search-console/callback', [SearchConsolePageController::class, 'callback'])->name('content.search-console.callback');
+    });
 
     Route::get('/settings/{group?}', SettingsPageController::class)->middleware('permission:settings.view')->where('group', '[a-z_]+')->name('settings.show');
 

@@ -20,6 +20,7 @@ use App\Http\Middleware\Mobile\EnsureCustomerToken;
 use App\Http\Middleware\SetLocaleFromRequest;
 use App\Http\Middleware\Storefront\ContentSecurityPolicy;
 use App\Http\Middleware\Storefront\PublicCacheHeaders;
+use App\Http\Middleware\Storefront\ResolveSeoUrls;
 use App\Http\Middleware\Storefront\SetStorefrontLocale;
 use App\Http\Support\LocalizedRoutes;
 use Illuminate\Foundation\Application;
@@ -55,6 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::prefix('webhooks')->name('webhooks.')->group(base_path('routes/webhooks.php'));
             // M-A6: app link association files and payment return links, outside every group.
             Route::group([], base_path('routes/app_links.php'));
+            // M18: robots.txt and sitemaps (no session), before the storefront pages.
+            Route::group([], base_path('routes/seo.php'));
             // M12: storefront pages, last because the category route catches one top-level segment.
             // The payment return page has no localized twin (its URL is configured for providers).
             Route::middleware(['storefront', 'storefront.locale:session', 'throttle:storefront'])
@@ -68,6 +71,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AssignRequestId::class);
+        // M18: trailing slash, admin redirects, 410 and 404 logging for storefront GETs.
+        $middleware->append(ResolveSeoUrls::class);
         $middleware->encryptCookies(except: ['currency']);
 
         $middleware->alias([
@@ -90,7 +95,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->group('account', ['web', 'auth', 'account.active', 'locale']);
         // M12: storefront pages (Blade): session, CSRF and the Content Security Policy nonce.
-        $middleware->group('storefront', ['web', ContentSecurityPolicy::class]);
+        $middleware->group('storefront', ['web', ContentSecurityPolicy::class.':storefront']);
         $middleware->redirectGuestsTo(fn (Request $request): string => $request->is('admin', 'admin/*')
             ? route('admin.login')
             : LocalizedRoutes::url('storefront.login', locale: LocalizedRoutes::localeOfPath($request->path())));
