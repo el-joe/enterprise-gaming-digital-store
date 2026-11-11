@@ -39,17 +39,22 @@
         @foreach ($slides as $index => $slide)
             <div class="relative grid min-h-[560px] md:min-h-[520px] lg:min-h-[620px]" role="group" aria-roledescription="{{ __('storefront.hero.slide') }}"
                 aria-label="{{ __('storefront.hero.slide_of', ['index' => $index + 1, 'count' => count($slides)]) }}" data-hero-slide @if (! $loop->first) hidden @endif>
-                <picture class="absolute inset-0 -z-0">
-                    @if ($slide['art'])
-                        <source media="(max-width: 767px)" srcset="{{ Vite::asset("resources/assets/images/hero/{$slide['art']}-mobile-1080x1350.webp") }}">
-                        <img src="{{ Vite::asset("resources/assets/images/hero/{$slide['art']}-desktop-2400x1000.webp") }}" alt="" width="2400" height="1000"
-                            class="h-[62%] w-full object-cover object-top md:h-full md:object-[75%_center] rtl:md:-scale-x-100" @if ($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
-                    @else
-                        @if ($slide['mobile'])<source media="(max-width: 767px)" srcset="{{ $slide['mobile']['formats']['webp'] ?? $slide['mobile']['url'] }}">@endif
-                        <img src="{{ $slide['desktop']['formats']['webp'] ?? $slide['desktop']['url'] ?? '' }}" alt="{{ $slide['desktop']['alt'] ?? '' }}" class="h-[62%] w-full object-cover md:h-full" @if ($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
-                    @endif
-                </picture>
-                <div class="hero-scrim absolute inset-0" aria-hidden="true"></div>
+                {{-- Art and scrim live in a frame capped at 1920px and centred, so on wide screens the scrim
+                     lines up with the content column instead of the viewport edge; beyond 1920px the frame's
+                     sides fade into the canvas (.hero-frame). --}}
+                <div class="hero-frame absolute inset-0 mx-auto w-full max-w-[1920px]">
+                    <picture class="absolute inset-0 -z-0">
+                        @if ($slide['art'])
+                            <source media="(max-width: 767px)" srcset="{{ Vite::asset("resources/assets/images/hero/{$slide['art']}-mobile-1080x1350.webp") }}">
+                            <img src="{{ Vite::asset("resources/assets/images/hero/{$slide['art']}-desktop-2400x1000.webp") }}" alt="" width="2400" height="1000"
+                                class="h-[62%] w-full object-cover object-top md:h-full md:object-[75%_center] rtl:md:-scale-x-100" @if ($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
+                        @else
+                            @if ($slide['mobile'])<source media="(max-width: 767px)" srcset="{{ $slide['mobile']['formats']['webp'] ?? $slide['mobile']['url'] }}">@endif
+                            <img src="{{ $slide['desktop']['formats']['webp'] ?? $slide['desktop']['url'] ?? '' }}" alt="{{ $slide['desktop']['alt'] ?? '' }}" class="h-[62%] w-full object-cover md:h-full" @if ($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async">
+                        @endif
+                    </picture>
+                    <div class="hero-scrim absolute inset-0" aria-hidden="true"></div>
+                </div>
                 <div class="container-page relative flex items-end pb-24 md:items-center md:pb-0">
                     <div class="flex max-w-xl flex-col items-start gap-4 md:gap-5">
                         <span class="rounded-xs bg-accent-tint px-2 py-0.5 text-xs font-medium text-accent-text">{{ __('storefront.hero.badge') }}</span>

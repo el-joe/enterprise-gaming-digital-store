@@ -311,6 +311,13 @@
         }
     }
 
+    /* Wider than the 1920px hero frame: fade its sides into the canvas instead of a hard edge. */
+    @media (min-width: 1921px) {
+        .hero-frame {
+            mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+        }
+    }
+
     .prose-store {
         @apply text-sm leading-6 text-content-secondary;
     }
