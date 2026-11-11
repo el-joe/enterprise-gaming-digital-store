@@ -75,6 +75,23 @@ final class ResetPasswordLink extends DeepLink {
   int get hashCode => Object.hash(token, email);
 }
 
+/// A product page on the store domain: `/products/{slug}`, also with a `/en` or `/ar` locale
+/// prefix (the web's product URL, `LinkTargetResolver`). Opens [location] in the app (M-A12).
+final class ProductLink extends DeepLink {
+  const ProductLink(this.slug);
+
+  final String slug;
+
+  /// The in-app location of the product page.
+  String get location => '/products/${Uri.encodeComponent(slug)}';
+
+  @override
+  bool operator ==(Object other) => other is ProductLink && other.slug == slug;
+
+  @override
+  int get hashCode => slug.hashCode;
+}
+
 final _segment = RegExp(r'^[A-Za-z0-9_-]{1,128}$');
 
 /// Parses an incoming link. Only `https` links on [appLinkHost] are accepted; signed links must
@@ -117,6 +134,12 @@ DeepLink? parseDeepLink(Uri uri, {required String appLinkHost}) {
       valid([s[2], s[3]]) &&
       signed()) {
     return VerifyEmailLink(s[2], s[3], uri);
+  }
+  final product = s.length == 3 && (s[0] == 'en' || s[0] == 'ar')
+      ? s.sublist(1)
+      : s;
+  if (product.length == 2 && product[0] == 'products' && valid([product[1]])) {
+    return ProductLink(product[1]);
   }
   if (s.length == 2 && s[0] == 'reset-password' && valid([s[1]])) {
     final email = uri.queryParameters['email'];

@@ -3,14 +3,15 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A11 home, catalog and search UI** (2026-11-11) on M-A10 (auth and onboarding), the M-A7
-data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
+Status: **M-A12 product UI** (2026-11-11) on M-A11 (home, catalog and search), M-A10 (auth and
+onboarding), the M-A7 data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
 maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
 (Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
 (categories and platforms), product listings with filters, sort and infinite scroll, search with
-suggestions, popular terms and a local history, and the display currency switcher. Cart, Orders and
-the product page are "coming in the next update" placeholders until M-A12 to M-A14; the Account tab
-holds the M-A10 account card, the currency and the language until M-A16.
+suggestions, popular terms and a local history, the display currency switcher, and the product
+page (variants, delivery fields, add to cart, reviews) with the cart count on the Cart tab. Cart and
+Orders are "coming in the next update" placeholders until M-A13 and M-A14; the Account tab holds the
+M-A10 account card, the currency and the language until M-A16.
 
 ## Requirements
 
@@ -94,8 +95,8 @@ test/fixtures/api/               committed copy of docs/api-fixtures (backend co
 tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 ```
 
-`presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10) and for `home`,
-`catalog` and `search` (M-A11); the other features get theirs in M-A12 onwards.
+`presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10), for `home`,
+`catalog` and `search` (M-A11) and for `product` (M-A12); the other features get theirs in M-A13 onwards.
 `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
 app lock at a cold start, biometric offer), called by the launch feature after the config check.
 
@@ -184,6 +185,48 @@ launch or scroll, with no Firebase or native setup. 4.0.5 (published 2026-10-21)
 release more than two weeks old; 4.0.7 was published on the day of this milestone. It is used only
 through `catalogImagesProvider` for catalog media and never for anything code-related; tests override
 that provider, so no plugin or network runs in tests. No other package was added in M-A11.
+
+## Product (M-A12)
+
+- **Routes.** `/products/:slug` (above the tabs; pushed from tiles, search and links, back returns;
+  opened directly it goes home on back) and `/products/:slug/reviews`. `parseDeepLink` returns
+  `ProductLink` for `https://<APP_LINK_HOST>/products/{slug}` and `/en|ar/products/{slug}`; the
+  platform intent filters and link listener come with the other app links (M-A13).
+- **Controllers** (`features/product/presentation/controllers/product_controllers.dart`):
+  `ProductController` (family by slug) loads the detail and the variants together, watches
+  `pricingContextProvider` (a currency or language change reloads), and holds the region and amount
+  selection, quantity, delivery values, field problems and the add-to-cart state;
+  `ProductReviewsController` pages the reviews (10 per page, `meta` driven, no automatic retry of a
+  failed page). Pure rules live in the domain: `delivery_field_rules.dart` and `variant_options.dart`.
+- **Variants.** Region chips appear only when the variants span several regions. Amounts that cannot
+  be bought stay visible, dimmed and disabled with their reason: `out_of_stock` "Sold out",
+  `is_custom_amount` "Not available yet", `purchasable: false` or no price "Not available" (the API
+  sends no customer-facing block reason). Switching region keeps the denomination when possible.
+  `price_may_vary` (product or variant) shows the warning notice. Quantity: 1 to
+  `max_quantity_per_order`, never above the cart request's limit of 10.
+- **Delivery fields (ADR-037).** The form is generated from `delivery_fields` and checked exactly as
+  `DeliveryFieldValidator` does, in the same order: PHP-style trim, empty (required), length in code
+  points, type (`number` ASCII digits, `email`, `select` value), then `pattern` as `^(?:pattern)$`
+  with Unicode (a pattern Dart cannot compile is left to the server). Checks run on "Add to cart",
+  then as the customer types. Arabic-Indic digits typed into `number` fields become Western digits.
+  Only trimmed, non-empty values of defined fields are sent. The server is authoritative: 422
+  `errors.delivery_values.{key}` shows beside the field, `errors.quantity` beside the stepper, any
+  other error (for example `variant_id` "out of stock") in a banner with the server's text.
+- **Add to cart** uses `CartRepository.addItem`; a guest's `X-Cart-Token` is captured and sent back
+  by `CartTokenInterceptor`. Success shows "Added to cart." with **View cart** (Cart tab). Login is
+  only needed at checkout (owner decision 4).
+- **Cart count** (`CartCount` in `features/cart/cart_providers.dart`): read from `GET
+  /storefront/cart` only when there is a cart (signed in, or a guest cart token), re-read on session
+  change, updated from every cart write (`updateFrom`), last count kept on a failed read. The Bottom
+  Nav draws it as the volt pill of `75:568` ("Cart, n items" for screen readers).
+- **Description.** The server's sanitized HTML is turned into native text blocks
+  (`core/utils/safe_html.dart`, `shared/widgets/html_text.dart`): paragraphs, headings, list items,
+  line breaks, bold and italic. No web view; scripts, styles, images and links are never loaded or
+  executed (links become their text). Instructions and terms are escaped plain text.
+- **Prices** are the variant offers' server money objects (`formatted`), LTR islands, and
+  `ltrIsolate` inside Arabic sentences (`ادفع \u2066USD10.00\u2069`); the footer shows the unit price
+  ("× n"), never a client total. Ratings are decimal strings (`ratingLabel`, `ratingStars`).
+- No package was added in M-A12.
 
 ## Biometric unlock (owner decision 6)
 
@@ -295,6 +338,17 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A12 additions)
+
+`test/features/product/product_rules_test.dart` (delivery-field matrix for every field type, variant
+options, ratings, description HTML), `product_controllers_test.dart` (loading, selection, quantity,
+add to cart success, local checks and 422 mapping incl. the `cart/add_item_validation_failed`
+fixture, cart count, reviews paging), `product_pages_test.dart` (every state in `en` and `ar`, add
+and View cart with the tab badge, number and select fields, reviews page, deep-link location, 360
+wide, tap-target and label guidelines) and goldens in LTR and RTL (`test/goldens/m_a12/`, including
+the 19.2 360x800 check and the cart badge). `test/helpers/product_fakes.dart` holds fake product
+and cart repositories answering with the contract fixtures; the harness wires them by default.
 
 ## Tests (M-A11 additions)
 

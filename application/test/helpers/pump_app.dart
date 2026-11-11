@@ -12,8 +12,10 @@ import 'package:application/features/app_config/app_config_providers.dart';
 import 'package:application/features/app_config/domain/entities/app_config.dart';
 import 'package:application/features/auth/auth_providers.dart';
 import 'package:application/features/auth/domain/entities/biometric.dart';
+import 'package:application/features/cart/cart_providers.dart';
 import 'package:application/features/catalog/catalog_providers.dart';
 import 'package:application/features/home/home_providers.dart';
+import 'package:application/features/product/product_providers.dart';
 import 'package:application/features/search/search_providers.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'catalog_fakes.dart';
 import 'fakes.dart';
 import 'memory_stores.dart';
+import 'product_fakes.dart';
 
 final testEnv = AppEnv(
   flavor: Flavor.dev,
@@ -70,6 +73,8 @@ final class TestHarness {
     required this.catalog,
     required this.search,
     required this.images,
+    required this.product,
+    required this.cart,
   });
 
   final ProviderContainer container;
@@ -91,6 +96,11 @@ final class TestHarness {
   final FakeCatalogRepository catalog;
   final FakeSearchRepository search;
   final RecordingImages images;
+
+  /// Product page (M-A12): product detail, variants and reviews, and the cart (add to cart and
+  /// the badge count).
+  final FakeProductRepository product;
+  final FakeCartRepository cart;
 
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
@@ -138,6 +148,8 @@ TestHarness buildHarness({
   final catalog = FakeCatalogRepository();
   final search = FakeSearchRepository();
   final images = RecordingImages();
+  final product = FakeProductRepository();
+  final cart = FakeCartRepository();
 
   final container = ProviderContainer(
     overrides: [
@@ -170,6 +182,8 @@ TestHarness buildHarness({
       catalogRepositoryProvider.overrideWithValue(catalog),
       searchRepositoryProvider.overrideWithValue(search),
       catalogImagesProvider.overrideWithValue(images.call),
+      productRepositoryProvider.overrideWithValue(product),
+      cartRepositoryProvider.overrideWithValue(cart),
       ...overrides,
     ],
   );
@@ -188,6 +202,8 @@ TestHarness buildHarness({
     catalog: catalog,
     search: search,
     images: images,
+    product: product,
+    cart: cart,
   );
 }
 

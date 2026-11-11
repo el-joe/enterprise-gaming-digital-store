@@ -1044,10 +1044,6 @@
   "@comingSoonBody": {
     "description": "Placeholder text."
   },
-  "productTitle": "Product",
-  "@productTitle": {
-    "description": "Product placeholder title."
-  },
   "languageSetting": "Language",
   "@languageSetting": {
     "description": "Account settings row."
@@ -1068,5 +1064,279 @@
   "notificationsComingSoon": "Notifications",
   "@notificationsComingSoon": {
     "description": "Notifications button tooltip."
+  },
+  "productLoadErrorTitle": "We couldn't load this product",
+  "@productLoadErrorTitle": {
+    "description": "Product page error title."
+  },
+  "productNotFoundTitle": "Product not available",
+  "@productNotFoundTitle": {
+    "description": "Product 404 title (05.6)."
+  },
+  "productNotFoundBody": "It may have been removed or is not sold in your region.",
+  "@productNotFoundBody": {
+    "description": "Product 404 text."
+  },
+  "backToStore": "Back to store",
+  "@backToStore": {
+    "description": "Button from the product 404 to home."
+  },
+  "productRegion": "Region",
+  "@productRegion": {
+    "description": "Region selector label."
+  },
+  "productAnyRegion": "All regions",
+  "@productAnyRegion": {
+    "description": "Region chip for variants without a region."
+  },
+  "productAmount": "Amount",
+  "@productAmount": {
+    "description": "Denomination selector label."
+  },
+  "productPay": "Pay {price}",
+  "@productPay": {
+    "description": "Price under a denomination; price is a server amount.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "variantSoldOut": "Sold out",
+  "@variantSoldOut": {
+    "description": "Out-of-stock denomination."
+  },
+  "variantCustomAmount": "Not available yet",
+  "@variantCustomAmount": {
+    "description": "Custom-amount denomination (cannot be bought yet)."
+  },
+  "variantUnavailable": "Not available",
+  "@variantUnavailable": {
+    "description": "Denomination that cannot be bought."
+  },
+  "variantLimited": "Only a few left",
+  "@variantLimited": {
+    "description": "Limited availability of the selected denomination."
+  },
+  "variantSemantics": "{title}, {detail}",
+  "@variantSemantics": {
+    "description": "Denomination for screen readers.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "priceMayVaryTitle": "Price may vary",
+  "@priceMayVaryTitle": {
+    "description": "price_may_vary notice title."
+  },
+  "priceMayVaryBody": "The final price is confirmed at checkout.",
+  "@priceMayVaryBody": {
+    "description": "price_may_vary notice text."
+  },
+  "productUnavailableTitle": "Not available right now",
+  "@productUnavailableTitle": {
+    "description": "Notice when no option can be bought."
+  },
+  "productUnavailableBody": "None of this product's options can be bought at the moment. Check back later.",
+  "@productUnavailableBody": {
+    "description": "Notice text when no option can be bought."
+  },
+  "addFailedTitle": "Couldn't add to cart",
+  "@addFailedTitle": {
+    "description": "Banner title when add to cart fails."
+  },
+  "productReviewsCount": "{count, plural, =0{No reviews} =1{1 review} other{{count} reviews}}",
+  "@productReviewsCount": {
+    "description": "Number of reviews.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productAverageRating": "Average rating {rating} out of 5",
+  "@productAverageRating": {
+    "description": "Rating summary for screen readers.",
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "deliveryTime": "{minutes, plural, =0{Instant delivery} =1{About 1 min} other{About {minutes} min}}",
+  "@deliveryTime": {
+    "description": "Delivery time of a product.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "aboutProduct": "About this product",
+  "@aboutProduct": {
+    "description": "Description heading."
+  },
+  "howToRedeem": "How to redeem",
+  "@howToRedeem": {
+    "description": "Instructions heading."
+  },
+  "termsTitle": "Terms",
+  "@termsTitle": {
+    "description": "Terms heading."
+  },
+  "reviewsTitle": "Reviews",
+  "@reviewsTitle": {
+    "description": "Reviews heading and page title."
+  },
+  "reviewsEmptyTitle": "No reviews yet",
+  "@reviewsEmptyTitle": {
+    "description": "No reviews."
+  },
+  "reviewsEmptyBody": "Reviews from buyers appear here.",
+  "@reviewsEmptyBody": {
+    "description": "No reviews text."
+  },
+  "seeAllReviews": "See all reviews",
+  "@seeAllReviews": {
+    "description": "Button to the full reviews list."
+  },
+  "reviewsLoadFailed": "Couldn't load reviews.",
+  "@reviewsLoadFailed": {
+    "description": "Reviews failed to load."
+  },
+  "loadMoreReviewsFailed": "Couldn't load more reviews.",
+  "@loadMoreReviewsFailed": {
+    "description": "Next reviews page failed."
+  },
+  "quantitySemantics": "Quantity {count}",
+  "@quantitySemantics": {
+    "description": "Quantity stepper for screen readers.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "increaseQuantity": "Increase quantity",
+  "@increaseQuantity": {
+    "description": "Quantity plus button."
+  },
+  "decreaseQuantity": "Decrease quantity",
+  "@decreaseQuantity": {
+    "description": "Quantity minus button."
+  },
+  "quantityLimit": "Up to {max} per order",
+  "@quantityLimit": {
+    "description": "Per-order quantity limit.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "priceLabel": "Price",
+  "@priceLabel": {
+    "description": "Footer price label."
+  },
+  "priceTimesQuantity": "{price} × {count}",
+  "@priceTimesQuantity": {
+    "description": "Unit price and quantity in the footer.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addToCart": "Add to cart",
+  "@addToCart": {
+    "description": "Add to cart button."
+  },
+  "addedToCart": "Added to cart.",
+  "@addedToCart": {
+    "description": "Success snackbar."
+  },
+  "viewCart": "View cart",
+  "@viewCart": {
+    "description": "Snackbar action to the cart."
+  },
+  "cartBadgeSemantics": "{count, plural, =1{1 item} other{{count} items}}",
+  "@cartBadgeSemantics": {
+    "description": "Cart tab badge for screen readers.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryFieldRequired": "{label} is required.",
+  "@deliveryFieldRequired": {
+    "description": "Required delivery field is empty.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deliveryFieldTooLong": "{label} is too long (at most {max} characters).",
+  "@deliveryFieldTooLong": {
+    "description": "Delivery value too long.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryFieldDigits": "{label} must contain digits only.",
+  "@deliveryFieldDigits": {
+    "description": "Number delivery field with other characters.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deliveryFieldEmail": "Enter a valid email address.",
+  "@deliveryFieldEmail": {
+    "description": "Email delivery field invalid."
+  },
+  "deliveryFieldOption": "Choose one of the options.",
+  "@deliveryFieldOption": {
+    "description": "Select delivery field invalid."
+  },
+  "deliveryFieldFormat": "{label} has an invalid format.",
+  "@deliveryFieldFormat": {
+    "description": "Delivery value does not match the pattern.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "selectPlaceholder": "Choose",
+  "@selectPlaceholder": {
+    "description": "Empty select field."
+  },
+  "galleryImage": "Image {index} of {count}",
+  "@galleryImage": {
+    "description": "Gallery page for screen readers.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -7,6 +7,7 @@ import 'package:application/core/router/routes.dart';
 import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/features/catalog/presentation/pages/platforms_page.dart';
 import 'package:application/features/home/presentation/pages/home_page.dart';
+import 'package:application/features/product/presentation/pages/product_page.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:application/shared/widgets/skeleton.dart';
 import 'package:flutter/material.dart';
@@ -158,13 +159,17 @@ void main() {
       });
 
       testWidgets('the hero opens its link target (product)', (tester) async {
-        await at(tester, Routes.home.path);
+        final h = await at(tester, Routes.home.path);
         await tester.tap(
           find.text(fixtureHome(lang).heroBanners.single.title!),
         );
         await tester.pumpAndSettle();
-        expect(find.text(l10n.productTitle), findsOneWidget);
-        expect(find.text(l10n.comingSoonTitle), findsOneWidget);
+        // The product page (M-A12) loads the linked product.
+        expect(find.byType(ProductPage), findsOneWidget);
+        expect(
+          h.product.detailCalls.single,
+          fixtureHome(lang).heroBanners.single.link!.value,
+        );
       });
 
       testWidgets('a search promo banner opens search with the term', (

@@ -16,6 +16,8 @@ import 'package:application/features/home/presentation/pages/home_page.dart';
 import 'package:application/features/launch/presentation/pages/notice_pages.dart';
 import 'package:application/features/launch/presentation/pages/onboarding_pages.dart';
 import 'package:application/features/launch/presentation/pages/splash_page.dart';
+import 'package:application/features/product/presentation/pages/product_page.dart';
+import 'package:application/features/product/presentation/pages/product_reviews_page.dart';
 import 'package:application/features/search/presentation/pages/search_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
@@ -137,8 +139,19 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: Routes.product.path,
         name: Routes.product.name,
-        builder: (context, state) =>
-            ComingSoonPage(title: context.l10n.productTitle, root: false),
+        builder: (context, state) {
+          final slug = state.pathParameters[Routes.slugParameter]!;
+          return ProductPage(key: ValueKey('product-$slug'), slug: slug);
+        },
+        routes: [
+          GoRoute(
+            path: 'reviews',
+            name: Routes.productReviews.name,
+            builder: (context, state) => ProductReviewsScreen(
+              slug: state.pathParameters[Routes.slugParameter]!,
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: Routes.splash.path,

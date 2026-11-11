@@ -122,8 +122,14 @@ abstract final class Routes {
   /// Search (04.6); query parameter `q` prefills and submits the term.
   static const search = AppRoute(name: 'search', path: '/search');
 
-  /// Product detail, a placeholder until M-A12.
+  /// Product detail (M-A12), above the tabs; deep links to `/products/{slug}` land here.
   static const product = AppRoute(name: 'product', path: '/products/:slug');
+
+  /// All reviews of a product (05.2), pushed from the product page.
+  static const productReviews = AppRoute(
+    name: 'product-reviews',
+    path: '/products/:slug/reviews',
+  );
 
   static const all = [
     home,
@@ -135,6 +141,7 @@ abstract final class Routes {
     listing,
     search,
     product,
+    productReviews,
     maintenance,
     updateRequired,
     splash,
@@ -188,6 +195,13 @@ abstract final class Routes {
   /// Location of [product] for [slug].
   static String productLocation(String slug) =>
       '/products/${Uri.encodeComponent(slug)}';
+
+  /// Location of [productReviews] for [slug].
+  static String productReviewsLocation(String slug) =>
+      '${productLocation(slug)}/reviews';
+
+  /// Path parameter of [product] and [productReviews].
+  static const slugParameter = 'slug';
 
   /// The route whose path pattern equals [path] (go_router's `fullPath`), if any.
   static AppRoute? byPath(String? path) {

@@ -795,9 +795,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.';
 
   @override
-  String get productTitle => 'Product';
-
-  @override
   String get languageSetting => 'Language';
 
   @override
@@ -810,4 +807,198 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsComingSoon => 'Notifications';
+
+  @override
+  String get productLoadErrorTitle => 'We couldn\'t load this product';
+
+  @override
+  String get productNotFoundTitle => 'Product not available';
+
+  @override
+  String get productNotFoundBody =>
+      'It may have been removed or is not sold in your region.';
+
+  @override
+  String get backToStore => 'Back to store';
+
+  @override
+  String get productRegion => 'Region';
+
+  @override
+  String get productAnyRegion => 'All regions';
+
+  @override
+  String get productAmount => 'Amount';
+
+  @override
+  String productPay(String price) {
+    return 'Pay $price';
+  }
+
+  @override
+  String get variantSoldOut => 'Sold out';
+
+  @override
+  String get variantCustomAmount => 'Not available yet';
+
+  @override
+  String get variantUnavailable => 'Not available';
+
+  @override
+  String get variantLimited => 'Only a few left';
+
+  @override
+  String variantSemantics(String title, String detail) {
+    return '$title, $detail';
+  }
+
+  @override
+  String get priceMayVaryTitle => 'Price may vary';
+
+  @override
+  String get priceMayVaryBody => 'The final price is confirmed at checkout.';
+
+  @override
+  String get productUnavailableTitle => 'Not available right now';
+
+  @override
+  String get productUnavailableBody =>
+      'None of this product\'s options can be bought at the moment. Check back later.';
+
+  @override
+  String get addFailedTitle => 'Couldn\'t add to cart';
+
+  @override
+  String productReviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '1 review',
+      zero: 'No reviews',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String productAverageRating(String rating) {
+    return 'Average rating $rating out of 5';
+  }
+
+  @override
+  String deliveryTime(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'About $minutes min',
+      one: 'About 1 min',
+      zero: 'Instant delivery',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aboutProduct => 'About this product';
+
+  @override
+  String get howToRedeem => 'How to redeem';
+
+  @override
+  String get termsTitle => 'Terms';
+
+  @override
+  String get reviewsTitle => 'Reviews';
+
+  @override
+  String get reviewsEmptyTitle => 'No reviews yet';
+
+  @override
+  String get reviewsEmptyBody => 'Reviews from buyers appear here.';
+
+  @override
+  String get seeAllReviews => 'See all reviews';
+
+  @override
+  String get reviewsLoadFailed => 'Couldn\'t load reviews.';
+
+  @override
+  String get loadMoreReviewsFailed => 'Couldn\'t load more reviews.';
+
+  @override
+  String quantitySemantics(int count) {
+    return 'Quantity $count';
+  }
+
+  @override
+  String get increaseQuantity => 'Increase quantity';
+
+  @override
+  String get decreaseQuantity => 'Decrease quantity';
+
+  @override
+  String quantityLimit(int max) {
+    return 'Up to $max per order';
+  }
+
+  @override
+  String get priceLabel => 'Price';
+
+  @override
+  String priceTimesQuantity(String price, int count) {
+    return '$price × $count';
+  }
+
+  @override
+  String get addToCart => 'Add to cart';
+
+  @override
+  String get addedToCart => 'Added to cart.';
+
+  @override
+  String get viewCart => 'View cart';
+
+  @override
+  String cartBadgeSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deliveryFieldRequired(String label) {
+    return '$label is required.';
+  }
+
+  @override
+  String deliveryFieldTooLong(String label, int max) {
+    return '$label is too long (at most $max characters).';
+  }
+
+  @override
+  String deliveryFieldDigits(String label) {
+    return '$label must contain digits only.';
+  }
+
+  @override
+  String get deliveryFieldEmail => 'Enter a valid email address.';
+
+  @override
+  String get deliveryFieldOption => 'Choose one of the options.';
+
+  @override
+  String deliveryFieldFormat(String label) {
+    return '$label has an invalid format.';
+  }
+
+  @override
+  String get selectPlaceholder => 'Choose';
+
+  @override
+  String galleryImage(int index, int count) {
+    return 'Image $index of $count';
+  }
 }

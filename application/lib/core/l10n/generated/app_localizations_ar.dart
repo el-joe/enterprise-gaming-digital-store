@@ -805,9 +805,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'هذا القسم قيد الإعداد. يمكنك حتى ذلك الحين استخدام boxcards.shop على الويب.';
 
   @override
-  String get productTitle => 'المنتج';
-
-  @override
   String get languageSetting => 'اللغة';
 
   @override
@@ -820,4 +817,206 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationsComingSoon => 'الإشعارات';
+
+  @override
+  String get productLoadErrorTitle => 'تعذّر تحميل هذا المنتج';
+
+  @override
+  String get productNotFoundTitle => 'المنتج غير متاح';
+
+  @override
+  String get productNotFoundBody => 'ربما أُزيل أو غير متاح في منطقتك.';
+
+  @override
+  String get backToStore => 'العودة إلى المتجر';
+
+  @override
+  String get productRegion => 'المنطقة';
+
+  @override
+  String get productAnyRegion => 'كل المناطق';
+
+  @override
+  String get productAmount => 'القيمة';
+
+  @override
+  String productPay(String price) {
+    return 'ادفع $price';
+  }
+
+  @override
+  String get variantSoldOut => 'نفدت الكمية';
+
+  @override
+  String get variantCustomAmount => 'غير متاح بعد';
+
+  @override
+  String get variantUnavailable => 'غير متاح';
+
+  @override
+  String get variantLimited => 'الكمية محدودة';
+
+  @override
+  String variantSemantics(String title, String detail) {
+    return '$title، $detail';
+  }
+
+  @override
+  String get priceMayVaryTitle => 'قد يتغيّر السعر';
+
+  @override
+  String get priceMayVaryBody => 'يُؤكَّد السعر النهائي عند الدفع.';
+
+  @override
+  String get productUnavailableTitle => 'غير متاح حاليًا';
+
+  @override
+  String get productUnavailableBody =>
+      'لا يمكن شراء أي من خيارات هذا المنتج الآن. عُد لاحقًا.';
+
+  @override
+  String get addFailedTitle => 'تعذّرت الإضافة إلى السلة';
+
+  @override
+  String productReviewsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييم',
+      many: '$count تقييمًا',
+      few: '$count تقييمات',
+      two: 'تقييمان',
+      one: 'تقييم واحد',
+      zero: 'لا توجد تقييمات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String productAverageRating(String rating) {
+    return 'متوسط التقييم $rating من 5';
+  }
+
+  @override
+  String deliveryTime(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'حوالي $minutes دقيقة',
+      many: 'حوالي $minutes دقيقة',
+      few: 'حوالي $minutes دقائق',
+      two: 'حوالي دقيقتين',
+      one: 'حوالي دقيقة',
+      zero: 'تسليم فوري',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aboutProduct => 'عن هذا المنتج';
+
+  @override
+  String get howToRedeem => 'طريقة الاستخدام';
+
+  @override
+  String get termsTitle => 'الشروط';
+
+  @override
+  String get reviewsTitle => 'التقييمات';
+
+  @override
+  String get reviewsEmptyTitle => 'لا توجد تقييمات بعد';
+
+  @override
+  String get reviewsEmptyBody => 'تظهر هنا تقييمات المشترين.';
+
+  @override
+  String get seeAllReviews => 'عرض كل التقييمات';
+
+  @override
+  String get reviewsLoadFailed => 'تعذّر تحميل التقييمات.';
+
+  @override
+  String get loadMoreReviewsFailed => 'تعذّر تحميل المزيد من التقييمات.';
+
+  @override
+  String quantitySemantics(int count) {
+    return 'الكمية $count';
+  }
+
+  @override
+  String get increaseQuantity => 'زيادة الكمية';
+
+  @override
+  String get decreaseQuantity => 'تقليل الكمية';
+
+  @override
+  String quantityLimit(int max) {
+    return 'حتى $max في الطلب الواحد';
+  }
+
+  @override
+  String get priceLabel => 'السعر';
+
+  @override
+  String priceTimesQuantity(String price, int count) {
+    return '$price × $count';
+  }
+
+  @override
+  String get addToCart => 'أضف إلى السلة';
+
+  @override
+  String get addedToCart => 'أُضيفت إلى السلة.';
+
+  @override
+  String get viewCart => 'عرض السلة';
+
+  @override
+  String cartBadgeSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count منتج',
+      many: '$count منتجًا',
+      few: '$count منتجات',
+      two: 'منتجان',
+      one: 'منتج واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deliveryFieldRequired(String label) {
+    return '$label مطلوب.';
+  }
+
+  @override
+  String deliveryFieldTooLong(String label, int max) {
+    return '$label طويل جدًا (حتى $max حرفًا).';
+  }
+
+  @override
+  String deliveryFieldDigits(String label) {
+    return 'يجب أن يحتوي $label على أرقام فقط.';
+  }
+
+  @override
+  String get deliveryFieldEmail => 'أدخل بريدًا إلكترونيًا صحيحًا.';
+
+  @override
+  String get deliveryFieldOption => 'اختر أحد الخيارات.';
+
+  @override
+  String deliveryFieldFormat(String label) {
+    return 'تنسيق $label غير صحيح.';
+  }
+
+  @override
+  String get selectPlaceholder => 'اختر';
+
+  @override
+  String galleryImage(int index, int count) {
+    return 'الصورة $index من $count';
+  }
 }

@@ -6,6 +6,7 @@ import 'package:application/core/storage/preferences_store.dart';
 import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/auth/presentation/widgets/account_card.dart';
+import 'package:application/features/cart/cart_providers.dart';
 import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
 import 'package:application/shared/widgets/app_bottom_nav.dart';
 import 'package:application/shared/widgets/app_button.dart';
@@ -17,17 +18,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// The tab shell (M-A11): Home, Browse, Cart, Orders, Account with the Mobile Bottom Nav
+/// The tab shell (M-A11; the Cart tab shows the cart's unit count since M-A12): Home, Browse, Cart, Orders, Account with the Mobile Bottom Nav
 /// (`75:568`). Each tab keeps its own navigation stack; tapping the current tab returns to its
 /// first page.
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({required this.shell, super.key});
 
   final StatefulNavigationShell shell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final cartUnits = ref.watch(cartCountProvider);
     return Scaffold(
       body: shell,
       bottomNavigationBar: AppBottomNav(
@@ -49,6 +51,8 @@ class MainShell extends StatelessWidget {
             label: l10n.navCart,
             icon: Icons.shopping_bag_outlined,
             selectedIcon: Icons.shopping_bag,
+            badgeCount: cartUnits,
+            badgeSemantics: l10n.cartBadgeSemantics(cartUnits),
           ),
           AppNavItem(
             label: l10n.navOrders,
@@ -66,8 +70,7 @@ class MainShell extends StatelessWidget {
   }
 }
 
-/// A tab or screen whose milestone is still to come (cart M-A13, orders M-A14, product
-/// M-A12): its title and a "coming in the next update" note. No fake data.
+/// A tab whose milestone is still to come (cart M-A13, orders M-A14): its title and a "coming in the next update" note. No fake data.
 class ComingSoonPage extends StatelessWidget {
   const ComingSoonPage({required this.title, this.root = true, super.key});
 

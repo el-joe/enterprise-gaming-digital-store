@@ -1466,12 +1466,6 @@ abstract class AppLocalizations {
   /// **'This part of the app is on its way. Meanwhile you can use boxcards.shop on the web.'**
   String get comingSoonBody;
 
-  /// Product placeholder title.
-  ///
-  /// In en, this message translates to:
-  /// **'Product'**
-  String get productTitle;
-
   /// Account settings row.
   ///
   /// In en, this message translates to:
@@ -1495,6 +1489,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications'**
   String get notificationsComingSoon;
+
+  /// Product page error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load this product'**
+  String get productLoadErrorTitle;
+
+  /// Product 404 title (05.6).
+  ///
+  /// In en, this message translates to:
+  /// **'Product not available'**
+  String get productNotFoundTitle;
+
+  /// Product 404 text.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been removed or is not sold in your region.'**
+  String get productNotFoundBody;
+
+  /// Button from the product 404 to home.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to store'**
+  String get backToStore;
+
+  /// Region selector label.
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get productRegion;
+
+  /// Region chip for variants without a region.
+  ///
+  /// In en, this message translates to:
+  /// **'All regions'**
+  String get productAnyRegion;
+
+  /// Denomination selector label.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get productAmount;
+
+  /// Price under a denomination; price is a server amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay {price}'**
+  String productPay(String price);
+
+  /// Out-of-stock denomination.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold out'**
+  String get variantSoldOut;
+
+  /// Custom-amount denomination (cannot be bought yet).
+  ///
+  /// In en, this message translates to:
+  /// **'Not available yet'**
+  String get variantCustomAmount;
+
+  /// Denomination that cannot be bought.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get variantUnavailable;
+
+  /// Limited availability of the selected denomination.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a few left'**
+  String get variantLimited;
+
+  /// Denomination for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}, {detail}'**
+  String variantSemantics(String title, String detail);
+
+  /// price_may_vary notice title.
+  ///
+  /// In en, this message translates to:
+  /// **'Price may vary'**
+  String get priceMayVaryTitle;
+
+  /// price_may_vary notice text.
+  ///
+  /// In en, this message translates to:
+  /// **'The final price is confirmed at checkout.'**
+  String get priceMayVaryBody;
+
+  /// Notice when no option can be bought.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available right now'**
+  String get productUnavailableTitle;
+
+  /// Notice text when no option can be bought.
+  ///
+  /// In en, this message translates to:
+  /// **'None of this product\'s options can be bought at the moment. Check back later.'**
+  String get productUnavailableBody;
+
+  /// Banner title when add to cart fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add to cart'**
+  String get addFailedTitle;
+
+  /// Number of reviews.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No reviews} =1{1 review} other{{count} reviews}}'**
+  String productReviewsCount(int count);
+
+  /// Rating summary for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Average rating {rating} out of 5'**
+  String productAverageRating(String rating);
+
+  /// Delivery time of a product.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =0{Instant delivery} =1{About 1 min} other{About {minutes} min}}'**
+  String deliveryTime(int minutes);
+
+  /// Description heading.
+  ///
+  /// In en, this message translates to:
+  /// **'About this product'**
+  String get aboutProduct;
+
+  /// Instructions heading.
+  ///
+  /// In en, this message translates to:
+  /// **'How to redeem'**
+  String get howToRedeem;
+
+  /// Terms heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get termsTitle;
+
+  /// Reviews heading and page title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get reviewsTitle;
+
+  /// No reviews.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get reviewsEmptyTitle;
+
+  /// No reviews text.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews from buyers appear here.'**
+  String get reviewsEmptyBody;
+
+  /// Button to the full reviews list.
+  ///
+  /// In en, this message translates to:
+  /// **'See all reviews'**
+  String get seeAllReviews;
+
+  /// Reviews failed to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load reviews.'**
+  String get reviewsLoadFailed;
+
+  /// Next reviews page failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load more reviews.'**
+  String get loadMoreReviewsFailed;
+
+  /// Quantity stepper for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity {count}'**
+  String quantitySemantics(int count);
+
+  /// Quantity plus button.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase quantity'**
+  String get increaseQuantity;
+
+  /// Quantity minus button.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease quantity'**
+  String get decreaseQuantity;
+
+  /// Per-order quantity limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} per order'**
+  String quantityLimit(int max);
+
+  /// Footer price label.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get priceLabel;
+
+  /// Unit price and quantity in the footer.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} × {count}'**
+  String priceTimesQuantity(String price, int count);
+
+  /// Add to cart button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to cart'**
+  String get addToCart;
+
+  /// Success snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to cart.'**
+  String get addedToCart;
+
+  /// Snackbar action to the cart.
+  ///
+  /// In en, this message translates to:
+  /// **'View cart'**
+  String get viewCart;
+
+  /// Cart tab badge for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String cartBadgeSemantics(int count);
+
+  /// Required delivery field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} is required.'**
+  String deliveryFieldRequired(String label);
+
+  /// Delivery value too long.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} is too long (at most {max} characters).'**
+  String deliveryFieldTooLong(String label, int max);
+
+  /// Number delivery field with other characters.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} must contain digits only.'**
+  String deliveryFieldDigits(String label);
+
+  /// Email delivery field invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get deliveryFieldEmail;
+
+  /// Select delivery field invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one of the options.'**
+  String get deliveryFieldOption;
+
+  /// Delivery value does not match the pattern.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} has an invalid format.'**
+  String deliveryFieldFormat(String label);
+
+  /// Empty select field.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get selectPlaceholder;
+
+  /// Gallery page for screen readers.
+  ///
+  /// In en, this message translates to:
+  /// **'Image {index} of {count}'**
+  String galleryImage(int index, int count);
 }
 
 class _AppLocalizationsDelegate

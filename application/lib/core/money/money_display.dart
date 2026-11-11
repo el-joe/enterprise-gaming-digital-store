@@ -18,3 +18,7 @@ String moneyText(Money money, {Iterable<CurrencyInfo> currencies = const []}) {
   }
   return '${money.currency} ${money.amountText}';
 }
+
+/// [text] as a left-to-right isolate (LRI … PDI), so an amount inside an Arabic sentence is
+/// never reordered (owner decision 2: Western digits, amounts read left to right).
+String ltrIsolate(String text) => '\u2066$text\u2069';

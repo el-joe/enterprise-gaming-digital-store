@@ -10,11 +10,19 @@ final class AppNavItem {
     required this.label,
     required this.icon,
     required this.selectedIcon,
+    this.badgeCount = 0,
+    this.badgeSemantics,
   });
 
   final String label;
   final IconData icon;
   final IconData selectedIcon;
+
+  /// The volt count pill on the icon's end side (the Cart count of `75:568`); hidden at 0.
+  final int badgeCount;
+
+  /// Spoken after the label while [badgeCount] is shown (for example "2 items").
+  final String? badgeSemantics;
 }
 
 /// Bottom navigation (Figma `Mobile / Bottom Nav` `75:568`): five tabs, the selected one with a
@@ -87,10 +95,13 @@ class _NavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final badge = item.badgeCount;
     return Semantics(
       button: true,
       selected: selected,
-      label: item.label,
+      label: badge > 0 && item.badgeSemantics != null
+          ? '${item.label}, ${item.badgeSemantics}'
+          : item.label,
       excludeSemantics: true,
       onTap: onTap,
       child: InkWell(
@@ -110,10 +121,22 @@ class _NavTab extends StatelessWidget {
                   color: selected ? colors.tint : Colors.transparent,
                   borderRadius: BorderRadius.circular(Radii.full),
                 ),
-                child: Icon(
-                  selected ? item.selectedIcon : item.icon,
-                  size: 24,
-                  color: selected ? colors.active : colors.idle,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      selected ? item.selectedIcon : item.icon,
+                      size: 24,
+                      color: selected ? colors.active : colors.idle,
+                    ),
+                    if (badge > 0)
+                      PositionedDirectional(
+                        top: 0,
+                        start: 32,
+                        child: _CountPill(count: badge),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: Spacing.s1),
@@ -127,6 +150,36 @@ class _NavTab extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The 16dp volt count pill (Bottom Nav "Cart count"); Western digits, capped at 99+.
+class _CountPill extends StatelessWidget {
+  const _CountPill({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      height: 16,
+      constraints: const BoxConstraints(minWidth: 16),
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: Spacing.s1),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.accentPrimary,
+        borderRadius: BorderRadius.circular(Radii.full),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        textDirection: TextDirection.ltr,
+        style: context.type.labelSm.copyWith(
+          color: colors.contentOnAccent,
+          height: 1,
         ),
       ),
     );

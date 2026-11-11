@@ -60,12 +60,35 @@ void main() {
       'boxcards://app/payments/return/ord_1',
       'https://boxcards.shop/app/payments/return/ord_1/extra',
       'https://boxcards.shop/app/payments/return/..%2F..',
-      'https://boxcards.shop/products/fifa',
+      'https://boxcards.shop/products/fifa/extra',
+      'https://boxcards.shop/fr/products/fifa',
+      'https://boxcards.shop/products/..%2F..',
+      'http://boxcards.shop/products/fifa',
+      'https://evil.test/products/fifa',
       'https://boxcards.shop/',
     ]) {
       expect(parse(link), isNull, reason: link);
     }
   });
+
+  test(
+    'product pages open the product (M-A12), with or without a locale prefix',
+    () {
+      expect(
+        parse('https://boxcards.shop/products/orbit-card'),
+        const ProductLink('orbit-card'),
+      );
+      expect(
+        parse('https://boxcards.shop/ar/products/orbit-card?ref=x'),
+        const ProductLink('orbit-card'),
+      );
+      expect(
+        parse('https://boxcards.shop/en/products/orbit-card'),
+        const ProductLink('orbit-card'),
+      );
+      expect(const ProductLink('orbit-card').location, '/products/orbit-card');
+    },
+  );
 
   test('host match is case-insensitive', () {
     expect(parse('https://BoxCards.Shop/app/payments/return/ord_1'), isNotNull);
