@@ -37,6 +37,7 @@ abstract class WalletTransactionDto with _$WalletTransactionDto {
     required String balanceAfter,
     required DateTime createdAt,
     String? note,
+    WalletOrderRefDto? order,
   }) = _WalletTransactionDto;
 
   const WalletTransactionDto._();
@@ -51,5 +52,23 @@ abstract class WalletTransactionDto with _$WalletTransactionDto {
     balanceAfter: balanceAfter,
     createdAt: createdAt,
     note: note,
+    order: order?.toEntity(),
   );
+}
+
+/// `order` of a statement line (M-A15): `{ public_id, order_number }` or null.
+@freezed
+abstract class WalletOrderRefDto with _$WalletOrderRefDto {
+  const factory WalletOrderRefDto({
+    required String publicId,
+    required String orderNumber,
+  }) = _WalletOrderRefDto;
+
+  const WalletOrderRefDto._();
+
+  factory WalletOrderRefDto.fromJson(Map<String, dynamic> json) =>
+      _$WalletOrderRefDtoFromJson(json);
+
+  WalletOrderRef toEntity() =>
+      WalletOrderRef(publicId: publicId, orderNumber: orderNumber);
 }

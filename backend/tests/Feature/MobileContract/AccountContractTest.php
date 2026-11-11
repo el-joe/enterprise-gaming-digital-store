@@ -12,9 +12,15 @@ use App\Domains\Orders\Models\Order;
 use App\Domains\Orders\Models\OrderItem;
 use App\Domains\Orders\Models\OrderItemUnit;
 use App\Domains\Orders\Notifications\OrderDelivered;
+use App\Domains\Shared\ValueObjects\Money;
 use App\Domains\Support\Enums\SupportTicketStatus;
 use App\Domains\Support\Models\SupportTicket;
 use App\Domains\Support\Notifications\SupportTicketReplied;
+use App\Domains\Wallet\DTOs\WalletEntry;
+use App\Domains\Wallet\Enums\CustomerWalletStatus;
+use App\Domains\Wallet\Enums\WalletTransactionType;
+use App\Domains\Wallet\Models\CustomerWallet;
+use App\Domains\Wallet\Services\WalletLedger;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 
@@ -82,9 +88,28 @@ describe('orders and reveal', function (): void {
 describe('wallet, reviews, tickets and refund requests', function (): void {
     it('reads the wallet and its statement', function (): void {
         fundWallet($this->customer, '25', 'contract:refund-1');
+        $this->travel(1)->minutes();
+        [, $payment] = orderAwaitingPayment(gatewayFor('stripe'), '10.00', orderAttributes: ['user_id' => $this->customer->id, 'order_number' => 'BX-1003']);
+        app(WalletLedger::class)->post(new WalletEntry(
+            userId: $this->customer->id,
+            type: WalletTransactionType::DebitPurchase,
+            amount: Money::of('10', 'USD'),
+            idempotencyKey: 'contract:pay-1',
+            referenceType: 'payment',
+            referenceId: $payment->id,
+            note: 'Order BX-1003',
+        ));
+        $this->travelTo(CONTRACT_NOW);
 
         contractFixture('wallet/wallet_ok', contractAccount('GET', 'wallet')->assertOk());
         contractFixture('wallet/transactions_ok', contractAccount('GET', 'wallet/transactions')->assertOk());
+    });
+
+    it('reads a frozen wallet', function (): void {
+        fundWallet($this->customer, '12.5', 'contract:refund-2');
+        CustomerWallet::query()->where('user_id', $this->customer->id)->update(['status' => CustomerWalletStatus::Frozen]);
+
+        contractFixture('wallet/wallet_frozen', contractAccount('GET', 'wallet')->assertOk()->assertJsonPath('data.wallet.status', 'frozen'));
     });
 
     it('reads an empty wallet', function (): void {

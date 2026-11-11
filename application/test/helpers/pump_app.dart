@@ -29,6 +29,7 @@ import 'package:application/features/payments/domain/usecases/resolve_payment.da
 import 'package:application/features/payments/payments_providers.dart';
 import 'package:application/features/product/product_providers.dart';
 import 'package:application/features/search/search_providers.dart';
+import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/widgets/network_image_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,6 +44,7 @@ import 'fakes.dart';
 import 'memory_stores.dart';
 import 'product_fakes.dart';
 import 'reveal_fakes.dart';
+import 'wallet_fakes.dart';
 
 final testEnv = AppEnv(
   flavor: Flavor.dev,
@@ -98,6 +100,7 @@ final class TestHarness {
     required this.reveal,
     required this.security,
     required this.clipboard,
+    required this.wallet,
   });
 
   final ProviderContainer container;
@@ -139,6 +142,9 @@ final class TestHarness {
   final FakeCodeRevealRepository reveal;
   final FakeScreenSecurity security;
   final FakeClipboardGuard clipboard;
+
+  /// Wallet (M-A15): the balance and the statement pages.
+  final FakeWalletRepository wallet;
 
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
@@ -200,6 +206,7 @@ TestHarness buildHarness({
   final reveal = FakeCodeRevealRepository();
   final security = FakeScreenSecurity();
   final clipboard = FakeClipboardGuard();
+  final wallet = FakeWalletRepository();
   when(account.profile).thenAnswer((_) async => Ok(fixtureProfile()));
 
   final container = ProviderContainer(
@@ -242,6 +249,7 @@ TestHarness buildHarness({
       codeRevealRepositoryProvider.overrideWithValue(reveal),
       screenSecurityProvider.overrideWithValue(security),
       clipboardGuardProvider.overrideWithValue(clipboard),
+      walletRepositoryProvider.overrideWithValue(wallet),
       placeOrderProvider.overrideWith(
         (ref) => PlaceOrder(
           checkout: checkout,
@@ -289,6 +297,7 @@ TestHarness buildHarness({
     reveal: reveal,
     security: security,
     clipboard: clipboard,
+    wallet: wallet,
   );
 }
 

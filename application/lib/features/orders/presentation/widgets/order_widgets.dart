@@ -238,12 +238,8 @@ class OrderTile extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(width: Spacing.s1),
-                Icon(
-                  Directionality.of(context) == TextDirection.rtl
-                      ? Icons.chevron_left
-                      : Icons.chevron_right,
-                  color: colors.contentMuted,
-                ),
+                // chevron_right mirrors itself in RTL (matchTextDirection).
+                Icon(Icons.chevron_right, color: colors.contentMuted),
               ],
             ),
           ),
@@ -347,12 +343,8 @@ class UnitRow extends StatelessWidget {
                   StatusPill(label: status, tone: tone, dot: false),
                   if (onTap != null) ...[
                     const SizedBox(width: Spacing.s1),
-                    Icon(
-                      Directionality.of(context) == TextDirection.rtl
-                          ? Icons.chevron_left
-                          : Icons.chevron_right,
-                      color: colors.contentMuted,
-                    ),
+                    // chevron_right mirrors itself in RTL (matchTextDirection).
+                    Icon(Icons.chevron_right, color: colors.contentMuted),
                   ],
                 ],
               ),

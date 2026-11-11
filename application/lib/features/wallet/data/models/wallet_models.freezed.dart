@@ -295,7 +295,7 @@ as bool,
 /// @nodoc
 mixin _$WalletTransactionDto {
 
- int get id; String get type; String get amount; String get balanceAfter; DateTime get createdAt; String? get note;
+ int get id; String get type; String get amount; String get balanceAfter; DateTime get createdAt; String? get note; WalletOrderRefDto? get order;
 /// Create a copy of WalletTransactionDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -309,20 +309,20 @@ $WalletTransactionDtoCopyWith<WalletTransactionDto> get copyWith => _$WalletTran
 @override
 bool operator ==(Object other) {
   final _this = this as WalletTransactionDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WalletTransactionDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.balanceAfter, _this.balanceAfter) || other.balanceAfter == _this.balanceAfter)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.note, _this.note) || other.note == _this.note));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WalletTransactionDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.balanceAfter, _this.balanceAfter) || other.balanceAfter == _this.balanceAfter)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.order, _this.order) || other.order == _this.order));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as WalletTransactionDto;
-  return Object.hash(runtimeType,_this.id,_this.type,_this.amount,_this.balanceAfter,_this.createdAt,_this.note);
+  return Object.hash(runtimeType,_this.id,_this.type,_this.amount,_this.balanceAfter,_this.createdAt,_this.note,_this.order);
 }
 
 @override
 String toString() {
   final _this = this as WalletTransactionDto;
-  return 'WalletTransactionDto(id: ${_this.id}, type: ${_this.type}, amount: ${_this.amount}, balanceAfter: ${_this.balanceAfter}, createdAt: ${_this.createdAt}, note: ${_this.note})';
+  return 'WalletTransactionDto(id: ${_this.id}, type: ${_this.type}, amount: ${_this.amount}, balanceAfter: ${_this.balanceAfter}, createdAt: ${_this.createdAt}, note: ${_this.note}, order: ${_this.order})';
 }
 
 
@@ -333,11 +333,11 @@ abstract mixin class $WalletTransactionDtoCopyWith<$Res>  {
   factory $WalletTransactionDtoCopyWith(WalletTransactionDto value, $Res Function(WalletTransactionDto) _then) = _$WalletTransactionDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String type, String amount, String balanceAfter, DateTime createdAt, String? note
+ int id, String type, String amount, String balanceAfter, DateTime createdAt, String? note, WalletOrderRefDto? order
 });
 
 
-
+$WalletOrderRefDtoCopyWith<$Res>? get order;
 
 }
 /// @nodoc
@@ -350,7 +350,7 @@ class _$WalletTransactionDtoCopyWithImpl<$Res>
 
 /// Create a copy of WalletTransactionDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? amount = null,Object? balanceAfter = null,Object? createdAt = null,Object? note = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? amount = null,Object? balanceAfter = null,Object? createdAt = null,Object? note = freezed,Object? order = freezed,}) {
   return _then(WalletTransactionDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -358,10 +358,23 @@ as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullabl
 as String,balanceAfter: null == balanceAfter ? _self.balanceAfter : balanceAfter // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as WalletOrderRefDto?,
   ));
 }
+/// Create a copy of WalletTransactionDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$WalletOrderRefDtoCopyWith<$Res>? get order {
+    if (_self.order == null) {
+    return null;
+  }
 
+  return $WalletOrderRefDtoCopyWith<$Res>(_self.order!, (value) {
+    return _then(_self.copyWith(order: value));
+  });
+}
 }
 
 
@@ -443,10 +456,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String type,  String amount,  String balanceAfter,  DateTime createdAt,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String type,  String amount,  String balanceAfter,  DateTime createdAt,  String? note,  WalletOrderRefDto? order)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WalletTransactionDto() when $default != null:
-return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.createdAt,_that.note);case _:
+return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.createdAt,_that.note,_that.order);case _:
   return orElse();
 
 }
@@ -464,10 +477,10 @@ return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.create
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String type,  String amount,  String balanceAfter,  DateTime createdAt,  String? note)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String type,  String amount,  String balanceAfter,  DateTime createdAt,  String? note,  WalletOrderRefDto? order)  $default,) {final _that = this;
 switch (_that) {
 case _WalletTransactionDto():
-return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.createdAt,_that.note);case _:
+return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.createdAt,_that.note,_that.order);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -484,10 +497,10 @@ return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.create
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String type,  String amount,  String balanceAfter,  DateTime createdAt,  String? note)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String type,  String amount,  String balanceAfter,  DateTime createdAt,  String? note,  WalletOrderRefDto? order)?  $default,) {final _that = this;
 switch (_that) {
 case _WalletTransactionDto() when $default != null:
-return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.createdAt,_that.note);case _:
+return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.createdAt,_that.note,_that.order);case _:
   return null;
 
 }
@@ -499,7 +512,7 @@ return $default(_that.id,_that.type,_that.amount,_that.balanceAfter,_that.create
 @JsonSerializable()
 
 class _WalletTransactionDto extends WalletTransactionDto {
-  const _WalletTransactionDto({required this.id, required this.type, required this.amount, required this.balanceAfter, required this.createdAt, this.note}): super._();
+  const _WalletTransactionDto({required this.id, required this.type, required this.amount, required this.balanceAfter, required this.createdAt, this.note, this.order}): super._();
   factory _WalletTransactionDto.fromJson(Map<String, dynamic> json) => _$WalletTransactionDtoFromJson(json);
 
 @override final  int id;
@@ -508,6 +521,7 @@ class _WalletTransactionDto extends WalletTransactionDto {
 @override final  String balanceAfter;
 @override final  DateTime createdAt;
 @override final  String? note;
+@override final  WalletOrderRefDto? order;
 
 /// Create a copy of WalletTransactionDto
 /// with the given fields replaced by the non-null parameter values.
@@ -522,18 +536,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WalletTransactionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.balanceAfter, balanceAfter) || other.balanceAfter == balanceAfter)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.note, note) || other.note == note));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WalletTransactionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.balanceAfter, balanceAfter) || other.balanceAfter == balanceAfter)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.note, note) || other.note == note)&&(identical(other.order, order) || other.order == order));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,type,amount,balanceAfter,createdAt,note);
+    return Object.hash(runtimeType,id,type,amount,balanceAfter,createdAt,note,order);
 }
 
 @override
 String toString() {
-    return 'WalletTransactionDto(id: $id, type: $type, amount: $amount, balanceAfter: $balanceAfter, createdAt: $createdAt, note: $note)';
+    return 'WalletTransactionDto(id: $id, type: $type, amount: $amount, balanceAfter: $balanceAfter, createdAt: $createdAt, note: $note, order: $order)';
 }
 
 
@@ -544,11 +558,11 @@ abstract mixin class _$WalletTransactionDtoCopyWith<$Res> implements $WalletTran
   factory _$WalletTransactionDtoCopyWith(_WalletTransactionDto value, $Res Function(_WalletTransactionDto) _then) = __$WalletTransactionDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String type, String amount, String balanceAfter, DateTime createdAt, String? note
+ int id, String type, String amount, String balanceAfter, DateTime createdAt, String? note, WalletOrderRefDto? order
 });
 
 
-
+@override $WalletOrderRefDtoCopyWith<$Res>? get order;
 
 }
 /// @nodoc
@@ -561,7 +575,7 @@ class __$WalletTransactionDtoCopyWithImpl<$Res>
 
 /// Create a copy of WalletTransactionDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? amount = null,Object? balanceAfter = null,Object? createdAt = null,Object? note = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? amount = null,Object? balanceAfter = null,Object? createdAt = null,Object? note = freezed,Object? order = freezed,}) {
   return _then(_WalletTransactionDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -569,7 +583,293 @@ as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullabl
 as String,balanceAfter: null == balanceAfter ? _self.balanceAfter : balanceAfter // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as WalletOrderRefDto?,
+  ));
+}
+
+/// Create a copy of WalletTransactionDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$WalletOrderRefDtoCopyWith<$Res>? get order {
+    if (_self.order == null) {
+    return null;
+  }
+
+  return $WalletOrderRefDtoCopyWith<$Res>(_self.order!, (value) {
+    return _then(_self.copyWith(order: value));
+  });
+}
+}
+
+
+/// @nodoc
+mixin _$WalletOrderRefDto {
+
+ String get publicId; String get orderNumber;
+/// Create a copy of WalletOrderRefDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$WalletOrderRefDtoCopyWith<WalletOrderRefDto> get copyWith => _$WalletOrderRefDtoCopyWithImpl<WalletOrderRefDto>(this as WalletOrderRefDto, _$identity);
+
+  /// Serializes this WalletOrderRefDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as WalletOrderRefDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WalletOrderRefDto&&(identical(other.publicId, _this.publicId) || other.publicId == _this.publicId)&&(identical(other.orderNumber, _this.orderNumber) || other.orderNumber == _this.orderNumber));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as WalletOrderRefDto;
+  return Object.hash(runtimeType,_this.publicId,_this.orderNumber);
+}
+
+@override
+String toString() {
+  final _this = this as WalletOrderRefDto;
+  return 'WalletOrderRefDto(publicId: ${_this.publicId}, orderNumber: ${_this.orderNumber})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $WalletOrderRefDtoCopyWith<$Res>  {
+  factory $WalletOrderRefDtoCopyWith(WalletOrderRefDto value, $Res Function(WalletOrderRefDto) _then) = _$WalletOrderRefDtoCopyWithImpl;
+@useResult
+$Res call({
+ String publicId, String orderNumber
+});
+
+
+
+
+}
+/// @nodoc
+class _$WalletOrderRefDtoCopyWithImpl<$Res>
+    implements $WalletOrderRefDtoCopyWith<$Res> {
+  _$WalletOrderRefDtoCopyWithImpl(this._self, this._then);
+
+  final WalletOrderRefDto _self;
+  final $Res Function(WalletOrderRefDto) _then;
+
+/// Create a copy of WalletOrderRefDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? orderNumber = null,}) {
+  return _then(WalletOrderRefDto(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,orderNumber: null == orderNumber ? _self.orderNumber : orderNumber // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [WalletOrderRefDto].
+extension WalletOrderRefDtoPatterns on WalletOrderRefDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _WalletOrderRefDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _WalletOrderRefDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _WalletOrderRefDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _WalletOrderRefDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _WalletOrderRefDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _WalletOrderRefDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String publicId,  String orderNumber)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _WalletOrderRefDto() when $default != null:
+return $default(_that.publicId,_that.orderNumber);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String publicId,  String orderNumber)  $default,) {final _that = this;
+switch (_that) {
+case _WalletOrderRefDto():
+return $default(_that.publicId,_that.orderNumber);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String publicId,  String orderNumber)?  $default,) {final _that = this;
+switch (_that) {
+case _WalletOrderRefDto() when $default != null:
+return $default(_that.publicId,_that.orderNumber);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _WalletOrderRefDto extends WalletOrderRefDto {
+  const _WalletOrderRefDto({required this.publicId, required this.orderNumber}): super._();
+  factory _WalletOrderRefDto.fromJson(Map<String, dynamic> json) => _$WalletOrderRefDtoFromJson(json);
+
+@override final  String publicId;
+@override final  String orderNumber;
+
+/// Create a copy of WalletOrderRefDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$WalletOrderRefDtoCopyWith<_WalletOrderRefDto> get copyWith => __$WalletOrderRefDtoCopyWithImpl<_WalletOrderRefDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$WalletOrderRefDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WalletOrderRefDto&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.orderNumber, orderNumber) || other.orderNumber == orderNumber));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,publicId,orderNumber);
+}
+
+@override
+String toString() {
+    return 'WalletOrderRefDto(publicId: $publicId, orderNumber: $orderNumber)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$WalletOrderRefDtoCopyWith<$Res> implements $WalletOrderRefDtoCopyWith<$Res> {
+  factory _$WalletOrderRefDtoCopyWith(_WalletOrderRefDto value, $Res Function(_WalletOrderRefDto) _then) = __$WalletOrderRefDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ String publicId, String orderNumber
+});
+
+
+
+
+}
+/// @nodoc
+class __$WalletOrderRefDtoCopyWithImpl<$Res>
+    implements _$WalletOrderRefDtoCopyWith<$Res> {
+  __$WalletOrderRefDtoCopyWithImpl(this._self, this._then);
+
+  final _WalletOrderRefDto _self;
+  final $Res Function(_WalletOrderRefDto) _then;
+
+/// Create a copy of WalletOrderRefDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? orderNumber = null,}) {
+  return _then(_WalletOrderRefDto(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,orderNumber: null == orderNumber ? _self.orderNumber : orderNumber // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

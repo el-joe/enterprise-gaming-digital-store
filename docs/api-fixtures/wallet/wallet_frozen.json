@@ -1,0 +1,28 @@
+{
+    "body": {
+        "data": {
+            "wallet": {
+                "balance": {
+                    "amount": "12.50",
+                    "currency": "USD",
+                    "formatted": "USD12.50"
+                },
+                "currency": "USD",
+                "status": "frozen",
+                "top_up_available": false
+            }
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/account/wallet"
+    },
+    "status": 200
+}

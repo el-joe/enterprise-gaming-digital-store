@@ -30,6 +30,9 @@ _WalletTransactionDto _$WalletTransactionDtoFromJson(
   balanceAfter: json['balance_after'] as String,
   createdAt: DateTime.parse(json['created_at'] as String),
   note: json['note'] as String?,
+  order: json['order'] == null
+      ? null
+      : WalletOrderRefDto.fromJson(json['order'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$WalletTransactionDtoToJson(
@@ -41,4 +44,17 @@ Map<String, dynamic> _$WalletTransactionDtoToJson(
   'balance_after': instance.balanceAfter,
   'created_at': instance.createdAt.toIso8601String(),
   'note': instance.note,
+  'order': instance.order?.toJson(),
 };
+
+_WalletOrderRefDto _$WalletOrderRefDtoFromJson(Map<String, dynamic> json) =>
+    _WalletOrderRefDto(
+      publicId: json['public_id'] as String,
+      orderNumber: json['order_number'] as String,
+    );
+
+Map<String, dynamic> _$WalletOrderRefDtoToJson(_WalletOrderRefDto instance) =>
+    <String, dynamic>{
+      'public_id': instance.publicId,
+      'order_number': instance.orderNumber,
+    };

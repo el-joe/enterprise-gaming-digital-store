@@ -8,6 +8,7 @@ import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/auth/presentation/widgets/account_card.dart';
 import 'package:application/features/cart/cart_providers.dart';
 import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
+import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/widgets/app_bottom_nav.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_list_tile.dart';
@@ -106,7 +107,8 @@ class ComingSoonPage extends StatelessWidget {
 }
 
 /// Account tab until M-A16: the account card (sign in, biometric unlock switch, sign out), the
-/// display currency (03.5), guest order access (M-A14) and the language.
+/// wallet (M-A15, hidden when `features.wallet_enabled` is off), the display currency (03.5),
+/// guest order access (M-A14) and the language.
 class AccountTabPage extends ConsumerWidget {
   const AccountTabPage({super.key});
 
@@ -114,6 +116,7 @@ class AccountTabPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final currency = ref.watch(displayCurrencyProvider);
+    final walletEnabled = ref.watch(walletEnabledProvider);
     final arabic = AppLocales.isRtl(Localizations.localeOf(context));
     return Scaffold(
       appBar: MobileAppBar(
@@ -127,6 +130,15 @@ class AccountTabPage extends ConsumerWidget {
         children: [
           const AccountCard(),
           const SizedBox(height: Spacing.s4),
+          if (walletEnabled)
+            AppListTile(
+              key: const ValueKey('account-wallet'),
+              title: l10n.walletTitle,
+              subtitle: l10n.walletAccountSubtitle,
+              icon: Icons.account_balance_wallet_outlined,
+              showChevron: true,
+              onTap: () => unawaited(context.push(Routes.wallet.path)),
+            ),
           AppListTile(
             title: l10n.displayCurrencyLabel,
             icon: Icons.payments_outlined,

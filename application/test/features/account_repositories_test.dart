@@ -22,6 +22,7 @@ import 'package:application/features/support/data/datasources/support_remote_dat
 import 'package:application/features/support/data/repositories/support_repository_impl.dart';
 import 'package:application/features/wallet/data/datasources/wallet_remote_data_source.dart';
 import 'package:application/features/wallet/data/repositories/wallet_repository_impl.dart';
+import 'package:application/features/wallet/domain/entities/wallet.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -333,16 +334,37 @@ void main() {
 
       h.serveFixture('wallet/wallet_ok');
       final wallet = okValue(await repo.wallet());
-      expect(wallet.balance.amountText, '25.00');
+      expect(wallet.balance.amountText, '15.00');
+      expect(wallet.status, 'active');
       expect(wallet.topUpAvailable, isFalse);
 
       h.serveFixture('wallet/wallet_empty');
       expect(okValue(await repo.wallet()).balance.amountText, '0.00');
 
+      h.serveFixture('wallet/wallet_frozen');
+      expect(okValue(await repo.wallet()).status, 'frozen');
+
       h.serveFixture('wallet/transactions_ok');
-      final statement = okValue(await repo.transactions());
-      expect(statement.items.single.amount, '25.000000');
-      expect(statement.items.single.type, 'credit_refund');
+      final statement = okValue(await repo.transactions(page: 2));
+      expect(h.adapter.requests.last.uri.queryParameters, {
+        'page': '2',
+        'per_page': '20',
+      });
+      final [debit, credit] = statement.items;
+      expect(debit.amount, '-10.000000');
+      expect(debit.type, 'debit_purchase');
+      expect(debit.isCredit, isFalse);
+      expect(
+        debit.order,
+        const WalletOrderRef(
+          publicId: '01jf0000000000000000000001',
+          orderNumber: 'FIXTURE-0001',
+        ),
+      );
+      expect(credit.amount, '25.000000');
+      expect(credit.isCredit, isTrue);
+      expect(credit.order, isNull);
+      expect(statement.page.total, 2);
     });
   });
 

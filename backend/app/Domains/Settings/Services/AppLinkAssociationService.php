@@ -9,8 +9,8 @@ namespace App\Domains\Settings\Services;
  * - Android Digital Asset Links: a JSON array of statements with relation
  *   `delegate_permission/common.handle_all_urls` and target `{namespace: android_app,
  *   package_name, sha256_cert_fingerprints}` (developer.android.com/training/app-links/configure-assetlinks).
- * - Apple: `{"applinks": {"details": [{"appIDs": [...], "components": [{"/": "/app/*"}]}]}}`
- *   (iOS 13 and later format).
+ * - Apple: `{"applinks": {"details": [{"appIDs": [...], "components": [{"/": "/app/*"}, ...]}]}}`
+ *   (iOS 13 and later format), one component per path in `mobile.app_links.paths`.
  *
  * Malformed configured values are left out rather than published, so a typo can never declare
  * a wrong app. Nothing is ever invented: unconfigured means `[]` and an empty `details` list.

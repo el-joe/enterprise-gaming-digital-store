@@ -3,7 +3,7 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A14 orders and code reveal UI** (2026-11-11) on M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
+Status: **M-A15 wallet UI** (2026-11-11) on M-A14 (orders and code reveal UI), M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
 onboarding), the M-A7 data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
 maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
 (Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
@@ -12,8 +12,9 @@ suggestions, popular terms and a local history, the display currency switcher, a
 page (variants, delivery fields, add to cart, reviews) with the cart count on the Cart tab, the cart
 tab, the signed-in checkout, the payment hand-off to PayPal and Paymob in the system browser with the
 app-link return, the payment results, the Orders tab with the order detail, the protected code
-reveal and guest order access by email code. The Account tab holds the M-A10 account card, the
-currency, guest order access and the language until M-A16.
+reveal, guest order access by email code and the wallet (balance and statement). The Account tab
+holds the M-A10 account card, the wallet entry, the currency, guest order access and the language
+until M-A16.
 
 ## Requirements
 
@@ -100,7 +101,8 @@ tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 
 `presentation/` (controllers, pages, widgets) exists for `auth` and `launch` (M-A10), for `home`,
 `catalog` and `search` (M-A11), for `product` (M-A12), for `cart`, `checkout` and `payments`
-(M-A13) and for `orders` and `code_reveal` (M-A14); the other features get theirs in M-A15 onwards.
+(M-A13), for `orders` and `code_reveal` (M-A14) and for `wallet` (M-A15); the other features get
+theirs in M-A16 onwards.
 `features/payments/payment_flow.dart` is the payments feature's public entry (`PaymentFlow`,
 `PaymentLaunch`), used by checkout, the app-link listener and the launch check.
 `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
@@ -393,11 +395,47 @@ including the link that cold-starts the app (kept until the first listen) and sc
   returns), and `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest
   delivery email) opens guest access. Android intent filter: `/account/orders/`,
   `/en/account/orders/`, `/ar/account/orders/` and the pattern
-  `/api/v1/checkout/guest/orders/.*/access`. iOS: the server's `apple-app-site-association` still
-  lists only `/app/*` (open item).
+  `/api/v1/checkout/guest/orders/.*/access`. iOS: since M-A15 the server's
+  `apple-app-site-association` lists the same paths (`config/mobile.php` `app_links.paths`).
 - **Dates** (`core/utils/date_format.dart`): local time, Arabic month names with Western digits.
 - No package was added in M-A14; no backend change (the order detail carries the unit ids and masks;
   a JSON `GET /account/digital-codes` was not needed).
+
+## Wallet (M-A15)
+
+- **Route.** `/wallet` (`RouteAccess.signedIn`, above the tabs), from the Account tab's "Wallet"
+  row. The row and the checkout wallet option are hidden when `features.wallet_enabled` is off
+  (`walletEnabledProvider` in `features/wallet/wallet_providers.dart`; true before the launch check
+  has a configuration, the server still decides whether the wallet can pay); opened anyway (a
+  stale link), the screen says "Wallet isn't available" and loads nothing.
+- **Screen** (`WalletController`, Figma 12.1 to 12.3): `GET /account/wallet` and the first page of
+  `GET /account/wallet/transactions` together; the balance card shows the server's money
+  (`balance.formatted`) with the status badge (Active, or Frozen with the warning banner and a
+  sticky "Contact support" that opens `links.support`); the statement is newest first, 20 per page,
+  `meta` paging (next page 600 px before the end, a failed page keeps the list with a retry bar, no
+  retry loop), pull to refresh (the list stays; a failed refresh keeps it). Loading skeleton,
+  empty ("No transactions yet"), error with request id and offline states. A sign-in, a sign-out
+  and `CartRevision` (an order or a payment answer can move the balance) reload it. Read only: no
+  top-up (BD3).
+- **Statement lines.** Credit (arrow down, success tint) or debit (arrow up); the type (Refund,
+  Credit from support, Payment, Adjustment by support, Reversal) with the order number when the
+  line has an `order`; the staff or system `note` only on lines without an order (the note is not
+  translated); the date (`AppDates.full`: local time, Arabic month names, Western digits); the
+  signed amount and the balance after. A line with an `order` opens the M-A14 order detail
+  (`/orders/:order`). Ledger amounts carry no currency (decimal strings, 6 dp): `walletAmountText`
+  writes them with the wallet currency's symbol and exponent from `GET /app/config` (else the code
+  and the balance's scale), through `MoneyFormatter`, truncating like the server, never through a
+  floating-point number; a `+` only on an amount that shows above zero. Amounts and order numbers
+  are LTR islands in Arabic.
+- **Accessibility.** The balance card reads "Store credit balance $40.00, Active"; each line reads
+  "type · order, amount, balance …, date" with "Opens the order" when it has one; rows are at least
+  64dp, buttons 48dp.
+- **Checkout** (M-A13 follow-up): when the payment options list the wallet, the controller reads
+  `GET /account/wallet` once per quote and the option reads "Store credit · balance $40.00" (07.2).
+  A failed read only hides the balance. The payment-options contract is unchanged.
+- **Backend (M-A15).** Statement lines carry `order: { public_id, order_number } | null` (the
+  customer's own order behind a purchase or a refund); `apple-app-site-association` lists the app's
+  link paths. No package was added.
 
 ## Biometric unlock (owner decision 6)
 
@@ -511,6 +549,29 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A15 additions)
+
+`test/features/wallet/wallet_controller_test.dart` (balance and first page together; paging through
+`meta` and the last page; a failed next page kept with no retry loop, then retried; one page at a
+time; pull to refresh keeps the list and reloads the balance; a failed refresh keeps the list; a
+failed balance or statement until retry; empty; `wallet_enabled` off loads nothing and comes back
+when turned on; signed out loads nothing, then signing in loads; `CartRevision` reloads; a late page
+from before a reload is dropped; the currency from the configuration or the fallback; support link;
+statement amounts: sign, exponent truncation, KWD, malformed; checkout: the balance in the wallet
+option, the option dropped with `wallet_enabled` off, no balance call without a wallet option, a
+failed balance only hides it), `wallet_page_test.dart` (in `en` and `ar`: Account entry to the
+wallet and back, types with order numbers, signed amounts as LTR islands, a linked line opens the
+order detail, an unlinked line does not, loading skeleton, empty, frozen with "Contact support" and
+without a support link, server error with request id and retry, offline and retry, paging by scroll
+with a failed page and retry, pull to refresh, `wallet_enabled` off hides the entry and the screen
+says unavailable, signed out asks to sign in, screen-reader labels with tap-target and label
+guidelines, 360 wide with a long balance, checkout balance and hidden option) and goldens in LTR
+and RTL (`test/goldens/m_a15/`, 11 states: 12.1 with the next-page skeleton, 12.2, 12.3, loading,
+error, offline, next page failed, unavailable, 360x800, the Account entry, the 07.2 wallet option).
+`test/helpers/wallet_fakes.dart` holds the fake wallet repository (per-page answers and gates) and
+the fixture helpers; the harness wires it. `account_repositories_test.dart` and the fixture contract
+test cover the new `order` field and the `wallet/wallet_frozen` fixture.
 
 ## Tests (M-A14 additions)
 

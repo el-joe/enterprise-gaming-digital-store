@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:application/core/l10n/l10n.dart';
+import 'package:application/core/money/money.dart';
 import 'package:application/core/money/money_display.dart';
 import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/radii.dart';
@@ -29,12 +30,16 @@ class PaymentOptionTile extends StatelessWidget {
     required this.option,
     required this.selected,
     required this.onTap,
+    this.walletBalance,
     super.key,
   });
 
   final PaymentOption option;
   final bool selected;
   final VoidCallback onTap;
+
+  /// The wallet option's balance (M-A15): "Store credit · balance $40.00".
+  final Money? walletBalance;
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +49,11 @@ class PaymentOptionTile extends StatelessWidget {
     final block = blockOfOption(option);
     final enabled = block == null;
     final charge = moneyText(option.paymentAmount);
+    final balance = walletBalance;
     final detail = block != null
         ? optionBlockText(l10n, block)
+        : balance != null
+        ? l10n.checkoutWalletBalance(ltrIsolate(moneyText(balance)))
         : option.notice == 'charged_in_payment_currency'
         ? l10n.checkoutChargedIn(option.paymentCurrency)
         : option.methods.isNotEmpty

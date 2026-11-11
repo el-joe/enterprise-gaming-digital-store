@@ -54,7 +54,7 @@ final class CheckoutControllerProvider
 }
 
 String _$checkoutControllerHash() =>
-    r'c3755819bb236ee6f51d94fd2135f20a992d9001';
+    r'67eca9c395e26b8c7f5e450b05a46d6358e24f7b';
 
 /// The signed-in checkout: country (from the profile when it is a checkout country), the cart
 /// repriced for it (`validate`), the payment options with their charge currency and amount, the

@@ -1987,4 +1987,101 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get orderGatewayWallet => 'المحفظة';
+
+  @override
+  String get walletTitle => 'المحفظة';
+
+  @override
+  String get walletAccountSubtitle => 'رصيد المتجر وكشف الحساب';
+
+  @override
+  String get walletStoreCredit => 'رصيد المتجر';
+
+  @override
+  String get walletStatusActive => 'نشطة';
+
+  @override
+  String get walletStatusFrozen => 'مجمّدة';
+
+  @override
+  String get walletBalanceNote =>
+      'من المبالغ المستردة وأرصدة الدعم. يمكن استخدامه للدفع، ولا يمكن شحنه.';
+
+  @override
+  String walletBalanceSemantics(String amount, String status) {
+    return 'رصيد المتجر $amount، $status';
+  }
+
+  @override
+  String get walletStatement => 'كشف الحساب';
+
+  @override
+  String get walletFrozenTitle => 'المحفظة مجمّدة';
+
+  @override
+  String get walletFrozenBody =>
+      'لا يمكنك الدفع برصيد المتجر حاليًا. تستمر المبالغ المستردة بالوصول. تواصل مع الدعم لمعرفة المزيد.';
+
+  @override
+  String get walletContactSupport => 'تواصل مع الدعم';
+
+  @override
+  String get walletEmptyTitle => 'لا توجد معاملات بعد';
+
+  @override
+  String get walletEmptyBody => 'ستظهر المبالغ المستردة والأرصدة هنا.';
+
+  @override
+  String get walletLoadErrorTitle => 'تعذّر تحميل محفظتك';
+
+  @override
+  String get walletMoreFailed => 'تعذّر تحميل المزيد من المعاملات';
+
+  @override
+  String get walletUnavailableTitle => 'المحفظة غير متاحة';
+
+  @override
+  String get walletUnavailableBody =>
+      'لا يمكن عرض رصيد المتجر في التطبيق حاليًا.';
+
+  @override
+  String get walletTypeCreditRefund => 'استرداد';
+
+  @override
+  String get walletTypeCreditAdmin => 'رصيد من الدعم';
+
+  @override
+  String get walletTypeDebitPurchase => 'دفع';
+
+  @override
+  String get walletTypeDebitAdmin => 'تسوية من الدعم';
+
+  @override
+  String get walletTypeReversal => 'عكس عملية';
+
+  @override
+  String get walletTypeOther => 'معاملة في المحفظة';
+
+  @override
+  String walletLineWithOrder(String type, String order) {
+    return '$type · $order';
+  }
+
+  @override
+  String walletLineSemantics(
+    String title,
+    String amount,
+    String balance,
+    String date,
+  ) {
+    return '$title، $amount، الرصيد $balance، $date';
+  }
+
+  @override
+  String get walletLineOpenOrderHint => 'يفتح الطلب';
+
+  @override
+  String checkoutWalletBalance(String amount) {
+    return 'رصيد المتجر · الرصيد $amount';
+  }
 }

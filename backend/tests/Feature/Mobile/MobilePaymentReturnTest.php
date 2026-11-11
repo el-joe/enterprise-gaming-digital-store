@@ -325,12 +325,32 @@ describe('app link association files', function (): void {
         expect($response->json())->toBe(['applinks' => ['details' => []]])->and($response->headers->getCookies())->toBe([]);
     });
 
-    it('lists the configured app ids for the /app/ paths', function (): void {
+    it('lists the configured app ids for every path the app handles, as the Android intent filter does', function (): void {
         config(['mobile.app_links.ios_app_ids' => 'ABCDE12345.shop.boxcards.app,bad.id']);
 
         $response = $this->get('/.well-known/apple-app-site-association')->assertOk();
 
-        expect($response->json())->toBe(['applinks' => ['details' => [['appIDs' => ['ABCDE12345.shop.boxcards.app'], 'components' => [['/' => '/app/*']]]]]])
-            ->and($response->getContent())->toContain('"/":"/app/*"');
+        expect($response->json())->toBe(['applinks' => ['details' => [['appIDs' => ['ABCDE12345.shop.boxcards.app'], 'components' => [
+            ['/' => '/app/*'],
+            ['/' => '/products/*'],
+            ['/' => '/en/products/*'],
+            ['/' => '/ar/products/*'],
+            ['/' => '/account/orders/*'],
+            ['/' => '/en/account/orders/*'],
+            ['/' => '/ar/account/orders/*'],
+            ['/' => '/api/v1/checkout/guest/orders/*/access'],
+        ]]]]])
+            ->and($response->getContent())->toContain('"/":"/app/*"')
+            ->and($response->getContent())->toContain('"/":"/api/v1/checkout/guest/orders/*/access"');
+    });
+
+    it('never claims the whole site, so web pages the app does not handle stay in the browser', function (): void {
+        config(['mobile.app_links.ios_app_ids' => 'ABCDE12345.shop.boxcards.app']);
+
+        $paths = array_column($this->get('/.well-known/apple-app-site-association')->assertOk()->json('applinks.details.0.components'), '/');
+
+        expect($paths)->not->toContain('*')
+            ->and($paths)->not->toContain('/*')
+            ->and(array_filter($paths, static fn (string $path): bool => str_starts_with($path, '/account/') && $path !== '/account/orders/*'))->toBe([]);
     });
 });

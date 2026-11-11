@@ -15,6 +15,7 @@ import 'package:application/features/checkout/checkout_providers.dart';
 import 'package:application/features/checkout/domain/entities/checkout.dart';
 import 'package:application/features/checkout/domain/usecases/place_order.dart';
 import 'package:application/features/payments/payment_flow.dart';
+import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/domain/entities/cart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -37,6 +38,9 @@ final class CheckoutQuote {
 
   int get units => cart.items.fold(0, (sum, line) => sum + line.quantity);
 }
+
+/// Gateway key of the store wallet.
+const walletGateway = 'wallet';
 
 /// Why an option cannot be chosen (07.3: disabled with a reason).
 enum OptionBlock {
@@ -123,6 +127,7 @@ final class CheckoutState {
     this.failureText,
     this.event,
     this.eventCount = 0,
+    this.walletBalance,
   });
 
   final Loadable<List<Country>> countries;
@@ -152,6 +157,10 @@ final class CheckoutState {
 
   final CheckoutEvent? event;
   final int eventCount;
+
+  /// The wallet balance (`GET /account/wallet`, M-A15) shown in the wallet option; null until
+  /// loaded, when the wallet is not listed, or when it could not be read.
+  final Money? walletBalance;
 
   CheckoutQuote? get loadedQuote => quote?.valueOrNull;
 
@@ -199,6 +208,7 @@ final class CheckoutState {
     String? Function()? failureText,
     CheckoutEvent? event,
     int? eventCount,
+    Money? Function()? walletBalance,
   }) => CheckoutState(
     countries: countries ?? this.countries,
     country: country == null ? this.country : country(),
@@ -214,6 +224,7 @@ final class CheckoutState {
     failureText: failureText == null ? this.failureText : failureText(),
     event: event ?? this.event,
     eventCount: eventCount ?? this.eventCount,
+    walletBalance: walletBalance == null ? this.walletBalance : walletBalance(),
   );
 }
 
@@ -516,7 +527,13 @@ class CheckoutController extends _$CheckoutController {
     switch (options) {
       case Err(:final failure):
         state = state.copyWith(quote: () => Failed(failure));
-      case Ok(:final value):
+      case Ok(value: final listed):
+        // `features.wallet_enabled` off: the wallet is not offered in the app (M-A15).
+        final walletEnabled = ref.read(walletEnabledProvider);
+        final value = [
+          for (final option in listed)
+            if (walletEnabled || option.gateway != walletGateway) option,
+        ];
         final keep = value
             .where(
               (o) => o.gateway == state.gateway && blockOfOption(o) == null,
@@ -529,6 +546,19 @@ class CheckoutController extends _$CheckoutController {
           gateway: () => chosen?.gateway,
           method: () => keep != null ? state.method : null,
         );
+        if (value.any((option) => option.gateway == walletGateway)) {
+          unawaited(_loadWalletBalance(generation));
+        }
     }
+  }
+
+  /// The balance for the wallet option's "Store credit · balance $40.00" (07.2). Advisory: the
+  /// options already say whether the wallet can pay, so a failure only hides the balance.
+  Future<void> _loadWalletBalance(int generation) async {
+    final result = await ref.read(walletRepositoryProvider).wallet();
+    if (!ref.mounted || generation != _generation) {
+      return;
+    }
+    state = state.copyWith(walletBalance: () => result.valueOrNull?.balance);
   }
 }

@@ -117,14 +117,27 @@ return [
     |   `AA:BB:...`, 32 bytes); with Play App Signing, the one shown in the Play Console. Every
     |   listed package is declared with every fingerprint.
     | - `ios_app_ids`: `TEAMID.bundle.id` (comma-separated), for example `ABCDE12345.shop.boxcards.app`.
-    | - `paths`: the paths the apps handle. Only the payment return paths live under `/app/`.
+    | - `paths`: the paths the apps handle, mirroring the Android intent filter
+    |   (application/android/app/src/main/AndroidManifest.xml) and the app's link listener: the
+    |   payment returns under `/app/` (M-A6), product pages (M-A12), the customer order page and
+    |   the signed guest access link of the delivery emails (M-A14). In Apple components `*`
+    |   matches any characters, including `/`; a component without `?` matches any query.
     |
     */
     'app_links' => [
         'android_packages' => env('MOBILE_ANDROID_PACKAGES') ?: 'shop.boxcards.app',
         'android_sha256_fingerprints' => env('MOBILE_ANDROID_SHA256_FINGERPRINTS') ?: '',
         'ios_app_ids' => env('MOBILE_IOS_APP_IDS') ?: '',
-        'paths' => ['/app/*'],
+        'paths' => [
+            '/app/*',
+            '/products/*',
+            '/en/products/*',
+            '/ar/products/*',
+            '/account/orders/*',
+            '/en/account/orders/*',
+            '/ar/account/orders/*',
+            '/api/v1/checkout/guest/orders/*/access',
+        ],
         'cache_seconds' => 3600,
     ],
 ];

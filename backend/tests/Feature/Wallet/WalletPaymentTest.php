@@ -38,6 +38,7 @@ use App\Domains\Wallet\Models\WalletTransaction;
 use App\Domains\Wallet\Services\WalletLedger;
 use Carbon\CarbonImmutable;
 use Database\Factories\Shared\CountryFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
@@ -208,6 +209,77 @@ describe('paying from the wallet', function (): void {
         $this->postJson('/webhooks/wallet', ['type' => 'payment.succeeded'])->assertStatus(400);
 
         expect(Order::query()->where('status', OrderStatus::Paid)->exists())->toBeFalse();
+    });
+});
+
+describe('statement links to the order', function (): void {
+    it('shows the order behind a purchase debit and a refund credit, and none for a credit without one', function (): void {
+        fundWallet($this->user, '20');
+        walletCheckout($this->user, 2)->assertCreated();
+        $order = Order::query()->sole();
+        $machine = app(OrderStateMachine::class);
+        $machine->transition($order, OrderStatus::Processing, OrderActor::system());
+        setUnitStatuses($order, [Unit::Delivered, Unit::Failed]);
+        $machine->transition($order, OrderStatus::PartiallyFulfilled, OrderActor::system());
+
+        $lines = $this->actingAs($this->user)->getJson('/api/v1/account/wallet/transactions')->assertOk()->json('data');
+        $linked = ['public_id' => $order->public_id, 'order_number' => $order->order_number];
+
+        expect(array_column($lines, 'type'))->toBe(['credit_refund', 'debit_purchase', 'credit_refund'])
+            ->and($lines[0]['order'])->toBe($linked)
+            ->and($lines[1]['order'])->toBe($linked)
+            ->and($lines[2]['order'])->toBeNull()
+            ->and($lines[1])->not->toHaveKey('reference_type')
+            ->and($lines[1])->not->toHaveKey('reference_id');
+    });
+
+    it('never links an order that belongs to someone else', function (): void {
+        $stranger = User::factory()->create();
+        [, $payment] = orderAwaitingPayment(gatewayFor('stripe'), '5.00', orderAttributes: ['user_id' => $stranger->id]);
+        fundWallet($this->user, '10');
+        app(WalletLedger::class)->post(new WalletEntry(
+            userId: $this->user->id,
+            type: WalletTransactionType::DebitAdmin,
+            amount: Money::of('5', 'USD'),
+            idempotencyKey: 'foreign-reference',
+            referenceType: 'payment',
+            referenceId: $payment->id,
+        ));
+
+        $this->actingAs($this->user)->getJson('/api/v1/account/wallet/transactions')->assertOk()
+            ->assertJsonPath('data.0.order', null)
+            ->assertJsonPath('data.1.order', null);
+    });
+
+    it('loads the linked orders of a page in a fixed number of queries', function (): void {
+        fundWallet($this->user, '100');
+        $statementQueries = function (): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            $this->actingAs($this->user)->getJson('/api/v1/account/wallet/transactions')->assertOk();
+            DB::disableQueryLog();
+
+            return count(DB::getQueryLog());
+        };
+        $debitFor = function (int $index): void {
+            [, $payment] = orderAwaitingPayment(gatewayFor('stripe'), '5.00', providerPaymentId: 'pi_linked_'.$index, orderAttributes: ['user_id' => $this->user->id]);
+            app(WalletLedger::class)->post(new WalletEntry(
+                userId: $this->user->id,
+                type: WalletTransactionType::DebitPurchase,
+                amount: Money::of('5', 'USD'),
+                idempotencyKey: 'linked-'.$index,
+                referenceType: 'payment',
+                referenceId: $payment->id,
+            ));
+        };
+
+        $debitFor(1);
+        $withOne = $statementQueries();
+        $debitFor(2);
+        $debitFor(3);
+
+        expect($statementQueries())->toBe($withOne)
+            ->and(array_filter(array_column($this->actingAs($this->user)->getJson('/api/v1/account/wallet/transactions')->json('data'), 'order')))->toHaveCount(3);
     });
 });
 

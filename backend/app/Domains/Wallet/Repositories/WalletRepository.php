@@ -2,10 +2,13 @@
 
 namespace App\Domains\Wallet\Repositories;
 
+use App\Domains\Payments\Models\Payment;
+use App\Domains\Payments\Models\Refund;
 use App\Domains\Wallet\Enums\CustomerWalletStatus;
 use App\Domains\Wallet\Models\CustomerWallet;
 use App\Domains\Wallet\Models\WalletTransaction;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\UniqueConstraintViolationException;
 
 class WalletRepository
@@ -58,12 +61,17 @@ class WalletRepository
     }
 
     /**
-     * Statement, newest first (idx_wt_wallet).
+     * Statement, newest first (idx_wt_wallet), with the order behind each purchase debit or
+     * refund credit loaded per page (M-A15, `WalletTransactionResource::order`).
      */
     public function statement(int $walletId, int $page, int $perPage): LengthAwarePaginator
     {
         return WalletTransaction::query()
             ->where('customer_wallet_id', $walletId)
+            ->with(['reference' => static fn (MorphTo $reference) => $reference->morphWith([
+                Payment::class => ['order:id,public_id,order_number,user_id'],
+                Refund::class => ['order:id,public_id,order_number,user_id'],
+            ])])
             ->orderByDesc('id')
             ->paginate($perPage, ['*'], 'page', $page);
     }

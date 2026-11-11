@@ -26,6 +26,7 @@ import 'package:application/features/payments/presentation/pages/payment_page.da
 import 'package:application/features/product/presentation/pages/product_page.dart';
 import 'package:application/features/product/presentation/pages/product_reviews_page.dart';
 import 'package:application/features/search/presentation/pages/search_page.dart';
+import 'package:application/features/wallet/presentation/pages/wallet_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -202,6 +203,11 @@ GoRouter appRouter(Ref ref) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: Routes.wallet.path,
+        name: Routes.wallet.name,
+        builder: (context, state) => const WalletPage(),
       ),
       GoRoute(
         path: Routes.guestAccess.path,

@@ -3,9 +3,9 @@
         "data": {
             "wallet": {
                 "balance": {
-                    "amount": "25.00",
+                    "amount": "15.00",
                     "currency": "USD",
-                    "formatted": "USD25.00"
+                    "formatted": "USD15.00"
                 },
                 "currency": "USD",
                 "status": "active",

@@ -168,6 +168,13 @@ abstract final class Routes {
     access: RouteAccess.signedIn,
   );
 
+  /// Wallet (M-A15, 12.1 to 12.3): balance and statement, read only; from the Account tab.
+  static const wallet = AppRoute(
+    name: 'wallet',
+    path: '/wallet',
+    access: RouteAccess.signedIn,
+  );
+
   /// Guest order access (11.x): paste the link of the delivery email. Reached from the Account
   /// tab and the signed-out Orders tab; no guest checkout (owner decision 4).
   static const guestAccess = AppRoute(
@@ -204,6 +211,7 @@ abstract final class Routes {
     orderDetail,
     codeReveal,
     refundRequest,
+    wallet,
     guestAccess,
     guestOrder,
     guestReveal,

@@ -3417,6 +3417,173 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wallet'**
   String get orderGatewayWallet;
+
+  /// Wallet screen title and Account tab entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get walletTitle;
+
+  /// Account tab wallet entry subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store credit and statement'**
+  String get walletAccountSubtitle;
+
+  /// Balance card label.
+  ///
+  /// In en, this message translates to:
+  /// **'Store credit'**
+  String get walletStoreCredit;
+
+  /// Wallet status badge, active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get walletStatusActive;
+
+  /// Wallet status badge, frozen.
+  ///
+  /// In en, this message translates to:
+  /// **'Frozen'**
+  String get walletStatusFrozen;
+
+  /// Balance card note (no top-up, BD3).
+  ///
+  /// In en, this message translates to:
+  /// **'From refunds and staff credits. It can pay for orders; there is no top-up.'**
+  String get walletBalanceNote;
+
+  /// Screen reader label of the balance card.
+  ///
+  /// In en, this message translates to:
+  /// **'Store credit balance {amount}, {status}'**
+  String walletBalanceSemantics(String amount, String status);
+
+  /// Statement section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement'**
+  String get walletStatement;
+
+  /// Frozen wallet banner title.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet frozen'**
+  String get walletFrozenTitle;
+
+  /// Frozen wallet banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can’t pay with store credit right now. Refunds still arrive. Contact support to learn more.'**
+  String get walletFrozenBody;
+
+  /// Frozen wallet footer button.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get walletContactSupport;
+
+  /// Empty statement title.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get walletEmptyTitle;
+
+  /// Empty statement body.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunds and credits will appear here.'**
+  String get walletEmptyBody;
+
+  /// Wallet load error title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your wallet'**
+  String get walletLoadErrorTitle;
+
+  /// Next statement page failed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load more transactions'**
+  String get walletMoreFailed;
+
+  /// Wallet turned off in the app configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet isn\'t available'**
+  String get walletUnavailableTitle;
+
+  /// Wallet turned off, body.
+  ///
+  /// In en, this message translates to:
+  /// **'Store credit can\'t be viewed in the app right now.'**
+  String get walletUnavailableBody;
+
+  /// Statement line type: refund credit.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get walletTypeCreditRefund;
+
+  /// Statement line type: staff credit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit from support'**
+  String get walletTypeCreditAdmin;
+
+  /// Statement line type: paid an order.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get walletTypeDebitPurchase;
+
+  /// Statement line type: staff debit.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment by support'**
+  String get walletTypeDebitAdmin;
+
+  /// Statement line type: reversal.
+  ///
+  /// In en, this message translates to:
+  /// **'Reversal'**
+  String get walletTypeReversal;
+
+  /// Statement line type not known to this version.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet transaction'**
+  String get walletTypeOther;
+
+  /// Statement line title with the order number.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} · {order}'**
+  String walletLineWithOrder(String type, String order);
+
+  /// Screen reader label of a statement line.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}, {amount}, balance {balance}, {date}'**
+  String walletLineSemantics(
+    String title,
+    String amount,
+    String balance,
+    String date,
+  );
+
+  /// Screen reader hint of a statement line linked to an order.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the order'**
+  String get walletLineOpenOrderHint;
+
+  /// Wallet payment option detail with the wallet balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Store credit · balance {amount}'**
+  String checkoutWalletBalance(String amount);
 }
 
 class _AppLocalizationsDelegate

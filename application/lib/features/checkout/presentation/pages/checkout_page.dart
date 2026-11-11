@@ -211,6 +211,9 @@ class CheckoutPage extends ConsumerWidget {
               option: option,
               selected: option.gateway == state.gateway,
               onTap: () => controller.selectOption(option.gateway),
+              walletBalance: option.gateway == walletGateway
+                  ? state.walletBalance
+                  : null,
             ),
             if (option.gateway == state.gateway &&
                 option.methods.length > 1) ...[

@@ -305,6 +305,7 @@ final Map<String, Decoder> decoders = {
   'support/tickets_list': _tickets,
   'wallet/transactions_ok': _walletTx,
   'wallet/wallet_empty': _wallet,
+  'wallet/wallet_frozen': _wallet,
   'wallet/wallet_ok': _wallet,
 };
 

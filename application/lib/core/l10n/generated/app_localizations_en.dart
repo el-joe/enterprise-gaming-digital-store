@@ -1977,4 +1977,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderGatewayWallet => 'Wallet';
+
+  @override
+  String get walletTitle => 'Wallet';
+
+  @override
+  String get walletAccountSubtitle => 'Store credit and statement';
+
+  @override
+  String get walletStoreCredit => 'Store credit';
+
+  @override
+  String get walletStatusActive => 'Active';
+
+  @override
+  String get walletStatusFrozen => 'Frozen';
+
+  @override
+  String get walletBalanceNote =>
+      'From refunds and staff credits. It can pay for orders; there is no top-up.';
+
+  @override
+  String walletBalanceSemantics(String amount, String status) {
+    return 'Store credit balance $amount, $status';
+  }
+
+  @override
+  String get walletStatement => 'Statement';
+
+  @override
+  String get walletFrozenTitle => 'Wallet frozen';
+
+  @override
+  String get walletFrozenBody =>
+      'You can’t pay with store credit right now. Refunds still arrive. Contact support to learn more.';
+
+  @override
+  String get walletContactSupport => 'Contact support';
+
+  @override
+  String get walletEmptyTitle => 'No transactions yet';
+
+  @override
+  String get walletEmptyBody => 'Refunds and credits will appear here.';
+
+  @override
+  String get walletLoadErrorTitle => 'We couldn\'t load your wallet';
+
+  @override
+  String get walletMoreFailed => 'We couldn\'t load more transactions';
+
+  @override
+  String get walletUnavailableTitle => 'Wallet isn\'t available';
+
+  @override
+  String get walletUnavailableBody =>
+      'Store credit can\'t be viewed in the app right now.';
+
+  @override
+  String get walletTypeCreditRefund => 'Refund';
+
+  @override
+  String get walletTypeCreditAdmin => 'Credit from support';
+
+  @override
+  String get walletTypeDebitPurchase => 'Payment';
+
+  @override
+  String get walletTypeDebitAdmin => 'Adjustment by support';
+
+  @override
+  String get walletTypeReversal => 'Reversal';
+
+  @override
+  String get walletTypeOther => 'Wallet transaction';
+
+  @override
+  String walletLineWithOrder(String type, String order) {
+    return '$type · $order';
+  }
+
+  @override
+  String walletLineSemantics(
+    String title,
+    String amount,
+    String balance,
+    String date,
+  ) {
+    return '$title, $amount, balance $balance, $date';
+  }
+
+  @override
+  String get walletLineOpenOrderHint => 'Opens the order';
+
+  @override
+  String checkoutWalletBalance(String amount) {
+    return 'Store credit · balance $amount';
+  }
 }

@@ -2670,5 +2670,148 @@
   "orderGatewayWallet": "Wallet",
   "@orderGatewayWallet": {
     "description": "Payment provider name for the store wallet."
+  },
+  "walletTitle": "Wallet",
+  "@walletTitle": {
+    "description": "Wallet screen title and Account tab entry."
+  },
+  "walletAccountSubtitle": "Store credit and statement",
+  "@walletAccountSubtitle": {
+    "description": "Account tab wallet entry subtitle."
+  },
+  "walletStoreCredit": "Store credit",
+  "@walletStoreCredit": {
+    "description": "Balance card label."
+  },
+  "walletStatusActive": "Active",
+  "@walletStatusActive": {
+    "description": "Wallet status badge, active."
+  },
+  "walletStatusFrozen": "Frozen",
+  "@walletStatusFrozen": {
+    "description": "Wallet status badge, frozen."
+  },
+  "walletBalanceNote": "From refunds and staff credits. It can pay for orders; there is no top-up.",
+  "@walletBalanceNote": {
+    "description": "Balance card note (no top-up, BD3)."
+  },
+  "walletBalanceSemantics": "Store credit balance {amount}, {status}",
+  "@walletBalanceSemantics": {
+    "description": "Screen reader label of the balance card.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "walletStatement": "Statement",
+  "@walletStatement": {
+    "description": "Statement section title."
+  },
+  "walletFrozenTitle": "Wallet frozen",
+  "@walletFrozenTitle": {
+    "description": "Frozen wallet banner title."
+  },
+  "walletFrozenBody": "You can’t pay with store credit right now. Refunds still arrive. Contact support to learn more.",
+  "@walletFrozenBody": {
+    "description": "Frozen wallet banner body."
+  },
+  "walletContactSupport": "Contact support",
+  "@walletContactSupport": {
+    "description": "Frozen wallet footer button."
+  },
+  "walletEmptyTitle": "No transactions yet",
+  "@walletEmptyTitle": {
+    "description": "Empty statement title."
+  },
+  "walletEmptyBody": "Refunds and credits will appear here.",
+  "@walletEmptyBody": {
+    "description": "Empty statement body."
+  },
+  "walletLoadErrorTitle": "We couldn't load your wallet",
+  "@walletLoadErrorTitle": {
+    "description": "Wallet load error title."
+  },
+  "walletMoreFailed": "We couldn't load more transactions",
+  "@walletMoreFailed": {
+    "description": "Next statement page failed."
+  },
+  "walletUnavailableTitle": "Wallet isn't available",
+  "@walletUnavailableTitle": {
+    "description": "Wallet turned off in the app configuration."
+  },
+  "walletUnavailableBody": "Store credit can't be viewed in the app right now.",
+  "@walletUnavailableBody": {
+    "description": "Wallet turned off, body."
+  },
+  "walletTypeCreditRefund": "Refund",
+  "@walletTypeCreditRefund": {
+    "description": "Statement line type: refund credit."
+  },
+  "walletTypeCreditAdmin": "Credit from support",
+  "@walletTypeCreditAdmin": {
+    "description": "Statement line type: staff credit."
+  },
+  "walletTypeDebitPurchase": "Payment",
+  "@walletTypeDebitPurchase": {
+    "description": "Statement line type: paid an order."
+  },
+  "walletTypeDebitAdmin": "Adjustment by support",
+  "@walletTypeDebitAdmin": {
+    "description": "Statement line type: staff debit."
+  },
+  "walletTypeReversal": "Reversal",
+  "@walletTypeReversal": {
+    "description": "Statement line type: reversal."
+  },
+  "walletTypeOther": "Wallet transaction",
+  "@walletTypeOther": {
+    "description": "Statement line type not known to this version."
+  },
+  "walletLineWithOrder": "{type} · {order}",
+  "@walletLineWithOrder": {
+    "description": "Statement line title with the order number.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "order": {
+        "type": "String"
+      }
+    }
+  },
+  "walletLineSemantics": "{title}, {amount}, balance {balance}, {date}",
+  "@walletLineSemantics": {
+    "description": "Screen reader label of a statement line.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "walletLineOpenOrderHint": "Opens the order",
+  "@walletLineOpenOrderHint": {
+    "description": "Screen reader hint of a statement line linked to an order."
+  },
+  "checkoutWalletBalance": "Store credit · balance {amount}",
+  "@checkoutWalletBalance": {
+    "description": "Wallet payment option detail with the wallet balance.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   }
 }

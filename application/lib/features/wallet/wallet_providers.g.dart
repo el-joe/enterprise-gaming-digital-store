@@ -102,3 +102,57 @@ final class WalletRepositoryProvider
 }
 
 String _$walletRepositoryHash() => r'149a52f4578e1e4694f8a1fa3cda9c75afd5ce2f';
+
+/// `features.wallet_enabled` of `GET /app/config` (M-A15). Off: the Account tab hides the wallet
+/// entry, the wallet screen shows "not available" and loads nothing, and checkout drops the
+/// wallet option. Before the launch check has a configuration the wallet is shown (the server
+/// still decides whether the wallet can pay).
+
+@ProviderFor(walletEnabled)
+final walletEnabledProvider = WalletEnabledProvider._();
+
+/// `features.wallet_enabled` of `GET /app/config` (M-A15). Off: the Account tab hides the wallet
+/// entry, the wallet screen shows "not available" and loads nothing, and checkout drops the
+/// wallet option. Before the launch check has a configuration the wallet is shown (the server
+/// still decides whether the wallet can pay).
+
+final class WalletEnabledProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// `features.wallet_enabled` of `GET /app/config` (M-A15). Off: the Account tab hides the wallet
+  /// entry, the wallet screen shows "not available" and loads nothing, and checkout drops the
+  /// wallet option. Before the launch check has a configuration the wallet is shown (the server
+  /// still decides whether the wallet can pay).
+  WalletEnabledProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'walletEnabledProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$walletEnabledHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return walletEnabled(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$walletEnabledHash() => r'3d349a2454d3d5fd4abe2b84751a83d9307dd7dd';
