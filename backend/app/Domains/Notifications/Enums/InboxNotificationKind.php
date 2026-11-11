@@ -6,7 +6,8 @@ namespace App\Domains\Notifications\Enums;
  * What a customer inbox notification is about (M-A5, gap G6). The kind is stored as the
  * notification `type`; title and body are English source strings with `:placeholders`, rendered
  * in the reader's locale when the inbox is listed (lang/ar.json). Payloads hold identifiers and
- * an order or ticket number only, never a code, PIN or message body.
+ * an order or ticket number only, never a code, PIN or message body. The push twin of an entry
+ * (M-A18, ADR-042) uses the same title and body.
  */
 enum InboxNotificationKind: string
 {
@@ -14,6 +15,8 @@ enum InboxNotificationKind: string
     case OrderPartiallyDelivered = 'order_partially_delivered';
     case OrderFulfilmentFailed = 'order_fulfilment_failed';
     case SupportTicketReplied = 'support_ticket_replied';
+    // M-A18: a verified payment attempt failed; the customer may try again from the order.
+    case PaymentFailed = 'payment_failed';
 
     public function category(): NotificationPreferenceCategory
     {
@@ -27,6 +30,7 @@ enum InboxNotificationKind: string
             self::OrderPartiallyDelivered => 'Part of order :number is ready',
             self::OrderFulfilmentFailed => 'We could not complete order :number',
             self::SupportTicketReplied => 'Update on your support request :number',
+            self::PaymentFailed => 'Payment for order :number did not go through',
         };
     }
 
@@ -37,6 +41,7 @@ enum InboxNotificationKind: string
             self::OrderPartiallyDelivered => 'Some items in your order are ready. Items we could not deliver will be refunded.',
             self::OrderFulfilmentFailed => 'We were unable to deliver your order. A refund is being prepared.',
             self::SupportTicketReplied => 'Our support team has replied to your request.',
+            self::PaymentFailed => 'Your payment was not completed. You can try again from your order.',
         };
     }
 }

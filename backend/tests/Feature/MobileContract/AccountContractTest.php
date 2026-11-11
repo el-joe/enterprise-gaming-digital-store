@@ -178,6 +178,9 @@ describe('notifications', function (): void {
         contractFixture('notifications/preferences_updated', contractAccount('PATCH', 'notification-preferences', ['preferences' => [['category' => 'marketing', 'channel' => 'mail', 'enabled' => true], ['category' => 'orders', 'channel' => 'sms', 'enabled' => true]]])->assertOk());
         contractFixture('notifications/preferences_mandatory', contractAccount('PATCH', 'notification-preferences', ['preferences' => [['category' => 'orders', 'channel' => 'mail', 'enabled' => false]]])
             ->assertUnprocessable()->assertJsonPath('code', 'notification_preference_mandatory'));
+        // M-A18: push exists for orders and support only.
+        contractFixture('notifications/preferences_unavailable', contractAccount('PATCH', 'notification-preferences', ['preferences' => [['category' => 'marketing', 'channel' => 'push', 'enabled' => true]]])
+            ->assertUnprocessable()->assertJsonPath('code', 'notification_preference_unavailable'));
     });
 });
 

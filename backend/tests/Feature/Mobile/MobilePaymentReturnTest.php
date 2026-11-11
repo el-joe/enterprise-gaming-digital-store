@@ -338,6 +338,9 @@ describe('app link association files', function (): void {
             ['/' => '/account/orders/*'],
             ['/' => '/en/account/orders/*'],
             ['/' => '/ar/account/orders/*'],
+            ['/' => '/account/tickets/*'],
+            ['/' => '/en/account/tickets/*'],
+            ['/' => '/ar/account/tickets/*'],
             ['/' => '/api/v1/checkout/guest/orders/*/access'],
         ]]]]])
             ->and($response->getContent())->toContain('"/":"/app/*"')
@@ -351,6 +354,6 @@ describe('app link association files', function (): void {
 
         expect($paths)->not->toContain('*')
             ->and($paths)->not->toContain('/*')
-            ->and(array_filter($paths, static fn (string $path): bool => str_starts_with($path, '/account/') && $path !== '/account/orders/*'))->toBe([]);
+            ->and(array_filter($paths, static fn (string $path): bool => str_starts_with($path, '/account/') && ! in_array($path, ['/account/orders/*', '/account/tickets/*'], true)))->toBe([]);
     });
 });

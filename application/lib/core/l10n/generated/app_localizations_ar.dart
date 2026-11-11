@@ -2885,6 +2885,60 @@ class AppLocalizationsAr extends AppLocalizations {
   String get preferencePushTitle => 'الإشعارات الفورية';
 
   @override
-  String get preferencePushBody =>
-      'قريبًا. حتى ذلك الحين تظهر التحديثات في صندوق الإشعارات وعبر البريد.';
+  String get preferenceChannelPush => 'الإشعارات الفورية';
+
+  @override
+  String get preferencePushNote =>
+      'على كل هاتف سجّلت الدخول فيه وسمحت فيه بالإشعارات';
+
+  @override
+  String get preferencePushUnavailable =>
+      'غير متاحة في هذا الإصدار من التطبيق. تظهر التحديثات في صندوق الإشعارات وعبر البريد.';
+
+  @override
+  String get preferencePushOffTitle => 'الإشعارات متوقفة على هذا الهاتف';
+
+  @override
+  String get preferencePushOffBody =>
+      'اسمح بالإشعارات لتصلك هذه التحديثات على هذا الهاتف.';
+
+  @override
+  String get preferencePushDeniedBody =>
+      'إذا لم يحدث شيء، فعّل إشعارات boxcards.shop من إعدادات هاتفك.';
+
+  @override
+  String get pushExplainerTitle => 'تابع تحديثات طلباتك';
+
+  @override
+  String get pushExplainerBody =>
+      'يمكننا إعلامك فورًا عندما يحدث أي جديد في طلباتك.';
+
+  @override
+  String get pushExplainerOrders => 'عندما يصبح طلبك جاهزًا';
+
+  @override
+  String get pushExplainerPayments => 'عندما لا تكتمل عملية دفع';
+
+  @override
+  String get pushExplainerSupport => 'عندما يرد فريق الدعم';
+
+  @override
+  String get pushExplainerNoCodes =>
+      'لا نرسل الأكواد في الإشعارات أبدًا. تفتحها داخل التطبيق.';
+
+  @override
+  String get pushExplainerSettingsNote =>
+      'يمكنك تغيير ذلك في أي وقت من الإعدادات > الإشعارات.';
+
+  @override
+  String get pushExplainerAllow => 'تفعيل الإشعارات';
+
+  @override
+  String get pushExplainerNotNow => 'ليس الآن';
+
+  @override
+  String get pushOpen => 'فتح';
+
+  @override
+  String get pushNewNotification => 'لديك إشعار جديد';
 }

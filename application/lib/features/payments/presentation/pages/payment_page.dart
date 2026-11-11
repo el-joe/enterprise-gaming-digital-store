@@ -12,6 +12,7 @@ import 'package:application/core/theme/tokens/semantic_colors.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/app_config/app_config_providers.dart';
 import 'package:application/features/payments/payment_flow.dart';
+import 'package:application/features/push/presentation/widgets/push_permission_sheet.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
@@ -200,6 +201,8 @@ class PaymentPage extends ConsumerWidget {
             Spacing.s6,
           ),
           children: [
+            // M-A18: the push explainer, once, after the first paid order.
+            if (state.phase == PaymentPhase.paid) const PushOfferOnPaid(),
             _StatusIcon(view: view, busy: busy && !state.isResult),
             const SizedBox(height: Spacing.s5),
             Semantics(

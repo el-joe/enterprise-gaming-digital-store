@@ -8,6 +8,9 @@ import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/radii.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/notifications/presentation/controllers/notifications_controllers.dart';
+import 'package:application/features/push/domain/entities/push.dart';
+import 'package:application/features/push/presentation/controllers/push_controllers.dart';
+import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_list_tile.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
@@ -29,15 +32,57 @@ String _channelTitle(AppLocalizations l10n, String channel) =>
     switch (channel) {
       'mail' => l10n.preferenceChannelMail,
       'sms' => l10n.preferenceChannelSms,
+      'push' => l10n.preferenceChannelPush,
       _ => l10n.preferenceChannelInbox,
     };
 
 /// Notification settings (16.3): per category (orders, support, offers, security) the channels
-/// the API has (in the app, email, SMS). Required cells are on and locked ("Required"); each
-/// switch saves at once and comes back with a message when the server refuses. Push is M-A18:
-/// the note says it is coming.
-class NotificationSettingsPage extends ConsumerWidget {
+/// the API has (in the app, push for orders and support, email, SMS). Required cells are on and
+/// locked ("Required"); each switch saves at once and comes back with a message when the server
+/// refuses. The push switches are the account's (every signed-in device); below them a banner
+/// says when this phone does not allow notifications and offers the system prompt (M-A18).
+class NotificationSettingsPage extends ConsumerStatefulWidget {
   const NotificationSettingsPage({super.key});
+
+  @override
+  ConsumerState<NotificationSettingsPage> createState() =>
+      _NotificationSettingsPageState();
+}
+
+class _NotificationSettingsPageState
+    extends ConsumerState<NotificationSettingsPage>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(ref.read(pushNotificationsProvider.notifier).refreshPermission());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Back from the system settings: the permission may have changed.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(
+        ref.read(pushNotificationsProvider.notifier).refreshPermission(),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => _NotificationSettingsView(ref: ref);
+}
+
+class _NotificationSettingsView extends StatelessWidget {
+  const _NotificationSettingsView({required this.ref});
+
+  final WidgetRef ref;
 
   Future<void> _toggle(
     BuildContext context,
@@ -63,9 +108,10 @@ class NotificationSettingsPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = ref.watch(notificationPreferencesControllerProvider);
+    final push = ref.watch(pushNotificationsProvider);
     final controller = ref.read(
       notificationPreferencesControllerProvider.notifier,
     );
@@ -124,9 +170,11 @@ class NotificationSettingsPage extends ConsumerWidget {
                       title: _channelTitle(l10n, channel),
                       subtitle: cell.mandatory
                           ? l10n.preferenceRequired
-                          : channel == 'sms'
-                          ? l10n.preferenceSmsNote
-                          : null,
+                          : switch (channel) {
+                              'sms' => l10n.preferenceSmsNote,
+                              'push' => l10n.preferencePushNote,
+                              _ => null,
+                            },
                       semanticsLabel: [
                         l10n.preferenceSemantics(
                           _categoryTitle(l10n, category),
@@ -145,11 +193,34 @@ class NotificationSettingsPage extends ConsumerWidget {
                   ],
                 const SizedBox(height: Spacing.s2),
               ],
-              StatusBanner(
-                tone: BannerTone.info,
-                title: l10n.preferencePushTitle,
-                body: l10n.preferencePushBody,
-              ),
+              if (!push.started)
+                StatusBanner(
+                  tone: BannerTone.info,
+                  title: l10n.preferencePushTitle,
+                  body: l10n.preferencePushUnavailable,
+                )
+              else if (!push.granted) ...[
+                StatusBanner(
+                  tone: BannerTone.warning,
+                  title: l10n.preferencePushOffTitle,
+                  body: push.permission == PushPermission.denied
+                      ? l10n.preferencePushDeniedBody
+                      : l10n.preferencePushOffBody,
+                ),
+                const SizedBox(height: Spacing.s3),
+                AppButton(
+                  key: const ValueKey('push-allow'),
+                  label: l10n.pushExplainerAllow,
+                  icon: Icons.notifications_active_outlined,
+                  variant: AppButtonVariant.secondary,
+                  expand: true,
+                  onPressed: () => unawaited(
+                    ref
+                        .read(pushNotificationsProvider.notifier)
+                        .requestPermission(),
+                  ),
+                ),
+              ],
             ],
           ),
         },

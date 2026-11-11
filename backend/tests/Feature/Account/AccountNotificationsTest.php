@@ -4,6 +4,7 @@
  * M-A5 (G6, inbox part): the customer notification inbox and notification preferences, for the
  * web session and the mobile bearer token, and the `database` channel written by the real
  * customer notifications according to the preferences. Payloads never carry a code or PIN.
+ * M-A18 adds the `push` cells (orders and support only).
  */
 
 use App\Domains\Customers\Enums\CustomerConsentChannel;
@@ -171,8 +172,8 @@ describe('notification preferences', function (): void {
             ->mapWithKeys(static fn (array $cell): array => ["{$cell['category']}.{$cell['channel']}" => [$cell['enabled'], $cell['mandatory']]]);
 
         expect($cells->all())->toBe([
-            'orders.mail' => [true, true], 'orders.database' => [true, false], 'orders.sms' => [false, false],
-            'support.mail' => [true, false], 'support.database' => [true, false], 'support.sms' => [false, false],
+            'orders.mail' => [true, true], 'orders.database' => [true, false], 'orders.sms' => [false, false], 'orders.push' => [true, false],
+            'support.mail' => [true, false], 'support.database' => [true, false], 'support.sms' => [false, false], 'support.push' => [true, false],
             'marketing.mail' => [true, false], 'marketing.database' => [true, false], 'marketing.sms' => [false, false],
             'security.mail' => [true, true], 'security.database' => [true, false], 'security.sms' => [false, false],
         ]);
@@ -204,12 +205,27 @@ describe('notification preferences', function (): void {
         expect(NotificationPreference::query()->count())->toBe(0);
     })->with(accountClients())->with(['orders', 'security']);
 
+    it('has push for orders and support only, and refuses push for marketing or security (M-A18)', function (string $client, string $category): void {
+        accountCall($client, $this->customer, 'PATCH', 'notification-preferences', ['preferences' => [
+            ['category' => 'orders', 'channel' => 'push', 'enabled' => false],
+            ['category' => $category, 'channel' => 'push', 'enabled' => true],
+        ]])->assertUnprocessable()
+            ->assertJsonPath('code', 'notification_preference_unavailable')
+            ->assertJsonValidationErrors(['preferences.1.channel']);
+
+        expect(NotificationPreference::query()->count())->toBe(0);
+
+        accountCall($client, $this->customer, 'PATCH', 'notification-preferences', ['preferences' => [['category' => 'support', 'channel' => 'push', 'enabled' => false]]])
+            ->assertOk()
+            ->assertJsonFragment(['category' => 'support', 'channel' => 'push', 'enabled' => false, 'mandatory' => false]);
+    })->with(accountClients())->with(['marketing', 'security']);
+
     it('validates the cells', function (string $client, array $body): void {
         accountCall($client, $this->customer, 'PATCH', 'notification-preferences', $body)->assertUnprocessable()->assertJsonPath('code', 'validation_failed');
     })->with(accountClients())->with([
         'empty' => [['preferences' => []]],
         'unknown category' => [['preferences' => [['category' => 'news', 'channel' => 'mail', 'enabled' => true]]]],
-        'unknown channel' => [['preferences' => [['category' => 'orders', 'channel' => 'push', 'enabled' => true]]]],
+        'unknown channel' => [['preferences' => [['category' => 'orders', 'channel' => 'fax', 'enabled' => true]]]],
         'missing enabled' => [['preferences' => [['category' => 'orders', 'channel' => 'sms']]]],
     ]);
 });

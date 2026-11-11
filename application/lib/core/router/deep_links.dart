@@ -113,6 +113,25 @@ final class AccountOrderLink extends DeepLink {
   int get hashCode => orderPublicId.hashCode;
 }
 
+/// The ticket link of the "support replied" email: `/account/tickets/{ticket}` (also with a `/en` or
+/// `/ar` prefix; `SupportTicketReplied`), and the same ids in a push (M-A18). Opens the ticket
+/// thread. `/account/tickets/new` (the web's new-request page) opens the new request screen.
+final class AccountTicketLink extends DeepLink {
+  const AccountTicketLink(this.ticketPublicId);
+
+  /// The web's "new request" page, which the `/account/tickets/*` app-link path also covers.
+  static const newTicket = 'new';
+
+  final String ticketPublicId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AccountTicketLink && other.ticketPublicId == ticketPublicId;
+
+  @override
+  int get hashCode => ticketPublicId.hashCode;
+}
+
 final _segment = RegExp(r'^[A-Za-z0-9_-]{1,128}$');
 
 /// Parses an incoming link. Only `https` links on [appLinkHost] are accepted; signed links must
@@ -164,6 +183,12 @@ DeepLink? parseDeepLink(Uri uri, {required String appLinkHost}) {
       localized[1] == 'orders' &&
       valid([localized[2]])) {
     return AccountOrderLink(localized[2]);
+  }
+  if (localized.length == 3 &&
+      localized[0] == 'account' &&
+      localized[1] == 'tickets' &&
+      valid([localized[2]])) {
+    return AccountTicketLink(localized[2]);
   }
   final product = s.length == 3 && (s[0] == 'en' || s[0] == 'ar')
       ? s.sublist(1)

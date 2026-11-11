@@ -7,6 +7,7 @@ use App\Http\Controllers\Mobile\Auth\MeController;
 use App\Http\Controllers\Mobile\Auth\RegisterController;
 use App\Http\Controllers\Mobile\Auth\TokenController;
 use App\Http\Controllers\Mobile\Auth\TwoFactorChallengeController;
+use App\Http\Controllers\Mobile\PushTokenController;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -32,6 +33,12 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
             Route::post('/confirm-biometric', [BiometricController::class, 'confirm'])->name('confirm-biometric');
         });
     });
+});
+
+// M-A18 (owner decision 9, ADR-042): this device's FCM push token.
+Route::middleware(['mobile.customer', 'throttle:mobile-push'])->group(function (): void {
+    Route::post('/push-token', [PushTokenController::class, 'store'])->name('push-token.store');
+    Route::delete('/push-token', [PushTokenController::class, 'destroy'])->name('push-token.destroy');
 });
 
 // M-A4: the same public app configuration as GET /api/v1/app/config, under the app's base path.

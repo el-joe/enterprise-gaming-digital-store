@@ -136,7 +136,9 @@ class MarkAllRead extends _$MarkAllRead {
 
 /// Order of the preference sections and rows (the API's categories and channels).
 const preferenceCategories = ['orders', 'support', 'marketing', 'security'];
-const preferenceChannels = ['database', 'mail', 'sms'];
+
+/// `push` (M-A18) exists for orders and support only; a category without a cell skips it.
+const preferenceChannels = ['database', 'push', 'mail', 'sms'];
 
 @immutable
 final class PreferencesState {

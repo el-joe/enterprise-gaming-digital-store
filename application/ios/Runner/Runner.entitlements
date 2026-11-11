@@ -9,6 +9,13 @@
     capability with the owner's Team ID;
   - the server publishes TEAMID.<bundle id> in MOBILE_IOS_APP_IDS (apple-app-site-association).
   Not referenced by the Xcode project yet, so unsigned and simulator builds are unaffected.
+
+  Push notifications (M-A18, owner decision 9): aps-environment is the Push Notifications
+  capability. Placeholder for the macOS host: enable "Push Notifications" and "Background Modes >
+  Remote notifications" in Xcode, use "production" for App Store and TestFlight builds, and
+  upload the APNs authentication key (.p8) to the Firebase project (Project settings > Cloud
+  Messaging > Apple app configuration). Each flavor's GoogleService-Info.plist is supplied by the
+  owner and never committed (README, push).
 -->
 <plist version="1.0">
 <dict>
@@ -16,5 +23,7 @@
 	<array>
 		<string>applinks:$(APP_LINK_HOST)</string>
 	</array>
+	<key>aps-environment</key>
+	<string>development</string>
 </dict>
 </plist>

@@ -82,3 +82,20 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// M-A18 push (owner decision 9): Firebase is configured per flavor by the owner's
+// google-services.json, never committed (.gitignore). Put one file per flavor in
+// app/src/<flavor>/google-services.json, or one file listing every flavor's application id in
+// app/google-services.json. Without any file the plugin is not applied, the build succeeds and the
+// app runs with push off (Firebase.initializeApp fails and push stays disabled). With per-flavor
+// files, a flavor whose file is missing fails at processGoogleServices: build only the flavors
+// that have one, or add the combined file.
+val googleServicesFiles = listOf("google-services.json") +
+    listOf("dev", "staging", "prod").flatMap { flavor ->
+        listOf("src/$flavor/google-services.json", "src/${flavor}Debug/google-services.json", "src/${flavor}Release/google-services.json")
+    }
+if (googleServicesFiles.any { file(it).exists() }) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.lifecycle("google-services.json not found: building without Firebase (push off).")
+}

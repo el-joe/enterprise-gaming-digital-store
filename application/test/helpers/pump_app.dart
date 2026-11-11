@@ -29,6 +29,7 @@ import 'package:application/features/orders/orders_providers.dart';
 import 'package:application/features/payments/domain/usecases/resolve_payment.dart';
 import 'package:application/features/payments/payments_providers.dart';
 import 'package:application/features/product/product_providers.dart';
+import 'package:application/features/push/push_providers.dart';
 import 'package:application/features/reviews/reviews_providers.dart';
 import 'package:application/features/search/search_providers.dart';
 import 'package:application/features/security/security_providers.dart';
@@ -48,6 +49,7 @@ import 'engagement_fakes.dart';
 import 'fakes.dart';
 import 'memory_stores.dart';
 import 'product_fakes.dart';
+import 'push_fakes.dart';
 import 'reveal_fakes.dart';
 import 'security_fakes.dart';
 import 'wallet_fakes.dart';
@@ -111,6 +113,8 @@ final class TestHarness {
     required this.reviews,
     required this.support,
     required this.notifications,
+    required this.push,
+    required this.pushTokens,
   });
 
   final ProviderContainer container;
@@ -165,6 +169,11 @@ final class TestHarness {
   final FakeSupportRepository support;
   final FakeNotificationsRepository notifications;
 
+  /// Push (M-A18): the device's push service (not available unless a test sets
+  /// `push.available`) and the token registration calls.
+  final FakePushMessaging push;
+  final FakePushTokenRepository pushTokens;
+
   T read<T>(ProviderListenable<T> provider) => container.read(provider);
 
   void dispose() {
@@ -172,6 +181,7 @@ final class TestHarness {
     now.dispose();
     unawaited(links.controller.close());
     unawaited(security.capture.close());
+    unawaited(push.close());
   }
 }
 
@@ -230,6 +240,8 @@ TestHarness buildHarness({
   final reviews = FakeReviewsRepository();
   final support = FakeSupportRepository();
   final notifications = FakeNotificationsRepository();
+  final push = FakePushMessaging();
+  final pushTokens = FakePushTokenRepository();
   when(account.devices).thenAnswer((_) async => Ok(fixtureDevices()));
   when(account.profile).thenAnswer((_) async => Ok(fixtureProfile()));
 
@@ -278,6 +290,8 @@ TestHarness buildHarness({
       reviewsRepositoryProvider.overrideWithValue(reviews),
       supportRepositoryProvider.overrideWithValue(support),
       notificationsRepositoryProvider.overrideWithValue(notifications),
+      pushMessagingProvider.overrideWithValue(push),
+      pushTokenRepositoryProvider.overrideWithValue(pushTokens),
       placeOrderProvider.overrideWith(
         (ref) => PlaceOrder(
           checkout: checkout,
@@ -330,6 +344,8 @@ TestHarness buildHarness({
     reviews: reviews,
     support: support,
     notifications: notifications,
+    push: push,
+    pushTokens: pushTokens,
   );
 }
 

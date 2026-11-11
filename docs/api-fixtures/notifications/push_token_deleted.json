@@ -1,0 +1,17 @@
+{
+    "body": {
+        "data": {},
+        "message": "Push notifications are off for this device.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "DELETE",
+        "path": "/api/v1/mobile/push-token"
+    },
+    "status": 200
+}

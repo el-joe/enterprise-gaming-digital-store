@@ -8,19 +8,25 @@ part of 'sign_out_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Sign out (17.4): revokes this device's sign-in (`POST /mobile/auth/logout`), wipes secure
+/// Sign out (17.4): removes this device's push token while the sign-in still works (M-A18;
+/// the server also drops it with the sign-in), revokes this device's sign-in
+/// (`POST /mobile/auth/logout`), wipes secure
 /// storage (also when the call fails), deletes the local biometric key (the server key died with
 /// the sign-in) and clears the in-memory account state. State: busy.
 
 @ProviderFor(SignOutController)
 final signOutControllerProvider = SignOutControllerProvider._();
 
-/// Sign out (17.4): revokes this device's sign-in (`POST /mobile/auth/logout`), wipes secure
+/// Sign out (17.4): removes this device's push token while the sign-in still works (M-A18;
+/// the server also drops it with the sign-in), revokes this device's sign-in
+/// (`POST /mobile/auth/logout`), wipes secure
 /// storage (also when the call fails), deletes the local biometric key (the server key died with
 /// the sign-in) and clears the in-memory account state. State: busy.
 final class SignOutControllerProvider
     extends $NotifierProvider<SignOutController, bool> {
-  /// Sign out (17.4): revokes this device's sign-in (`POST /mobile/auth/logout`), wipes secure
+  /// Sign out (17.4): removes this device's push token while the sign-in still works (M-A18;
+  /// the server also drops it with the sign-in), revokes this device's sign-in
+  /// (`POST /mobile/auth/logout`), wipes secure
   /// storage (also when the call fails), deletes the local biometric key (the server key died with
   /// the sign-in) and clears the in-memory account state. State: busy.
   SignOutControllerProvider._()
@@ -50,9 +56,11 @@ final class SignOutControllerProvider
   }
 }
 
-String _$signOutControllerHash() => r'b351567c096f8023925be73cd89c474679f9c3d2';
+String _$signOutControllerHash() => r'e7d461420f88c2bcaf10ee2974500876e6a2f432';
 
-/// Sign out (17.4): revokes this device's sign-in (`POST /mobile/auth/logout`), wipes secure
+/// Sign out (17.4): removes this device's push token while the sign-in still works (M-A18;
+/// the server also drops it with the sign-in), revokes this device's sign-in
+/// (`POST /mobile/auth/logout`), wipes secure
 /// storage (also when the call fails), deletes the local biometric key (the server key died with
 /// the sign-in) and clears the in-memory account state. State: busy.
 

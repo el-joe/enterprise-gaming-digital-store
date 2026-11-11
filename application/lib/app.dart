@@ -4,6 +4,8 @@ import 'package:application/core/router/app_router.dart';
 import 'package:application/core/security/clipboard_resume_hook.dart';
 import 'package:application/core/theme/app_theme.dart';
 import 'package:application/features/auth/presentation/widgets/biometric_widgets.dart';
+import 'package:application/features/push/presentation/controllers/push_controllers.dart';
+import 'package:application/features/push/presentation/widgets/push_message_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +17,10 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Payment return and product app links (M-A13); kept alive for the app's lifetime.
-    ref.watch(appLinkListenerProvider);
+    ref
+      ..watch(appLinkListenerProvider)
+      // Push (M-A18): starts the service and routes taps; never asks for permission on launch.
+      ..listen(pushNotificationsProvider, (_, _) {});
     final locale = ref.watch(appLocaleProvider);
     final theme = AppTheme.dark(arabic: AppLocales.isRtl(locale));
     return MaterialApp.router(
@@ -30,8 +35,11 @@ class App extends ConsumerWidget {
       routerConfig: ref.watch(appRouterProvider),
       // Biometric app lock above the navigator (owner decision 6).
       // The clipboard clear of a copied code also runs after a return from the background.
+      // Pushes received in the foreground show as a snackbar (M-A18).
       builder: (context, child) => AppLockGate(
-        child: ClipboardResumeHook(child: child ?? const SizedBox.shrink()),
+        child: ClipboardResumeHook(
+          child: PushMessageHost(child: child ?? const SizedBox.shrink()),
+        ),
       ),
     );
   }

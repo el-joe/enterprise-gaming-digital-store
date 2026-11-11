@@ -3903,10 +3903,74 @@
   },
   "preferencePushTitle": "Push notifications",
   "@preferencePushTitle": {
-    "description": "Info banner."
+    "description": "Push banner title in the notification settings when push is not available in this build."
   },
-  "preferencePushBody": "Coming later. Until then, updates appear in this inbox and by email.",
-  "@preferencePushBody": {
-    "description": "Info banner body."
+  "preferenceChannelPush": "Push notifications",
+  "@preferenceChannelPush": {
+    "description": "Channel name in the notification settings (M-A18)."
+  },
+  "preferencePushNote": "On every phone where you are signed in and allow notifications",
+  "@preferencePushNote": {
+    "description": "Subtitle of a push switch: the setting is the account's."
+  },
+  "preferencePushUnavailable": "Not available in this version of the app. Updates appear in the inbox and by email.",
+  "@preferencePushUnavailable": {
+    "description": "Banner body when push is not configured in this build."
+  },
+  "preferencePushOffTitle": "Notifications are off on this phone",
+  "@preferencePushOffTitle": {
+    "description": "Banner title when the system permission is not granted."
+  },
+  "preferencePushOffBody": "Allow notifications to get these updates on this phone.",
+  "@preferencePushOffBody": {
+    "description": "Banner body when the system has not been asked yet."
+  },
+  "preferencePushDeniedBody": "If nothing happens, turn notifications on for boxcards.shop in your phone's settings.",
+  "@preferencePushDeniedBody": {
+    "description": "Banner body when the system permission was refused."
+  },
+  "pushExplainerTitle": "Get order updates",
+  "@pushExplainerTitle": {
+    "description": "Push explainer sheet title, shown once after the first paid order."
+  },
+  "pushExplainerBody": "We can let you know right away when something happens with your orders.",
+  "@pushExplainerBody": {
+    "description": "Push explainer intro."
+  },
+  "pushExplainerOrders": "When your order is ready",
+  "@pushExplainerOrders": {
+    "description": "Push explainer point."
+  },
+  "pushExplainerPayments": "When a payment does not go through",
+  "@pushExplainerPayments": {
+    "description": "Push explainer point."
+  },
+  "pushExplainerSupport": "When our support team replies",
+  "@pushExplainerSupport": {
+    "description": "Push explainer point."
+  },
+  "pushExplainerNoCodes": "Codes are never sent in notifications. You open them in the app.",
+  "@pushExplainerNoCodes": {
+    "description": "Push explainer point."
+  },
+  "pushExplainerSettingsNote": "You can change this any time in Settings > Notifications.",
+  "@pushExplainerSettingsNote": {
+    "description": "Push explainer footnote."
+  },
+  "pushExplainerAllow": "Turn on notifications",
+  "@pushExplainerAllow": {
+    "description": "Button that shows the system permission prompt."
+  },
+  "pushExplainerNotNow": "Not now",
+  "@pushExplainerNotNow": {
+    "description": "Button that closes the push explainer."
+  },
+  "pushOpen": "Open",
+  "@pushOpen": {
+    "description": "Snackbar action that opens the order or ticket of a push."
+  },
+  "pushNewNotification": "You have a new notification",
+  "@pushNewNotification": {
+    "description": "Snackbar text for a push without text."
   }
 }

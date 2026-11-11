@@ -86,7 +86,7 @@ tool/ci.sh                       CI gate
 ```
 lib/features/<feature>/          app_config, auth, home, catalog, search, product, cart, checkout,
                                  payments, orders, code_reveal, wallet, reviews, support,
-                                 notifications, account, security
+                                 notifications, push (M-A18), account, security
   data/models/                   freezed + json_serializable DTOs, one per API Resource shape
   data/datasources/              <feature>_remote_data_source.dart: Dio calls on /mobile/... paths
   data/repositories/             <feature>_repository_impl.dart: Result<T>, DTO -> entity
@@ -562,12 +562,88 @@ including the link that cold-starts the app (kept until the first listen) and sc
   Preferences: categories orders, support, offers, security x channels in the app (`database`),
   email, SMS, exactly the API's matrix; required cells (`orders.mail`, `security.mail`) are on
   and locked; a switch is saved at once with that one cell and reverts with the server's message
-  when refused (`notification_preference_mandatory` or any failure). Push is M-A18: a note says
-  it is coming; no Firebase was added.
+  when refused (`notification_preference_mandatory` or any failure). Push was M-A18: the note is
+  now real push switches (see Push).
 - **Shared**: `SelectField` (field and option sheet), `SubjectCard`, `NotificationBell`,
   `AppTextField` multi-line (`minLines`, `maxLines`, `maxLength`), `AppListTile.semanticsLabel`,
   `StatusPill` tones `info`, `danger`, `accent`. `ComingSoonPage` is gone. No package and no
   backend change.
+
+## Push notifications (M-A18, owner decision 9)
+
+Firebase Cloud Messaging for Android and, through APNs, iOS. Backend: `docs/API_DOCUMENTATION.md`
+1h, ADR-042; owner steps also in `docs/INTEGRATIONS.md` 8.
+
+### Packages
+
+**`firebase_core` 5.1.0** and **`firebase_messaging` 17.0.1** (pinned exactly; BSD-3-Clause;
+`github.com/firebase/flutterfire`). Why: the roadmap's packages for push (section 3) and the only
+first-party Flutter client for FCM; they handle the Android 13+ `POST_NOTIFICATIONS` prompt, iOS
+authorization and APNs relay, foreground, background-tap and cold-start messages, and token
+rotation, with no extra notification plugin (the system shows background notifications; the app
+shows foreground ones as a snackbar). Versions: on 2026-11-11 the newest releases at least two
+weeks old are firebase_core 5.1.0 and firebase_messaging 17.0.1 (both published 2026-10-23;
+messaging 17.0.1 requires core ^5.1.0). Transitive `firebase_*_platform_interface` and `_web`
+packages resolved by pub are older still. The Android Gradle plugin `com.google.gms.google-services`
+is 4.5.0 (4.6.0 was published on 2026-11-11, too new). Messaging 17 raises Android `minSdk` to 24
+(the Flutter default here) and builds on Firebase BoM 35 and the iOS SDK 13.
+
+Messaging 17 deprecates `getToken`, `onTokenRefresh` and `deleteToken` in favour of Firebase
+Installation ID registration. The backend sends to FCM registration tokens (HTTP v1
+`message.token`), so `FirebasePushMessaging` keeps them with a documented `ignore`; moving to FIDs
+is an open item once FCM documents that send target.
+
+### Configuration files (never committed)
+
+Firebase starts only when the flavor's configuration exists; otherwise `Firebase.initializeApp`
+fails, push stays off and the rest of the app runs normally (`flutter build apk --flavor dev
+--debug` builds without any file). `google-services.json` and `GoogleService-Info.plist` are in
+`.gitignore`. Where the owner puts them:
+
+- **Android**: per flavor `android/app/src/dev/google-services.json`,
+  `android/app/src/staging/google-services.json`, `android/app/src/prod/google-services.json`
+  (Firebase apps `shop.boxcards.app.dev`, `.staging`, `shop.boxcards.app`), or one combined
+  `android/app/google-services.json` listing all three. `app/build.gradle.kts` applies the
+  google-services plugin only when one of these exists; with per-flavor files, a flavor whose file
+  is missing fails at `processGoogleServices`, so add all three (or the combined file).
+- **iOS** (macOS host, M-A20): each flavor's `GoogleService-Info.plist` added to the Runner target
+  for that scheme (for example by a build phase copying `ios/config/<flavor>/GoogleService-Info.plist`).
+  In Xcode enable **Push Notifications** and **Background Modes > Remote notifications**, set
+  `CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements` (it already holds the placeholder
+  `aps-environment` `development`; use `production` for TestFlight and the App Store), and upload
+  the APNs authentication key (.p8) to the Firebase project. `Info.plist` already declares
+  `UIBackgroundModes` `remote-notification` and `FirebaseAppDelegateProxyEnabled` (swizzling, so
+  `AppDelegate` needs no push code). None of this could be built or checked here (no macOS host).
+
+### Behaviour
+
+- `features/push`: `PushMessaging` (interface; `FirebasePushMessaging` in the app, a fake in
+  tests), `PushTokenRepository` (`POST`/`DELETE /mobile/push-token`, bodies kept out of logs),
+  `deepLinkForPush` (an `order` target opens the order, `ticket` the ticket thread, anything else
+  nothing; ids must be plain public ids), `PushNotifications` (keep-alive controller).
+- **Never on launch.** The service starts after launch without asking. After the **first paid
+  result** (08.1) the explainer sheet (`PushPermissionSheet`: order ready, payment did not go
+  through, support replied, "codes are never sent in notifications") is offered once per
+  installation (`prefs.push_prompt_shown`), only when push runs in the build and the system has
+  not been asked; "Turn on notifications" then shows the system prompt (Android 13+, iOS). The
+  notification settings offer the same button while this phone does not allow notifications.
+- **Token**: registered when signed in and allowed, again when FCM rotates it and after a later
+  sign-in; sign-out and sign-out everywhere remove it on the server (while the bearer still works)
+  and then delete it on the device. The server also deletes it with the sign-in.
+- **Foreground**: the unread badge is read again, the inbox reloads, and a snackbar shows the
+  title and body with "Open" for an order or ticket (`PushMessageHost` in the app builder).
+- **Taps**: from the background (`onMessageOpenedApp`) and from a cold start
+  (`getInitialMessage`) the target goes through `AppLinkListener.open`, the same queue, guards and
+  routes as app links (waits for the splash; signed out, sign in first).
+- **Settings**: `push` switches for orders and support come from the API (they apply to every
+  signed-in phone); below them a banner when this phone does not allow notifications, or a note
+  when this build has no Firebase.
+- **Ticket email links**: `/account/tickets/{id}` (and `/en`, `/ar`) are app links now (intent
+  filter and the server's apple-app-site-association) and open the ticket thread;
+  `/account/tickets/new` opens a new request.
+- **Android**: `POST_NOTIFICATIONS`, the channel `updates` ("Order and support updates", Arabic
+  name in `values-ar`) created in `MainActivity` and set as FCM's default channel; the server sends
+  the same `channel_id`. The small icon is the launcher icon until a monochrome vector exists.
 
 ## Biometric unlock (owner decision 6)
 
@@ -740,6 +816,26 @@ on-device suite is not part of `tool/ci.sh` (it needs a device).
   code hidden).
 - **Images**: `NetworkImageBox` decodes at the slot width rounded up to 64 px (at most 1536 px),
   so similar slots share one decoded image.
+
+## Tests (M-A18 additions, written, not yet run)
+
+By owner instruction the M-A18 tests were written but not executed.
+`test/features/push/push_routing_test.dart` (payload routing: order, ticket, unknown and unsafe
+targets; the ticket email links), `push_controllers_test.dart` (token lifecycle on fakes: register,
+rotation, retry after a failure, nothing without permission, signed out or Firebase, sign-in later,
+sign-out and sign-out everywhere; the prompt due once after the first purchase, accept, not due
+when answered or unavailable; foreground badge refresh), `push_pages_test.dart` (`en`/`ar`: never
+on launch, the explainer after the first paid order then the system prompt, "Not now"; background
+tap, cold start, unknown target, signed-out tap, ticket email link; the foreground snackbar and
+"Open"; settings switches, saving a push cell, "Turn on", the unavailable note),
+`account_repositories_test.dart` (push token repository on the contract fixtures; 14 preference
+cells), `fixture_contract_test.dart` (push decoders). Goldens: `test/goldens/push_golden_test.dart`
+(`m_a18/push_explainer_{ltr,rtl}.png` and at 200% text; no PNG committed, create them with
+`--update-goldens` in the final run). The M-A17 settings goldens (16.3) change on purpose (push
+switches). Fakes: `test/helpers/push_fakes.dart`, wired into the harness; push is unavailable in
+every other test. The contract fixtures for the push token were written by hand and are
+regenerated by the backend contract suite in the final run (then `tool/sync_fixtures.sh` and
+`tool/bundle_fixtures.py`).
 
 ## Tests (M-A19 additions, written, not yet run)
 

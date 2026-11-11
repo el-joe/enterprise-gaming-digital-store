@@ -11,7 +11,7 @@ abstract class InboxNotification with _$InboxNotification {
     required String id,
 
     /// `order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`,
-    /// `support_ticket_replied`.
+    /// `support_ticket_replied`, `payment_failed` (M-A18).
     required String type,
     required String category,
     required String title,
@@ -35,8 +35,9 @@ abstract class InboxPage with _$InboxPage {
   }) = _InboxPage;
 }
 
-/// One cell of the 4 x 3 matrix (categories `orders`, `support`, `marketing`, `security` x
-/// channels `mail`, `database`, `sms`). [mandatory] cells cannot be switched off.
+/// One cell of the matrix (categories `orders`, `support`, `marketing`, `security` x channels
+/// `mail`, `database`, `sms`, and `push` for orders and support since M-A18). [mandatory] cells
+/// cannot be switched off.
 @freezed
 abstract class NotificationPreference with _$NotificationPreference {
   const factory NotificationPreference({

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Push (M-A18): the notification channel for order, payment and support updates. The id must
+         match config/push.php android_channel_id on the server. -->
+    <string name="push_channel_id" translatable="false">updates</string>
+    <string name="push_channel_name">Order and support updates</string>
+    <string name="push_channel_description">When an order is ready, a payment does not go through or support replies.</string>
+</resources>

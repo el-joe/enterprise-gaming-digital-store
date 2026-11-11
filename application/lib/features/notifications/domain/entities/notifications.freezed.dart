@@ -17,7 +17,7 @@ mixin _$InboxNotification {
 
 /// UUID.
  String get id;/// `order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`,
-/// `support_ticket_replied`.
+/// `support_ticket_replied`, `payment_failed` (M-A18).
  String get type; String get category; String get title; String get body; DateTime get createdAt; LinkTarget? get link; DateTime? get readAt;
 /// Create a copy of InboxNotification
 /// with the given fields replaced by the non-null parameter values.
@@ -240,7 +240,7 @@ class _InboxNotification extends InboxNotification {
 /// UUID.
 @override final  String id;
 /// `order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`,
-/// `support_ticket_replied`.
+/// `support_ticket_replied`, `payment_failed` (M-A18).
 @override final  String type;
 @override final  String category;
 @override final  String title;

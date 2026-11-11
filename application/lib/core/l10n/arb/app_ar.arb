@@ -812,5 +812,21 @@
   "preferenceSemantics": "{category}، {channel}",
   "preferenceSaveFailed": "لم يتم الحفظ. {reason}",
   "preferencePushTitle": "الإشعارات الفورية",
-  "preferencePushBody": "قريبًا. حتى ذلك الحين تظهر التحديثات في صندوق الإشعارات وعبر البريد."
+  "preferenceChannelPush": "الإشعارات الفورية",
+  "preferencePushNote": "على كل هاتف سجّلت الدخول فيه وسمحت فيه بالإشعارات",
+  "preferencePushUnavailable": "غير متاحة في هذا الإصدار من التطبيق. تظهر التحديثات في صندوق الإشعارات وعبر البريد.",
+  "preferencePushOffTitle": "الإشعارات متوقفة على هذا الهاتف",
+  "preferencePushOffBody": "اسمح بالإشعارات لتصلك هذه التحديثات على هذا الهاتف.",
+  "preferencePushDeniedBody": "إذا لم يحدث شيء، فعّل إشعارات boxcards.shop من إعدادات هاتفك.",
+  "pushExplainerTitle": "تابع تحديثات طلباتك",
+  "pushExplainerBody": "يمكننا إعلامك فورًا عندما يحدث أي جديد في طلباتك.",
+  "pushExplainerOrders": "عندما يصبح طلبك جاهزًا",
+  "pushExplainerPayments": "عندما لا تكتمل عملية دفع",
+  "pushExplainerSupport": "عندما يرد فريق الدعم",
+  "pushExplainerNoCodes": "لا نرسل الأكواد في الإشعارات أبدًا. تفتحها داخل التطبيق.",
+  "pushExplainerSettingsNote": "يمكنك تغيير ذلك في أي وقت من الإعدادات > الإشعارات.",
+  "pushExplainerAllow": "تفعيل الإشعارات",
+  "pushExplainerNotNow": "ليس الآن",
+  "pushOpen": "فتح",
+  "pushNewNotification": "لديك إشعار جديد"
 }

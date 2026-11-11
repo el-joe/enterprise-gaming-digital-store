@@ -57,3 +57,10 @@ key.properties
 
 # Release symbols (archived privately, MOBILE_APP_ROADMAP.md 6.5)
 /build/symbols/
+
+# Firebase configuration (M-A18, owner decision 9): supplied by the owner per flavor, never
+# committed (README: push). Android: android/app/src/<flavor>/google-services.json or
+# android/app/google-services.json; iOS: the flavor's GoogleService-Info.plist.
+google-services.json
+GoogleService-Info.plist
+**/firebase_app_id_file.json

@@ -31,6 +31,8 @@ void main() {
       PreferencesStore.integrityWarningShownKey,
       // M-A11: local search history (terms the customer typed, no secret).
       PreferencesStore.searchHistoryKey,
+      // M-A18: the push explainer was offered once (a flag; the FCM token is never stored here).
+      PreferencesStore.pushPromptShownKey,
     });
     for (final key in PreferencesStore.allowedKeys) {
       expect(key, isNot(matches(RegExp('token|password|secret|key'))));

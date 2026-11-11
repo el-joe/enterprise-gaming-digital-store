@@ -2882,6 +2882,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preferencePushTitle => 'Push notifications';
 
   @override
-  String get preferencePushBody =>
-      'Coming later. Until then, updates appear in this inbox and by email.';
+  String get preferenceChannelPush => 'Push notifications';
+
+  @override
+  String get preferencePushNote =>
+      'On every phone where you are signed in and allow notifications';
+
+  @override
+  String get preferencePushUnavailable =>
+      'Not available in this version of the app. Updates appear in the inbox and by email.';
+
+  @override
+  String get preferencePushOffTitle => 'Notifications are off on this phone';
+
+  @override
+  String get preferencePushOffBody =>
+      'Allow notifications to get these updates on this phone.';
+
+  @override
+  String get preferencePushDeniedBody =>
+      'If nothing happens, turn notifications on for boxcards.shop in your phone\'s settings.';
+
+  @override
+  String get pushExplainerTitle => 'Get order updates';
+
+  @override
+  String get pushExplainerBody =>
+      'We can let you know right away when something happens with your orders.';
+
+  @override
+  String get pushExplainerOrders => 'When your order is ready';
+
+  @override
+  String get pushExplainerPayments => 'When a payment does not go through';
+
+  @override
+  String get pushExplainerSupport => 'When our support team replies';
+
+  @override
+  String get pushExplainerNoCodes =>
+      'Codes are never sent in notifications. You open them in the app.';
+
+  @override
+  String get pushExplainerSettingsNote =>
+      'You can change this any time in Settings > Notifications.';
+
+  @override
+  String get pushExplainerAllow => 'Turn on notifications';
+
+  @override
+  String get pushExplainerNotNow => 'Not now';
+
+  @override
+  String get pushOpen => 'Open';
+
+  @override
+  String get pushNewNotification => 'You have a new notification';
 }

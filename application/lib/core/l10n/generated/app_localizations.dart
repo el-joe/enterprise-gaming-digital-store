@@ -4983,17 +4983,113 @@ abstract class AppLocalizations {
   /// **'Not saved. {reason}'**
   String preferenceSaveFailed(String reason);
 
-  /// Info banner.
+  /// Push banner title in the notification settings when push is not available in this build.
   ///
   /// In en, this message translates to:
   /// **'Push notifications'**
   String get preferencePushTitle;
 
-  /// Info banner body.
+  /// Channel name in the notification settings (M-A18).
   ///
   /// In en, this message translates to:
-  /// **'Coming later. Until then, updates appear in this inbox and by email.'**
-  String get preferencePushBody;
+  /// **'Push notifications'**
+  String get preferenceChannelPush;
+
+  /// Subtitle of a push switch: the setting is the account's.
+  ///
+  /// In en, this message translates to:
+  /// **'On every phone where you are signed in and allow notifications'**
+  String get preferencePushNote;
+
+  /// Banner body when push is not configured in this build.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available in this version of the app. Updates appear in the inbox and by email.'**
+  String get preferencePushUnavailable;
+
+  /// Banner title when the system permission is not granted.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off on this phone'**
+  String get preferencePushOffTitle;
+
+  /// Banner body when the system has not been asked yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications to get these updates on this phone.'**
+  String get preferencePushOffBody;
+
+  /// Banner body when the system permission was refused.
+  ///
+  /// In en, this message translates to:
+  /// **'If nothing happens, turn notifications on for boxcards.shop in your phone\'s settings.'**
+  String get preferencePushDeniedBody;
+
+  /// Push explainer sheet title, shown once after the first paid order.
+  ///
+  /// In en, this message translates to:
+  /// **'Get order updates'**
+  String get pushExplainerTitle;
+
+  /// Push explainer intro.
+  ///
+  /// In en, this message translates to:
+  /// **'We can let you know right away when something happens with your orders.'**
+  String get pushExplainerBody;
+
+  /// Push explainer point.
+  ///
+  /// In en, this message translates to:
+  /// **'When your order is ready'**
+  String get pushExplainerOrders;
+
+  /// Push explainer point.
+  ///
+  /// In en, this message translates to:
+  /// **'When a payment does not go through'**
+  String get pushExplainerPayments;
+
+  /// Push explainer point.
+  ///
+  /// In en, this message translates to:
+  /// **'When our support team replies'**
+  String get pushExplainerSupport;
+
+  /// Push explainer point.
+  ///
+  /// In en, this message translates to:
+  /// **'Codes are never sent in notifications. You open them in the app.'**
+  String get pushExplainerNoCodes;
+
+  /// Push explainer footnote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this any time in Settings > Notifications.'**
+  String get pushExplainerSettingsNote;
+
+  /// Button that shows the system permission prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on notifications'**
+  String get pushExplainerAllow;
+
+  /// Button that closes the push explainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get pushExplainerNotNow;
+
+  /// Snackbar action that opens the order or ticket of a push.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get pushOpen;
+
+  /// Snackbar text for a push without text.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a new notification'**
+  String get pushNewNotification;
 }
 
 class _AppLocalizationsDelegate

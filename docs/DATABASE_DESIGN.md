@@ -131,10 +131,10 @@ Index: `idx_cc_user_channel` (user_id, channel, created_at): latest consent per 
 |---|---|---|---|
 | user_id | fk:users cascade | NN | |
 | category | enum | NN | `orders`, `support`, `marketing`, `security` |
-| channel | enum | NN | `mail`, `database`, `sms` (M17) |
+| channel | enum | NN | `mail`, `database`, `sms` (M17), `push` (M-A18; orders and support only) |
 | enabled | bool | NN | default true |
 
-Unique: `uq_np` (user_id, category, channel). M-A5: edited by the customer (`/account/notification-preferences`); without a row `mail` and `database` are on for orders, support and security, `sms` is off, marketing follows the latest marketing consent; `orders`+`mail` and `security`+`mail` are mandatory and cannot be stored disabled (`NotificationPreferenceService`). M17: `sms` is the secondary channel of the n8n customer workflows and is opt-in: an order or support SMS needs an enabled row for that category; marketing SMS needs the latest `sms_marketing` consent to be a grant and no disabled marketing `sms` row (`CustomerContactPolicy`).
+Unique: `uq_np` (user_id, category, channel). M-A5: edited by the customer (`/account/notification-preferences`); without a row `mail` and `database` are on for orders, support and security, `sms` is off, marketing follows the latest marketing consent; `orders`+`mail` and `security`+`mail` are mandatory and cannot be stored disabled (`NotificationPreferenceService`). M17: `sms` is the secondary channel of the n8n customer workflows and is opt-in: an order or support SMS needs an enabled row for that category; marketing SMS needs the latest `sms_marketing` consent to be a grant and no disabled marketing `sms` row (`CustomerContactPolicy`). M-A18: `push` exists for `orders` and `support` only (VARCHAR, ADR-005: no schema change), on without a row; a `push` row for marketing or security is refused (`notification_preference_unavailable`).
 
 ### otp_challenges
 
@@ -204,11 +204,24 @@ Indexes: `idx_mbk_family` (family_id, revoked_at), `idx_mbk_user` (user_id, revo
 | expires_at | ts | NN | `mobile.biometric.challenge_ttl_seconds` (60); index `idx_mbc_expires` (pruned by `auth:prune-mobile-tokens`) |
 | consumed_at | ts | Y | single use: set on every presentation |
 
+### mobile_push_tokens (M-A18, ADR-042)
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| user_id | fk:users cascade | NN | index `idx_mpt_user` |
+| family_id | char(26) | NN | the sign-in (refresh-token family); unique `uq_mpt_family`: one token per device |
+| platform | str(16) | NN | `android`, `ios` |
+| token | text | NN | the FCM registration token, encrypted (`encrypted` cast, APP_KEY); hidden from serialization, never logged or audited |
+| token_hash | char(64) | NN | SHA-256 of the token; unique `uq_mpt_token_hash`: one row per token (a token registered by another sign-in moves) |
+| last_sent_at | ts | Y | last message FCM accepted |
+
+Written by `POST /api/v1/mobile/push-token` (replaces the family's row), deleted by `DELETE /api/v1/mobile/push-token` and by every revocation of the family in `MobileTokenRepository` (logout, sign out everywhere, device revocation, reuse, password change or reset, account inactive), by FCM answering `UNREGISTERED` / invalid token / `SENDER_ID_MISMATCH`, and by `auth:prune-mobile-tokens` when the family has no live refresh token. Sends select only rows whose family is live. Migration `2026_11_17_010001_create_mobile_push_tokens_table`.
+
 ### `notifications`, `sessions`, `password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`
 
 Laravel standard. Only `notifications` needs a new migration.
 
-`notifications` (M-A5, customer inbox, no schema change): written by the `database` channel of `OrderDelivered`, `OrderFulfilmentFailed` and `SupportTicketReplied` when the customer's preferences allow it. `type` is the inbox kind (`order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`, `support_ticket_replied`), `notifiable_type` the morph alias `user`, `data` `{ kind, params: { number }, link: { type: order|ticket, value: public_id } }`: identifiers and the order or ticket number only, never a code, PIN or message body. Title and body are rendered in the reader's language when listed. The inbox reads use the `notifiable` morph index.
+`notifications` (M-A5, customer inbox, no schema change): written by the `database` channel of `OrderDelivered`, `OrderFulfilmentFailed` and `SupportTicketReplied` when the customer's preferences allow it. `type` is the inbox kind (`order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`, `support_ticket_replied`; M-A18 adds `payment_failed`, written by `PaymentFailed`), `notifiable_type` the morph alias `user`, `data` `{ kind, params: { number }, link: { type: order|ticket, value: public_id } }`: identifiers and the order or ticket number only, never a code, PIN or message body. Title and body are rendered in the reader's language when listed. The inbox reads use the `notifiable` morph index.
 
 `sessions` (M-A5): with `SESSION_DRIVER=database` the account device list reads and deletes a customer's rows by `user_id`; the session id never leaves the server (shown as an HMAC).
 

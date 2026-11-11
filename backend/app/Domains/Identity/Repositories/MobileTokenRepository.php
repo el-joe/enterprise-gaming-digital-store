@@ -7,14 +7,19 @@ use App\Domains\Identity\Models\MobileBiometricChallenge;
 use App\Domains\Identity\Models\MobileLoginChallenge;
 use App\Domains\Identity\Models\MobileRefreshToken;
 use App\Domains\Identity\Models\User;
+use App\Domains\Notifications\Repositories\PushTokenRepository;
 use Illuminate\Support\Collection;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
- * Queries over mobile refresh tokens, login challenges and the customers' Sanctum tokens.
+ * Queries over mobile refresh tokens, login challenges and the customers' Sanctum tokens. Every
+ * revocation also deletes the push tokens of the revoked sign-ins (M-A18, ADR-042), so a signed-out
+ * device stops receiving notifications at once.
  */
 class MobileTokenRepository
 {
+    public function __construct(private PushTokenRepository $pushTokens) {}
+
     public function lockRefreshTokenByHash(string $hash): ?MobileRefreshToken
     {
         return MobileRefreshToken::query()->where('token_hash', $hash)->lockForUpdate()->first();
@@ -39,6 +44,7 @@ class MobileTokenRepository
      */
     public function revokeFamily(string $familyId, TokenRevocationReason $reason): int
     {
+        $this->pushTokens->deleteForFamilies([$familyId]);
         $this->deleteAccessTokens(MobileRefreshToken::query()->where('family_id', $familyId)->whereNotNull('access_token_id')->pluck('access_token_id')->all());
 
         return MobileRefreshToken::query()
@@ -53,6 +59,7 @@ class MobileTokenRepository
     public function revokeAllForUser(User $user, TokenRevocationReason $reason): int
     {
         $user->tokens()->delete();
+        $this->pushTokens->deleteForUserExcept($user->id, null);
 
         return MobileRefreshToken::query()
             ->where('user_id', $user->id)
@@ -111,6 +118,8 @@ class MobileTokenRepository
             ->distinct()
             ->pluck('family_id');
 
+        $this->pushTokens->deleteForUserExcept($user->id, $keptFamilyId);
+
         MobileRefreshToken::query()
             ->where('user_id', $user->id)
             ->whereIn('family_id', $families)
@@ -142,15 +151,16 @@ class MobileTokenRepository
 
     /**
      * Delete refresh tokens, login challenges, biometric challenges and customer access tokens
-     * past their expiry.
+     * past their expiry, and the push tokens of sign-ins that are no longer live.
      *
-     * @return array{refresh_tokens: int, challenges: int, biometric_challenges: int, access_tokens: int}
+     * @return array{refresh_tokens: int, challenges: int, biometric_challenges: int, access_tokens: int, push_tokens: int}
      */
     public function pruneExpired(): array
     {
         $now = now();
 
         return [
+            'push_tokens' => $this->pushTokens->pruneOrphaned(),
             'refresh_tokens' => MobileRefreshToken::query()->where('expires_at', '<', $now)->delete(),
             'challenges' => MobileLoginChallenge::query()->where('expires_at', '<', $now)->delete(),
             'biometric_challenges' => MobileBiometricChallenge::query()->where('expires_at', '<', $now)->delete(),

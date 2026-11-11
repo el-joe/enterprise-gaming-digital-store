@@ -2,6 +2,7 @@
 
 namespace App\Domains\Payments\Services;
 
+use App\Domains\Identity\Models\User;
 use App\Domains\Orders\DTOs\OrderActor;
 use App\Domains\Orders\Enums\OrderStatus;
 use App\Domains\Orders\Models\Order;
@@ -14,6 +15,7 @@ use App\Domains\Payments\Enums\PaymentTransactionType;
 use App\Domains\Payments\Enums\ProviderPaymentStatus;
 use App\Domains\Payments\Models\Payment;
 use App\Domains\Payments\Models\PaymentTransaction;
+use App\Domains\Payments\Notifications\PaymentFailed;
 use App\Domains\Settings\Services\SettingsService;
 use App\Domains\Shared\ValueObjects\Money;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +35,8 @@ use Illuminate\Support\Facades\Log;
  * - Succeeded while another payment holds the slot: `duplicate_capture`, a full automatic refund.
  * - A failure after success (out of order) is ignored; a success after a failure is accepted,
  *   since the provider's current state is the truth.
+ * - A failure that leaves a customer's order without an open attempt notifies the customer
+ *   (`PaymentFailed`: inbox and push, M-A18); a cancellation by the customer does not.
  */
 class PaymentStateApplier
 {
@@ -177,6 +181,11 @@ class PaymentStateApplier
 
         if ($openAttempts) {
             return;
+        }
+
+        // M-A18: tell the customer (inbox and push), once the transaction has committed.
+        if ($order->user_id !== null && $state->status === ProviderPaymentStatus::Failed) {
+            User::query()->find($order->user_id)?->notify((new PaymentFailed($order->id))->afterCommit());
         }
 
         $exhausted = Payment::query()->where('order_id', $order->id)->count() >= (int) $this->settings->get('orders', 'max_payment_attempts', 5);

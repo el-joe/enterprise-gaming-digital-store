@@ -53,6 +53,9 @@ class PreferencesStore {
   /// The rooted or jailbroken device warning was shown once (owner decision 5).
   static const integrityWarningShownKey = 'prefs.integrity_warning_shown';
 
+  /// The push explainer was offered once after the first paid order (M-A18).
+  static const pushPromptShownKey = 'prefs.push_prompt_shown';
+
   /// Recent search terms, newest first (M-A11). Local only: there is no API for history.
   static const searchHistoryKey = 'prefs.search_history';
 
@@ -63,6 +66,7 @@ class PreferencesStore {
     onboardingCompletedKey,
     biometricOfferShownKey,
     integrityWarningShownKey,
+    pushPromptShownKey,
   };
 
   final PreferencesBackend _backend;
@@ -125,6 +129,11 @@ class PreferencesStore {
 
   Future<void> setIntegrityWarningShown() =>
       _backend.setBool(integrityWarningShownKey, value: true);
+
+  bool get pushPromptShown => _backend.getBool(pushPromptShownKey) ?? false;
+
+  Future<void> setPushPromptShown() =>
+      _backend.setBool(pushPromptShownKey, value: true);
 }
 
 /// Overridden in `bootstrap.dart` with the opened store.

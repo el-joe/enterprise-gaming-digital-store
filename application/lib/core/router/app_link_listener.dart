@@ -37,9 +37,14 @@ LinkSource linkSource(Ref ref) => AppLinksSource();
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
 /// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
 ///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/account/tickets/{ticket}` (also `/en|ar/...`, the "support replied" email, M-A18): opens the
+///   ticket thread; `/account/tickets/new` opens a new request. Signed out, sign in first.
 /// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
 ///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
 ///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
+///
+/// A tapped push notification (M-A18) arrives through [open] with the same order or ticket link,
+/// so a tap from the background or a cold start follows the same queue, guards and routes.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the
@@ -73,6 +78,11 @@ class AppLinkListener extends _$AppLinkListener {
     if (link == null) {
       return;
     }
+    open(link);
+  }
+
+  /// Opens [link] as soon as the app shows a normal page (push taps, M-A18).
+  void open(DeepLink link) {
     _queue.add(link);
     _flush();
   }
@@ -127,6 +137,12 @@ class AppLinkListener extends _$AppLinkListener {
         unawaited(router.push(location));
       case AccountOrderLink(:final orderPublicId):
         router.go(Routes.orderLocation(orderPublicId));
+      case AccountTicketLink(:final ticketPublicId):
+        router.go(
+          ticketPublicId == AccountTicketLink.newTicket
+              ? Routes.newTicketLocation()
+              : Routes.ticketLocation(ticketPublicId),
+        );
       case GuestOrderAccessLink(:final orderPublicId, :final signedUri):
         ref.read(guestLinkInboxProvider).put(orderPublicId, signedUri);
         router.go(Routes.guestOrderLocation(orderPublicId));

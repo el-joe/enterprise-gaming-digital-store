@@ -1,0 +1,22 @@
+{
+    "body": {
+        "code": "notification_preference_unavailable",
+        "errors": {
+            "preferences.0.channel": [
+                "This channel is not available for this kind of notification."
+            ]
+        },
+        "message": "This channel is not available for this kind of notification.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "PATCH",
+        "path": "/api/v1/mobile/account/notification-preferences"
+    },
+    "status": 422
+}

@@ -14,6 +14,7 @@ use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
 use App\Domains\Mcp\DTOs\McpCaller;
+use App\Domains\Notifications\Channels\PushChannel;
 use App\Domains\Orders\Events\OrderStatusChanged;
 use App\Domains\Orders\Listeners\RecognizeOrderFinancials;
 use App\Domains\Orders\Listeners\SendFulfilmentNotifications;
@@ -36,6 +37,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskStarting;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
@@ -43,6 +45,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -94,6 +97,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(OrderStatusChanged::class, RedeemCouponWhenPaid::class);
         Event::listen(OrderStatusChanged::class, TrackAffiliateCommission::class);
         Event::listen(OrderStatusChanged::class, CompleteRefundRequests::class);
+        // M-A18 (ADR-042): the `push` notification channel (FCM), a no-op while push.enabled is off.
+        Notification::extend('push', static fn (Application $app): PushChannel => $app->make(PushChannel::class));
+
         Event::listen([ScheduledTaskStarting::class, ScheduledTaskFinished::class, ScheduledTaskFailed::class], RecordScheduledTaskHeartbeat::class);
     }
 
@@ -165,6 +171,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('mobile-biometric', static fn (Request $request): array => [
             Limit::perMinute((int) config('mobile.biometric.per_minute'))->by('mobile-biometric|user|'.($request->user()?->getAuthIdentifier() ?? $request->ip())),
             Limit::perMinute(60)->by('mobile-biometric|ip|'.$request->ip()),
+        ]);
+        RateLimiter::for('mobile-push', static fn (Request $request): array => [
+            Limit::perMinute((int) config('push.register_per_minute'))->by('mobile-push|user|'.($request->user()?->getAuthIdentifier() ?? $request->ip())),
+            Limit::perMinute((int) config('push.register_per_minute_per_ip'))->by('mobile-push|ip|'.$request->ip()),
         ]);
         RateLimiter::for('storefront', static fn (Request $request): Limit => Limit::perMinute(120)->by('storefront|'.$request->ip()));
         RateLimiter::for('search', static fn (Request $request): Limit => Limit::perMinute(60)->by('search|'.$request->ip()));

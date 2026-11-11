@@ -21,6 +21,12 @@
                     "mandatory": false
                 },
                 {
+                    "category": "orders",
+                    "channel": "push",
+                    "enabled": true,
+                    "mandatory": false
+                },
+                {
                     "category": "support",
                     "channel": "mail",
                     "enabled": true,
@@ -36,6 +42,12 @@
                     "category": "support",
                     "channel": "sms",
                     "enabled": false,
+                    "mandatory": false
+                },
+                {
+                    "category": "support",
+                    "channel": "push",
+                    "enabled": true,
                     "mandatory": false
                 },
                 {

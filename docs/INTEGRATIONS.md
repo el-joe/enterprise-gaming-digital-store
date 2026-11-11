@@ -396,3 +396,30 @@ Verification: site verification meta tag from settings.
 - Connect (`settings.manage_critical`): `https://accounts.google.com/o/oauth2/v2/auth` with `access_type=offline`, `prompt=consent`, scope `webmasters.readonly`, a session `state` (10 minutes, single use) and PKCE S256. Callback exchanges the code at `https://oauth2.googleapis.com/token`; the refresh token is stored encrypted (`analytics.search_console_refresh_token`), never shown or returned; audited without the token. Access tokens are cached encrypted until 2 minutes before expiry. Disconnect revokes at `https://oauth2.googleapis.com/revoke` (best effort) and deletes the token.
 - `seo:fetch-search-console {--days=3}` (daily 06:15) reads `date`, `date+query` and `date+page` (5,000 rows each, `dataState: final`, window ending 3 days ago) into `search_console_metrics` (upsert per date, dimension and key). Report: Content > Search Console (`seo.manage`), 7, 28 or 90 days, with the "top rows only" notice.
 - `UNVERIFIED`: whether `prompt=consent` is needed on every reconnect to receive a new refresh token, and the exact error shape for an expired grant (handled generically as 502 `search_console_unavailable`).
+
+---
+
+## 8. Firebase Cloud Messaging (push, M-A18, owner decision 9)
+
+**Status: awaiting credentials, mocked only.** No Firebase project, service account or app config file exists yet. The backend sender is tested with `Http::fake` and a generated test RSA key only; FCM and Google's OAuth endpoint have never been called live. The app builds and runs with push off without the config files. Design: `PROJECT_ARCHITECTURE.md` ADR-042; API: `API_DOCUMENTATION.md` 1h.
+
+Sources (from the FCM HTTP v1 and Google OAuth 2.0 service-account documentation as known when built; to be re-checked against the console when the project exists): `POST https://fcm.googleapis.com/v1/projects/{project_id}/messages:send` with `{ message: { token, notification: { title, body }, data: { string: string }, android: { priority, notification: { channel_id, tag } }, apns: { headers, payload: { aps } } } }`; access token from `https://oauth2.googleapis.com/token` (`grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer`, an RS256 JWT with `iss` = service account email, `scope` = `https://www.googleapis.com/auth/firebase.messaging`, `aud` = the key's `token_uri`, `iat`, `exp` = `iat` + 3600). Error codes in `error.details[].errorCode`: `UNREGISTERED` (404, delete the token), `INVALID_ARGUMENT` (400; an invalid registration token or a bad message), `SENDER_ID_MISMATCH` (403, the token belongs to another project), `QUOTA_EXCEEDED` (429), `UNAVAILABLE` (503), `INTERNAL` (500), `THIRD_PARTY_AUTH_ERROR` (401, APNs credentials).
+
+**Built (backend).** No SDK or composer package (backend/CLAUDE.md): `FcmClient` on the Laravel HTTP client signs the JWT with `openssl_sign` (SHA-256 with RSA) and caches the access token encrypted until 5 minutes before expiry (dropped on 401). `PushChannel` (`Notification::extend('push')`) queues one `SendPushMessage` per live device token; see `API_DOCUMENTATION.md` 1h for what is sent and how answers are handled.
+
+Configuration (`config/push.php`, `.env.example`):
+
+| Key | Meaning |
+|---|---|
+| `FCM_ENABLED` | empty or `false` (default): every send is a no-op logged at debug level |
+| `FCM_PROJECT_ID` | the Firebase project id |
+| `FCM_CREDENTIALS_PATH` | absolute path to the service-account JSON key, outside the web root, readable only by the PHP user (for example `/etc/boxcards/fcm-service-account.json`, mode 0400). Never in the repository, `.env` or the database |
+
+**Owner steps.**
+1. Create the Firebase project (one per environment is cleanest: dev, staging, prod) and add the Android apps `shop.boxcards.app.dev`, `shop.boxcards.app.staging`, `shop.boxcards.app` and the iOS apps with the same bundle ids.
+2. Download each Android `google-services.json` into `application/android/app/src/<flavor>/` (or one combined file into `application/android/app/`), and each iOS `GoogleService-Info.plist` for the flavor's scheme on the macOS host. Both are git-ignored; `application/README.md` (Push) has the details.
+3. iOS: upload an APNs authentication key (.p8) in Project settings > Cloud Messaging, and enable Push Notifications and Background Modes > Remote notifications in Xcode (entitlement placeholder already in `ios/Runner/Runner.entitlements`).
+4. Server: create a service account key with the Firebase Cloud Messaging API (V1) enabled (Project settings > Service accounts), store it as above, set `FCM_PROJECT_ID`, `FCM_CREDENTIALS_PATH`, `FCM_ENABLED=true`, and run a queue worker for the `notifications` queue.
+5. Verify (M-A18 acceptance): on a real Android device with the dev flavor, a delivered order, a failed payment and a staff ticket reply each arrive; switching the push preference off stops them.
+
+`UNVERIFIED` until a live project exists: the exact `INVALID_ARGUMENT` message for a bad token (matched on "registration token"), the APNs relay behaviour for `apns-priority` 10 with `thread-id`, and the new Firebase Installation ID direct-send target that firebase_messaging 17 introduces (the app keeps registration tokens, the stable HTTP v1 target).

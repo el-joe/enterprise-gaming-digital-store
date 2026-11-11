@@ -2,6 +2,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Biometric unlock and re-auth (owner decision 6, M-A10; biometric_signature). -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Push (M-A18): Android 13+ asks for it after the explainer, never on launch. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="${appLabel}"
         android:name="${applicationName}"
@@ -50,11 +52,20 @@
                 <data android:pathPrefix="/account/orders/"/>
                 <data android:pathPrefix="/en/account/orders/"/>
                 <data android:pathPrefix="/ar/account/orders/"/>
+                <!-- M-A18: the support ticket page of the "support replied" email. -->
+                <data android:pathPrefix="/account/tickets/"/>
+                <data android:pathPrefix="/en/account/tickets/"/>
+                <data android:pathPrefix="/ar/account/tickets/"/>
                 <data android:pathPattern="/api/v1/checkout/guest/orders/.*/access"/>
             </intent-filter>
             <!-- Links go to the app_links listener only, not straight to the router. -->
             <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
         </activity>
+        <!-- Push (M-A18): notifications from FCM go to the "updates" channel that MainActivity
+             creates (the server sends android.notification.channel_id "updates"). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/push_channel_id"/>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

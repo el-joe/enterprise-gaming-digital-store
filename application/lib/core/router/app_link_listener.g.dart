@@ -58,9 +58,14 @@ String _$linkSourceHash() => r'ba078e7094f13e70a7a3acf6b14bd513515328f0';
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
 /// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
 ///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/account/tickets/{ticket}` (also `/en|ar/...`, the "support replied" email, M-A18): opens the
+///   ticket thread; `/account/tickets/new` opens a new request. Signed out, sign in first.
 /// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
 ///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
 ///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
+///
+/// A tapped push notification (M-A18) arrives through [open] with the same order or ticket link,
+/// so a tap from the background or a cold start follows the same queue, guards and routes.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the
@@ -79,9 +84,14 @@ final appLinkListenerProvider = AppLinkListenerProvider._();
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
 /// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
 ///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/account/tickets/{ticket}` (also `/en|ar/...`, the "support replied" email, M-A18): opens the
+///   ticket thread; `/account/tickets/new` opens a new request. Signed out, sign in first.
 /// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
 ///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
 ///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
+///
+/// A tapped push notification (M-A18) arrives through [open] with the same order or ticket link,
+/// so a tap from the background or a cold start follows the same queue, guards and routes.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the
@@ -98,9 +108,14 @@ final class AppLinkListenerProvider
   /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
   /// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
   ///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+  /// - `/account/tickets/{ticket}` (also `/en|ar/...`, the "support replied" email, M-A18): opens the
+  ///   ticket thread; `/account/tickets/new` opens a new request. Signed out, sign in first.
   /// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
   ///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
   ///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
+  ///
+  /// A tapped push notification (M-A18) arrives through [open] with the same order or ticket link,
+  /// so a tap from the background or a cold start follows the same queue, guards and routes.
   ///
   /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
   /// while the launch check, onboarding, maintenance or force update is on screen wait until the
@@ -134,7 +149,7 @@ final class AppLinkListenerProvider
   }
 }
 
-String _$appLinkListenerHash() => r'366285e727a503fc9a44357f3bf04bac82820677';
+String _$appLinkListenerHash() => r'51a47a094ab5507a09408e86b0e24f310c66a6cf';
 
 /// Routes app links (MOBILE_APP_ROADMAP.md 2.1 `deep_links.dart`, ADR-039):
 ///
@@ -144,9 +159,14 @@ String _$appLinkListenerHash() => r'366285e727a503fc9a44357f3bf04bac82820677';
 /// - `/products/{slug}` (also `/en|ar/products/{slug}`): pushes the product page (M-A12).
 /// - `/account/orders/{order}` (also `/en|ar/...`, the customer delivery email): opens the order
 ///   detail (M-A14); signed out, the guard asks to sign in and returns there.
+/// - `/account/tickets/{ticket}` (also `/en|ar/...`, the "support replied" email, M-A18): opens the
+///   ticket thread; `/account/tickets/new` opens a new request. Signed out, sign in first.
 /// - `/api/v1/checkout/guest/orders/{order}/access?expires=&signature=` (the guest delivery
 ///   email): hands the signed link to the guest order screen ([GuestLinkInbox]) and opens it
 ///   (M-A14). The screen calls its `/mobile` twin; the link opens nothing by itself.
+///
+/// A tapped push notification (M-A18) arrives through [open] with the same order or ticket link,
+/// so a tap from the background or a cold start follows the same queue, guards and routes.
 ///
 /// Links are parsed by [parseDeepLink] (https and the configured host only). Links that arrive
 /// while the launch check, onboarding, maintenance or force update is on screen wait until the

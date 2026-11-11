@@ -14,6 +14,7 @@ import 'package:application/features/home/data/models/home_models.dart';
 import 'package:application/features/notifications/data/models/notification_models.dart';
 import 'package:application/features/orders/data/models/order_models.dart';
 import 'package:application/features/product/data/models/product_models.dart';
+import 'package:application/features/push/data/models/push_models.dart';
 import 'package:application/features/reviews/data/models/review_models.dart';
 import 'package:application/features/search/data/models/search_models.dart';
 import 'package:application/features/security/data/models/two_factor_models.dart';
@@ -189,6 +190,8 @@ List<Check> _prefs(Object? d) => _rtList(
   NotificationPreferenceDto.fromJson,
   (v) => v.toJson(),
 );
+List<Check> _pushToken(Object? d) =>
+    _rt(objectAt(d, 'push_token'), PushTokenDto.fromJson, (v) => v.toJson());
 List<Check> _profile(Object? d) =>
     _rt(objectAt(d, 'profile'), ProfileDto.fromJson, (v) => v.toJson());
 List<Check> _signedOut(Object? d) =>
@@ -272,6 +275,10 @@ final Map<String, Decoder> decoders = {
   'notifications/preferences_updated': _prefs,
   'notifications/read_all_ok': _count,
   'notifications/unread_count_ok': _count,
+  // M-A18: this device's push token (the token itself is never echoed).
+  'notifications/push_token_registered': _pushToken,
+  'notifications/push_token_unchanged': _pushToken,
+  'notifications/push_token_deleted': _empty,
   'orders/detail_ok': _orderDetail,
   'orders/list_filtered': _orders,
   'orders/list_ok': _orders,

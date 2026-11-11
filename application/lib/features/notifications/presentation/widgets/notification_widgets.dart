@@ -22,6 +22,8 @@ IconData _iconFor(String type) => switch (type) {
   'order_delivered' ||
   'order_partially_delivered' => Icons.receipt_long_outlined,
   'order_fulfilment_failed' => Icons.warning_amber_rounded,
+  // M-A18: a verified payment attempt failed; the order offers "Retry payment".
+  'payment_failed' => Icons.credit_card_off_outlined,
   'support_ticket_replied' => Icons.help_outline,
   _ => Icons.notifications_none,
 };

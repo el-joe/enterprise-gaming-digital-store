@@ -116,5 +116,11 @@
     "This notification cannot be turned off.": "لا يمكن إيقاف هذا الإشعار.",
     "The :attribute must be the code of an active currency.": "يجب أن يكون :attribute رمز عملة مفعّلة.",
     "The phone number must be in international format, for example +201001234567.": "يجب أن يكون رقم الهاتف بالصيغة الدولية، مثل +201001234567.",
-    "Please sign in or create an account to check out.": "يُرجى تسجيل الدخول أو إنشاء حساب لإتمام الطلب."
+    "Please sign in or create an account to check out.": "يُرجى تسجيل الدخول أو إنشاء حساب لإتمام الطلب.",
+    "Payment for order :number did not go through": "لم يكتمل الدفع للطلب :number",
+    "Your payment was not completed. You can try again from your order.": "لم تكتمل عملية الدفع. يمكنك المحاولة مرة أخرى من صفحة طلبك.",
+    "This channel is not available for this kind of notification.": "هذه القناة غير متاحة لهذا النوع من الإشعارات.",
+    "Push notifications are on for this device.": "تم تفعيل الإشعارات الفورية على هذا الجهاز.",
+    "Push notifications are off for this device.": "تم إيقاف الإشعارات الفورية على هذا الجهاز.",
+    "Push notifications need a signed-in mobile device.": "تحتاج الإشعارات الفورية إلى جهاز جوال مسجّل الدخول."
 }

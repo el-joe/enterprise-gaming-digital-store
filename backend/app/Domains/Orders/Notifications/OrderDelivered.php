@@ -3,6 +3,9 @@
 namespace App\Domains\Orders\Notifications;
 
 use App\Domains\Cms\Enums\LinkTargetType;
+use App\Domains\Identity\Models\User;
+use App\Domains\Notifications\Contracts\PushNotification;
+use App\Domains\Notifications\DTOs\PushMessage;
 use App\Domains\Notifications\Enums\InboxNotificationKind;
 use App\Domains\Notifications\Enums\NotificationPreferenceCategory;
 use App\Domains\Notifications\Enums\NotificationPreferenceChannel;
@@ -18,9 +21,10 @@ use Illuminate\Support\Facades\URL;
 /**
  * "Your order is ready": a secure link to reveal codes, never the code itself (ADR-009). Queued
  * with the order id only. Guests receive a signed link valid for `fulfillment.guest_link_hours`
- * and must also verify their email by one-time code before any reveal.
+ * and must also verify their email by one-time code before any reveal. Accounts also get a push
+ * (M-A18) with the inbox text and the order's public id when their orders push preference is on.
  */
-class OrderDelivered extends Notification implements ShouldQueue
+class OrderDelivered extends Notification implements PushNotification, ShouldQueue
 {
     use Queueable;
 
@@ -34,7 +38,7 @@ class OrderDelivered extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return app(NotificationPreferenceService::class)->channelsFor($notifiable, NotificationPreferenceCategory::Orders, [NotificationPreferenceChannel::Mail, NotificationPreferenceChannel::Database]);
+        return app(NotificationPreferenceService::class)->channelsFor($notifiable, NotificationPreferenceCategory::Orders, [NotificationPreferenceChannel::Mail, NotificationPreferenceChannel::Database, NotificationPreferenceChannel::Push]);
     }
 
     /**
@@ -55,6 +59,16 @@ class OrderDelivered extends Notification implements ShouldQueue
         $order = $this->order();
 
         return ['kind' => self::kind($order)->value, 'params' => ['number' => $order->order_number], 'link' => ['type' => LinkTargetType::Order->value, 'value' => $order->public_id]];
+    }
+
+    /**
+     * The push twin of the inbox entry (M-A18): number and public id only, never a code.
+     */
+    public function toPush(User $notifiable): ?PushMessage
+    {
+        $order = Order::query()->find($this->orderId);
+
+        return $order === null ? null : PushMessage::forInbox(self::kind($order), ['number' => $order->order_number], LinkTargetType::Order, $order->public_id, $notifiable->locale);
     }
 
     public function toMail(object $notifiable): MailMessage

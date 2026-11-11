@@ -114,6 +114,19 @@ describe('auth', function (): void {
     });
 });
 
+describe('push token (M-A18, API_DOCUMENTATION.md 1h)', function (): void {
+    it('registers, re-registers, refuses bad input and removes this device\'s push token', function (): void {
+        $access = mobileSignIn(contractCustomer())['access_token'];
+        $token = 'fixture-fcm-registration-token:APA91bFIXTUREFIXTUREFIXTURE';
+
+        contractFixture('notifications/push_token_registered', mobileCall('POST', 'push-token', ['token' => $token, 'platform' => 'android'], $access)->assertCreated());
+        contractFixture('notifications/push_token_unchanged', mobileCall('POST', 'push-token', ['token' => $token, 'platform' => 'android'], $access)->assertOk());
+        contractFixture('notifications/push_token_validation_failed', mobileCall('POST', 'push-token', ['platform' => 'windows'], $access)
+            ->assertUnprocessable()->assertJsonPath('code', 'validation_failed'));
+        contractFixture('notifications/push_token_deleted', mobileCall('DELETE', 'push-token', token: $access)->assertOk());
+    });
+});
+
 describe('app config', function (): void {
     it('returns the public configuration with an update verdict', function (): void {
         CurrencyFactory::ensure('USD');

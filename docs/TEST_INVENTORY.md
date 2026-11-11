@@ -8,12 +8,12 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ## Backend (Laravel, Pest)
 
-115 files, 1419 declared test cases (202 with datasets, which run once per dataset row).
+116 files, 1451 declared test cases (207 with datasets, which run once per dataset row).
 
 | Area | Files | Declared cases |
 |---|---:|---:|
 | `Feature` | 1 | 1 |
-| `Feature/Account` | 5 | 53 |
+| `Feature/Account` | 5 | 54 |
 | `Feature/Admin` | 12 | 150 |
 | `Feature/Affiliates` | 1 | 12 |
 | `Feature/Automation` | 8 | 72 |
@@ -23,8 +23,8 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 | `Feature/Foundation` | 7 | 64 |
 | `Feature/Fulfillment` | 5 | 52 |
 | `Feature/Mcp` | 5 | 55 |
-| `Feature/Mobile` | 9 | 157 |
-| `Feature/MobileContract` | 6 | 48 |
+| `Feature/Mobile` | 10 | 187 |
+| `Feature/MobileContract` | 6 | 49 |
 | `Feature/Orders` | 7 | 87 |
 | `Feature/Payments` | 6 | 85 |
 | `Feature/Pricing` | 2 | 83 |
@@ -68,7 +68,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 </details>
 
-<details><summary><code>backend/tests/Feature/Account/AccountNotificationsTest.php</code> (11)</summary>
+<details><summary><code>backend/tests/Feature/Account/AccountNotificationsTest.php</code> (12)</summary>
 
 - **database channel of the customer notifications**
   - writes the inbox and sends the email for delivery, partial delivery, failure and support replies
@@ -83,6 +83,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - shows the category x channel matrix with defaults and mandatory cells _(dataset)_
   - saves changes, audits them and reads them back _(dataset)_
   - refuses to switch off a mandatory email and saves nothing of that request _(dataset)_
+  - has push for orders and support only, and refuses push for marketing or security (M-A18) _(dataset)_
   - validates the cells _(dataset)_
 
 </details>
@@ -1250,6 +1251,45 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 </details>
 
+<details><summary><code>backend/tests/Feature/Mobile/PushNotificationsTest.php</code> (30)</summary>
+
+- **device registration**
+  - registers this device's token for the sign-in, audits it without the token and never echoes it
+  - keeps one token per device: the same token again is 200, a refreshed token replaces it
+  - gives each signed-in device its own token
+  - moves a token to the account now signed in on the device
+  - validates the token and the platform _(dataset)_
+  - needs a signed-in customer device
+  - rate limits registration per customer
+  - unregisters this device, idempotently
+- **cleanup with the sign-in**
+  - deletes the device's token on logout
+  - deletes every token on sign-out everywhere
+  - deletes the revoked device's token only
+  - keeps only the caller's token after a password change
+  - deletes the family's token when a used refresh token is replayed
+  - keeps the token across a normal refresh, and prunes tokens of expired sign-ins
+  - never sends to a device whose sign-in is no longer live
+- **sending**
+  - is a no-op that logs at debug level while push is disabled
+  - pushes a delivered order with the inbox text and ids only, never a code (canary)
+  - pushes a support reply with the ticket number and id, and no message body
+  - writes the text in the customer's language
+  - pushes and files a verified payment failure, without the amount or provider message
+  - respects the push preference: off means no push, the inbox still gets the entry
+  - lists push in the channels only when the preference is on
+  - deletes a token FCM reports as unregistered, and does not retry
+  - deletes a token FCM calls an invalid registration token or another project's _(dataset)_
+  - keeps the token on other refusals and on a bare 404 (a wrong project id) _(dataset)_
+  - asks for a retry on quota, server errors and an expired access token, honouring Retry-After _(dataset)_
+  - caches the OAuth access token between sends
+  - fails without retrying and without sending when the credentials file is missing
+- **service-account JWT**
+  - signs an RS256 assertion for the FCM scope that the public key verifies
+  - refuses a key that cannot sign
+
+</details>
+
 ### `Feature/MobileContract`
 
 <details><summary><code>backend/tests/Feature/MobileContract/AccountContractTest.php</code> (15)</summary>
@@ -1277,7 +1317,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 </details>
 
-<details><summary><code>backend/tests/Feature/MobileContract/AuthContractTest.php</code> (7)</summary>
+<details><summary><code>backend/tests/Feature/MobileContract/AuthContractTest.php</code> (8)</summary>
 
 - **auth**
   - registers
@@ -1286,6 +1326,8 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - refreshes, detects reuse and reads the signed-in user
   - signs out this device and every device
   - enrols a biometric key and confirms recent auth with it (M-A10, API_DOCUMENTATION.md 1g)
+- **push token (M-A18, API_DOCUMENTATION.md 1h)**
+  - registers, re-registers, refuses bad input and removes this device's push token
 - **app config**
   - returns the public configuration with an update verdict
 
@@ -2317,7 +2359,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ## App (Flutter)
 
-74 files, 885 declared test cases.
+78 files, 920 declared test cases.
 
 | Area | Files | Declared cases |
 |---|---:|---:|
@@ -2330,7 +2372,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 | `core/storage` | 2 | 7 |
 | `core/theme` | 2 | 11 |
 | `core/utils` | 2 | 6 |
-| `features` | 5 | 54 |
+| `features` | 5 | 55 |
 | `features/account` | 2 | 38 |
 | `features/auth` | 6 | 71 |
 | `features/code_reveal` | 1 | 8 |
@@ -2339,11 +2381,12 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 | `features/launch` | 2 | 20 |
 | `features/orders` | 3 | 60 |
 | `features/product` | 3 | 65 |
+| `features/push` | 3 | 32 |
 | `features/security` | 3 | 29 |
 | `features/storefront` | 3 | 51 |
 | `features/usecases` | 3 | 25 |
 | `features/wallet` | 2 | 42 |
-| `goldens` | 9 | 126 |
+| `goldens` | 10 | 128 |
 | `shared` | 1 | 4 |
 
 ### `accessibility`
@@ -2666,7 +2709,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ### `features`
 
-<details><summary><code>application/test/features/account_repositories_test.dart</code> (21)</summary>
+<details><summary><code>application/test/features/account_repositories_test.dart</code> (22)</summary>
 
 - **AuthRepository**
   - register stores the token pair in secure storage
@@ -2691,6 +2734,8 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - requests a refund and refuses a second open request
 - **NotificationsRepository**
   - reads and marks the inbox and the preferences
+- **PushTokenRepository (M-A18)**
+  - registers, re-registers, refuses bad input and removes the token
 - **AccountRepository**
   - profile, password, devices and verification
   - sign out other devices sends the current password once
@@ -3367,6 +3412,64 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 </details>
 
+### `features/push`
+
+<details><summary><code>application/test/features/push/push_controllers_test.dart</code> (13)</summary>
+
+- **token lifecycle**
+  - signed in with permission, registers the token with the platform
+  - a rotated token is registered again; the same token is not
+  - a failed registration is tried again on the next refresh
+  - nothing is registered without permission, signed out, or without Firebase
+  - signing in later registers the token
+  - sign-out removes the token on the server first, then on the device
+  - sign out everywhere removes it too
+  - without Firebase, sign-out makes no push call
+- **permission prompt after the first purchase**
+  - due once when the system has not been asked, then never again
+  - accepting shows the system prompt and registers the token
+  - not due when already answered, without Firebase, or once shown
+- **foreground messages**
+  - refresh the unread badge and become a foreground event
+  - two equal messages are two events
+
+</details>
+
+<details><summary><code>application/test/features/push/push_pages_test.dart</code> (13)</summary>
+
+- **permission prompt ($lang)**
+  - never on launch
+  - the explainer after the first paid order, then the system prompt
+  - "Not now" asks nothing, and the next purchase shows nothing
+- **tap routing ($lang)**
+  - a tapped order push opens the order from the background
+  - a cold start from a ticket push opens the ticket thread
+  - a push with an unknown target opens nothing
+  - signed out, a tapped order push asks to sign in first
+  - the ticket link of the support email opens the thread
+- **foreground ($lang)**
+  - shows the push in the app, refreshes the badge, and "Open" opens it
+- **notification settings ($lang)**
+  - push switches for orders and support only
+  - a push switch saves the push cell
+  - without permission on this phone, "Turn on" asks the system
+  - without Firebase in the build, a note instead of the button
+
+</details>
+
+<details><summary><code>application/test/features/push/push_routing_test.dart</code> (6)</summary>
+
+- **push payload routing**
+  - an order push opens the order
+  - a ticket push opens the ticket thread
+  - without link_type, the order_id or ticket_id is used
+  - an unknown target, a missing id or an unsafe id opens nothing
+- **ticket email links**
+  - the parser knows /account/tickets/{id} with and without a locale
+  - other hosts and the ticket list are not app links
+
+</details>
+
 ### `features/security`
 
 <details><summary><code>application/test/features/security/security_controllers_test.dart</code> (14)</summary>
@@ -3726,6 +3829,13 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - reviews list ($dir)
   - bottom nav cart count ($dir)
   - 19.2 product at 360x800 ($dir)
+
+</details>
+
+<details><summary><code>application/test/goldens/push_golden_test.dart</code> (2)</summary>
+
+  - push explainer after the first paid order ($dir)
+  - push explainer at 200% text ($dir)
 
 </details>
 

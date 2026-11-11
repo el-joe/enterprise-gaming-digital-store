@@ -101,6 +101,7 @@ Money is a decimal **string** with the currency's precision, plus a separate cur
 | `auth` | 5/min per email+IP |
 | `otp` | 5 per 10 min per identifier (web: pending user in the session; mobile: the challenge token; else IP) |
 | `mobile-refresh` | 5/min per presented refresh token and 60/min per IP (`config/mobile.php`) |
+| `mobile-push` | 10/min per customer and 60/min per IP (`config/push.php`, M-A18) |
 | `checkout` | 20/min per client and 60/min per IP. Client: the session; without one, the bearer user, else the bearer token, the `X-Cart-Token` or the `X-Guest-Order-Token` (hashed), else the IP |
 | `code-reveal` | 10/hour per user or guest order |
 | `admin` | 300/min per user |
@@ -275,6 +276,33 @@ A key belongs to one sign-in (refresh-token family) and stops working when that 
 
 ---
 
+## 1h. Push notifications (built, M-A18, owner decision 9)
+
+Design: `PROJECT_ARCHITECTURE.md` ADR-042. Closes gap G6 (push part). Firebase Cloud Messaging (FCM) for Android and, through APNs, iOS.
+
+**Device token.** Behind `mobile.customer` and the `mobile-push` limiter (10 per minute per customer, 60 per IP).
+
+| Method | Path | Body | Result |
+|---|---|---|---|
+| POST | `/api/v1/mobile/push-token` | `token` (the FCM registration token, 20 to 4096 characters of `A-Z a-z 0-9 _ : - .`), `platform` (`android` or `ios`) | 201 `{ push_token: { platform, registered_at } }` for a new or replaced token, 200 when this device already has exactly this token. The token is never echoed. One token per device: it belongs to the calling sign-in (refresh-token family) and replaces that sign-in's previous token (a refreshed FCM token). The same FCM token registered by another sign-in (another account on the same phone) is moved here. 403 `push_not_available` for a customer token that is not an app sign-in; 422 `validation_failed`. Audited `account.push_token_registered` (platform, family, replaced; never the token) |
+| DELETE | `/api/v1/mobile/push-token` | | 200. Removes this device's token (idempotent). Audited `account.push_token_removed` when one was removed |
+
+The token is also deleted when its sign-in ends: logout, sign out everywhere, device revocation (`DELETE /account/devices/{id}`, also by staff), refresh-token reuse, a password change (every other device) or reset (every device), and by `auth:prune-mobile-tokens` once the sign-in has expired. A push is only ever sent to a token whose sign-in is live. Tokens are stored encrypted (`mobile_push_tokens`).
+
+**What is pushed.** For a signed-in customer, while the `push` preference of the category is on (on by default; `GET/PATCH /account/notification-preferences`, 4c):
+
+| Event | `type` | Category | Target |
+|---|---|---|---|
+| Order delivered (completed or partially fulfilled) | `order_delivered`, `order_partially_delivered` | orders | order |
+| Payment failed: a verified provider failure leaving the order unpaid with no open attempt (not a cancellation by the customer) | `payment_failed` | orders | order |
+| Staff reply on a support ticket | `support_ticket_replied` | support | ticket |
+
+Each push is the twin of its inbox entry: `notification.title` and `notification.body` are the inbox title and body in the customer's language (`users.locale`), and `data` (strings only) is `{ type, category, link_type: "order" | "ticket", link_value: public_id, order_id | ticket_id: public_id }`. Never a code, PIN, redemption URL, message body, amount or provider message. Android notifications use the channel `updates` (`config/push.php` `android_channel_id`) and a tag per order or ticket, so a newer push replaces the older one of the same target.
+
+**Sending.** Queued per device (`SendPushMessage` on the `notifications` queue, 5 tries, backoff 30 s, 2 min, 10 min, 30 min, or FCM's `Retry-After`) to the FCM HTTP v1 API (`POST https://fcm.googleapis.com/v1/projects/{FCM_PROJECT_ID}/messages:send`) with an OAuth2 access token from the service-account JWT flow. `UNREGISTERED`, an invalid registration token (400 `INVALID_ARGUMENT` about the token) and `SENDER_ID_MISMATCH` delete the token; 429, 5xx, 401 (the cached access token is dropped) and network failures retry; other refusals are logged and dropped. With `FCM_ENABLED` off (the default) every send is a no-op logged at debug level (`push.disabled`), and missing credentials fail the job without a retry (`push.not_configured`). Configuration and owner steps: `INTEGRATIONS.md` (FCM).
+
+**Ticket email link.** The "support replied" email links to `/account/tickets/{ticket}`; `/account/tickets/*` and its `/en` and `/ar` variants are now app links (Android intent filter and `apple-app-site-association`, 1e), and the app opens the ticket thread.
+
 ## 1e. Payment returns for the app (built, M-A6)
 
 Design: `PROJECT_ARCHITECTURE.md` ADR-039. Closes gap G8.
@@ -296,11 +324,11 @@ Per provider: PayPal receives both as `payment_source.paypal.experience_context.
 
 **`GET /.well-known/assetlinks.json`** and **`GET /.well-known/apple-app-site-association`**: plain JSON (no envelope), `Content-Type: application/json`, 200 with no redirect, `Cache-Control: public, max-age=3600`, ETag, no cookies. From `config/mobile.php` `app_links` (`DEPLOYMENT.md` 3):
 - assetlinks: one statement per package in `MOBILE_ANDROID_PACKAGES` (default `shop.boxcards.app`; add `shop.boxcards.app.staging`, `shop.boxcards.app.dev` for the flavors), each with relation `delegate_permission/common.handle_all_urls` and every fingerprint in `MOBILE_ANDROID_SHA256_FINGERPRINTS`. **With no fingerprint configured the file is `[]`**: no app is verified, and app links open in the browser (the return route then redirects to the web page). Malformed packages or fingerprints are left out.
-- apple-app-site-association: `{"applinks":{"details":[{"appIDs":["TEAMID.shop.boxcards.app"],"components":[{"/":"/app/*"},{"/":"/products/*"},{"/":"/en/products/*"},{"/":"/ar/products/*"},{"/":"/account/orders/*"},{"/":"/en/account/orders/*"},{"/":"/ar/account/orders/*"},{"/":"/api/v1/checkout/guest/orders/*/access"}]}]}}` from `MOBILE_IOS_APP_IDS`; unconfigured: `{"applinks":{"details":[]}}`. The components (`mobile.app_links.paths`) mirror the Android intent filter and the app's link listener (M-A15): payment returns under `/app/` (M-A6), product pages (M-A12), the customer order page and the signed guest access link of the delivery emails (M-A14). In a component `*` matches any characters including `/`, and a component without `?` matches any query, so the guest link's `expires` and `signature` pass through. Nothing else on the site opens the app.
+- apple-app-site-association: `{"applinks":{"details":[{"appIDs":["TEAMID.shop.boxcards.app"],"components":[{"/":"/app/*"},{"/":"/products/*"},{"/":"/en/products/*"},{"/":"/ar/products/*"},{"/":"/account/orders/*"},{"/":"/en/account/orders/*"},{"/":"/ar/account/orders/*"},{"/":"/account/tickets/*"},{"/":"/en/account/tickets/*"},{"/":"/ar/account/tickets/*"},{"/":"/api/v1/checkout/guest/orders/*/access"}]}]}}` from `MOBILE_IOS_APP_IDS`; unconfigured: `{"applinks":{"details":[]}}`. The components (`mobile.app_links.paths`) mirror the Android intent filter and the app's link listener (M-A15): payment returns under `/app/` (M-A6), product pages (M-A12), the customer order page and the signed guest access link of the delivery emails (M-A14), and the ticket page of the "support replied" email (M-A18). In a component `*` matches any characters including `/`, and a component without `?` matches any query, so the guest link's `expires` and `signature` pass through. Nothing else on the site opens the app.
 
 ## 1f. Contract fixtures (built, M-A7, gap G11)
 
-The Pest suite `backend/tests/Feature/MobileContract` calls every `/api/v1/mobile` route the app uses, with factories, and records the responses as JSON in `docs/api-fixtures/<area>/<name>.json` (141 files, 18 areas: success responses plus validation 422, domain 422, 401, 403, 404, 409, 423 and 429 errors; catalog, product, home and app config also in Arabic). Each file holds `{ request: { method, path }, status, headers, body }`, where `headers` keeps only what the app reads (`Cache-Control`, `Content-Language`, `Idempotency-Replayed`, `Retry-After`, `X-Cart-Token`).
+The Pest suite `backend/tests/Feature/MobileContract` calls every `/api/v1/mobile` route the app uses, with factories, and records the responses as JSON in `docs/api-fixtures/<area>/<name>.json` (156 files, 18 areas: success responses plus validation 422, domain 422, 401, 403, 404, 409, 423 and 429 errors; catalog, product, home and app config also in Arabic). Each file holds `{ request: { method, path }, status, headers, body }`, where `headers` keeps only what the app reads (`Cache-Control`, `Content-Language`, `Idempotency-Replayed`, `Retry-After`, `X-Cart-Token`).
 
 - Normalized for stability, types kept: ULIDs (`01JF...`, case preserved), UUIDs, integer ids, order and ticket numbers, ISO timestamps (`2026-11-10T12:00:00+00:00`), and every token or secret value (`fixture-access-token`, `fixture-token`, `fixture-client-secret`, `fixture-recovery-code-N`, signed-link `expires`/`signature`). Money strings and every other value are exact. Keys are sorted and pretty-printed.
 - The reveal fixtures carry the canary code `FIXTURE-CODE-0000` only; `FixtureSafetyContractTest` fails on provider secrets, live or test secret keys, bearer values, TOTP secrets, real-looking codes and money sent as a JSON number.
@@ -561,7 +589,7 @@ Locale: a web session uses the saved `locale` for its next requests (`Content-La
 | GET | `/devices` | `{ devices: [{ id, type, device_name, user_agent, ip, created_at, last_used_at, expires_at, current }] }`, `meta.web_sessions_listed`. `type` `mobile`: one per live sign-in (refresh-token family; `id` is the family id, `created_at` the sign-in, `last_used_at` the latest of the access token's last use and the last refresh, `expires_at` the family's absolute expiry). `type` `web`: browser sessions, only with the `database` session driver (`id` is an opaque `web_...` HMAC of the session id, never the id itself). `ip` is masked (`203.0.113.x`, `2001:0db8:0000:0000:x`). `current` marks the caller. Audited `account.devices_viewed` |
 | DELETE | `/devices/{id}` | Signs that device out (family revoked with `device_revoked`, or the session row deleted). 409 `current_device` for the caller's own device (use logout); 404 for an unknown id or another customer's device. Audited `account.device_revoked` |
 
-**Notifications (inbox; push is M-A18)**
+**Notifications (inbox; push since M-A18, 1h)**
 
 | Method | Path | Query / body | Result |
 |---|---|---|---|
@@ -569,13 +597,13 @@ Locale: a web session uses the saved `locale` for its next requests (`Content-La
 | GET | `/notifications/unread-count` | | `{ unread_count }` |
 | POST | `/notifications/{id}/read` | | `{ notification }` (idempotent). 404 for another customer's notification |
 | POST | `/notifications/read-all` | | `{ marked_read, unread_count: 0 }` |
-| GET | `/notification-preferences` | | `{ preferences: [{ category, channel, enabled, mandatory }] }`, all 12 cells: categories `orders`, `support`, `marketing`, `security` x channels `mail`, `database` (the inbox), `sms` |
-| PATCH | `/notification-preferences` | `preferences: [{ category, channel, enabled }]` (1 to 12) | The full matrix. 422 `notification_preference_mandatory` (`errors.preferences.N.enabled`) when a mandatory cell is switched off; nothing of that request is saved. Audited |
+| GET | `/notification-preferences` | | `{ preferences: [{ category, channel, enabled, mandatory }] }`, 14 cells in a fixed order: categories `orders`, `support`, `marketing`, `security` x channels `mail`, `database` (the inbox), `sms`, plus `push` (M-A18) for `orders` and `support` only |
+| PATCH | `/notification-preferences` | `preferences: [{ category, channel, enabled }]` (1 to 16) | The full matrix. 422 `notification_preference_mandatory` (`errors.preferences.N.enabled`) when a mandatory cell is switched off; 422 `notification_preference_unavailable` (`errors.preferences.N.channel`) for `push` with `marketing` or `security`; nothing of that request is saved. Audited |
 
-- `type`: `order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`, `support_ticket_replied`. `title` and `body` are rendered in the request language from the stored kind and number. `link`: `{ type: "order" \| "ticket", value: public_id, url }` (the ADR-037 shape; `url` is the web account page the emails link to).
+- `type`: `order_delivered`, `order_partially_delivered`, `order_fulfilment_failed`, `support_ticket_replied`, `payment_failed` (M-A18: inbox and push only, no email). `title` and `body` are rendered in the request language from the stored kind and number. `link`: `{ type: "order" \| "ticket", value: public_id, url }` (the ADR-037 shape; `url` is the web account page the emails link to).
 - Payloads hold identifiers and the order or ticket number only: never a code, PIN, redemption URL or message body.
-- Defaults without a saved row: `mail` and `database` on for orders, support and security; `sms` off (opt-in, ADR-034); marketing follows the latest marketing consent of the channel (email marketing for mail and the inbox, SMS marketing for SMS). Mandatory (always on, cannot be disabled): `orders.mail` (delivery link and failure notice, ADR-009) and `security.mail` (password reset and verification are always sent).
-- The customer notifications `OrderDelivered`, `OrderFulfilmentFailed` and `SupportTicketReplied` follow these preferences for `mail` and `database` (M-A5); guests get email only. `sms` remains the n8n channel read by `CustomerContactPolicy`.
+- Defaults without a saved row: `mail` and `database` on for orders, support and security; `push` on for orders and support (M-A18); `sms` off (opt-in, ADR-034); marketing follows the latest marketing consent of the channel (email marketing for mail and the inbox, SMS marketing for SMS). Mandatory (always on, cannot be disabled): `orders.mail` (delivery link and failure notice, ADR-009) and `security.mail` (password reset and verification are always sent).
+- The customer notifications `OrderDelivered`, `OrderFulfilmentFailed` and `SupportTicketReplied` follow these preferences for `mail` and `database` (M-A5); `OrderDelivered`, `SupportTicketReplied` and `PaymentFailed` also for `push` (M-A18, 1h); guests get email only. `sms` remains the n8n channel read by `CustomerContactPolicy`.
 
 ### 4d. Built account routes (M13)
 

@@ -120,7 +120,8 @@ return [
     | - `paths`: the paths the apps handle, mirroring the Android intent filter
     |   (application/android/app/src/main/AndroidManifest.xml) and the app's link listener: the
     |   payment returns under `/app/` (M-A6), product pages (M-A12), the customer order page and
-    |   the signed guest access link of the delivery emails (M-A14). In Apple components `*`
+    |   the signed guest access link of the delivery emails (M-A14), and the support ticket page
+    |   of the "support replied" email (M-A18). In Apple components `*`
     |   matches any characters, including `/`; a component without `?` matches any query.
     |
     */
@@ -136,6 +137,9 @@ return [
             '/account/orders/*',
             '/en/account/orders/*',
             '/ar/account/orders/*',
+            '/account/tickets/*',
+            '/en/account/tickets/*',
+            '/ar/account/tickets/*',
             '/api/v1/checkout/guest/orders/*/access',
         ],
         'cache_seconds' => 3600,

@@ -63,6 +63,16 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- M-A18 push (owner decision 9): remote notifications wake the app for FCM. Swizzling stays
+	     on (the firebase_messaging default), so AppDelegate needs no push code; the Push
+	     Notifications capability and the per-flavor GoogleService-Info.plist are owner steps on the
+	     macOS host (README, push). -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

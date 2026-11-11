@@ -14,6 +14,8 @@ import 'package:application/features/code_reveal/domain/entities/revealed_code.d
 import 'package:application/features/notifications/data/datasources/notifications_remote_data_source.dart';
 import 'package:application/features/notifications/data/repositories/notifications_repository_impl.dart';
 import 'package:application/features/notifications/domain/entities/notifications.dart';
+import 'package:application/features/push/data/datasources/push_remote_data_source.dart';
+import 'package:application/features/push/data/repositories/push_token_repository_impl.dart';
 import 'package:application/features/reviews/data/datasources/reviews_remote_data_source.dart';
 import 'package:application/features/reviews/data/repositories/reviews_repository_impl.dart';
 import 'package:application/features/security/data/datasources/security_remote_data_source.dart';
@@ -569,12 +571,19 @@ void main() {
 
       h.serveFixture('notifications/preferences_ok');
       final preferences = okValue(await repo.preferences());
-      expect(preferences, hasLength(12));
+      // 4 categories x 3 channels, and push for orders and support (M-A18).
+      expect(preferences, hasLength(14));
       expect(
         preferences
             .where((p) => p.mandatory)
             .map((p) => '${p.category}.${p.channel}'),
         ['orders.mail', 'security.mail'],
+      );
+      expect(
+        preferences
+            .where((p) => p.channel == 'push')
+            .map((p) => '${p.category}.${p.enabled}'),
+        ['orders.true', 'support.true'],
       );
 
       h.serveFixture('notifications/preferences_updated');
@@ -596,7 +605,52 @@ void main() {
       );
       expect(mandatory.code, 'notification_preference_mandatory');
       expect(mandatory.errors.keys, ['preferences.0.enabled']);
+
+      h.serveFixture('notifications/preferences_unavailable');
+      final unavailable = failureOf<DomainFailure>(
+        await repo.updatePreferences(const [
+          PreferenceChange(
+            category: 'marketing',
+            channel: 'push',
+            enabled: true,
+          ),
+        ]),
+      );
+      expect(unavailable.code, 'notification_preference_unavailable');
     });
+  });
+
+  group('PushTokenRepository (M-A18)', () {
+    test(
+      'registers, re-registers, refuses bad input and removes the token',
+      () async {
+        final h = Harness(stored: signedIn());
+        final repo = PushTokenRepositoryImpl(PushRemoteDataSource(h.dio));
+
+        h.serveFixture('notifications/push_token_registered');
+        okValue(await repo.register(token: 'fcm-token-1', platform: 'android'));
+        final request = h.adapter.requests.single;
+        expect(request.data, {'token': 'fcm-token-1', 'platform': 'android'});
+        expect(
+          h.adapter.sentHeaders.single['Authorization'],
+          'Bearer access-1',
+        );
+        expect(request.extra[RequestExtras.sensitive], isTrue);
+
+        h.serveFixture('notifications/push_token_unchanged');
+        okValue(await repo.register(token: 'fcm-token-1', platform: 'android'));
+
+        h.serveFixture('notifications/push_token_validation_failed');
+        final invalid = failureOf<ValidationFailure>(
+          await repo.register(token: 'fcm-token-1', platform: 'windows'),
+        );
+        expect(invalid.fieldErrors.keys, containsAll(['platform', 'token']));
+
+        h.serveFixture('notifications/push_token_deleted');
+        okValue(await repo.unregister());
+        expect(h.adapter.requests.single.method, 'DELETE');
+      },
+    );
   });
 
   group('AccountRepository', () {
