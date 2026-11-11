@@ -208,53 +208,62 @@ class PromoBannerCard extends ConsumerWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: SizedBox(
-            height: 112,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                NetworkImageBox(
-                  url: image?.url,
-                  fallback: ColoredBox(color: colors.surfaceRaised),
-                ),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: AlignmentDirectional.centerStart,
-                      end: AlignmentDirectional.centerEnd,
-                      colors: [
-                        colors.surfaceCanvas.withValues(alpha: 0.8),
-                        colors.surfaceCanvas.withValues(alpha: 0),
+          // Full width; 112dp tall at default text size, taller with large text instead of
+          // cutting the title (M-A19).
+          child: FractionallySizedBox(
+            widthFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 112),
+              child: Stack(
+                alignment: AlignmentDirectional.centerStart,
+                children: [
+                  Positioned.fill(
+                    child: NetworkImageBox(
+                      url: image?.url,
+                      fallback: ColoredBox(color: colors.surfaceRaised),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: AlignmentDirectional.centerStart,
+                          end: AlignmentDirectional.centerEnd,
+                          colors: [
+                            colors.surfaceCanvas.withValues(alpha: 0.8),
+                            colors.surfaceCanvas.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.all(Spacing.s4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (banner.title != null)
+                          Text(
+                            banner.title!,
+                            style: context.type.headingSm,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (banner.subtitle != null)
+                          Text(
+                            banner.subtitle!,
+                            style: context.type.bodySm.copyWith(
+                              color: colors.contentSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.all(Spacing.s4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (banner.title != null)
-                        Text(
-                          banner.title!,
-                          style: context.type.headingSm,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      if (banner.subtitle != null)
-                        Text(
-                          banner.subtitle!,
-                          style: context.type.bodySm.copyWith(
-                            color: colors.contentSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

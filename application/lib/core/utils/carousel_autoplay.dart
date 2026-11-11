@@ -9,7 +9,8 @@ import 'package:flutter/foundation.dart';
 ///   those interactions lasts; a full new interval starts when the last one ends;
 /// - stops while the carousel is not visible (scrolled away, another tab, a route on top, the
 ///   app in the background);
-/// - never advances when the OS asks for reduced motion (`MediaQuery.disableAnimations`);
+/// - never advances when the OS asks for reduced motion (`MotionTokens.reduced`: Android
+///   "Remove animations" or iOS "Reduce Motion");
 /// - never advances with fewer than two slides.
 ///
 /// It owns only the timer; the widget reports facts and moves the page on [onAdvance].

@@ -1456,7 +1456,9 @@ Plan and milestones: `MOBILE_APP_ROADMAP.md` (M-A1 to M-A20). Code: `application
 | M-A15 | Wallet UI | Complete (2026-11-11, not yet committed; awaiting PM verification) |
 | M-A16 | Account and security UI | Complete (2026-11-11, not yet committed; awaiting PM verification and LFA security review) |
 | M-A17 | Support, reviews, refund requests and notifications UI | Built (2026-11-11, not yet committed; tests written but not run by owner instruction; awaiting the final test run and PM verification) |
-| M-A18 to M-A20 | | Not started |
+| M-A18 | Push notifications | Not started (waiting for the owner's push provider decision) |
+| M-A19 | Accessibility, performance and integration tests | Built (2026-11-11, not yet committed; tests written but not run by owner instruction; awaiting the final test run, the on-device run and PM verification) |
+| M-A20 | Release configuration and store assets | Not started |
 
 ### M-A1: Flutter foundation
 
@@ -1717,6 +1719,52 @@ Date: 2026-11-11. Completed by: SFD, alone and in sequence. Not committed. **Tes
 - Deviations from Figma: the inbox's "⋮" is a settings button (its only action); preferences list every channel of the API per category (the frame shows a subset and names rows "Order updates by email"); "Request sent" says "You can follow its status here" (no reply time is promised by the API); refund rows have no refunded amount (the request carries only the refund's id and status); ticket rows show "updated <date>" for every ticket; Material icons stand in for the Figma icon set; empty states use the shared icon badge, not the drawn illustrations.
 - Open items: email links to `/account/tickets/{id}` are not app links yet (intent filters and `apple-app-site-association` paths, with M-A18 tap routing); the order detail finds its refund request in the first 50 requests (a backend `order` filter on `GET /refund-requests` or the request in the order detail would remove the limit); the eligible list is the server's first 100 items; the unread badge refreshes at sign-in, in the inbox and on home pull to refresh only (push is M-A18); ticket and review deep links from email are web pages until then.
 - Next milestone: M-A18 (push notifications).
+
+### M-A19: Accessibility, performance and integration tests
+
+Date: 2026-11-11. Completed by: SFD, alone and in sequence. Not committed. **Tests written but not run** (owner instruction: one full run at the end; no golden PNGs created). `dart run build_runner build`, `dart format`, `flutter analyze` and `dart analyze --fatal-infos` are clean; `flutter build apk --flavor dev --debug` builds (the SDK `integration_test` plugin was added as a dev dependency). Push (M-A18) untouched. Backend: no change.
+
+**Accessibility audit** of every screen of M-A10 to M-A17 (code review against the tokens and the M-A8 accessibility notes; checks written as tests, not run):
+
+| # | Area | Finding | Fix |
+|---|---|---|---|
+| 1 | Reduced motion | Every check read `MediaQuery.disableAnimations`, which is Android "Remove animations" only. Flutter reports iOS "Reduce Motion" separately (`AccessibilityFeatures.reduceMotion`), so on iOS the carousel still advanced and nothing was reduced. | `MotionTokens.reduced(context)` covers both; used by the carousel autoplay and dots, the product scroll-to-field, the payment status ring, the bottom nav and the new widgets below. |
+| 2 | Reduced motion | Bottom nav selected pill animated 200 ms always. | `MotionTokens.resolve(context, MotionTokens.base)`. |
+| 3 | Reduced motion | Page transitions (Android predictive back / zoom, iOS slide) ignored reduced motion. | `ReducedMotionPageTransitionsBuilder` in the theme: cross-fade in place; the wrapped builder still runs, so the iOS edge swipe and predictive back keep working. |
+| 4 | Reduced motion | Indeterminate spinners kept spinning (button loading, splash, code screen and guest order loading, currency sheet, device sign-out, ticket send) and the language apply bar was an indeterminate `LinearProgressIndicator`. | `BusyIndicator`: the same spinner, or a still hourglass under reduced motion; labelled "Loading" unless inside a labelled button. The code screen's loading spinner had no label; it has now. |
+| 5 | Live regions | Revealing a code announced nothing (hiding did). | "Code shown. Use Read code aloud to hear it." is announced once when the code appears (the code itself only on "Read code aloud"). Checked: add to cart (snackbar, a live region), payment status (title is a live region), checkout summary, every `StatusBanner` error, field errors and the quantity are already live regions. |
+| 6 | Text 200% | `AppChip` and `PillButton` had a fixed 36dp height: at 2x the label (40dp line) was cut. | Minimum 36dp with 4dp vertical padding; same look at 1x. |
+| 7 | Text 200% | Cart count pill fixed at 16dp. | Minimum 16dp. |
+| 8 | Text 200% | App bar title (`heading/md`, 26dp line) cut in the 48dp bar above 1.85x. | Title capped at 1.8x (`MobileAppBar.titleMaxTextScale`), one line with ellipsis; the page header keeps its full size. |
+| 9 | Text 200% | Home promo banner fixed at 112dp: two-line title plus subtitle overflowed. | Minimum 112dp, full width, image and gradient fill the box. |
+| 10 | Text 200% | Product amount tiles fixed at 76dp. | Minimum 76dp with vertical padding. |
+| 11 | Text 200% | Quantity count fixed 32dp wide (two digits wrapped). | Minimum 32dp wide. |
+| 12 | Text 200% | OTP digits (`heading/lg`) and the account initials were cut in their fixed boxes. | Scaled down to fit (`FittedBox`); boxes keep their size. |
+| 13 | Text 200% | Store header currency button: the theme's 12dp vertical padding pushed the code out of the 56dp header; the search field button had a fixed 48dp height. | No vertical padding on the currency button (48dp minimum keeps the target); search field minimum 48dp. |
+| 14 | Text 200% | Amounts at the end of a row (cart totals, checkout total, payment option charge) could overflow or squeeze the label. | `FitAmount`: at most 200dp (160dp for the charge chip), scaled down, never cut or wrapped; natural size at 1x. |
+| 15 | Contrast | Unchecked radio rings used `line/strong` (ink-600): 1.9:1 on canvas, below the 3:1 of WCAG 1.4.11 for a state indicator. | `content/muted` (6.3:1) in `OptionTile`, `PaymentOptionTile` and the payment method rows. |
+| 16 | Contrast | Token check (WCAG 2.1): text `content/primary` 15.7 to 18.7:1, `secondary` 8.7 to 10.4:1, `muted` 5.3 to 6.3:1 on every surface; `accent/text` 14.3:1+, status colours 6.1:1+ on surfaces and 5.9:1+ on their tints; ink on volt 17:1, on ember 6.4:1, on danger solid 5.3:1; focus ring 5.0:1+. `content/disabled` 3.0 to 3.3:1 (disabled, exempt). | None needed; ratios asserted in `contrast_test.dart`. Open: field outlines (`line/default`, 1.4:1) and OTP box borders (`line/strong`, 1.9:1) are below 3:1; every field has a visible label, so this is a design decision for the owner. |
+| 17 | RTL | `Icons.logout` does not mirror itself (its arrow should leave through the end side). | `DirectionalIcons.logout`: the same glyph with `matchTextDirection`. No hand-swapped icons exist; `chevron_right`, `arrow_back`, `open_in_new`, `send_outlined`, `star_half` mirror by themselves and are used as they are; the search "fill" arrow (`north_west`, not mirrored by Flutter) keeps its `Transform.flip`. |
+| 18 | Labels | All 16 icon-only buttons have a tooltip or a `Semantics` label (the bell and the rating stars through `Semantics`). | None needed; swept by the guideline test. |
+| 19 | Focus order | Checkout, product and code reveal are single columns whose order follows the task (what, choices, notices, summary, action last); footers sit after the body. | None needed; asserted in both directions by `traversal_order_test.dart`. |
+| 20 | 48dp | Targets checked per milestone already. | Swept on all 33 main screens in both locales. |
+| 21 | Rule 6 | `StaticStars.size` was a `double` in `lib/features` (the no-double check of `tool/ci.sh` and `no_double_test.dart` would fail). | `num`, converted at the `Icon`. |
+
+**Performance** (review and fixes):
+- Startup: `PreferencesStore.open()` and the secure session read run in parallel before `runApp`; everything else (app config, integrity, biometrics, catalog) already starts from the splash after the first frame.
+- Images: `NetworkImageBox` already decoded at the slot width; the decode width is now rounded up to 64 px steps (at most 1536 px) so slots a few pixels apart share one decoded image in the cache. `cached_network_image` keeps originals on disk.
+- Rebuild scope: `select` on the session (Account hub, settings), the startup state (update and maintenance screens) and the device list (security); the security page keeps the two-step disable controller alive without rebuilding on its states.
+- Lists: the wallet statement (infinite scroll) is a `ListView.builder` (it built every loaded row's widget on each rebuild); listing, orders, notifications, tickets and reviews were already builders. `prefer_const_constructors` is enforced by the analyzer (clean).
+- Frame timing: `integration_test/perf_test.dart` flings home and a 200-product listing under `watchPerformance`; profile mode asserts p90 build and raster at most 16 ms and at most 5% missed build budgets (physical device only). App size: `flutter build apk --analyze-size` command in the README. Numbers to record after the on-device run.
+
+**Integration tests** (SDK `integration_test`, no third-party package, no backend): `integration_test/app_test.dart` runs `journeys/auth_journey.dart` (launch, onboarding, login, two-step code), `shopping_journey.dart` (home, product, add to cart, cart, checkout, PayPal hand-off, app-link return, paid; EN and AR), `reveal_journey.dart` (orders, detail, reveal with the confirm-password sheet, 60 s auto-hide), `security_journey.dart` (security, two-step on, recovery codes), `support_journey.dart` (new request, reply), `notifications_journey.dart` (bell, ticket target, order target). They run the real app on the harness fakes of `test/helpers`; the contract fixtures are compiled into `integration_test/fixtures/api_fixtures.g.dart` by `tool/bundle_fixtures.py` (checked by `tool/ci.sh`) because a device has no `test/fixtures`; `ApiFixture.bundle` switches the loader. Drivers: `test_driver/integration_test.dart`, `test_driver/perf_driver.dart`.
+
+**Widget and unit tests written, not run**: `test/accessibility/semantics_guidelines_test.dart` (33 screens x en/ar: `androidTapTargetGuideline`, `labeledTapTargetGuideline`, `textContrastGuideline`), `text_scale_test.dart` (21 key screens x en/ar at 2x and 360dp: no overflow, no text cut vertically; the app bar cap), `traversal_order_test.dart`, `reduced_motion_test.dart` (Android and iOS settings; shown/hidden announcements), `test/core/theme/contrast_test.dart`, `test/shared/performance_widgets_test.dart`; screen catalog `test/helpers/screens.dart`.
+
+- **Deviation**: the roadmap asks for flows "against a seeded dev backend with provider sandboxes"; by owner instruction for this milestone they run on the fakes and contract fixtures (no live backend). The fixtures are the backend's own contract recordings (G11), so the request and response shapes are the server's; a live-backend smoke run remains open.
+- **Goldens expected to change** (intended; regenerate with `--update-goldens` and review): unchecked radio rings in `m_a10` onboarding language and currency, `m_a11` currency and filter sheets, `m_a12` select-field sheets if captured, `m_a13` checkout states, `m_a16` settings; the mirrored sign-out icon in the RTL `m_a16` hub, settings, security and devices states; the `m_a16` settings state while a language applies (spinner instead of a bar), if captured.
+- **Open items**: the on-device run (journeys on an emulator, frame timing on a physical device in profile mode) and its numbers; app size totals; field outline contrast (finding 16) for the owner; the ticket thread builds its messages eagerly (bounded by the thread length; a builder if threads grow long); the product page rebuilds as a whole on each keystroke in a delivery field (cheap today; split if profiling shows jank); a live-backend smoke run of the journeys; screen-reader passes with TalkBack and VoiceOver on hardware (the automated checks do not replace them).
+- Next milestone: M-A18 (push, after the owner's provider decision) or M-A20.
 
 ## Design approval gate (M1 and M-A9), 2026-11-10
 

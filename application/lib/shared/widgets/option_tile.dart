@@ -76,7 +76,7 @@ class OptionTile extends StatelessWidget {
                   selected
                       ? Icons.radio_button_checked
                       : Icons.radio_button_unchecked,
-                  color: selected ? colors.accentPrimary : colors.lineStrong,
+                  color: selected ? colors.accentPrimary : colors.contentMuted,
                 ),
               ],
             ),

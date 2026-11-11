@@ -3,7 +3,7 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A17 support, reviews, refund requests and notifications UI** (2026-11-11; tests written, not yet run) on M-A16 (account and security UI), M-A15 (wallet UI), M-A14 (orders and code reveal UI), M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
+Status: **M-A19 accessibility, performance and integration tests** (2026-11-11; tests written, not yet run) on M-A17 (support, reviews, refund requests and notifications UI), M-A16 (account and security UI), M-A15 (wallet UI), M-A14 (orders and code reveal UI), M-A13 (cart, checkout and payments UI), M-A12 (product UI), M-A11 (home, catalog and search), M-A10 (auth and
 onboarding), the M-A7 data layers and the M-A1 foundation. The app starts on the splash (app config check: force update,
 maintenance, offline), runs onboarding (language, display currency) once, and opens the tab shell
 (Home, Browse, Cart, Orders, Account): home from `GET /storefront/home` with the hero carousel, browse
@@ -678,12 +678,82 @@ default.) `tool/ci.sh` regenerates and fails when the committed output is stale.
 ```sh
 flutter test                      # unit, widget and golden tests
 flutter test --update-goldens test/goldens   # after an intended visual change
-bash tool/ci.sh                   # pub get, generated-code check, fixture sync check, no-double check,
-                                  # format, both analyzers, tests + coverage
+bash tool/ci.sh                   # pub get, generated-code check, fixture sync and bundle checks,
+                                  # no-double check, format, both analyzers, tests + coverage
 bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/api
+python3 tool/bundle_fixtures.py   # then rebuild the fixture bundle of the integration tests
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Integration tests (M-A19)
+
+`integration_test/` runs the critical journeys as the real app on an Android emulator or device:
+launch, onboarding, sign in with two-step verification; browse, product, add to cart, checkout,
+PayPal hand-off and the app-link return to the paid result (also in Arabic, RTL); orders, code
+reveal with the confirm-password sheet and the 60 s auto-hide; Account, security, turning on
+two-step verification and the recovery codes; a new support request and a reply; the
+notifications inbox opening a ticket and an order. They run on the same fake repositories as the
+widget tests (`test/helpers/`), answering with the backend contract fixtures, which are compiled
+into `integration_test/fixtures/api_fixtures.g.dart` because a device has no `test/fixtures`
+folder (`ApiFixture.bundle`). No backend, provider sandbox or network is needed.
+
+```sh
+flutter emulators --launch <emulator-id>      # or attach a device; `flutter devices` lists ids
+flutter test integration_test/app_test.dart --flavor dev -d <device-id>
+
+# The same through flutter drive (host driver in test_driver/integration_test.dart):
+flutter drive --flavor dev --driver=test_driver/integration_test.dart \
+  --target=integration_test/app_test.dart -d <device-id>
+
+# Frame timing (list jank): profile mode, physical device only; writes
+# build/home_scroll.timeline_summary.json and build/listing_scroll.timeline_summary.json.
+flutter drive --profile --flavor dev --driver=test_driver/perf_driver.dart \
+  --target=integration_test/perf_test.dart -d <physical-device-id>
+
+# App size (record the totals in docs/PROGRESS.md, M-A19):
+flutter build apk --flavor dev -t lib/main_dev.dart --release --analyze-size --target-platform android-arm64 \
+  --dart-define-from-file=lib/core/config/env_dev.json
+```
+
+`perf_test.dart` asserts p90 build and raster time at most 16 ms and at most 5% of frames over the
+build budget, in profile mode only; a debug run records the numbers without judging them. The
+on-device suite is not part of `tool/ci.sh` (it needs a device).
+
+## Accessibility and performance (M-A19)
+
+- **Reduced motion**: `MotionTokens.reduced(context)` is true for Android "Remove animations"
+  (`MediaQuery.disableAnimations`) and for iOS "Reduce Motion", which Flutter reports separately
+  (`AccessibilityFeatures.reduceMotion`). Under it the hero carousel does not advance, motion
+  tokens resolve to zero, page transitions cross-fade in place
+  (`core/theme/reduced_motion_transitions.dart`, back gestures still work) and spinners are a
+  still hourglass (`shared/widgets/busy_indicator.dart`; use it instead of
+  `CircularProgressIndicator`).
+- **Text scaling**: fixed heights around text are minimum heights; amounts at a row end use
+  `FitAmount` (scales down, never cut); the app bar title stops growing at 1.8x
+  (`MobileAppBar.titleMaxTextScale`) so it fits the 56dp bar.
+- **RTL icons**: icons that point along the reading direction mirror through
+  `matchTextDirection` (Flutter's `chevron_right`, `arrow_back`, `open_in_new`, `send_outlined`,
+  `star_half`, and `DirectionalIcons.logout`); never swap icons by hand.
+- **Announcements**: async results reach screen readers through live regions (`StatusBanner`,
+  snackbars, the checkout summary, the payment status title) or `SemanticsService` (code shown,
+  code hidden).
+- **Images**: `NetworkImageBox` decodes at the slot width rounded up to 64 px (at most 1536 px),
+  so similar slots share one decoded image.
+
+## Tests (M-A19 additions, written, not yet run)
+
+By owner instruction the M-A19 tests were written but not executed.
+`test/accessibility/semantics_guidelines_test.dart` (33 main screens x `en`/`ar`: tap target,
+labelled tap target, text contrast), `text_scale_test.dart` (21 key screens at 200% text and
+360dp wide in `en`/`ar`: no overflow, no text cut vertically; the app bar title cap),
+`traversal_order_test.dart` (screen-reader order on checkout, product and code reveal in both
+directions), `reduced_motion_test.dart` (Android and iOS settings: tokens, page transition,
+spinners, payment status; the "code shown" and "code hidden" announcements),
+`test/core/theme/contrast_test.dart` (WCAG ratios of the token pairs),
+`test/shared/performance_widgets_test.dart` (decode width, `FitAmount`). Screen catalog:
+`test/helpers/screens.dart`. On-device: `integration_test/app_test.dart` (journeys in
+`integration_test/journeys/`) and `integration_test/perf_test.dart` (see Integration tests).
 
 ## Tests (M-A17 additions, written, not yet run)
 

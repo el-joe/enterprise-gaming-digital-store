@@ -8,6 +8,7 @@ import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/catalog/presentation/controllers/currency_switcher_controller.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
 import 'package:application/shared/widgets/option_tile.dart';
 import 'package:application/shared/widgets/sheet_header.dart';
 import 'package:application/shared/widgets/state_views.dart';
@@ -77,7 +78,7 @@ class CurrencySheet extends ConsumerWidget {
                       const Center(
                         child: Padding(
                           padding: EdgeInsetsDirectional.all(Spacing.s6),
-                          child: CircularProgressIndicator(),
+                          child: BusyIndicator(size: 36, strokeWidth: 4),
                         ),
                       ),
                     ],

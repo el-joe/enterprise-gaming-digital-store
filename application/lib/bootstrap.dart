@@ -36,9 +36,13 @@ Future<void> bootstrap(
     };
 
     final env = AppEnv.fromEnvironment(expected: flavor);
-    final preferences = await PreferencesStore.open();
     const secureStore = SecureStore();
-    final signedIn = await secureStore.hasSession();
+    // The only work before the first frame: both reads run at once (M-A19). Everything else
+    // (app config, integrity, biometrics, catalog) starts from the splash after the first frame.
+    final (preferences, signedIn) = await (
+      PreferencesStore.open(),
+      secureStore.hasSession(),
+    ).wait;
 
     runApp(
       ProviderScope(

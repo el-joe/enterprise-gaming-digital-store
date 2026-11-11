@@ -1,4 +1,5 @@
 import 'package:application/core/theme/theme_extensions.dart';
+import 'package:application/core/theme/tokens/motion.dart';
 import 'package:application/core/theme/tokens/radii.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:flutter/material.dart';
@@ -114,7 +115,8 @@ class _NavTab extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                // The pill swap is instant when the platform asks for reduced motion.
+                duration: MotionTokens.resolve(context, MotionTokens.base),
                 width: 56,
                 height: 32,
                 decoration: BoxDecoration(
@@ -165,9 +167,9 @@ class _CountPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    // At least 16dp: grows with large text instead of clipping the count (M-A19).
     return Container(
-      height: 16,
-      constraints: const BoxConstraints(minWidth: 16),
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
       padding: const EdgeInsetsDirectional.symmetric(horizontal: Spacing.s1),
       alignment: Alignment.center,
       decoration: BoxDecoration(

@@ -8,6 +8,7 @@ import 'package:application/features/account/presentation/controllers/account_co
 import 'package:application/features/auth/presentation/controllers/sign_out_controller.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
 import 'package:application/shared/widgets/option_tile.dart';
 import 'package:application/shared/widgets/sheet_header.dart';
 import 'package:application/shared/widgets/status_banner.dart';
@@ -50,9 +51,18 @@ class ProfileHeader extends StatelessWidget {
                 color: colors.accentPrimary,
                 shape: BoxShape.circle,
               ),
-              child: Text(
-                header.initials,
-                style: type.headingMd.copyWith(color: colors.contentOnAccent),
+              // The 56dp avatar keeps its size; large text scales the initials down to fit.
+              child: Padding(
+                padding: const EdgeInsetsDirectional.all(Spacing.s2),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    header.initials,
+                    style: type.headingMd.copyWith(
+                      color: colors.contentOnAccent,
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: Spacing.s3),
@@ -274,7 +284,8 @@ class LanguageSheet extends ConsumerWidget {
                 if (state.applying)
                   const Padding(
                     padding: EdgeInsetsDirectional.only(bottom: Spacing.s3),
-                    child: LinearProgressIndicator(),
+                    // Still under reduced motion (M-A19).
+                    child: Center(child: BusyIndicator()),
                   ),
                 OptionTile(
                   title: l10n.languageEnglish,

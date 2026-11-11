@@ -91,7 +91,9 @@ class MaintenancePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final config = ref.watch(latestAppConfigProvider);
-    final checking = ref.watch(startupControllerProvider) is StartupChecking;
+    final checking = ref.watch(
+      startupControllerProvider.select((s) => s is StartupChecking),
+    );
     return FlowScaffold(
       body: [
         const SizedBox(height: Spacing.s16),

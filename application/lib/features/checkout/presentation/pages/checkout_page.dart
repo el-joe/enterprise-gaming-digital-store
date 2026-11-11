@@ -17,6 +17,7 @@ import 'package:application/features/checkout/presentation/controllers/checkout_
 import 'package:application/features/checkout/presentation/widgets/checkout_widgets.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
+import 'package:application/shared/widgets/fit_amount.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:application/shared/widgets/state_views.dart';
 import 'package:application/shared/widgets/status_banner.dart';
@@ -443,7 +444,8 @@ class OptionTileCompact extends StatelessWidget {
                     ? Icons.radio_button_checked
                     : Icons.radio_button_unchecked,
                 size: 20,
-                color: selected ? colors.accentPrimary : colors.lineStrong,
+                // content/muted: the unchecked ring needs 3:1 against the surface (M-A19).
+                color: selected ? colors.accentPrimary : colors.contentMuted,
               ),
               const SizedBox(width: Spacing.s2),
               Expanded(child: Text(label, style: context.type.bodyMd)),
@@ -554,10 +556,14 @@ class _Summary extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    moneyText(quote.displayTotal),
-                    textDirection: TextDirection.ltr,
-                    style: type.priceMd,
+                  const SizedBox(width: Spacing.s2),
+                  // Scales down rather than overflow at large text; never cut (M-A19).
+                  FitAmount(
+                    child: Text(
+                      moneyText(quote.displayTotal),
+                      textDirection: TextDirection.ltr,
+                      style: type.priceMd,
+                    ),
                   ),
                 ],
               ),

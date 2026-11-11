@@ -382,11 +382,13 @@ class AmountTile extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: enabled ? onTap : null,
-            child: SizedBox(
-              height: 76,
+            // 76dp at default text size; grows with large text instead of clipping (M-A19).
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 76),
               child: Padding(
                 padding: const EdgeInsetsDirectional.symmetric(
                   horizontal: Spacing.s1,
+                  vertical: Spacing.s2,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

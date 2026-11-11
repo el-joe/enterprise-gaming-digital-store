@@ -30,6 +30,9 @@ else
   echo "No ../docs/api-fixtures (app-only checkout): using the committed test/fixtures/api."
 fi
 
+echo "==> integration test fixture bundle in sync with test/fixtures/api"
+python3 tool/bundle_fixtures.py --check
+
 echo "==> no double in data models or entities"
 if grep -rnE '\bdouble\b' lib/features lib/shared/data lib/shared/domain --include='*.dart' --exclude='*.g.dart' --exclude='*.freezed.dart'; then
   echo "A feature model uses double; money and amounts must be Money/Decimal or String." >&2
@@ -37,7 +40,7 @@ if grep -rnE '\bdouble\b' lib/features lib/shared/data lib/shared/domain --inclu
 fi
 
 echo "==> format"
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test integration_test test_driver
 
 echo "==> flutter analyze"
 flutter analyze --fatal-infos
@@ -47,5 +50,8 @@ dart analyze --fatal-infos
 
 echo "==> flutter test with coverage"
 flutter test --coverage
+
+# The on-device journeys (integration_test/) need an emulator or device and are not part of this
+# gate; see README.md "Integration tests".
 
 echo "CI passed."

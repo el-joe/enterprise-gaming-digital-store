@@ -15,6 +15,7 @@ import 'package:application/features/security/presentation/widgets/security_widg
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_list_tile.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
+import 'package:application/shared/widgets/directional_icons.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:application/shared/widgets/status_banner.dart';
 import 'package:flutter/material.dart';
@@ -47,9 +48,12 @@ class SecurityPage extends ConsumerWidget {
     final l10n = context.l10n;
     final header = ref.watch(accountHeaderProvider);
     final twoFactorOn = header?.twoFactorEnabled ?? false;
-    // Keeps the disable controller alive while its sheet can be opened.
-    ref.watch(twoFactorDisableControllerProvider);
-    final devices = ref.watch(devicesControllerProvider).content.valueOrNull;
+    // Keeps the disable controller alive while its sheet can be opened, without rebuilding
+    // this page on each of its states (the sheet watches them).
+    ref.watch(twoFactorDisableControllerProvider.select((_) => true));
+    final devices = ref.watch(
+      devicesControllerProvider.select((s) => s.content.valueOrNull),
+    );
     final biometricOn = ref.watch(biometricUnlockSettingsProvider).value;
     final resetNotice =
         ref.watch(biometricResetNoticeProvider) && biometricOn == false;
@@ -121,7 +125,7 @@ class SecurityPage extends ConsumerWidget {
           AppButton(
             key: const ValueKey('security-sign-out-everywhere'),
             label: l10n.signOutEverywhere,
-            icon: Icons.logout,
+            icon: DirectionalIcons.logout,
             variant: AppButtonVariant.secondary,
             expand: true,
             loading: signingOut,

@@ -9,6 +9,7 @@ import 'package:application/features/launch/presentation/controllers/startup_con
 import 'package:application/features/launch/presentation/widgets/integrity_warning_sheet.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/brand_logo.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
 import 'package:application/shared/widgets/status_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -121,13 +122,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                   const Center(child: BrandLogo.full(height: 36)),
                   const SizedBox(height: Spacing.s16),
                   Center(
-                    child: Semantics(
-                      label: l10n.loadingLabel,
-                      child: const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
+                    child: BusyIndicator(semanticsLabel: l10n.loadingLabel),
                   ),
                   const SizedBox(height: Spacing.s3),
                   Text(

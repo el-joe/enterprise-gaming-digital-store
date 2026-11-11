@@ -6,6 +6,7 @@ import 'package:application/core/network/failure.dart';
 import 'package:application/core/router/routes.dart';
 import 'package:application/core/state/loadable.dart';
 import 'package:application/core/theme/theme_extensions.dart';
+import 'package:application/core/theme/tokens/motion.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/product/domain/entities/product.dart';
 import 'package:application/features/product/domain/variant_options.dart';
@@ -95,9 +96,7 @@ class _ProductPageState extends ConsumerState<ProductPage> {
           await Scrollable.ensureVisible(
             target,
             alignment: 0.3,
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 200),
+            duration: MotionTokens.resolve(context, MotionTokens.base),
           );
         }
         return;

@@ -118,9 +118,50 @@ class _WalletPageState extends ConsumerState<WalletPage> {
         );
       case Loaded(value: final overview):
         final lines = overview.lines;
+        final header = <Widget>[
+          if (overview.frozen) ...[
+            StatusBanner(
+              tone: BannerTone.warning,
+              title: l10n.walletFrozenTitle,
+              body: l10n.walletFrozenBody,
+            ),
+            const SizedBox(height: Spacing.s3),
+          ],
+          WalletBalanceCard(
+            wallet: overview.wallet,
+            currency: overview.currency,
+          ),
+          const SizedBox(height: Spacing.s3),
+          if (state.isEmpty)
+            EmptyState(
+              icon: Icons.receipt_long_outlined,
+              title: l10n.walletEmptyTitle,
+              body: l10n.walletEmptyBody,
+            )
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 36),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    l10n.walletStatement,
+                    style: context.type.headingSm,
+                  ),
+                ),
+              ),
+            ),
+        ];
+        final footer = <Widget>[
+          const SizedBox(height: Spacing.s3),
+          _MoreFooter(state: state, onRetry: controller.loadMore),
+        ];
+        final rows = state.isEmpty ? 0 : lines.length + footer.length;
         return RefreshIndicator(
           onRefresh: controller.refresh,
-          child: ListView(
+          // Built lazily: the statement grows page by page with infinite scroll (M-A19).
+          child: ListView.builder(
             controller: _scroll,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsetsDirectional.fromSTEB(
@@ -129,60 +170,36 @@ class _WalletPageState extends ConsumerState<WalletPage> {
               Spacing.s4,
               Spacing.s6,
             ),
-            children: [
-              if (overview.frozen) ...[
-                StatusBanner(
-                  tone: BannerTone.warning,
-                  title: l10n.walletFrozenTitle,
-                  body: l10n.walletFrozenBody,
-                ),
-                const SizedBox(height: Spacing.s3),
-              ],
-              WalletBalanceCard(
-                wallet: overview.wallet,
-                currency: overview.currency,
-              ),
-              const SizedBox(height: Spacing.s3),
-              if (state.isEmpty)
-                EmptyState(
-                  icon: Icons.receipt_long_outlined,
-                  title: l10n.walletEmptyTitle,
-                  body: l10n.walletEmptyBody,
-                )
-              else ...[
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 36),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Semantics(
-                      header: true,
-                      child: Text(
-                        l10n.walletStatement,
-                        style: context.type.headingSm,
-                      ),
-                    ),
-                  ),
-                ),
-                for (var i = 0; i < lines.length; i++) ...[
+            itemCount: header.length + rows,
+            itemBuilder: (context, index) {
+              if (index < header.length) {
+                return header[index];
+              }
+              final i = index - header.length;
+              if (i >= lines.length) {
+                return footer[i - lines.length];
+              }
+              final line = lines[i];
+              final order = line.order;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   if (i > 0)
                     Divider(height: 1, color: context.colors.lineSubtle),
                   WalletStatementRow(
-                    key: ValueKey('wallet-line-${lines[i].id}'),
-                    line: lines[i],
+                    key: ValueKey('wallet-line-${line.id}'),
+                    line: line,
                     currency: overview.currency,
-                    onOpenOrder: lines[i].order == null
+                    onOpenOrder: order == null
                         ? null
                         : () => unawaited(
-                            context.push(
-                              Routes.orderLocation(lines[i].order!.publicId),
-                            ),
+                            context.push(Routes.orderLocation(order.publicId)),
                           ),
                   ),
                 ],
-                const SizedBox(height: Spacing.s3),
-                _MoreFooter(state: state, onRetry: controller.loadMore),
-              ],
-            ],
+              );
+            },
           ),
         );
     }

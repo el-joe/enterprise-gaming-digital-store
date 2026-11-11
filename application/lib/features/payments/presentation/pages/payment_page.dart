@@ -6,6 +6,7 @@ import 'package:application/core/money/money_display.dart';
 import 'package:application/core/platform/native_bridge.dart';
 import 'package:application/core/router/routes.dart';
 import 'package:application/core/theme/theme_extensions.dart';
+import 'package:application/core/theme/tokens/motion.dart';
 import 'package:application/core/theme/tokens/radii.dart';
 import 'package:application/core/theme/tokens/semantic_colors.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
@@ -430,7 +431,7 @@ class _StatusIcon extends StatelessWidget {
                 child: Icon(view.icon, color: view.color, size: 30),
               ),
             ),
-            if (busy && !MediaQuery.disableAnimationsOf(context))
+            if (busy && !MotionTokens.reduced(context))
               SizedBox.square(
                 dimension: 68,
                 child: CircularProgressIndicator(

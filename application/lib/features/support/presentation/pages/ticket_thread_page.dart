@@ -13,6 +13,7 @@ import 'package:application/features/support/presentation/controllers/support_co
 import 'package:application/features/support/presentation/pages/support_page.dart';
 import 'package:application/features/support/presentation/widgets/support_widgets.dart';
 import 'package:application/shared/widgets/app_button.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:application/shared/widgets/skeleton.dart';
 import 'package:application/shared/widgets/state_views.dart';
@@ -335,12 +336,9 @@ class _Composer extends StatelessWidget {
                       ),
                       onPressed: sending ? null : onSend,
                       icon: sending
-                          ? SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colors.contentOnAccent,
-                              ),
+                          ? BusyIndicator(
+                              color: colors.contentOnAccent,
+                              excludeSemantics: true,
                             )
                           : const Icon(Icons.send_outlined),
                     ),

@@ -3,6 +3,7 @@
 
 Backend: Pest files under backend/tests (describe / it / test, and whether a dataset is attached).
 App:     Flutter files under application/test (group / test / testWidgets).
+On-device: application/integration_test (journeys and the frame-timing check, M-A19).
 
 Usage:  python3 tools/test_inventory.py      (writes docs/TEST_INVENTORY.md)
 """
@@ -92,6 +93,13 @@ def main() -> None:
     backend = collect(ROOT / "backend" / "tests", "*Test.php", php_entries)
     app = collect(ROOT / "application" / "test", "*_test.dart", dart_entries)
     goldens = sorted((ROOT / "application" / "test" / "goldens").rglob("*.png"))
+    # Journeys live in plain .dart files that app_test.dart calls; the generated fixture bundle
+    # holds no tests.
+    device = [
+        (f, entries)
+        for f, entries in collect(ROOT / "application" / "integration_test", "*.dart", dart_entries)
+        if not f.name.endswith(".g.dart")
+    ]
 
     lines = [
         "# Test inventory",
@@ -110,6 +118,21 @@ def main() -> None:
     ]
     lines += section("Backend (Laravel, Pest)", ROOT / "backend" / "tests", backend, 2, {"it", "test"}, "describe")
     lines += section("App (Flutter)", ROOT / "application" / "test", app, 2, {"test", "testWidgets"}, "group")
+    lines += section(
+        "App on a device (integration_test, M-A19)",
+        ROOT / "application" / "integration_test",
+        device,
+        1,
+        {"test", "testWidgets"},
+        "group",
+    )
+    lines += [
+        "The journeys are declared once each in `integration_test/journeys/` and called from "
+        "`integration_test/app_test.dart`: six in English, the purchase journey again in Arabic (7 runs). "
+        "They use the fake repositories and the contract fixtures compiled into "
+        "`integration_test/fixtures/api_fixtures.g.dart` (no backend).",
+        "",
+    ]
     lines += [
         "## App golden images",
         "",
@@ -132,6 +155,21 @@ def main() -> None:
         "```bash",
         "cd /var/www/enterprise-gaming-digital-store/application && PATH=/home/joe/flutter/bin:$PATH bash tool/ci.sh",
         "```",
+        "",
+        "Then the on-device suite (M-A19), with an Android emulator or device attached and listed by "
+        "`flutter devices`. The journeys run in debug mode on an emulator; the frame-timing budgets are "
+        "asserted only in profile mode, which needs a physical device (profile mode does not run on emulators).",
+        "",
+        "```bash",
+        "cd /var/www/enterprise-gaming-digital-store/application && PATH=/home/joe/flutter/bin:$PATH flutter test integration_test/app_test.dart --flavor dev -d <device-id>",
+        "```",
+        "",
+        "```bash",
+        "cd /var/www/enterprise-gaming-digital-store/application && PATH=/home/joe/flutter/bin:$PATH flutter drive --profile --flavor dev --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d <physical-device-id>",
+        "```",
+        "",
+        "The second command writes `build/home_scroll.timeline_summary.json` and "
+        "`build/listing_scroll.timeline_summary.json`; record the p90 build and raster times in `PROGRESS.md` (M-A19).",
         "",
     ]
     OUT.write_text("\n".join(lines), encoding="utf-8")

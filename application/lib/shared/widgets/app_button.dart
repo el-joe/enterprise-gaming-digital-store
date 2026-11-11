@@ -1,4 +1,5 @@
 import 'package:application/core/theme/theme_extensions.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
 import 'package:flutter/material.dart';
 
 /// [danger] is the destructive filled button of the M-A8 frames (sign out, turn off two-step
@@ -35,10 +36,8 @@ class AppButton extends StatelessWidget {
         ? Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+              // The label already says what is busy; the spinner adds nothing for screen readers.
+              const BusyIndicator(size: 18, excludeSemantics: true),
               const SizedBox(width: 10),
               Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
             ],

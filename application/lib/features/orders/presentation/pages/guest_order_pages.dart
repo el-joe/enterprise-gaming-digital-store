@@ -14,6 +14,7 @@ import 'package:application/features/orders/presentation/controllers/guest_order
 import 'package:application/features/orders/presentation/pages/order_detail_page.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_text_field.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
 import 'package:application/shared/widgets/countdown.dart';
 import 'package:application/shared/widgets/flow_scaffold.dart';
 import 'package:application/shared/widgets/icon_badge.dart';
@@ -133,7 +134,7 @@ class _GuestOrderPageState extends ConsumerState<GuestOrderPage> {
       case GuestStep.loading:
         return Scaffold(
           appBar: appBar,
-          body: const Center(child: CircularProgressIndicator()),
+          body: const Center(child: BusyIndicator(size: 36, strokeWidth: 4)),
         );
       case GuestStep.failed:
         return Scaffold(

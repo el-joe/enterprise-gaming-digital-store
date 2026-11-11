@@ -9,6 +9,7 @@ import 'package:application/core/theme/tokens/spacing.dart';
 import 'package:application/features/catalog/domain/entities/catalog.dart';
 import 'package:application/features/checkout/domain/entities/checkout.dart';
 import 'package:application/features/checkout/presentation/controllers/checkout_controller.dart';
+import 'package:application/shared/widgets/fit_amount.dart';
 import 'package:application/shared/widgets/option_tile.dart';
 import 'package:application/shared/widgets/sheet_header.dart';
 import 'package:application/shared/widgets/skeleton.dart';
@@ -95,7 +96,9 @@ class PaymentOptionTile extends StatelessWidget {
                       active
                           ? Icons.radio_button_checked
                           : Icons.radio_button_unchecked,
-                      color: active ? colors.accentPrimary : colors.lineStrong,
+                      color: active
+                          ? colors.accentPrimary
+                          : colors.contentMuted,
                     ),
                     const SizedBox(width: Spacing.s3),
                     Expanded(
@@ -114,20 +117,24 @@ class PaymentOptionTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: Spacing.s2),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.surfaceSunken,
-                        borderRadius: BorderRadius.circular(Radii.xs),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.symmetric(
-                          horizontal: Spacing.s2,
-                          vertical: Spacing.s1,
+                    // At large text the amount scales down instead of squeezing the name out.
+                    FitAmount(
+                      maxWidth: 160,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.surfaceSunken,
+                          borderRadius: BorderRadius.circular(Radii.xs),
                         ),
-                        child: Text(
-                          enabled ? charge : '–',
-                          textDirection: TextDirection.ltr,
-                          style: type.monoSm,
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.symmetric(
+                            horizontal: Spacing.s2,
+                            vertical: Spacing.s1,
+                          ),
+                          child: Text(
+                            enabled ? charge : '–',
+                            textDirection: TextDirection.ltr,
+                            style: type.monoSm,
+                          ),
                         ),
                       ),
                     ),

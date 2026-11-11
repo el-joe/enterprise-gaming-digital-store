@@ -14,6 +14,8 @@ import 'package:application/features/security/presentation/controllers/devices_c
 import 'package:application/features/security/presentation/widgets/security_widgets.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
+import 'package:application/shared/widgets/directional_icons.dart';
 import 'package:application/shared/widgets/flow_scaffold.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:application/shared/widgets/skeleton.dart';
@@ -156,7 +158,7 @@ class DevicesPage extends ConsumerWidget {
               AppButton(
                 key: const ValueKey('devices-sign-out-others'),
                 label: l10n.signOutOthersAction,
-                icon: Icons.logout,
+                icon: DirectionalIcons.logout,
                 variant: AppButtonVariant.secondary,
                 expand: true,
                 loading: state.signingOutOthers,
@@ -255,12 +257,7 @@ class _DeviceTile extends StatelessWidget {
               child: busy
                   ? const SizedBox.square(
                       dimension: 48,
-                      child: Center(
-                        child: SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
+                      child: Center(child: BusyIndicator()),
                     )
                   : TextButton(
                       onPressed: onSignOut,

@@ -38,9 +38,11 @@ class AppChip extends StatelessWidget {
           child: Center(
             widthFactor: 1,
             child: Container(
-              height: 36,
+              // 36dp at default text size; grows with large text instead of clipping (M-A19).
+              constraints: const BoxConstraints(minHeight: 36),
               padding: const EdgeInsetsDirectional.symmetric(
                 horizontal: Spacing.s3,
+                vertical: Spacing.s1,
               ),
               decoration: BoxDecoration(
                 color: selected ? colors.accentPrimary : colors.surfaceRaised,

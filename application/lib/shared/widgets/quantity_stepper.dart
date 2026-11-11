@@ -65,8 +65,9 @@ class QuantityStepper extends StatelessWidget {
               liveRegion: true,
               label: l10n.quantitySemantics(quantity),
               excludeSemantics: true,
-              child: SizedBox(
-                width: 32,
+              // At least 32dp wide; two-digit counts at large text widen it instead of wrapping.
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 32),
                 child: Text(
                   '$quantity',
                   textAlign: TextAlign.center,

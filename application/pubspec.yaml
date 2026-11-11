@@ -31,6 +31,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # M-A19: on-device journeys (integration_test/) and the profile-mode frame timing driver
+  # (test_driver/). Both ship with the Flutter SDK; no third-party package.
+  integration_test:
+    sdk: flutter
+  flutter_driver:
+    sdk: flutter
   flutter_lints: ^6.0.0
   build_runner: ^2.17.1
   riverpod_generator: ^4.0.10

@@ -19,8 +19,11 @@ final class ApiFixture {
 
   /// Loads `test/fixtures/api/<name>.json`, for example `catalog/products_en`.
   factory ApiFixture.load(String name) {
-    final file = File('test/fixtures/api/$name.json');
-    final json = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+    final bundled = bundle;
+    final text = bundled != null
+        ? bundled[name] ?? (throw StateError('No bundled fixture $name'))
+        : File('test/fixtures/api/$name.json').readAsStringSync();
+    final json = jsonDecode(text) as Map<String, dynamic>;
     final request = json['request'] as Map<String, dynamic>;
     return ApiFixture._(
       name,
@@ -41,6 +44,12 @@ final class ApiFixture {
     required Map<String, String> headers,
     required Object? body,
   }) => ApiFixture._(name, method, path, status, headers, body);
+
+  /// The fixtures compiled into an integration test (name -> JSON text, from
+  /// `integration_test/fixtures/api_fixtures.g.dart`). On a device or emulator the files under
+  /// `test/fixtures/api` do not exist, so the integration suite sets this before any test; widget
+  /// and unit tests leave it null and read the files.
+  static Map<String, String>? bundle;
 
   final String name;
   final String method;
@@ -67,6 +76,9 @@ final class ApiFixture {
 
   /// Every fixture name under `test/fixtures/api` (for "every fixture parses" tests).
   static List<String> all() {
+    if (bundle case final bundled?) {
+      return bundled.keys.toList()..sort();
+    }
     final root = Directory('test/fixtures/api');
     final names = <String>[];
     for (final entity in root.listSync(recursive: true)) {

@@ -13,6 +13,7 @@ import 'package:application/features/auth/presentation/controllers/sign_out_cont
 import 'package:application/features/catalog/presentation/widgets/currency_sheet.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_list_tile.dart';
+import 'package:application/shared/widgets/directional_icons.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +31,9 @@ class SettingsPage extends ConsumerWidget {
     final l10n = context.l10n;
     final colors = context.colors;
     final type = context.type;
-    final signedIn = ref.watch(sessionProvider) == SessionStatus.signedIn;
+    final signedIn = ref.watch(
+      sessionProvider.select((s) => s == SessionStatus.signedIn),
+    );
     final currency = ref.watch(displayCurrencyProvider);
     final links = ref.watch(accountLinksProvider);
     final signingOut = ref.watch(signOutControllerProvider);
@@ -129,7 +132,7 @@ class SettingsPage extends ConsumerWidget {
             AppButton(
               key: const ValueKey('settings-sign-out'),
               label: l10n.signOutAction,
-              icon: Icons.logout,
+              icon: DirectionalIcons.logout,
               variant: AppButtonVariant.danger,
               expand: true,
               loading: signingOut,

@@ -26,7 +26,9 @@ class StaticStars extends StatelessWidget {
   const StaticStars({required this.rating, this.size = 18, super.key});
 
   final int rating;
-  final double size;
+
+  /// Star size in logical pixels (`num`: feature code keeps `double` out, rule 6).
+  final num size;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,7 @@ class StaticStars extends StatelessWidget {
           for (var star = 1; star <= 5; star++)
             Icon(
               star <= rating ? Icons.star : Icons.star_border,
-              size: size,
+              size: size.toDouble(),
               color: color,
             ),
         ],

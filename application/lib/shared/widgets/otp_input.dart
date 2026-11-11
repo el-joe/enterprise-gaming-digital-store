@@ -86,10 +86,14 @@ class _OtpInputState extends State<OtpInput> {
                 ),
                 borderRadius: BorderRadius.circular(Radii.md),
               ),
+              // The square box keeps its size; large text scales the digit down to fit.
               child: Center(
-                child: Text(
-                  filled ? text[index] : '',
-                  style: context.type.headingLg,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    filled ? text[index] : '',
+                    style: context.type.headingLg,
+                  ),
                 ),
               ),
             ),

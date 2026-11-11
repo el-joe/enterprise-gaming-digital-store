@@ -1,3 +1,4 @@
+import 'package:application/core/theme/reduced_motion_transitions.dart';
 import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/radii.dart';
 import 'package:application/core/theme/tokens/semantic_colors.dart';
@@ -86,6 +87,8 @@ abstract final class AppTheme {
       dividerColor: c.lineSubtle,
       focusColor: c.focusRing,
       hoverColor: c.surfaceHover,
+      // Platform page transitions, cross-faded in place under reduced motion (M-A19).
+      pageTransitionsTheme: ReducedMotionPageTransitionsBuilder.theme(),
       appBarTheme: AppBarTheme(
         backgroundColor: c.surfaceCanvas,
         foregroundColor: c.contentPrimary,

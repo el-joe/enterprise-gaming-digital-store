@@ -111,7 +111,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
     _autoplay.update(
       slides: widget.banners.length,
       visible: _visible,
-      reduceMotion: MediaQuery.disableAnimationsOf(context),
+      reduceMotion: MotionTokens.reduced(context),
     );
   }
 

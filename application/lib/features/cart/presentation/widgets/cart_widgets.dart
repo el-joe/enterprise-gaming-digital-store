@@ -8,6 +8,7 @@ import 'package:application/features/cart/presentation/controllers/cart_controll
 import 'package:application/shared/domain/entities/cart.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_text_field.dart';
+import 'package:application/shared/widgets/fit_amount.dart';
 import 'package:application/shared/widgets/quantity_stepper.dart';
 import 'package:application/shared/widgets/skeleton.dart';
 import 'package:flutter/material.dart';
@@ -361,10 +362,12 @@ class CartTotalsCard extends StatelessWidget {
     final code = cart.coupon?.applied ?? false ? cart.coupon!.code : null;
     Widget row(String label, Widget value, {TextStyle? style}) => Padding(
       padding: const EdgeInsetsDirectional.symmetric(vertical: Spacing.s1),
+      // The amount scales down rather than overflow at large text; never cut (M-A19).
       child: Row(
         children: [
           Expanded(child: Text(label, style: style)),
-          value,
+          const SizedBox(width: Spacing.s2),
+          FitAmount(child: value),
         ],
       ),
     );

@@ -33,6 +33,20 @@ class NetworkImageBox extends ConsumerWidget {
   /// The image's `alt`; null hides the image from screen readers (the tile labels itself).
   final String? semanticLabel;
 
+  /// Decode widths are rounded up to a multiple of this (physical pixels), so tiles whose laid-out
+  /// widths differ by a few pixels (2 columns, rotation, text scale) share one decoded image in the
+  /// image cache instead of decoding the same original again (M-A19).
+  static const decodeWidthStep = 64;
+
+  /// Upper bound of a decode: no catalog slot needs more than a full-width phone image at 3x.
+  static const maxDecodeWidth = 1536;
+
+  /// The decode width for a slot [physicalWidth] pixels wide.
+  static int decodeWidthFor(double physicalWidth) {
+    final steps = (physicalWidth / decodeWidthStep).ceil().clamp(1, 1 << 20);
+    return (steps * decodeWidthStep).clamp(decodeWidthStep, maxDecodeWidth);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final source = url;
@@ -45,7 +59,7 @@ class NetworkImageBox extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.hasBoundedWidth
-            ? (constraints.maxWidth * ratio).round()
+            ? decodeWidthFor(constraints.maxWidth * ratio)
             : null;
         final provider = ResizeImage.resizeIfNeeded(
           width,

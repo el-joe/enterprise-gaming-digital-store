@@ -32,6 +32,9 @@ class MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// A non-button trailing widget (for example the onboarding step label).
   final Widget? trailing;
 
+  /// Largest text scale of the title: `heading/md` (26dp line) fits the 48dp bar up to 1.8x.
+  static const titleMaxTextScale = 1.8;
+
   @override
   Size get preferredSize => const Size.fromHeight(56);
 
@@ -74,10 +77,16 @@ class MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ? const SizedBox.shrink()
                     : Semantics(
                         header: true,
-                        child: Text(
-                          title!,
-                          style: context.type.headingMd,
-                          overflow: TextOverflow.ellipsis,
+                        // The bar is 56dp (48dp inside): above 180% the one-line title would be
+                        // cut vertically, so it stops growing there and ellipsizes (M-A19).
+                        child: MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: titleMaxTextScale,
+                          child: Text(
+                            title!,
+                            style: context.type.headingMd,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
               ),

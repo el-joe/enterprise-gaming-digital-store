@@ -14,6 +14,7 @@ import 'package:application/features/reviews/reviews_providers.dart';
 import 'package:application/features/wallet/wallet_providers.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_list_tile.dart';
+import 'package:application/shared/widgets/directional_icons.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,7 +31,9 @@ class AccountHubPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final signedIn = ref.watch(sessionProvider) == SessionStatus.signedIn;
+    final signedIn = ref.watch(
+      sessionProvider.select((s) => s == SessionStatus.signedIn),
+    );
     return Scaffold(
       appBar: MobileAppBar(
         title: l10n.accountTitle,
@@ -154,7 +157,7 @@ class _SignedInHub extends ConsumerWidget {
         AppButton(
           key: const ValueKey('account-sign-out'),
           label: l10n.signOutAction,
-          icon: Icons.logout,
+          icon: DirectionalIcons.logout,
           variant: AppButtonVariant.secondary,
           expand: true,
           loading: signingOut,

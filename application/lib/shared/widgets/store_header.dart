@@ -74,6 +74,11 @@ class StoreHeader extends ConsumerWidget {
                   style: TextButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     foregroundColor: colors.contentPrimary,
+                    // No vertical padding: the 48dp minimum centres the code, and at 200% text
+                    // it still fits the 56dp header instead of being cut (M-A19).
+                    padding: const EdgeInsetsDirectional.symmetric(
+                      horizontal: Spacing.s5,
+                    ),
                   ),
                   child: Text(code, style: context.type.labelMd),
                 ),
@@ -152,8 +157,9 @@ class SearchFieldButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(Radii.md),
-          child: SizedBox(
-            height: 48,
+          // 48dp at default text size; grows with large text instead of cutting the hint.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
             child: Padding(
               padding: const EdgeInsetsDirectional.symmetric(
                 horizontal: Spacing.s3,

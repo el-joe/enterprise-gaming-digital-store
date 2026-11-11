@@ -2317,17 +2317,18 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ## App (Flutter)
 
-68 files, 864 declared test cases.
+74 files, 885 declared test cases.
 
 | Area | Files | Declared cases |
 |---|---:|---:|
+| `accessibility` | 4 | 12 |
 | `core/config` | 2 | 5 |
 | `core/money` | 1 | 16 |
 | `core/network` | 8 | 61 |
 | `core/router` | 3 | 26 |
 | `core/security` | 2 | 10 |
 | `core/storage` | 2 | 7 |
-| `core/theme` | 1 | 6 |
+| `core/theme` | 2 | 11 |
 | `core/utils` | 2 | 6 |
 | `features` | 5 | 54 |
 | `features/account` | 2 | 38 |
@@ -2343,6 +2344,43 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 | `features/usecases` | 3 | 25 |
 | `features/wallet` | 2 | 42 |
 | `goldens` | 9 | 126 |
+| `shared` | 1 | 4 |
+
+### `accessibility`
+
+<details><summary><code>application/test/accessibility/reduced_motion_test.dart</code> (6)</summary>
+
+  - motion tokens resolve to zero
+  - a pushed page cross-fades in place, no slide or zoom
+  - busy indicators are still
+  - a payment still being confirmed shows no spinner
+  - without reduced motion the spinner runs
+  - revealing announces "Code shown" once; hiding announces it
+
+</details>
+
+<details><summary><code>application/test/accessibility/semantics_guidelines_test.dart</code> (1)</summary>
+
+- **guidelines ($lang)**
+  - $screen: tap targets, labels and text contrast
+
+</details>
+
+<details><summary><code>application/test/accessibility/text_scale_test.dart</code> (2)</summary>
+
+- **200% text ($lang)**
+  - $screen has no overflow or cut text
+  - the app bar title stops growing at 180% and stays one line
+
+</details>
+
+<details><summary><code>application/test/accessibility/traversal_order_test.dart</code> (3)</summary>
+
+  - checkout: country, payment options, terms, summary, pay ($lang)
+  - product: title, options, field, reviews, price, add ($lang)
+  - code reveal: code, reveal, then copy and hide ($lang)
+
+</details>
 
 ### `core/config`
 
@@ -2583,6 +2621,19 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 </details>
 
 ### `core/theme`
+
+<details><summary><code>application/test/core/theme/contrast_test.dart</code> (5)</summary>
+
+- **text on every surface reaches 4.5:1**
+  - ${text.key} on ${surface.key}
+- **tinted pairs reach 4.5:1**
+  - primary text on field $field
+- **state indicators reach 3:1 (WCAG 1.4.11)**
+  - focus ring on ${surface.key}
+  - selected volt on ${surface.key}
+  - unchecked radio (content/muted) on ${surface.key}
+
+</details>
 
 <details><summary><code>application/test/core/theme/tokens_test.dart</code> (6)</summary>
 
@@ -3721,6 +3772,92 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 </details>
 
+### `shared`
+
+<details><summary><code>application/test/shared/performance_widgets_test.dart</code> (4)</summary>
+
+- **NetworkImageBox decode width**
+  - rounds up to 64 px steps so similar slots share a decode
+  - never decodes wider than a full-width 3x phone image
+- **FitAmount**
+  - keeps its natural size at the default text size
+  - scales down at 200% instead of overflowing
+
+</details>
+
+## App on a device (integration_test, M-A19)
+
+9 files, 8 declared test cases.
+
+| Area | Files | Declared cases |
+|---|---:|---:|
+| `(root)` | 2 | 2 |
+| `helpers` | 1 | 0 |
+| `journeys` | 6 | 6 |
+
+### `(root)`
+
+<details><summary><code>application/integration_test/app_test.dart</code> (0)</summary>
+
+- **EN journeys**
+- **AR journey (RTL)**
+
+</details>
+
+<details><summary><code>application/integration_test/perf_test.dart</code> (2)</summary>
+
+  - home scrolls within the frame budget
+  - a 200-product listing scrolls within the frame budget
+
+</details>
+
+### `helpers`
+
+<details><summary><code>application/integration_test/helpers/journey.dart</code> (0)</summary>
+
+
+</details>
+
+### `journeys`
+
+<details><summary><code>application/integration_test/journeys/auth_journey.dart</code> (1)</summary>
+
+  - launch, onboarding, sign in with two-step verification ($lang)
+
+</details>
+
+<details><summary><code>application/integration_test/journeys/notifications_journey.dart</code> (1)</summary>
+
+  - notifications: open the targets ($lang)
+
+</details>
+
+<details><summary><code>application/integration_test/journeys/reveal_journey.dart</code> (1)</summary>
+
+  - orders, reveal with re-auth, auto-hide ($lang)
+
+</details>
+
+<details><summary><code>application/integration_test/journeys/security_journey.dart</code> (1)</summary>
+
+  - account, security, turn on two-step, recovery codes ($lang)
+
+</details>
+
+<details><summary><code>application/integration_test/journeys/shopping_journey.dart</code> (1)</summary>
+
+  - browse, add to cart, check out, pay, paid result ($lang)
+
+</details>
+
+<details><summary><code>application/integration_test/journeys/support_journey.dart</code> (1)</summary>
+
+  - support: create a request, then reply ($lang)
+
+</details>
+
+The journeys are declared once each in `integration_test/journeys/` and called from `integration_test/app_test.dart`: six in English, the purchase journey again in Arabic (7 runs). They use the fake repositories and the contract fixtures compiled into `integration_test/fixtures/api_fixtures.g.dart` (no backend).
+
 ## App golden images
 
 236 committed reference images under `application/test/goldens/`. Goldens written after the no-run rule have no image yet; the final run creates them with `--update-goldens`, and each new image must be reviewed before it is committed.
@@ -3740,3 +3877,15 @@ cd /var/www/enterprise-gaming-digital-store/application && PATH=/home/joe/flutte
 ```bash
 cd /var/www/enterprise-gaming-digital-store/application && PATH=/home/joe/flutter/bin:$PATH bash tool/ci.sh
 ```
+
+Then the on-device suite (M-A19), with an Android emulator or device attached and listed by `flutter devices`. The journeys run in debug mode on an emulator; the frame-timing budgets are asserted only in profile mode, which needs a physical device (profile mode does not run on emulators).
+
+```bash
+cd /var/www/enterprise-gaming-digital-store/application && PATH=/home/joe/flutter/bin:$PATH flutter test integration_test/app_test.dart --flavor dev -d <device-id>
+```
+
+```bash
+cd /var/www/enterprise-gaming-digital-store/application && PATH=/home/joe/flutter/bin:$PATH flutter drive --profile --flavor dev --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart -d <physical-device-id>
+```
+
+The second command writes `build/home_scroll.timeline_summary.json` and `build/listing_scroll.timeline_summary.json`; record the p90 build and raster times in `PROGRESS.md` (M-A19).

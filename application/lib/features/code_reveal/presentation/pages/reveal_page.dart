@@ -15,6 +15,7 @@ import 'package:application/features/code_reveal/presentation/widgets/reauth_she
 import 'package:application/features/code_reveal/presentation/widgets/reveal_card.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/app_snackbar.dart';
+import 'package:application/shared/widgets/busy_indicator.dart';
 import 'package:application/shared/widgets/mobile_app_bar.dart';
 import 'package:application/shared/widgets/state_views.dart';
 import 'package:application/shared/widgets/status_banner.dart';
@@ -129,6 +130,10 @@ class _RevealPageState extends ConsumerState<RevealPage> {
           tone: SnackbarTone.danger,
         );
       }
+      // Shown: one announcement (the code itself is read only on "Read code aloud").
+      if (previous?.code == null && next.code != null) {
+        _announce(l10n.revealShownSemantics);
+      }
       if (next.hideCount > (previous?.hideCount ?? 0)) {
         _announce(
           next.lastHide == RevealHideReason.timeout
@@ -197,7 +202,7 @@ class _RevealPageState extends ConsumerState<RevealPage> {
     ];
 
     final Widget body = switch (state.unit) {
-      Loading() => const Center(child: CircularProgressIndicator()),
+      Loading() => const Center(child: BusyIndicator(size: 36, strokeWidth: 4)),
       Failed(failure: NotFoundFailure()) => Center(
         child: SingleChildScrollView(
           child: EmptyState(
