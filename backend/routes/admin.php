@@ -1,5 +1,6 @@
 <?php
 
+use App\DataTables\AdminTables;
 use App\Http\Controllers\Admin\Affiliates\AffiliateController;
 use App\Http\Controllers\Admin\Automation\AutomationCredentialController;
 use App\Http\Controllers\Admin\Catalog\AttributeDefinitionController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Admin\Fulfillment\ManualTaskController;
 use App\Http\Controllers\Admin\Fulfillment\OrderFulfilmentController;
 use App\Http\Controllers\Admin\Mcp\McpActionController;
 use App\Http\Controllers\Admin\Mcp\McpTokenController;
+use App\Http\Controllers\Admin\Payments\PaymentGatewayController;
 use App\Http\Controllers\Admin\Payments\RefundController;
 use App\Http\Controllers\Admin\Pricing\PriceSimulationController;
 use App\Http\Controllers\Admin\Pricing\PricingRuleController;
@@ -41,6 +43,8 @@ use App\Http\Controllers\Admin\Suppliers\SupplierController;
 use App\Http\Controllers\Admin\Suppliers\SupplierMappingController;
 use App\Http\Controllers\Admin\Support\RefundRequestController;
 use App\Http\Controllers\Admin\Support\SupportTicketController;
+use App\Http\Controllers\Admin\Tables\BulkActionController;
+use App\Http\Controllers\Admin\Tables\TableController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/me', [SessionController::class, 'show'])->name('me');
@@ -146,6 +150,7 @@ Route::middleware('permission:mappings.manage')->group(static function (): void 
 // Fulfilment (M8, M9)
 Route::get('orders/{order}/timeline', [OrderFulfilmentController::class, 'timeline'])->middleware('permission:orders.view')->name('orders.timeline');
 Route::post('orders/{order}/review', [OrderFulfilmentController::class, 'review'])->middleware('permission:orders.review')->name('orders.review');
+Route::post('orders/{order}/reject', [OrderFulfilmentController::class, 'reject'])->middleware('permission:orders.review')->name('orders.reject');
 Route::post('orders/{order}/retry-verified-unit', [OrderFulfilmentController::class, 'retryVerifiedUnit'])->middleware('permission:orders.review')->name('orders.retry-verified-unit');
 Route::post('orders/{order}/reconcile', [OrderFulfilmentController::class, 'reconcile'])->middleware(['permission:orders.reconcile', 'throttle:12,1'])->name('orders.reconcile');
 Route::post('transactions/{transaction}/mark-not-accepted', [OrderFulfilmentController::class, 'markNotAccepted'])->middleware('permission:orders.reconcile')->name('transactions.mark-not-accepted');
@@ -219,3 +224,27 @@ Route::middleware('permission:mcp_actions.approve')->group(static function (): v
     Route::post('mcp-actions/{mcpAction:public_id}/approve', [McpActionController::class, 'approve'])->name('mcp-actions.approve');
     Route::post('mcp-actions/{mcpAction:public_id}/reject', [McpActionController::class, 'reject'])->name('mcp-actions.reject');
 });
+
+// Payment gateways and reconciliation (M14). Credentials are write-only (E permission).
+Route::patch('payment-gateways/{gateway}', [PaymentGatewayController::class, 'update'])->middleware('permission:payments.manage')->name('payment-gateways.update');
+Route::post('payment-gateways/{gateway}/credentials', [PaymentGatewayController::class, 'credentials'])->middleware(['permission:payments.credentials', 'throttle:10,1'])->name('payment-gateways.credentials');
+Route::patch('payment-eligibility-rules/{rule}', [PaymentGatewayController::class, 'toggleRule'])->middleware('permission:payments.manage')->name('payment-eligibility-rules.update');
+Route::post('payments/reconcile', [PaymentGatewayController::class, 'reconcile'])->middleware(['permission:payments.manage', 'throttle:6,1'])->name('payments.reconcile');
+Route::post('reconciliation-items/{item}/resolve', [PaymentGatewayController::class, 'resolveItem'])->middleware('permission:payments.manage')->name('reconciliation-items.resolve');
+
+// Admin tables (M14): server-side data, layout, saved filters and queued exports, each table
+// behind its own permission. The table is chosen by the route, never by input.
+foreach (AdminTables::all() as $key => $table) {
+    Route::middleware('permission:'.$table::permission())->prefix("tables/{$key}")->name("tables.{$key}.")->group(static function (): void {
+        Route::post('/', [TableController::class, 'data'])->name('data');
+        Route::put('state', [TableController::class, 'saveState'])->name('state');
+        Route::post('saved-filters', [TableController::class, 'storeSavedFilter'])->name('saved-filters.store');
+        Route::delete('saved-filters/{savedFilter}', [TableController::class, 'destroySavedFilter'])->whereNumber('savedFilter')->name('saved-filters.destroy');
+        Route::post('exports', [TableController::class, 'storeExport'])->middleware('throttle:10,1')->name('exports.store');
+        Route::get('exports/{exportJob}', [TableController::class, 'showExport'])->whereNumber('exportJob')->name('exports.show');
+        Route::get('exports/{exportJob}/download', [TableController::class, 'downloadExport'])->whereNumber('exportJob')->name('exports.download');
+    });
+}
+Route::post('tables/orders/bulk/reconcile', [BulkActionController::class, 'reconcileOrders'])->middleware(['permission:orders.reconcile', 'throttle:6,1'])->name('tables.orders.bulk.reconcile');
+Route::post('tables/reconciliation/bulk/resolve', [BulkActionController::class, 'resolveReconciliation'])->middleware('permission:payments.manage')->name('tables.reconciliation.bulk.resolve');
+Route::post('tables/reconciliation/bulk/ignore', [BulkActionController::class, 'ignoreReconciliation'])->middleware('permission:payments.manage')->name('tables.reconciliation.bulk.ignore');

@@ -102,6 +102,7 @@ use App\Domains\Seo\Models\NotFoundLog;
 use App\Domains\Seo\Models\Redirect;
 use App\Domains\Seo\Models\SeoMetadata;
 use App\Domains\Seo\Models\SeoTemplate;
+use App\Domains\Settings\Models\AdminTableState;
 use App\Domains\Settings\Models\ExportJob;
 use App\Domains\Settings\Models\SavedFilter;
 use App\Domains\Settings\Models\Setting;
@@ -135,6 +136,7 @@ final class MorphMap
     {
         return [
             'user' => User::class,
+            'admin_table_state' => AdminTableState::class,
             'affiliate' => Affiliate::class,
             'affiliate_commission' => AffiliateCommission::class,
             'affiliate_payout' => AffiliatePayout::class,

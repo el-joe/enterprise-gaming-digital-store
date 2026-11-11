@@ -19,7 +19,7 @@ const images = readdirSync('resources/assets/images', { recursive: true })
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', ...images],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin.js', ...images],
             refresh: true,
             fonts: [
                 google('Changa', {

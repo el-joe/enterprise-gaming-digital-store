@@ -106,12 +106,23 @@ export async function busy(button, task) {
     }
 }
 
-/** Plain object of a form's named controls (checkbox: boolean; radio: the checked one; `a[b]` nested). */
+/** Plain object of a form's named controls (checkbox: boolean; radio: the checked one; `a[b]` nested; `a[]` a list of the checked values, M14). */
 export function formValues(form) {
     const values = {};
 
     form.querySelectorAll('input[name], select[name], textarea[name]').forEach((field) => {
         if (field.type === 'submit' || field.disabled || (field.type === 'radio' && !field.checked)) {
+            return;
+        }
+
+        if (field.name.endsWith('[]')) {
+            const key = field.name.slice(0, -2);
+            values[key] ??= [];
+
+            if (!['checkbox', 'radio'].includes(field.type) || field.checked) {
+                values[key].push(field.value);
+            }
+
             return;
         }
 

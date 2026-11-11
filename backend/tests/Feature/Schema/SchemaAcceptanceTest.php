@@ -37,6 +37,7 @@ it('has every table in section 17 of the database design', function (string $tab
 
 it('creates exactly the tables in the design', function (): void {
     $expected = [
+        'admin_table_states',
         'affiliate_commissions',
         'affiliate_payouts',
         'affiliate_referrals',

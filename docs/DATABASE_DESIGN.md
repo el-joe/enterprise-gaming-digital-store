@@ -1618,6 +1618,10 @@ Group `app` (M-A4, public, never encrypted; published by `GET /api/v1/app/config
 
 Columns: user_id fk cascade NN, table_key str(64) NN, name str(120) NN, payload json NN, is_default bool NN default false. Unique: `uq_sf` (user_id, table_key, name).
 
+### admin_table_states (M14)
+
+Columns: user_id fk cascade NN, table_key str(64) NN, hidden_columns json Y (column keys), page_length smallint unsigned Y. Unique: `uq_ats` (user_id, table_key). The staff member's current layout of an admin table; saved filter sets stay in `saved_filters` (payload `{ search, filters, order, hidden_columns }`, values checked against the table's declared filters).
+
 ### export_jobs
 
 Columns: user_id fk NN, table_key str(64) NN, filters json Y, status enum NN (`pending`,`running`,`completed`,`failed`), media_path str(500) Y, row_count int unsigned Y, expires_at ts Y, error str(255) Y. Index (user_id, created_at).
@@ -1833,7 +1837,7 @@ Timestamps are assigned at creation in this order. Each group depends only on ea
 | G0 (exists) | `users`, `password_reset_tokens`, `sessions`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs` |
 | G1 Reference | `currencies`, `countries`, `regions`, `region_country` |
 | G2 Identity | alter `users` (adds columns and FKs to `countries`, `currencies`), Spatie tables, `service_accounts`, `personal_access_tokens`, `notifications`, `customer_profiles`, `customer_notes`, `customer_consents`, `notification_preferences`, `otp_challenges` |
-| G3 Media and settings | `media`, `settings`, `saved_filters`, `export_jobs`, `audit_logs`, `security_events`, `scheduled_task_runs`, `notification_templates` |
+| G3 Media and settings | `media`, `settings`, `saved_filters`, `admin_table_states` (M14), `export_jobs`, `audit_logs`, `security_events`, `scheduled_task_runs`, `notification_templates` |
 | G4 Catalog | `gaming_platforms`, `categories`, `products`, `category_product`, `product_variants`, `product_regions`, `product_country_restrictions`, `product_images`, `attribute_definitions`, `product_attribute_values`, `delivery_field_definitions`, `product_delivery_fields`, `product_relations`, `wishlist_items`, `content_translations`, `search_documents`, `search_queries` |
 | G5 CMS and SEO | `seo_metadata`, `seo_templates`, `redirects`, `not_found_logs`, `pages`, `blog_categories`, `blog_posts`, `faq_groups`, `faqs`, `menus`, `menu_items`, `homepage_sections`, `homepage_section_items`, `banners`, `newsletter_subscribers` |
 | G6 Currency and pricing | `exchange_rates`, `exchange_rate_history`, `pricing_rules`, `variant_prices`, `pricing_overrides_log` |

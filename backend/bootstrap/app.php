@@ -7,6 +7,7 @@ use App\Http\Middleware\Account\EnsureAccountActive;
 use App\Http\Middleware\Admin\EnforceIdleTimeout;
 use App\Http\Middleware\Admin\EnsureStaff;
 use App\Http\Middleware\Admin\EnsureTwoFactor;
+use App\Http\Middleware\Admin\SetAdminLocale;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\Automation\AuthenticateAutomationRequest;
 use App\Http\Middleware\Automation\RecordAutomationCall;
@@ -40,6 +41,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('account')->prefix('api/v1/account')->name('account.')->group(base_path('routes/account.php'));
             Route::middleware(['api', 'mobile.account'])->prefix('api/v1/mobile/account')->name('mobile.account.')->group(base_path('routes/account.php'));
             Route::middleware('admin')->prefix('admin/api')->name('admin.api.')->group(base_path('routes/admin.php'));
+            // M14: admin pages (Blade). Reads only; changes go through /admin/api.
+            Route::middleware('admin.web')->prefix('admin')->name('admin.')->group(base_path('routes/admin_pages.php'));
             Route::middleware(['web', 'locale'])->prefix('api/v1')->name('api.v1.')->group(base_path('routes/checkout.php'));
             Route::middleware('web')->prefix('api/v1')->name('api.v1.')->group(base_path('routes/affiliates.php'));
             Route::middleware(['api', AuthenticateOptionalCustomerToken::class])->prefix('api/v1/mobile')->name('mobile.')->group(base_path('routes/checkout.php'));
@@ -80,6 +83,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'locale' => SetLocaleFromRequest::class,
             'cache.public' => PublicCacheHeaders::class,
             'storefront.locale' => SetStorefrontLocale::class,
+            'admin.locale' => SetAdminLocale::class,
         ]);
 
         $middleware->appendToGroup('api', SetLocaleFromRequest::class);
@@ -87,8 +91,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('account', ['web', 'auth', 'account.active', 'locale']);
         // M12: storefront pages (Blade): session, CSRF and the Content Security Policy nonce.
         $middleware->group('storefront', ['web', ContentSecurityPolicy::class]);
-        $middleware->redirectGuestsTo(fn (Request $request): string => LocalizedRoutes::url('storefront.login', locale: LocalizedRoutes::localeOfPath($request->path())));
-        $middleware->group('admin', ['web', 'auth', 'staff', 'two_factor', 'admin.idle', 'throttle:admin']);
+        $middleware->redirectGuestsTo(fn (Request $request): string => $request->is('admin', 'admin/*')
+            ? route('admin.login')
+            : LocalizedRoutes::url('storefront.login', locale: LocalizedRoutes::localeOfPath($request->path())));
+        // M14: admin pages: session, CSRF, the nonce CSP and the admin language.
+        $middleware->group('admin.web', ['web', ContentSecurityPolicy::class, 'admin.locale']);
+        $middleware->group('admin', ['web', 'auth', 'staff', 'two_factor', 'admin.idle', 'throttle:admin', 'locale']);
         $middleware->group('mcp', [RecordMcpCall::class, AuthenticateMcpToken::class, 'throttle:mcp']);
         $middleware->group('mobile.customer', ['auth:sanctum', EnsureCustomerToken::class, 'account.active', 'throttle:account']);
         // M-A3: the account routes for bearer clients; routes/account.php sets its own limiters.

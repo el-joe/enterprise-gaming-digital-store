@@ -52,6 +52,20 @@
         'external' => '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
         'settings' => '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
         'pencil' => '<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+        // M14 admin icons
+        'plug' => '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8ZM12 17v4"/>',
+        'percent' => '<path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+        'file' => '<path d="M6 3h9l4 4v14H6V3Z"/><path d="M9 11h7M9 15h7M9 7h3"/>',
+        'sliders' => '<path d="M5 4v16M12 4v16M19 4v16"/><path d="M3 9h4M10 15h4M17 7h4"/>',
+        'refresh' => '<path d="M20 11a8 8 0 0 0-14.7-4.3L4 8M4 4v4h4M4 13a8 8 0 0 0 14.7 4.3L20 16M20 20v-4h-4"/>',
+        'download' => '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+        'columns' => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/>',
+        'bookmark' => '<path d="M6 3h12v18l-6-4-6 4V3Z"/>',
+        'activity' => '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+        'calendar' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+        'panel' => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+        'print' => '<path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7v-7Z"/>',
+        'help' => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/>',
     ];
     $mirrored = in_array($name, ['arrow', 'chevron-forward', 'chevron-back', 'logout', 'send', 'chat'], true);
 @endphp

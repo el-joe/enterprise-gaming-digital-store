@@ -21,7 +21,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M12 | Storefront | Complete (Blade pages EN/AR; web checkout requires sign-in by owner decision 4, flag `storefront.guest_checkout`; payments mocked only; newsletter, wishlist and account area not built) |
 | OD-1 | Owner decisions, backend (`OWNER_DECISIONS.md` 1, 3, 4, 5, 6) | Complete (2026-11-11, not committed; Flutter only DTO fields and fixtures) |
 | M13 | Customer account | Complete (2026-11-11, not committed; every spec section 9 module in EN/AR including wishlist; ticket attachments not built, no API) |
-| M14 | Admin core | Not started |
+| M14 | Admin core | Complete (2026-11-11, not committed; layout, dashboard, DataTables base, orders, suppliers and payments in EN/AR; M15 sections hidden until built) |
 | M15 | Admin remaining | Not started |
 | M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
 | M17 | n8n workflows | Complete (run before M14 and BD9 by PM decision; Laravel automation API, outbox and heartbeats built and tested; 58 workflows authored and validated, **not executed**: n8n is not installed here; admin screen is M15) |
@@ -1036,6 +1036,110 @@ Email verification banner with "send the link again" on every account page while
 ### Next milestone
 
 M14: Admin core.
+
+---
+
+## M14: Admin core
+
+Date completed: 2026-11-11
+Completed by: Senior Laravel full-stack developer, alone and in sequence. Not committed.
+
+### Summary of completed work
+
+The admin panel core as server-rendered Blade with Tailwind 4 and plain JavaScript modules through Vite (no Livewire), in English (LTR) and Arabic (RTL), from the approved Figma file `JkUUSR3WGBYC9ewy2qRFQO` (Admin page 2:6, Phase 1 and Phase 2 rows; RTL page 2:7 "RTL Admin Order"), in the **Admin Light** theme mode (the semantic tokens rebound under `[data-theme=admin-light]`), with the logo on its dark chip and the mark in the collapsed rail. Pages only read; every change goes through `/admin/api` JSON routes with CSRF, a named permission and an audit entry, and envelope errors show beside the fields. Tables are server-side through Yajra DataTables 13.3.1 with the `datatables.net` 3.1.5 front end (no jQuery). Money is only printed from server-formatted strings (`CurrencyConverter::present`).
+
+### Pages and routes
+
+`routes/admin_pages.php` (group `admin.web`: session, CSRF, nonce CSP, admin language; names `admin.*`). Guests go to `/admin/login`; staff without two-step verification are sent to `/admin/two-factor/setup`; a session that never passed the challenge is signed out (`two_factor:redirect`); customers get 403.
+
+| Page | URL | Permission | Notes |
+|---|---|---|---|
+| Sign in, challenge, 2FA setup | `/admin/login`, `/admin/two-factor`, `/admin/two-factor/setup` (+ `/qr`) | none / staff | Post to the existing `/login`, `/two-factor-challenge` and account two-factor routes; recovery codes shown once |
+| Language | `POST /admin/locale` | none | Session choice, else the staff member's locale; returns to the admin page it came from |
+| Home | `/admin` | any section | Redirects to the first permitted screen; 403 when none |
+| Dashboard | `/admin/dashboard?days=7\|30\|90` | `dashboard.view` | KPIs with change against the previous window and sparklines (net revenue, orders placed, new customers, net profit with `reports.profit`, open orders with "stuck over 1 hour", failed payments), revenue and profit bar charts (server-drawn SVG, values table), supplier balances (`suppliers.view`), gateway success (`payments.view`), top products, recent orders (`orders.view`). Revenue, profit and top products reuse the M16 analytics readers (`order_item_financials`) |
+| Orders | `/admin/orders` (`?q=` from the top-bar search) | `orders.view` | Table, filters, saved filters, export, bulk "check supplier status" |
+| Order detail | `/admin/orders/{public_id}` | `orders.view` | `no-store`. Reconciliation panel (check now, retry locked while ambiguous), manual review approve and reject with reason, purchased units (masked code only), fulfilment attempts with "mark verified not accepted" (reason and evidence), payments, refunds with a refund form (units, reason, destination, note), append-only timeline, payment snapshot (display, payment amount and currency, base, rate), customer (email masked without `customers.view_pii`), risk assessment. Each action shown only to its permission and confirmed in a dialog |
+| Suppliers | `/admin/suppliers` | `suppliers.view` | Summary (pending verification, lowest balance, below alert level), table, "labelled until verified" note |
+| Supplier detail | `/admin/suppliers/{id}` | `suppliers.view` | Capability matrix of every adapter (current supplier highlighted), health and circuit breaker, balance, alert level, per-request cap, recent health checks, test connection (`suppliers.manage`), sync catalog and prices (`suppliers.sync`), settings form (status, priority, fallback, fallback supplier, low balance alert; `suppliers.manage`), credentials as configured or not per mode with a replace form (`suppliers.credentials`), sync history, mappings table, API logs table (`suppliers.logs`) |
+| Payments | `/admin/payments` (gateways), `/gateways/{id}`, `/transactions`, `/webhooks`, `/refunds`, `/disputes`, `/reconciliation` | `payments.view`; webhooks `payments.webhook_logs`; refunds `refunds.view` | Tabs shown per permission. Gateway cards: status, mode, charge currency (OD-1), credentials state, currencies, active rules, "awaiting sandbox verification". Gateway page: status and mode form (`payments.manage`), write-only credentials (`payments.credentials`), currencies, eligibility rules with enable/disable (`payments.manage`). "Reconcile now" (`payments.manage`). One server-side table per tab |
+
+### DataTables base
+
+- `app/DataTables/AdminDataTable` and one class per table (`Orders/OrdersDataTable`, `Suppliers/{SuppliersDataTable,SupplierApiLogsDataTable,SupplierMappingsDataTable}`, `Payments/{PaymentsDataTable,WebhooksDataTable,RefundsDataTable,DisputesDataTable,ReconciliationItemsDataTable}`), registered in `AdminTables`; `routes/admin.php` registers data, layout, saved filter and export routes per table with the table's permission.
+- The client never names a database column: columns, sort expressions (at most three), prefix search columns and filter options are declared in the class; the request is replaced by that allow-list before Yajra reads it, page length is one of 10/25/50/100, and only declared columns plus `DT_RowId` leave the server (`only`). HTML cells come from `Cell` (escaped parts); everything else is escaped by Yajra. Filters and search run in Yajra's filter callback (`recordsTotal` is the scope, `recordsFiltered` the result); context filters (the supplier of a nested table) narrow the scope and are required.
+- `resources/js/admin/table.js`: DataTables 3 with an `ajax` function over the existing `http.js` helper (CSRF, envelope errors), Tailwind theme in `app.css`, debounced search, filters, numbered pager, page length, column visibility, row selection and bulk bar, saved filters (apply, save with "open with these filters", delete), CSV/XLSX export with status polling and automatic download, skeleton while loading, empty state with "clear filters", RTL pager arrows.
+- Layout and saved filters per staff member: `admin_table_states` (new) and `saved_filters` (existing), through `AdminTablePreferences` (audited).
+- Exports: `export_jobs` row, queued `ExportAdminTable` job, `AdminTableExporter` with in-house `CsvTableWriter` (BOM) and `XlsxTableWriter` (ZipArchive, inline strings), formula cells neutralised, 50 000 row cap, private disk, 24-hour expiry, owner-only download re-checked against the table permission, request and download audited.
+
+### Form and error modules
+
+`admin/form.js` (JSON forms: method, confirm dialog, nullable and list fields, envelope errors beside fields with `[data-error-for]` dot keys, form-level alert), `admin/action.js` (one-click actions with the confirmation dialog, optional written reason sent to the audit log), `admin/dialog.js` (native `<dialog>` in the layout, danger tone, reason field with minimum length), `admin/shell.js` (collapsible rail remembered in this browser only, mobile drawer, sign out). `lib/forms.js` `formValues` now reads `name[]` checkboxes as a list (used by the refund unit choice).
+
+### Files created
+
+- Routes: `routes/admin_pages.php`; additions in `routes/admin.php` (tables, exports, saved filters, state, bulk actions, order reject, gateway update and credentials, eligibility rule toggle, payments reconcile, reconciliation resolve).
+- PHP: `app/DataTables/*` (base, `Column`, `Filter`, `Cell`, `AdminTables`, `Payments/PaymentReference`, nine tables); `app/Http/Controllers/Admin/Pages/{AuthPageController,HomeController,LocaleController,DashboardController,OrderPageController,SupplierPageController,PaymentPageController}`, `Admin/Tables/{TableController,BulkActionController}`, `Admin/Payments/PaymentGatewayController`; requests `Admin/Tables/{AdminTableRequest,TableViewRules,SaveTableStateRequest,SaveFilterRequest,ExportTableRequest,BulkIdsRequest}`, `Admin/Pages/{SwitchLocaleRequest,DashboardRequest}`, `Admin/Fulfillment/RejectOrderRequest`, `Admin/Payments/{UpdateGatewayRequest,SetGatewayCredentialsRequest,ToggleRuleRequest,ResolveReconciliationRequest}`; `app/Http/Support/{AdminNavigation,AdminTablePage}`; `app/Http/Middleware/Admin/SetAdminLocale`; `app/View/Composers/AdminLayoutComposer`; domain `Analytics/{Repositories/AdminDashboardRepository,Services/AdminDashboardService}`, `Orders/Services/AdminOrderReader`, `Suppliers/Services/SupplierOverview`, `Payments/Services/PaymentGatewayAdminService`, `Settings/{Models/AdminTableState,Services/AdminTablePreferences,Services/AdminTableExporter,Services/Export/*,Jobs/ExportAdminTable}`; `config/admin.php` (navigation, payment tabs, credential fields per adapter, table limits, badge tones); factory `Settings/AdminTableStateFactory`.
+- Views: `layouts/{admin,admin-auth}`, `components/admin/{badge,status,card,crumb,field,form-alerts,kpi,table}`, `admin/{dashboard,auth/*,orders/*,suppliers/*,payments/*,partials/bar-chart}`.
+- Front end: `resources/js/admin.js` (entry), `resources/js/admin/{table,form,action,dialog,shell}.js`; Admin Light tokens and admin utilities in `resources/css/app.css`; 13 icons added to `components/store/icon`.
+- Translations: `lang/en/admin.php`, `lang/ar/admin.php` (same keys, tested); admin field names in `lang/ar/validation.php`.
+- Tests: `tests/Feature/Admin/{AdminAccessTest,AdminTablesTest,AdminTableExportAndPreferencesTest,AdminOrderPagesTest,AdminSupplierAndPaymentPagesTest}.php`, `tests/Support/AdminFixtures.php`.
+
+### Files changed
+
+- `bootstrap/app.php` (admin page group, `admin.locale` alias, admin guest redirect, `locale` on the admin API group), `EnsureTwoFactor` (`redirect` mode for pages; JSON unchanged), `StorefrontServiceProvider` (admin composer), `vite.config.js` (admin entry), `package.json` / `package-lock.json` (`datatables.net` 3.1.5 exact, npm).
+- `FulfilmentAdminService::reject` and `::reconcileMany`, `OrderFulfilmentController::reject`, `RefundService` (staff refunds audited `refunds.created`), `MorphMap` (`admin_table_state`).
+- Tests changed (adaptation, not weakening): `Schema/SchemaAcceptanceTest` lists the new `admin_table_states` table.
+
+### Migrations
+
+`2026_11_16_010001_create_admin_table_states_table` (reversible). Applied by the test runs on `gaming-store_testing`; **not applied to the app database** — run `php artisan migrate`.
+
+### Packages
+
+`datatables.net` **3.1.5** (exact, `dependencies`, npm only; one package added to `package-lock.json`). DataTables 3 has no jQuery dependency, so jQuery was **not** added. No styling or extension packages; nothing else added. `backend/.yarn/`, `.yarnrc.yml` and `yarn.lock` untouched.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Validation errors beside fields using the envelope | Met | Dot keys from 422 envelopes (`filters.status`, `credentials.secret_key`, `reason`, `evidence`, `priority`) are rendered in `[data-error-for]`; tests assert the envelope keys for tables, saved filters, exports, supplier settings, gateway credentials and activation, rule toggle, order approve/reject, reconciliation; headless Chrome shows the Arabic errors beside "reason" and "evidence" |
+| Each table server-side | Met | Nine tables, all Yajra server-side; tests for paging, total and filtered counts, prefix search (literal `%` and `_`), filters, allow-listed sort, ignored client columns, declared columns only, escaping, PII masking, invalid filter and page length, and constant query counts (no N+1) for every table |
+| Order timeline, retry and reconcile with permissions | Met | Detail page tests; reconcile single and bulk audited; retry shown only for verified-failed units with `orders.review`, "Retry (locked)" while an attempt is ambiguous; reject (unpaid cancel, paid refund needing `refunds.create`, refused with an open supplier attempt) |
+| Supplier capability matrix rendered | Met | Every capability across adapters with levels, current supplier marked; credentials never rendered (canary) |
+| Permission-based navigation and route denial | Met | Navigation per permission set and per seeded role (Operations, Finance, Support, Catalog = 403 home); M15 entries hidden; payment tabs per permission; every page and every table, export, state and saved-filter route 403 without its permission and 200 with it; every action route 403 without its permission |
+| Export permission and audit | Met | 403 without the table permission; owner-only download (404 for others, 403 after losing the permission); request and download audited; expiry 410; failure leaves no file |
+| Responsive 1280/768, usable 375; no console errors or CSP violations | Met | Headless Chrome (CDP) over 12 pages × 3 widths × EN/AR (72 loads) on preview data in the testing database: no console errors, exceptions or CSP violations, no horizontal page overflow, tables loaded rows in both languages. Interactive run: search, filter, empty state and clear, sort, paging, column hiding kept after reload, saved filter, selection bar, XLSX export download, confirmation dialog, envelope errors beside fields |
+
+### Tests and results
+
+- New: 123 tests in `tests/Feature/Admin` (660 assertions): access and navigation 53, tables 26, exports and preferences 10, orders 13, suppliers, payments and dashboard 21; plus one model factory case for `AdminTableState`.
+- Full suite: `php artisan test --compact` (sequential, MySQL) **2534 passed, 0 failed, 17920 assertions, about 169 s** (2410 after M13). `vendor/bin/pint --dirty`: passed. `npm run build`: passed.
+
+### Deviations from Figma
+
+- Admin frames are drawn in the dark theme; built in the Admin Light theme mode as briefed (Figma's light dashboard frame 18:1295 is the reference).
+- No notification bell in the top bar (no staff notification feed exists); the top bar adds a language switch. The top-bar search searches orders only.
+- Dashboard: revenue and profit are bar charts per day (server-drawn SVG, no chart library), not a line with a "previous period" series; KPI "vs previous" uses the previous window of the same length; customers KPI counts new customers; "Export report" not built (export is per table).
+- Tables: no searchable or multi select widget (native selects; no package allowed); filters wrap onto a second line at 1280 when dates are shown; the "Saved: …" control is a menu button.
+- Order detail: "Escalate to manual" is "Mark as verified not accepted" (the existing reason + evidence action); no 04:12 countdown (the attempt shows next check and deadline); no "Print" button.
+- Supplier detail: credentials show configured/not configured per mode with a replace form (no masked "••••3a2f" hint, by the write-only rule); "Add supplier" is not on the list (supplier creation stays in the JSON API; M15 settings).
+- Payments: gateway cards link to a gateway page instead of a modal; eligibility rules can only be switched on or off here (rule editing is M15).
+
+### Outstanding requirements (M15 and later)
+
+- M15 screens: catalog, customers, pricing and currency, marketing, content, support, reviews, users and roles, settings (including eligibility rule editing, supplier creation, app settings and public payment identifiers), MCP tokens and action approval, automation credentials and AI review. Their navigation entries exist in `config/admin.php` with `route => null` and appear once a route is set.
+- Staff notification feed (Figma bell), dashboard "export report", order notes (`orders/{id}/notes` not built), `supplier-mappings/suggestions` and `bulk`.
+- Exports need a queue worker in production (`QUEUE_CONNECTION=database`): without one the UI keeps "waiting for the queue worker". Expired export files are not yet pruned by a scheduled task.
+- The admin language for JSON messages follows `Accept-Language` after the staff member's saved locale (`SetLocaleFromRequest`); the page switch only changes the session.
+
+### Design changes made
+
+- `API_DOCUMENTATION.md` section 5e; `DATABASE_DESIGN.md` `admin_table_states`; `PROJECT_ARCHITECTURE.md` section 4 npm row.
+
+### Next milestone
+
+M15: Admin remaining (Step 8).
 
 ---
 

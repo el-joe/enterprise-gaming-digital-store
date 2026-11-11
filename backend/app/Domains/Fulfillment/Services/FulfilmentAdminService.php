@@ -13,6 +13,8 @@ use App\Domains\Orders\Models\OrderEvent;
 use App\Domains\Orders\Models\OrderItemUnit;
 use App\Domains\Orders\Services\OrderStateMachine;
 use App\Domains\Orders\Services\UnitStatusRecorder;
+use App\Domains\Payments\Enums\RefundReason;
+use App\Domains\Payments\Services\RefundService;
 use App\Domains\Shared\Exceptions\ApplicationException;
 use App\Domains\Suppliers\Enums\SupplierTransactionStatus as Status;
 use App\Domains\Suppliers\Models\SupplierTransaction;
@@ -32,6 +34,7 @@ class FulfilmentAdminService
         private UnitStatusRecorder $units,
         private SupplierVerificationService $verifier,
         private AuditLogger $audit,
+        private RefundService $refunds,
     ) {}
 
     /**
@@ -52,6 +55,65 @@ class FulfilmentAdminService
         $this->audit->record(new AuditEntry('orders.review_approved', $order, reason: $note));
 
         return $order;
+    }
+
+    /**
+     * Reject an order held in review (M14, spec "Fraud review"). Units without an open supplier
+     * attempt (pending, queued, in review or failed) become failed. An unpaid order is
+     * cancelled (`orders.review`); a paid one has those units refunded to the original method
+     * and enters `refund_pending`, which the state machine allows only with `refunds.create`.
+     * Delivered units are left as they are (refund them separately). Refused while any unit
+     * still has an attempt with the supplier: a second order could double-charge us.
+     */
+    public function reject(Order $order, User $staff, string $reason, RefundReason $refundReason): Order
+    {
+        return DB::transaction(function () use ($order, $staff, $reason, $refundReason): Order {
+            $locked = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+            if ($locked->status !== OrderStatus::ManualReview) {
+                throw new ApplicationException('Only an order in manual review can be rejected.', 'conflict', 409);
+            }
+
+            $units = OrderItemUnit::query()->where('order_id', $locked->id)->lockForUpdate()->get();
+            $active = [Unit::Submitting, Unit::SupplierPending, Unit::PendingVerification];
+
+            if ($units->contains(static fn (OrderItemUnit $unit): bool => in_array($unit->status, $active, true))) {
+                throw new ApplicationException('A unit still has an open supplier attempt. Reconcile it first.', 'supplier_attempt_open', 409);
+            }
+
+            $actor = OrderActor::staff($staff);
+            $rejectable = $units->filter(static fn (OrderItemUnit $unit): bool => in_array($unit->status, [Unit::Pending, Unit::Queued, Unit::ManualReview, Unit::ManualTask, Unit::Failed], true));
+
+            if ($locked->primary_payment_id === null) {
+                foreach ($rejectable as $unit) {
+                    $this->units->move($unit, Unit::Cancelled, 'review_rejected', $reason, [], $actor);
+                }
+
+                $locked = $this->machine->transition($locked, OrderStatus::Cancelled, $actor, $reason, ['action' => 'reject']);
+                $this->audit->record(new AuditEntry('orders.review_rejected', $locked, after: ['outcome' => 'cancelled'], reason: $reason));
+
+                return $locked;
+            }
+
+            if ($rejectable->isEmpty()) {
+                throw new ApplicationException('No undelivered unit is left to refund.', 'conflict', 409);
+            }
+
+            if (! $this->machine->canTransition($locked, OrderStatus::RefundPending, $actor)) {
+                throw new ApplicationException('Rejecting a paid order refunds it, which needs the refunds.create permission.', 'forbidden', 403);
+            }
+
+            foreach ($rejectable as $unit) {
+                if ($unit->status !== Unit::Failed) {
+                    $this->units->move($unit, Unit::Failed, 'review_rejected', $reason, [], $actor);
+                }
+            }
+
+            $refund = $this->refunds->refundUnits($locked, $rejectable->pluck('public_id')->all(), $refundReason, $actor, $reason);
+            $this->audit->record(new AuditEntry('orders.review_rejected', $locked, after: ['outcome' => 'refund_pending', 'refund_id' => $refund->id], reason: $reason));
+
+            return $locked->refresh();
+        }, 3);
     }
 
     /**
@@ -123,6 +185,25 @@ class FulfilmentAdminService
 
             return $this->machine->transition($locked, OrderStatus::Processing, $actor, 'Staff retried a verified-failed unit.', ['unit_id' => $lockedUnit->id]);
         }, 3);
+    }
+
+    /**
+     * Bulk "check status now" on selected orders (M14), each run and audited as the single
+     * action. Unknown ids are counted as skipped.
+     *
+     * @param  list<string>  $publicIds
+     * @return array{orders: int, attempts_checked: int, skipped: int}
+     */
+    public function reconcileMany(array $publicIds, User $staff): array
+    {
+        $orders = Order::query()->whereIn('public_id', $publicIds)->get();
+        $checked = 0;
+
+        foreach ($orders as $order) {
+            $checked += $this->reconcile($order, $staff);
+        }
+
+        return ['orders' => $orders->count(), 'attempts_checked' => $checked, 'skipped' => count($publicIds) - $orders->count()];
     }
 
     /**

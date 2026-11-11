@@ -697,7 +697,7 @@ Rules worth knowing:
 
 `destination` (M11, optional): `original_method` (default) or `wallet`. A wallet refund credits the customer's wallet with the refund's base amount (`credit_refund`, key `refund:{public_id}`) and never calls the provider; only a registered customer's order (422 `refund_destination_unavailable`). A refund of a wallet payment always goes back to the wallet.
 
-Undelivered units are refunded automatically by the system (BD4 default); there is no route for that. Gateway configuration and write-only credential routes are M15; until then gateways are configured in the database (seeded inactive, so nothing is eligible).
+Undelivered units are refunded automatically by the system (BD4 default); there is no route for that. Gateway status, mode and write-only credential routes were built in M14 (5e).
 
 Not built: `GET supplier-mappings/suggestions`, `POST supplier-mappings/bulk` (M14), and `POST /webhooks/suppliers/{key}`: Reloadly's webhook signature is `UNVERIFIED`, so polling is the only path.
 
@@ -723,6 +723,51 @@ Not built: `GET supplier-mappings/suggestions`, `POST supplier-mappings/bulk` (M
 | `customers/{public_id}/wallet/status` | `POST { status: active/frozen, reason }`. A frozen wallet cannot pay; refunds still credit it. Audited | `customers.wallet_adjust` |
 
 Not built: affiliate payouts (`affiliate_payouts`), DataTables endpoints for these resources (M14/M15).
+
+### 5e. Built admin core routes (M14)
+
+Admin pages (Blade, `routes/admin_pages.php`, prefix `/admin`, names `admin.*`) only read; every change below is JSON under `/admin/api` in the `admin` group (session, CSRF, active staff, two-step verification passed, idle timeout, `throttle:admin`, `Accept-Language`) with the standard envelope. Validation errors are 422 `validation_failed` with dot keys (`filters.status`, `credentials.secret_key`), shown beside the fields. Every mutation is written to `audit_logs`.
+
+**Pages** (each checks its permission; 403 otherwise; guests go to `/admin/login`, staff without two-step verification to `/admin/two-factor/setup`): `GET /admin/login`, `/admin/two-factor`, `/admin/two-factor/setup` (+ `/qr`, SVG, `no-store`), `POST /admin/locale { locale: en|ar }`, `GET /admin` (first permitted screen), `/admin/dashboard?days=7|30|90` (`dashboard.view`), `/admin/orders` and `/admin/orders/{public_id}` (`orders.view`), `/admin/suppliers` and `/admin/suppliers/{id}` (`suppliers.view`), `/admin/payments` and `/admin/payments/gateways/{id}`, `/transactions`, `/disputes`, `/reconciliation` (`payments.view`), `/admin/payments/webhooks` (`payments.webhook_logs`), `/admin/payments/refunds` (`refunds.view`).
+
+**Tables.** One set of routes per table under `/admin/api/tables/{table}`, registered from `App\DataTables\AdminTables` with the table's permission. The table comes from the route, never from input.
+
+| Table | Permission | Filters (`filters[...]`) | Search |
+|---|---|---|---|
+| `orders` | `orders.view` | `status`, `attention=1`, `gateway` (id), `from`, `to` (Y-m-d) | order number, customer name; email only with `customers.view_pii` (otherwise masked in rows) |
+| `suppliers` | `suppliers.view` | `status`, `health` | name, adapter key |
+| `supplier-logs` | `suppliers.logs` | `supplier` (required context), `outcome` (`ok`, `failed`) | operation |
+| `supplier-mappings` | `suppliers.view` or `mappings.manage` | `supplier` (required context), `active` | none |
+| `payments` | `payments.view` | `gateway`, `status`, `from`, `to` | provider payment or order id, public id |
+| `webhooks` | `payments.webhook_logs` | `gateway`, `status`, `signature` (`valid`, `invalid`) | event type, provider event id |
+| `refunds` | `refunds.view` | `status`, `reason` | public id, provider refund id |
+| `disputes` | `payments.view` | `status` | provider dispute id |
+| `reconciliation` | `payments.view` | `status`, `type` | provider reference |
+
+| Route | Body and answer |
+|---|---|
+| `POST tables/{table}` | DataTables server-side request: `draw`, `start`, `length` (10, 25, 50 or 100), `search.value` (at most 100 characters, literal prefix match), `order[]` (at most 3 `{ column, dir }`, by position in the table's declared columns), `filters`. Column definitions, column search and regex sent by the client are ignored. Answer (DataTables shape, not the envelope): `draw`, `recordsTotal` (the table's scope), `recordsFiltered`, `data[]` with only the declared column keys and `DT_RowId`; text is escaped, badge and link cells are server-built HTML from escaped values. A filter value outside its options is 422 on `filters.{key}` |
+| `PUT tables/{table}/state` | `{ hidden_columns: [keys], page_length }` (unknown keys dropped). The staff member's own layout (`admin_table_states`) |
+| `POST tables/{table}/saved-filters` | `{ name, is_default?, payload: { search?, filters?, order?, hidden_columns? } }`, 201. Replaces a filter of the same name; filter values validated; at most `admin.tables.saved_filters_per_table` (20) per table (422 on `name`) |
+| `DELETE tables/{table}/saved-filters/{id}` | Own filters only; another staff member's is 404 |
+| `POST tables/{table}/exports` | `{ format: csv\|xlsx, search?, filters?, order?, hidden_columns?, ids?: [row ids, at most 500] }`, 10 per minute, 202 `{ id, status, rows, download_url, expires_at }`. Recorded in `export_jobs`, audited (`admin.export_requested`: table, format, filters, whether searched, selected count) and written by the queued `ExportAdminTable` job to the private disk: UTF-8 CSV with BOM or XLSX (in-house writer), formula cells neutralised, at most `admin.tables.export_max_rows` (50 000) rows |
+| `GET tables/{table}/exports/{id}` | Status of the caller's own export (others 404) |
+| `GET tables/{table}/exports/{id}/download` | The file (`no-store`), for the requester only, while they hold the table permission and before `expires_at` (24 h; 410 `export_expired`; 409 `export_not_ready`). Audited `admin.export_downloaded` |
+
+**Actions.**
+
+| Route | Body and answer | Permission |
+|---|---|---|
+| `POST orders/{public_id}/reject` | `{ reason (5 to 1000), refund_reason?: fraud\|admin\|customer_request (default fraud) }`. Only in `manual_review`; 409 `supplier_attempt_open` while a unit has an attempt with the supplier. Unpaid: undelivered units cancelled, order `cancelled`. Paid: undelivered units failed and refunded to the original method through 5c (order `refund_pending`), which also needs `refunds.create` (403 otherwise, nothing changed). Audited `orders.review_rejected` | `orders.review` |
+| `POST tables/orders/bulk/reconcile` | `{ ids: [order public ids, 1 to 100] }`, 6 per minute: "check status now" for each order. `{ orders, attempts_checked, skipped }`; audited per order (`orders.reconciled`) | `orders.reconcile` |
+| `PATCH payment-gateways/{id}` | `{ is_active?, mode?: sandbox\|production }`. Activating needs credentials for the mode (422 on `is_active`). The charge currency (`default_currency`, OD-1) is not editable. Audited `payments.gateway_updated` | `payments.manage` |
+| `POST payment-gateways/{id}/credentials` | `{ mode, credentials: { …every field of the adapter }, webhook_secret? }`, 10 per minute. Fields per adapter (`admin.credential_fields.gateways`): Stripe `secret_key`, `publishable_key` (prefixes must match the mode: `sk_test_`/`pk_test_` in sandbox, `sk_live_`/`pk_live_` in production); PayPal `client_id`, `client_secret`, `webhook_id`; Paymob `api_key`, `secret_key`, `public_key`. Replaces the mode's values; extra fields dropped. Answer `{ credentials_configured: { sandbox: { configured, rotated_at }, production: {…} } }`, never a value. Audited `payments.credentials_set` with field names only | `payments.credentials` (E) |
+| `PATCH payment-eligibility-rules/{id}` | `{ is_active }`. Audited `payments.eligibility_rule_toggled` (rule editing is M15) | `payments.manage` |
+| `POST payments/reconcile` | No body, 6 per minute. Runs the five-minute open-payment reconciliation now; `{ payments, expired, refunds, webhooks }`. Audited `payments.reconciled` | `payments.manage` |
+| `POST reconciliation-items/{id}/resolve` | `{ status: resolved\|ignored, note (5 to 1000) }`; closed items are skipped. `{ changed }`. Audited per item | `payments.manage` |
+| `POST tables/reconciliation/bulk/resolve`, `.../bulk/ignore` | `{ ids: [item ids], note }` | `payments.manage` |
+
+Existing routes used by the M14 pages without change: order `review`, `reconcile`, `retry-verified-unit`, `transactions/{id}/mark-not-accepted`, `orders/{id}/refunds` (5b, 5c; refunds created by staff are now audited `refunds.created`), and supplier `PATCH`, `credentials`, `test-connection`, `sync-catalog`, `sync-pricing` (5b). The sign-in pages post to `/login`, `/two-factor-challenge` and `/api/v1/account/security/two-factor[/confirm]` (1a, 4a).
 
 ## 6. Webhooks
 

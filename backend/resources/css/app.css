@@ -4,6 +4,7 @@
 @source '../../storage/framework/views/*.php';
 @source '../views';
 @source '../js';
+@source '../../app/DataTables';
 
 /*
  * Design tokens (docs/DESIGN_TOKENS.md, Figma `Primitives` and `Theme / Dark`). Names map 1:1 to
@@ -340,5 +341,170 @@
 
     .prose-store :where(strong) {
         @apply text-content-primary;
+    }
+}
+
+/*
+ * Admin Light theme mode (M14, Figma `Theme / Admin Light`, DESIGN_TOKENS.md): the admin layout
+ * sets `data-theme="admin-light"` on <html>, which rebinds the semantic tokens. Utilities read
+ * the variables, so every component above works unchanged on light surfaces.
+ */
+@layer base {
+    [data-theme='admin-light'] {
+        color-scheme: light;
+        --color-surface-canvas: #f6f7f9;
+        --color-surface-base: #ffffff;
+        --color-surface-raised: #ffffff;
+        --color-surface-overlay: #ffffff;
+        --color-surface-sunken: #eceef2;
+        --color-line-subtle: #eceef2;
+        --color-line-default: #d7dbe3;
+        --color-line-strong: #b3bbc9;
+        --color-content-primary: #0c0e13;
+        --color-content-secondary: #383f4d;
+        --color-content-muted: #5a6374;
+        --color-content-on-accent: #07080b;
+        --color-accent-primary: #c8ff2e;
+        --color-accent-hover: #a6db10;
+        --color-accent-tint: #e4ff85;
+        --color-accent-text: #4a6404;
+        --color-accent-ember: #ff5a2b;
+        --color-accent-ember-tint: #ffe1e4;
+        --color-accent-ember-text: #c2410c;
+        --color-accent-ultra: #5a50ff;
+        --color-focus-ring: #5a50ff;
+        --color-status-success: #0e7f4d;
+        --color-status-warning: #8a5e00;
+        --color-status-danger: #b81f33;
+        --color-status-info: #1d5fa8;
+        --color-status-success-tint: #d9f7e8;
+        --color-status-warning-tint: #ffc53d;
+        --color-status-danger-tint: #ffe1e4;
+        --color-status-info-tint: #ddeeff;
+        --shadow-card: 0 1px 2px rgb(12 14 19 / 0.06);
+        --shadow-raised: 0 8px 24px rgb(12 14 19 / 0.12);
+        --shadow-overlay: 0 24px 64px rgb(12 14 19 / 0.24);
+    }
+}
+
+@utility admin-card {
+    @apply rounded-lg border border-line-subtle bg-surface-raised shadow-card;
+}
+
+@utility admin-btn {
+    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-sm border border-line-default bg-surface-raised px-3 text-sm font-medium text-content-primary transition duration-200 ease-(--ease-brand) hover:border-line-strong disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility admin-btn-primary {
+    @apply admin-btn border-transparent bg-accent-primary font-semibold text-content-on-accent hover:bg-accent-hover;
+}
+
+@utility admin-btn-danger {
+    @apply admin-btn border-transparent bg-status-danger font-semibold text-white hover:opacity-90;
+}
+
+@utility admin-input {
+    @apply block min-h-9 w-full rounded-sm border border-line-default bg-surface-raised px-3 text-sm text-content-primary placeholder:text-content-muted hover:border-line-strong focus:border-focus-ring focus:outline-none aria-invalid:border-status-danger;
+}
+
+@utility admin-th {
+    @apply bg-surface-sunken px-3 py-2.5 text-start text-xs leading-4 font-medium whitespace-nowrap text-content-secondary;
+}
+
+@utility admin-td {
+    @apply border-t border-line-subtle px-3 py-3 align-middle text-sm text-content-primary;
+}
+
+@layer components {
+    /* DataTables 3 (no styling package): table chrome comes from the admin-th/admin-td classes. */
+    .dt-container .dataTable {
+        @apply w-full border-collapse;
+    }
+
+    .dt-container .dataTable thead th {
+        @apply admin-th;
+    }
+
+    .dt-container .dataTable tbody td {
+        @apply admin-td;
+    }
+
+    .dt-container .dataTable tbody tr:hover td {
+        @apply bg-surface-canvas;
+    }
+
+    .dt-container .dataTable tbody tr[data-selected] td {
+        @apply bg-accent-tint/40;
+    }
+
+    .dt-container .dataTable th.dt-orderable-asc,
+    .dt-container .dataTable th.dt-orderable-desc {
+        @apply cursor-pointer select-none hover:text-content-primary;
+    }
+
+    .dt-container .dataTable th .dt-column-title {
+        @apply inline;
+    }
+
+    .dt-container .dataTable .dt-type-numeric {
+        @apply text-end;
+    }
+
+    .dt-container .dataTable th .dt-column-order {
+        @apply ms-1 inline-block w-3 text-content-muted;
+    }
+
+    .dt-container .dataTable th.dt-orderable-asc .dt-column-order::after,
+    .dt-container .dataTable th.dt-orderable-desc .dt-column-order::after {
+        content: '\2195';
+    }
+
+    .dt-container .dataTable th.dt-ordering-asc .dt-column-order::after {
+        content: '\2191';
+        @apply text-accent-text;
+    }
+
+    .dt-container .dataTable th.dt-ordering-desc .dt-column-order::after {
+        content: '\2193';
+        @apply text-accent-text;
+    }
+
+    .dt-container .dataTable th.dt-ordering-asc,
+    .dt-container .dataTable th.dt-ordering-desc {
+        @apply text-content-primary;
+    }
+
+    .dt-container .dt-empty {
+        @apply py-12 text-center text-content-muted;
+    }
+
+    .dt-container .dt-processing {
+        @apply hidden;
+    }
+
+    .admin-skeleton {
+        @apply h-3 animate-pulse rounded-full bg-surface-sunken;
+    }
+
+    /* Sidebar: full from lg, icon rail at md (768 to 1279) and, when collapsed, at lg too. */
+    .admin-rail .admin-sidebar {
+        @apply lg:w-[76px];
+    }
+
+    .admin-rail .admin-nav-label {
+        @apply lg:sr-only;
+    }
+
+    .admin-rail .admin-nav-badge,
+    .admin-rail .admin-logo-full {
+        @apply lg:hidden;
+    }
+
+    .admin-rail .admin-logo-mark {
+        @apply lg:inline-flex;
+    }
+
+    .admin-rail .admin-nav-link {
+        @apply lg:justify-center lg:px-0;
     }
 }

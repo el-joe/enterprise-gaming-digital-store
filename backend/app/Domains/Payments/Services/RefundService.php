@@ -2,6 +2,8 @@
 
 namespace App\Domains\Payments\Services;
 
+use App\Domains\Audit\DTOs\AuditEntry;
+use App\Domains\Audit\Services\AuditLogger;
 use App\Domains\Currency\Services\CurrencyConverter;
 use App\Domains\Orders\DTOs\OrderActor;
 use App\Domains\Orders\Enums\OrderEventActorType;
@@ -47,6 +49,7 @@ class RefundService
         private UnitStatusRecorder $units,
         private PaymentGatewayRegistry $registry,
         private CurrencyConverter $converter,
+        private AuditLogger $audit,
     ) {}
 
     /**
@@ -98,7 +101,20 @@ class RefundService
                 $this->machine->transition($locked, OrderStatus::RefundPending, $actor, 'Refund requested by staff.', ['reason' => $reason->value]);
             }
 
-            return $this->create($locked, $unitPublicIds, $reason, $actor, $note, $destination);
+            $refund = $this->create($locked, $unitPublicIds, $reason, $actor, $note, $destination);
+
+            if ($actor->type === OrderEventActorType::Staff) {
+                $this->audit->record(new AuditEntry('refunds.created', $refund, after: [
+                    'order_id' => $locked->id,
+                    'units' => count($unitPublicIds),
+                    'reason' => $reason->value,
+                    'destination' => $destination->value,
+                    'amount' => $refund->amount,
+                    'currency' => $refund->currency,
+                ], reason: $note));
+            }
+
+            return $refund;
         }, 3);
     }
 

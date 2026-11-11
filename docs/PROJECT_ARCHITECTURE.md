@@ -128,7 +128,7 @@ Installed at M3: Sanctum, Permission, DataTables, Stripe, Image, Google2FA. `geo
 | `stripe/stripe-php` | Stripe API and signature verification |
 | `intervention/image` | WebP and AVIF derivatives through GD (AVIF depends on the GD build, check at M3) |
 | `geoip2/geoip2` | Local GeoLite2 lookup, needs a MaxMind licence key (ADR-016) |
-| npm: `datatables.net-dt`, `tom-select`, `sweetalert2`, `chart.js`, `axios` | Admin UI (Tom Select is the "more modern" Select2 alternative; DataTables still requires jQuery internally, confined to the admin bundle) |
+| npm: `datatables.net` 3.1.5 (exact, M14) | Admin tables, server-side only. DataTables 3 has no jQuery dependency, so jQuery is not installed; no styling package (`-dt`): the table is themed with Tailwind in `app.css`. Only in the admin bundle (`resources/js/admin.js`). The other planned admin packages (`tom-select`, `sweetalert2`, `chart.js`, `axios`) were not added (owner rule: no dependency change beyond DataTables): native `<select>`, a native `<dialog>` confirmation, server-drawn SVG charts and the existing `fetch` helper are built in-house. |
 | `pragmarx/google2fa` | Staff TOTP |
 
 PayPal, Paymob and Reloadly use the Laravel HTTP client directly, with no third-party SDK.

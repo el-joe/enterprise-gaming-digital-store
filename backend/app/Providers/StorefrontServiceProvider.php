@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Support\LocalizedRoutes;
 use App\View\Composers\AccountLayoutComposer;
+use App\View\Composers\AdminLayoutComposer;
 use App\View\Composers\StorefrontLayoutComposer;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Facades\View;
@@ -19,6 +20,7 @@ class StorefrontServiceProvider extends ServiceProvider
     {
         View::composer('layouts.storefront', StorefrontLayoutComposer::class);
         View::composer('layouts.account', AccountLayoutComposer::class);
+        View::composer(['layouts.admin', 'layouts.admin-auth', 'admin.*'], AdminLayoutComposer::class);
 
         // Registered on the class, so booting never resolves the URL generator (and its request).
         UrlGenerator::macro('localized', function (string $name, array $parameters = []): string {
