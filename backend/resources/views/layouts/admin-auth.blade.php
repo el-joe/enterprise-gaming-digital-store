@@ -3,7 +3,7 @@
     $config = ['locale' => $admin['locale'], 'csrf' => csrf_token(), 'routes' => ['login' => route('admin.login'), 'logout' => url('/logout')], 'i18n' => trans('admin.js') + trans('storefront.js')];
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $admin['locale'] }}" dir="{{ $admin['dir'] }}" data-theme="admin-light">
+<html lang="{{ $admin['locale'] }}" dir="{{ $admin['dir'] }}" data-theme="{{ config('admin.theme') === 'light' ? 'admin-light' : 'dark' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,7 +17,7 @@
 <body class="flex min-h-screen flex-col items-center justify-center bg-surface-canvas px-4 py-10 text-content-primary">
     <main id="main" class="w-full max-w-[420px]">
         <div class="mb-6 flex items-center justify-between">
-            <x-brand.logo :height="32" surface="light" eager />
+            <x-brand.logo :height="32" :surface="config('admin.theme') === 'light' ? 'light' : 'dark'" eager />
             <form method="POST" action="{{ route('admin.locale') }}">
                 @csrf
                 <input type="hidden" name="locale" value="{{ $admin['locale'] === 'ar' ? 'en' : 'ar' }}">

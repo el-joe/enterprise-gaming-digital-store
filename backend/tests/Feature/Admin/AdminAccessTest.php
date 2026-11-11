@@ -21,7 +21,7 @@ describe('sign-in and two-step verification', function (): void {
         $response->assertOk()
             ->assertSee($title)
             ->assertSee('dir="'.$dir.'"', false)
-            ->assertSee('data-theme="admin-light"', false)
+            ->assertSee('data-theme="dark"', false)
             ->assertSee('noindex,nofollow', false);
         assertCspSafeHtml($response);
     })->with([

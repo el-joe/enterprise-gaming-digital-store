@@ -17,7 +17,7 @@
     ];
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $admin['locale'] }}" dir="{{ $admin['dir'] }}" data-theme="admin-light">
+<html lang="{{ $admin['locale'] }}" dir="{{ $admin['dir'] }}" data-theme="{{ config('admin.theme') === 'light' ? 'admin-light' : 'dark' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -35,8 +35,8 @@
         <aside class="admin-sidebar fixed inset-y-0 start-0 z-40 flex w-64 flex-col border-e border-line-subtle bg-surface-base transition-transform duration-200 max-md:-translate-x-full max-md:rtl:translate-x-full md:sticky md:top-0 md:h-screen md:w-[76px] lg:w-60" data-admin-sidebar aria-label="{{ __('admin.nav.label') }}">
             <div class="flex h-16 shrink-0 items-center px-4">
                 <a href="{{ route('admin.home') }}" class="flex items-center" aria-label="{{ __('admin.nav.home') }}">
-                    <span class="admin-logo-full inline-flex md:hidden lg:inline-flex"><x-brand.logo :height="28" surface="light" eager /></span>
-                    <span class="admin-logo-mark hidden md:inline-flex lg:hidden"><x-brand.logo variant="mark" :height="32" surface="light" eager /></span>
+                    <span class="admin-logo-full inline-flex md:hidden lg:inline-flex"><x-brand.logo :height="28" :surface="config('admin.theme') === 'light' ? 'light' : 'dark'" eager /></span>
+                    <span class="admin-logo-mark hidden md:inline-flex lg:hidden"><x-brand.logo variant="mark" :height="32" :surface="config('admin.theme') === 'light' ? 'light' : 'dark'" eager /></span>
                 </a>
             </div>
             <nav class="flex-1 overflow-y-auto px-3 py-3">
