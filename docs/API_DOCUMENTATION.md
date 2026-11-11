@@ -33,7 +33,8 @@ Web pages (Blade) are listed in `SEO_STRATEGY.md` section 2 and built in M12 (`r
 | `Accept-Language` | `en` or `ar` (region suffixes and quality values honoured, e.g. `ar-EG,ar;q=0.9`); anything else is `en`. Sets the language of messages and translated storefront content; the response carries `Content-Language` (M-A3, section 1c) |
 | `Authorization: Bearer` | Customer access token (section 1b). Stateless `/api/v1/mobile` routes only |
 | `X-Cart-Token` | Stateless guest cart (section 1c) |
-| `X-Currency` | Display currency for stateless clients; overrides the `currency` cookie (section 1c) |
+| `X-Currency` | Display currency for stateless clients; overrides the `currency` cookie (section 1c). An explicit choice: always wins over the country currency (section 1g) |
+| `X-Device-Integrity` | `ok`, `compromised` or `unknown`: the app's device-integrity verdict on mobile code reveals, audited and never blocking (section 1g) |
 | `X-Guest-Order-Token` | Per-order guest access for stateless clients (section 1c) |
 
 ### Standard success envelope
@@ -70,7 +71,7 @@ All admin JS depends on this exact shape. It is implemented once, in `bootstrap/
 | 404 | `not_found` | absent | SweetAlert2 error |
 | 403 | `margin_override_forbidden` | absent | SweetAlert2 error |
 | 409 | `current_device` (M-A5: revoke the calling device with logout instead), `conflict`, `illegal_transition`, `idempotency_in_progress`, `idempotency_mismatch`, `two_factor_already_enabled`, `duplicate_code`, `review_exists`, `ticket_closed`, `refund_request_open`, `wallet_frozen`, `wallet_idempotency_mismatch` | absent | SweetAlert2 and reload row |
-| 423 | `recent_auth_required` | absent | Ask for the password (`POST /api/v1/account/confirm-password`), then retry |
+| 423 | `recent_auth_required` | absent | Ask for the password (`POST /api/v1/account/confirm-password`) or, in the app, a biometric confirmation (`POST /api/v1/mobile/auth/confirm-biometric`, section 1g), then retry |
 | 422 | `cart_empty`, `item_unavailable` (`errors.items.{cart_item_id}` or `errors.variant_id`), `order_total_invalid`, `otp_invalid` | optional | Message near the form |
 | 419 | `csrf_expired` | absent | Prompt to refresh |
 | 422 | `validation_failed` | object | Field-level display |
@@ -189,13 +190,13 @@ Not duplicated: `POST /api/v1/storefront/currency` (sets a cookie; the app sends
 
 **Cart token.** The first `POST /api/v1/mobile/storefront/cart/items` of a guest without `X-Cart-Token` issues a 64-character token, returned once in the `X-Cart-Token` response header and in `meta.cart_token` (`Cache-Control: no-store, private`). Send it as `X-Cart-Token` on every cart and checkout call. Only its SHA-256 is stored (`carts.session_token`). A request with a bearer token and `X-Cart-Token` adopts that guest cart when the customer has no active cart (merge on sign-in: send the guest token with the first cart call after login; a customer who already has a cart keeps it).
 
-**Currency.** `X-Currency: EGP` sets the display currency of the catalog, variants, cart, validate, payment options and place-order, and overrides the `currency` cookie. It must be a three-letter code of an active currency, else 422 `validation_failed` with `errors.currency = ["The X-Currency header must be the code of an active currency."]`. An active currency without a usable rate falls back to the base currency (see `meta.display_currency`).
+**Currency.** `X-Currency: EGP` sets the display currency of the catalog, variants, cart, validate, payment options and place-order, and overrides the `currency` cookie. It must be a three-letter code of an active currency, else 422 `validation_failed` with `errors.currency = ["The X-Currency header must be the code of an active currency."]`. An active currency without a usable rate falls back to the base currency (see `meta.display_currency`). Without `X-Currency` the display currency follows the customer's country (OD-1, section 1g).
 
 **Guest order token.** Replaces the browser session's order list and guest proofs.
 
 | Issued by | `data.guest_order_token` | Grants |
 |---|---|---|
-| `POST /mobile/checkout/place-order` by a guest, 201 and replay (not `meta.duplicate: true`, not for a signed-in customer) | `{ token, order_public_id, expires_at }` | status, verify-payment, paypal/capture, retry-payment of that order |
+| `POST /mobile/checkout/place-order` by a guest (only while `storefront.guest_checkout` is on; off by default since OD-1, section 1g), 201 and replay (not `meta.duplicate: true`, not for a signed-in customer) | `{ token, order_public_id, expires_at }` | status, verify-payment, paypal/capture, retry-payment of that order |
 | `POST /mobile/checkout/guest/otp/verify` | a **new** token; the presented `X-Guest-Order-Token` of the same order (if any) is deleted and its link proof carried over | as above, plus the OTP proof |
 | `GET /mobile/checkout/guest/orders/{id}/access?expires=&signature=` (the signed delivery link: same query as the web link, verified against the web URL) | a link-only token when none is presented; with a presented token of that order, the link proof is added to it and `guest_order_token` is null | the link proof only; it opens nothing by itself |
 
@@ -222,11 +223,11 @@ Query (optional, both or neither): `platform` (`android` or `ios`) and `version`
     },
     "update": { "platform": "android", "version": "1.3.9", "required": true, "available": true },
     "maintenance": { "enabled": false, "message": null },
-    "features": { "checkout_enabled": true, "guest_checkout_enabled": true, "wallet_enabled": true, "reviews_enabled": true, "support_enabled": true },
+    "features": { "checkout_enabled": true, "guest_checkout_enabled": false, "wallet_enabled": true, "reviews_enabled": true, "support_enabled": true, "web_checkout_redirect": false },
     "locales": { "supported": ["en", "ar"], "default": "en" },
     "currencies": { "base": "USD", "supported": [{ "code": "USD", "name": "US Dollar", "symbol": "$", "exponent": 2 }] },
     "media": { "base_url": "https://boxcards.shop/storage" },
-    "links": { "support": "https://...", "terms": "https://...", "privacy": null, "refund": null },
+    "links": { "support": "https://...", "terms": "https://...", "privacy": null, "refund": null, "web_checkout": "https://boxcards.shop/checkout" },
     "payment_gateways": { "stripe": { "publishable_key": "pk_live_..." }, "paypal": { "client_id": "A..." }, "wallet": {} }
   }
 }
@@ -234,11 +235,42 @@ Query (optional, both or neither): `platform` (`android` or `ios`) and `version`
 
 - `update.required`: the installed version is **strictly below** `min_supported_version` (force update); `update.available`: strictly below `latest_version`. Comparison is SemVer precedence (`1.10.0 > 1.9.0`, `1.4.0-rc.1 < 1.4.0`, build metadata ignored). The app should compare the same way if it does not send its version.
 - `maintenance.message` is in the request language (custom text per locale, else a translated default), null when maintenance is off.
-- `features` are advisory for the app (what to offer); they do not disable server routes.
+- `features` are advisory for the app (what to offer); they do not disable server routes. Two exceptions tie a flag to the server (OD-1): `guest_checkout_enabled` is true only while the server also accepts guest place-order (`storefront.guest_checkout`, default off, owner decision 4), and `web_checkout_redirect` (default false, owner decision 3) tells the app to show "Complete purchase on boxcards.shop" and open `links.web_checkout` (default `APP_URL/checkout`, settable to the cart or another site path) in the system browser instead of its own checkout.
 - `payment_gateways`: one entry per **active** gateway, keyed by gateway key, holding only its public identifier (`stripe.publishable_key`, `paypal.client_id`, `paymob.public_key`; the wallet has none). The value is null when not configured, or when it does not match the gateway's mode (a `pk_live_` key on a sandbox gateway). The app treats Stripe as unavailable when `publishable_key` is null or `stripe` is absent.
 - `media.base_url` is the prefix of media URLs (`MEDIA_BASE_URL` CDN when set, else the public disk). Every storefront image is already returned as an absolute URL.
 
-Sources and how to change them without a deploy: settings group `app` (keys `android_min_version`, `android_latest_version`, `ios_min_version`, `ios_latest_version`, `maintenance`, `maintenance_message` (JSON `{ "en": "...", "ar": "..." }`), `checkout_enabled`, `guest_checkout_enabled`, `wallet_enabled`, `reviews_enabled`, `support_enabled`, `support_url`, `terms_url`, `privacy_url`, `refund_url`) through `php artisan mobile:app-config set <key> <value>` (validated: SemVer, booleans, http(s) URL or site path); defaults in `config/mobile.php` `app` (env `MOBILE_*`). Public payment identifiers: `php artisan payments:public-key <gateway> <value> --mode=sandbox|production` (or `--clear`), stored in that mode's encrypted gateway credentials. Clients see a change within the 60 s cache.
+Sources and how to change them without a deploy: settings group `app` (keys `android_min_version`, `android_latest_version`, `ios_min_version`, `ios_latest_version`, `maintenance`, `maintenance_message` (JSON `{ "en": "...", "ar": "..." }`), `checkout_enabled`, `guest_checkout_enabled`, `wallet_enabled`, `reviews_enabled`, `support_enabled`, `web_checkout_redirect`, `support_url`, `terms_url`, `privacy_url`, `refund_url`, `web_checkout_url`) through `php artisan mobile:app-config set <key> <value>` (validated: SemVer, booleans, http(s) URL or site path); defaults in `config/mobile.php` `app` (env `MOBILE_*`). Public payment identifiers: `php artisan payments:public-key <gateway> <value> --mode=sandbox|production` (or `--clear`), stored in that mode's encrypted gateway credentials. Clients see a change within the 60 s cache.
+
+---
+
+## 1g. Owner decisions OD-1 (built)
+
+Design: `PROJECT_ARCHITECTURE.md` ADR-040 (biometric re-auth) and ADR-041 (display and payment currency).
+
+**Display currency (owner decision 1).** Every price-bearing response (Blade pages, `/api/v1`, `/api/v1/mobile`) uses one resolver, `DisplayCurrencyResolver`, decided once per request:
+
+1. explicit choice, always wins: `X-Currency` (422 unless an active currency), else the `currency` cookie (the web switcher, `POST /api/v1/storefront/currency`), else the signed-in customer's saved `users.display_currency` (`PATCH /account/profile`);
+2. otherwise the customer's country: the signed-in customer's `users.country_code`, else the GeoIP country (`GeoIpResolver`, `GEOIP_DRIVER=header` with `CF-IPCountry` behind Cloudflare). Its `countries.default_currency` is used only if active with a fresh rate;
+3. otherwise the base currency (USD).
+
+No redirect; the country never appears in a URL. The public, cached storefront reads (`/storefront/home`, `/catalog/products/{slug}`) are anonymous, so there step 2 uses GeoIP only and, with the header driver, `Vary` also names the GeoIP header (`Vary: Accept-Language, X-Currency, Cookie, CF-IPCountry`). A signed-in app that wants its profile currency on those reads sends it as `X-Currency`; cart, checkout and account calls with a bearer token use the profile directly.
+
+**Payment currency (owner decision 1).** Fixed per gateway, as data: `payment_gateways.default_currency` (seeded Paymob `EGP`; Stripe, PayPal, wallet `USD`). It no longer follows the display currency, and the former Paymob `settings.charge_display_currency_only` is removed (migration `2026_11_15_010001`), so Paymob is offered for any display currency, still only under its country and IP rules. The merchant currency row and the adapter must still support it; PayPal's refusal of EGP, SAR and AED stays and no longer matters because PayPal charges USD. `payment-options` and place-order are unchanged in shape: `display_amount` / `display_currency` and the exact `payment_amount` / `payment_currency`; the conversion runs once with the checkout rate snapshot, inside the margin floor (`payment_currency_below_margin`), and `price_changed` still compares the displayed total.
+
+**Guest checkout in the app (owner decision 4).** `POST /api/v1/mobile/checkout/place-order` without a bearer token returns 401 `guest_checkout_disabled` while `storefront.guest_checkout` (`STOREFRONT_GUEST_CHECKOUT`, default off) is off, exactly like the web route. Existing guest orders stay reachable with `X-Guest-Order-Token`, OTP and the signed delivery link.
+
+**Device integrity on reveal (owner decision 5).** `POST /api/v1/mobile/account/orders/{order}/units/{unit}/reveal` and the guest `/mobile/checkout/guest/.../reveal` accept `X-Device-Integrity: ok|compromised|unknown`. The value is stored in `digital_code_accesses.device_integrity` and in the audit `after.device_integrity` of every attempt, granted or denied; any other value is stored as `unknown`; absent is null. It never changes the outcome. It is the app's own verdict and can be forged: a risk signal only.
+
+**Biometric re-auth (owner decision 6).** All behind `mobile.customer` and the `mobile-biometric` limiter (10 per minute per customer, 60 per IP).
+
+| Method | Path | Body | Result |
+|---|---|---|---|
+| POST | `/api/v1/mobile/auth/biometric-key` | `public_key` (base64 or base64url: DER SubjectPublicKeyInfo, or the 65-byte uncompressed point), `algorithm?` (`ES256`) | 201 `{ biometric_key: { id, algorithm, created_at } }`. ECDSA P-256 only (else 422 `validation_failed`). Needs a recent **password** confirmation on this token (else 423 `recent_auth_required`; a biometric confirmation does not count). Replaces this device's previous key. Audited `auth.biometric_key_registered`, security event |
+| DELETE | `/api/v1/mobile/auth/biometric-key` | | 200. Turns biometric unlock off on this device. Audited `auth.biometric_key_revoked` |
+| POST | `/api/v1/mobile/auth/biometric-challenge` | | 200 `{ challenge: { challenge, algorithm: "ES256", expires_at } }`, `Cache-Control: no-store`. 404 `biometric_not_registered` when this device has no live key. Lives `mobile.biometric.challenge_ttl_seconds` (60) |
+| POST | `/api/v1/mobile/auth/confirm-biometric` | `challenge` (exactly as issued), `signature` (base64 DER ECDSA signature over the UTF-8 bytes of `challenge`, SHA-256) | 200 `{ confirmed_for_minutes }`, as confirm-password: sets `password_confirmed_at` on the current access token. 422 `biometric_challenge_invalid` (unknown, used, expired, another token's or device's challenge), 422 `biometric_failed` (bad signature), 423 `biometric_locked` (5th consecutive bad signature: the key is revoked; confirm the password). Audited `auth.biometric_confirmed` / `auth.biometric_failed` |
+
+A key belongs to one sign-in (refresh-token family) and stops working when that device is signed out or revoked, when the password is changed or reset, or after five bad signatures. Each challenge is single use and bound to the key and the access token that asked for it. The app keeps the private key in the Android Keystore or iOS Secure Enclave, usable only after a biometric prompt and invalidated when biometrics change (`setInvalidatedByBiometricEnrollment` / `.biometryCurrentSet`), so a changed enrolment falls back to the password.
 
 ---
 
@@ -407,7 +439,7 @@ Same group, middleware and `checkout` limiter as 3a. The order routes are visibl
 
 | Method | Path | Body | Result |
 |---|---|---|---|
-| GET | `/checkout/payment-options` | `country`, `email?` | `{ options: [{ gateway, label, methods: [{ code, label }], available, payment_currency, payment_amount, display_currency, display_amount, notice }] }`. Only eligible gateways are listed. `notice`: null, `charged_in_payment_currency` (the gateway charges another currency than the display currency, for example PayPal for an EGP, SAR or AED shopper), or `payment_currency_below_margin` with `available: false`. Errors as for validate. Advisory: place-order re-checks everything. |
+| GET | `/checkout/payment-options` | `country`, `email?` | `{ options: [{ gateway, label, methods: [{ code, label }], available, payment_currency, payment_amount, display_currency, display_amount, notice }] }`. Only eligible gateways are listed. `notice`: null, `charged_in_payment_currency` (the gateway charges another currency than the display currency: since OD-1 every gateway charges one fixed currency, Paymob EGP and Stripe, PayPal and the wallet USD, so for example Paymob for a USD shopper or Stripe for an EGP shopper; the page shows "You will be charged ..."), or `payment_currency_below_margin` with `available: false`. Errors as for validate. Advisory: place-order re-checks everything. |
 | POST | `/checkout/orders/{public_id}/retry-payment` | `gateway?`, `method?`, `client?` (section 1e) | 201 `{ next }`. A new attempt on the order's gateway with the frozen snapshot. 409 `order_not_payable` (not `pending_payment`, or already paid), `order_expired`, `payment_attempts_exhausted` (`orders.max_payment_attempts`, default 5); 422 `gateway_change_unsupported` (another gateway: place the order again), `gateway_not_eligible`; 503 `gateway_unavailable` when the provider could not create it. |
 | POST | `/checkout/orders/{public_id}/verify-payment` | | `{ public_id, status, payment_status, is_final }` after a server-side read of the latest attempt. For the return page. |
 | POST | `/checkout/orders/{public_id}/paypal/capture` | | Same shape. Server capture of an approved PayPal order (`PayPal-Request-Id: pay_capture:{payment}`); paid only on capture `COMPLETED`. 422 `capability_not_supported` for other gateways. |
@@ -455,7 +487,7 @@ Reveal response: `{ code, pin, redemption_url, instructions }`, `Cache-Control: 
 | GET | `/api/v1/checkout/guest/orders/{order_public_id}/access` | signed URL from the delivery email, valid 72 h | `otp` | Opens the order to this browser session; `{ order_public_id, otp_required }`. A browser (no JSON expected) is redirected to the M12 guest order page `/orders/{order_public_id}` (code form, then the order). Unsigned or expired: 403 |
 | POST | `/api/v1/checkout/guest/orders/{order_public_id}/units/{unit_public_id}/reveal` | | `code-reveal` | As above for a guest: the session must hold both the signed link and a verified email one-time code (`POST /checkout/guest/otp/verify`) for this order |
 
-Every attempt, granted or denied, is written to `audit_logs` (`digital_codes.revealed` / `digital_codes.reveal_denied`) and, where a code exists, to `digital_code_accesses`. Delivery emails link here and never contain a code.
+Every attempt, granted or denied, is written to `audit_logs` (`digital_codes.revealed` / `digital_codes.reveal_denied`) and, where a code exists, to `digital_code_accesses`, with the app's `X-Device-Integrity` verdict on the `/api/v1/mobile` routes (section 1g). Delivery emails link here and never contain a code.
 
 ### 4b. Built customer routes (M11)
 

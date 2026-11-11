@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Account;
 
 use App\Domains\Fulfillment\DTOs\RevealContext;
 use App\Domains\Fulfillment\DTOs\RevealedCode;
+use App\Domains\Fulfillment\Enums\DeviceIntegrity;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessActorType;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessPurpose;
 use App\Domains\Fulfillment\Services\CodeRevealService;
@@ -35,6 +36,7 @@ class OrderCodeController extends Controller
             ip: $request->ip(),
             userAgent: $request->userAgent(),
             sessionVerified: $recent,
+            deviceIntegrity: $request->hasSession() ? null : DeviceIntegrity::fromHeader($request->headers->get(DeviceIntegrity::HEADER)),
         ));
 
         return self::revealResponse($this, $revealed, $reveals->instructionsFor($unit));

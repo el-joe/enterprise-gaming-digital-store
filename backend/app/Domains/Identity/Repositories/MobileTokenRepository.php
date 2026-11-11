@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Repositories;
 
 use App\Domains\Identity\Enums\TokenRevocationReason;
+use App\Domains\Identity\Models\MobileBiometricChallenge;
 use App\Domains\Identity\Models\MobileLoginChallenge;
 use App\Domains\Identity\Models\MobileRefreshToken;
 use App\Domains\Identity\Models\User;
@@ -140,9 +141,10 @@ class MobileTokenRepository
     }
 
     /**
-     * Delete refresh tokens, login challenges and customer access tokens past their expiry.
+     * Delete refresh tokens, login challenges, biometric challenges and customer access tokens
+     * past their expiry.
      *
-     * @return array{refresh_tokens: int, challenges: int, access_tokens: int}
+     * @return array{refresh_tokens: int, challenges: int, biometric_challenges: int, access_tokens: int}
      */
     public function pruneExpired(): array
     {
@@ -151,6 +153,7 @@ class MobileTokenRepository
         return [
             'refresh_tokens' => MobileRefreshToken::query()->where('expires_at', '<', $now)->delete(),
             'challenges' => MobileLoginChallenge::query()->where('expires_at', '<', $now)->delete(),
+            'biometric_challenges' => MobileBiometricChallenge::query()->where('expires_at', '<', $now)->delete(),
             'access_tokens' => PersonalAccessToken::query()
                 ->where('tokenable_type', (new User)->getMorphClass())
                 ->where('expires_at', '<', $now)

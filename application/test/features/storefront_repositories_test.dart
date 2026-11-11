@@ -31,6 +31,12 @@ void main() {
       expect(config.update?.required, isTrue);
       expect(config.versions['android']?.minSupportedVersion, '1.2.0');
       expect(config.features.checkoutEnabled, isTrue);
+      expect(config.features.guestCheckoutEnabled, isFalse);
+      expect(config.features.webCheckoutRedirect, isFalse);
+      expect(
+        config.links.webCheckout,
+        Uri.parse('https://boxcards.test/checkout'),
+      );
       expect(config.stripePublishableKey, 'pk_test_fixture');
       expect(config.isGatewayActive('paypal'), isFalse);
       expect(

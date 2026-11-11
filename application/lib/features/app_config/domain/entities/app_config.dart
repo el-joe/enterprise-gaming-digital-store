@@ -60,6 +60,10 @@ abstract class AppFeatures with _$AppFeatures {
     required bool walletEnabled,
     required bool reviewsEnabled,
     required bool supportEnabled,
+
+    /// OD-1 (owner decision 3): checkout opens [AppLinks.webCheckout] in the
+    /// system browser instead of the in-app checkout.
+    @Default(false) bool webCheckoutRedirect,
   }) = _AppFeatures;
 }
 
@@ -78,5 +82,6 @@ abstract class AppLinks with _$AppLinks {
     Uri? terms,
     Uri? privacy,
     Uri? refund,
+    Uri? webCheckout,
   }) = _AppLinks;
 }

@@ -162,6 +162,10 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute((int) config('mobile.auth.refresh_per_minute_per_ip'))->by('mobile-refresh|ip|'.$request->ip()),
             ];
         });
+        RateLimiter::for('mobile-biometric', static fn (Request $request): array => [
+            Limit::perMinute((int) config('mobile.biometric.per_minute'))->by('mobile-biometric|user|'.($request->user()?->getAuthIdentifier() ?? $request->ip())),
+            Limit::perMinute(60)->by('mobile-biometric|ip|'.$request->ip()),
+        ]);
         RateLimiter::for('storefront', static fn (Request $request): Limit => Limit::perMinute(120)->by('storefront|'.$request->ip()));
         RateLimiter::for('search', static fn (Request $request): Limit => Limit::perMinute(60)->by('search|'.$request->ip()));
         RateLimiter::for('checkout', static fn (Request $request): array => [

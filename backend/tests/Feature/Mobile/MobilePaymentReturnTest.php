@@ -168,6 +168,9 @@ describe('Stripe next.return_url', function (): void {
 
 describe('the client channel at place-order and retry-payment', function (): void {
     beforeEach(function (): void {
+        // OD-1 (owner decision 4): guest checkout is off by default on the app route too; these
+        // tests cover the guest flow, which stays available behind `storefront.guest_checkout`.
+        config(['storefront.guest_checkout' => true]);
         CountryFactory::ensure('US');
         CountryFactory::ensure('EG');
         CurrencyFactory::ensure('USD');

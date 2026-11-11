@@ -44,13 +44,17 @@ class AppConfigService
         $maintenance = (bool) $this->value(AppConfigSetting::Maintenance);
         $features = [];
 
-        foreach ([AppConfigSetting::CheckoutEnabled, AppConfigSetting::GuestCheckoutEnabled, AppConfigSetting::WalletEnabled, AppConfigSetting::ReviewsEnabled, AppConfigSetting::SupportEnabled] as $flag) {
+        foreach ([AppConfigSetting::CheckoutEnabled, AppConfigSetting::GuestCheckoutEnabled, AppConfigSetting::WalletEnabled, AppConfigSetting::ReviewsEnabled, AppConfigSetting::SupportEnabled, AppConfigSetting::WebCheckoutRedirect] as $flag) {
             $features[$flag->value] = (bool) $this->value($flag);
         }
 
+        // Owner decision 4 (OD-1): the app is never told to offer guest checkout while the server
+        // refuses it (`storefront.guest_checkout`, default off, shared by web and app).
+        $features[AppConfigSetting::GuestCheckoutEnabled->value] = $features[AppConfigSetting::GuestCheckoutEnabled->value] && (bool) config('storefront.guest_checkout');
+
         $links = [];
 
-        foreach (['support' => AppConfigSetting::SupportUrl, 'terms' => AppConfigSetting::TermsUrl, 'privacy' => AppConfigSetting::PrivacyUrl, 'refund' => AppConfigSetting::RefundUrl] as $name => $setting) {
+        foreach (['support' => AppConfigSetting::SupportUrl, 'terms' => AppConfigSetting::TermsUrl, 'privacy' => AppConfigSetting::PrivacyUrl, 'refund' => AppConfigSetting::RefundUrl, 'web_checkout' => AppConfigSetting::WebCheckoutUrl] as $name => $setting) {
             $links[$name] = $this->url($this->value($setting));
         }
 

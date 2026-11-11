@@ -24,6 +24,8 @@ enum AppConfigSetting: string
     case WalletEnabled = 'wallet_enabled';
     case ReviewsEnabled = 'reviews_enabled';
     case SupportEnabled = 'support_enabled';
+    case WebCheckoutRedirect = 'web_checkout_redirect';
+    case WebCheckoutUrl = 'web_checkout_url';
     case SupportUrl = 'support_url';
     case TermsUrl = 'terms_url';
     case PrivacyUrl = 'privacy_url';
@@ -32,7 +34,7 @@ enum AppConfigSetting: string
     public function type(): SettingType
     {
         return match ($this) {
-            self::Maintenance, self::CheckoutEnabled, self::GuestCheckoutEnabled, self::WalletEnabled, self::ReviewsEnabled, self::SupportEnabled => SettingType::Bool,
+            self::Maintenance, self::CheckoutEnabled, self::GuestCheckoutEnabled, self::WalletEnabled, self::ReviewsEnabled, self::SupportEnabled, self::WebCheckoutRedirect => SettingType::Bool,
             self::MaintenanceMessage => SettingType::Json,
             default => SettingType::String,
         };
@@ -50,7 +52,7 @@ enum AppConfigSetting: string
 
     public function isUrl(): bool
     {
-        return in_array($this, [self::SupportUrl, self::TermsUrl, self::PrivacyUrl, self::RefundUrl], true);
+        return in_array($this, [self::SupportUrl, self::TermsUrl, self::PrivacyUrl, self::RefundUrl, self::WebCheckoutUrl], true);
     }
 
     /**

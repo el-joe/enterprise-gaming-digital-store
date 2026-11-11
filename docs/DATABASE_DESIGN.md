@@ -73,6 +73,8 @@ Standard Sanctum table. `tokenable` is a `ServiceAccount` (abilities store scope
 
 M-A3 adds `password_confirmed_at` (ts, null): the last password confirmation made with this access token, the bearer twin of the session key `auth.password_confirmed_at`; reveal accepts it for `fulfillment.reveal_recent_auth_minutes`. A refresh copies it to the successor token.
 
+OD-1 (ADR-040) adds `recent_auth_method` (str(16), null): `password` or `biometric`, how `password_confirmed_at` was last set. Both satisfy a reveal; registering a biometric key needs `password` (null, from before OD-1, counts as password).
+
 ### service_accounts [sd]
 
 | Column | Type | Null | Notes |
@@ -174,6 +176,33 @@ Indexes: `idx_mrt_family` (family_id): family revocation. `idx_mrt_user_device` 
 | attempts | tinyint unsigned | NN | default 0; spent at `mobile.auth.challenge_max_attempts` |
 | expires_at | ts | NN | index `idx_mlc_expires` (prune) |
 | consumed_at | ts | Y | single use |
+
+### mobile_biometric_keys (OD-1, ADR-040)
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| public_id | ulid | NN | unique `uq_mbk_public_id` |
+| user_id | fk:users cascade | NN | |
+| family_id | char(26) | NN | the sign-in (refresh-token family) the key belongs to; usable only while it is live |
+| algorithm | str(16) | NN | `ES256` (ECDSA P-256, SHA-256) |
+| public_key | text | NN | PEM SubjectPublicKeyInfo; hidden from serialization |
+| key_fingerprint | char(64) | NN | SHA-256 of the PEM |
+| failed_attempts | tinyint unsigned | NN | consecutive bad signatures; reset on success |
+| last_used_at | ts | Y | |
+| revoked_at | ts | Y | |
+| revocation_reason | enum | Y | `revoked_by_user`, `replaced`, `too_many_failures`, `password_changed`, `password_reset` |
+
+Indexes: `idx_mbk_family` (family_id, revoked_at), `idx_mbk_user` (user_id, revoked_at). One live key per family (enforced by the service: registering revokes the previous one).
+
+### mobile_biometric_challenges (OD-1, ADR-040)
+
+| Column | Type | Null | Notes |
+|---|---|---|---|
+| mobile_biometric_key_id | fk:mobile_biometric_keys cascade | NN | |
+| access_token_id | fk:personal_access_tokens cascade | NN | the token that asked; only it may answer |
+| challenge_hash | char(64) | NN | SHA-256 of the challenge string; unique `uq_mbc_challenge_hash` |
+| expires_at | ts | NN | `mobile.biometric.challenge_ttl_seconds` (60); index `idx_mbc_expires` (pruned by `auth:prune-mobile-tokens`) |
+| consumed_at | ts | Y | single use: set on every presentation |
 
 ### `notifications`, `sessions`, `password_reset_tokens`, `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`
 
@@ -1010,6 +1039,7 @@ Indexes: `idx_dc_stock` (product_variant_id, stock_status, id): `SELECT ... FOR 
 | denial_reason | str(64) | Y | |
 | ip | str(45) | Y | |
 | user_agent | str(255) | Y | |
+| device_integrity | str(16) | Y | OD-1: the app's `X-Device-Integrity` (`ok`, `compromised`, `unknown`) on mobile reveals; null otherwise. Advisory, never blocks |
 
 Index: `idx_dca_code` (digital_code_id, created_at). `idx_dca_actor` (actor_type, actor_id, created_at): staff access review.
 

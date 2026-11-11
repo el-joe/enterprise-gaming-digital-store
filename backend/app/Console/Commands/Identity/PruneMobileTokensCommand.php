@@ -18,7 +18,7 @@ class PruneMobileTokensCommand extends Command
     {
         $pruned = $tokens->pruneExpired();
 
-        $this->info("Pruned {$pruned['refresh_tokens']} refresh tokens, {$pruned['challenges']} login challenges and {$pruned['access_tokens']} access tokens.");
+        $this->info("Pruned {$pruned['refresh_tokens']} refresh tokens, {$pruned['challenges']} login challenges, {$pruned['biometric_challenges']} biometric challenges and {$pruned['access_tokens']} access tokens.");
 
         return self::SUCCESS;
     }

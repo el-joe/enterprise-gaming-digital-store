@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Mobile\AppConfigController;
+use App\Http\Controllers\Mobile\Auth\BiometricController;
 use App\Http\Controllers\Mobile\Auth\LoginController;
 use App\Http\Controllers\Mobile\Auth\MeController;
 use App\Http\Controllers\Mobile\Auth\RegisterController;
@@ -22,6 +23,14 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
         Route::get('/me', [MeController::class, 'show'])->name('me');
         Route::post('/logout', [TokenController::class, 'destroy'])->name('logout');
         Route::post('/logout-all', [TokenController::class, 'destroyAll'])->name('logout-all');
+
+        // OD-1 (owner decision 6, ADR-040): device-bound biometric re-auth for code reveal.
+        Route::middleware('throttle:mobile-biometric')->group(function (): void {
+            Route::post('/biometric-key', [BiometricController::class, 'store'])->name('biometric-key.store');
+            Route::delete('/biometric-key', [BiometricController::class, 'destroy'])->name('biometric-key.destroy');
+            Route::post('/biometric-challenge', [BiometricController::class, 'challenge'])->name('biometric-challenge');
+            Route::post('/confirm-biometric', [BiometricController::class, 'confirm'])->name('confirm-biometric');
+        });
     });
 });
 

@@ -5,6 +5,9 @@
  * recent authentication for reveal stored on the access token.
  */
 
+use App\Domains\Audit\Models\AuditLog;
+use App\Domains\Fulfillment\Enums\DeviceIntegrity;
+use App\Domains\Fulfillment\Models\DigitalCodeAccess;
 use App\Domains\Identity\Enums\ServiceAccountKind;
 use App\Domains\Identity\Enums\UserStatus;
 use App\Domains\Identity\Models\ServiceAccount;
@@ -97,6 +100,32 @@ describe('reveal with token-scoped recent authentication', function (): void {
 
         $this->travel(6)->minutes();
         mobileCall('POST', revealPathFor($this->unit), token: $refreshed)->assertStatus(423);
+    });
+
+    it('stores the X-Device-Integrity verdict in the reveal audit and never blocks on it (owner decision 5)', function (?string $header, ?DeviceIntegrity $stored): void {
+        mobileCall('POST', 'account/confirm-password', ['password' => 'password'], $this->access)->assertOk();
+        $headers = $header === null ? [] : [DeviceIntegrity::HEADER => $header];
+
+        statelessCall('POST', 'api/v1/mobile/'.revealPathFor($this->unit), headers: $headers, token: $this->access)->assertOk();
+
+        $access = DigitalCodeAccess::query()->sole();
+        $audit = AuditLog::query()->where('action', 'digital_codes.revealed')->sole();
+
+        expect($access->granted)->toBeTrue()
+            ->and($access->device_integrity)->toBe($stored)
+            ->and($audit->after['device_integrity'])->toBe($stored?->value);
+    })->with([
+        'ok' => ['ok', DeviceIntegrity::Ok],
+        'compromised (warn, do not block)' => ['compromised', DeviceIntegrity::Compromised],
+        'unknown' => ['unknown', DeviceIntegrity::Unknown],
+        'malformed is kept as unknown' => ['rooted!!', DeviceIntegrity::Unknown],
+        'absent' => [null, null],
+    ]);
+
+    it('records the verdict on a refused reveal too', function (): void {
+        statelessCall('POST', 'api/v1/mobile/'.revealPathFor($this->unit), headers: [DeviceIntegrity::HEADER => 'compromised'], token: $this->access)->assertStatus(423);
+
+        expect(DigitalCodeAccess::query()->sole()->device_integrity)->toBe(DeviceIntegrity::Compromised);
     });
 
     it('still refuses another customer\'s unit with 404', function (): void {

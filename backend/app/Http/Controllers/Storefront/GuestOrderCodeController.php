@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Domains\Fulfillment\DTOs\RevealContext;
+use App\Domains\Fulfillment\Enums\DeviceIntegrity;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessActorType;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessPurpose;
 use App\Domains\Fulfillment\Services\CodeRevealService;
@@ -80,6 +81,7 @@ class GuestOrderCodeController extends Controller
             ip: $request->ip(),
             userAgent: $request->userAgent(),
             sessionVerified: $verified,
+            deviceIntegrity: $request->hasSession() ? null : DeviceIntegrity::fromHeader($request->headers->get(DeviceIntegrity::HEADER)),
         ));
 
         return OrderCodeController::revealResponse($this, $revealed, $reveals->instructionsFor($unit));

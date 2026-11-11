@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "guest_checkout_disabled",
+        "message": "Please sign in or create an account to check out.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/checkout/place-order"
+    },
+    "status": 401
+}

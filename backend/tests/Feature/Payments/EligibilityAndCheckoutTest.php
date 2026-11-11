@@ -153,21 +153,72 @@ describe('seeded country and currency rules', function (): void {
         'IP in the US' => ['EG', 'US', 'EGP'],
         'IP unknown' => ['EG', null, 'EGP'],
         'IP is Tor' => ['EG', 'T1', 'EGP'],
-        'display in USD' => ['EG', 'EG', 'USD'],
     ]);
 
-    it('refuses Paymob at place-order for a non-EGP order, whatever the client sends', function (): void {
+    // OD-1 (owner decision 1): Paymob always charges EGP and is offered for any display currency.
+    // Before OD-1 a USD display refused Paymob (`charge_display_currency_only`).
+    it('offers Paymob for any display currency in Egypt and always charges EGP', function (string $display, string $displayAmount): void {
+        addToPaymentCart($this->user, $this->variant);
+
+        $paymob = collect(optionsFor('EG', 'EG', $display)->json('data.options'))->firstWhere('gateway', 'paymob');
+
+        expect($paymob)->not->toBeNull()
+            ->and($paymob['payment_currency'])->toBe('EGP')
+            ->and($paymob['payment_amount']['amount'])->toBe('500.00')
+            ->and($paymob['display_currency'])->toBe($display)
+            ->and($paymob['display_amount']['amount'])->toBe($displayAmount)
+            ->and($paymob['notice'])->toBe('charged_in_payment_currency');
+    })->with([
+        'display in USD' => ['USD', '10.00'],
+        'display in SAR' => ['SAR', '37.50'],
+    ]);
+
+    // OD-1: was "refuses Paymob at place-order for a non-EGP order"; a USD display now places a
+    // Paymob order charged in EGP, converted once with the checkout rate snapshot.
+    it('places a Paymob order from a USD display, charging EGP once at the snapshot rate', function (): void {
+        fakePaymob();
         addToPaymentCart($this->user, $this->variant);
 
         $this->withHeaders(['CF-IPCountry' => 'EG']);
-        placePaymentOrder($this->user, placeOrderBody('10.00', ['gateway' => 'paymob', 'country' => 'EG']))->assertJsonPath('code', 'gateway_not_eligible');
+        placePaymentOrder($this->user, placeOrderBody('10.00', ['gateway' => 'paymob', 'country' => 'EG']))
+            ->assertCreated()
+            ->assertJsonPath('data.order.display_total.amount', '10.00')
+            ->assertJsonPath('data.order.payment_total.amount', '500.00')
+            ->assertJsonPath('data.order.payment_total.currency', 'EGP');
+
+        $order = Order::query()->sole();
+
+        expect($order->display_currency)->toBe('USD')
+            ->and($order->payment_currency)->toBe('EGP')
+            ->and(Money::of($order->payment_total, 'EGP')->amount)->toBe(Money::of('500', 'EGP')->amount)
+            ->and((string) $order->payment_rate)->toStartWith('50');
+    });
+
+    it('still refuses Paymob at place-order outside Egypt, whatever the client sends', function (): void {
+        addToPaymentCart($this->user, $this->variant);
+
+        $this->withHeaders(['CF-IPCountry' => 'EG']);
+        placePaymentOrder($this->user, placeOrderBody('10.00', ['gateway' => 'paymob', 'country' => 'US']))->assertJsonPath('code', 'gateway_not_eligible');
+    });
+
+    it('charges Stripe in USD even when the merchant account also enables the display currency', function (): void {
+        gatewayFor('stripe', ['USD', 'EGP'], keepRules: true, defaultCurrency: 'USD');
+        addToPaymentCart($this->user, $this->variant);
+
+        $stripe = collect(optionsFor('US', 'US', 'EGP')->json('data.options'))->firstWhere('gateway', 'stripe');
+
+        expect($stripe['payment_currency'])->toBe('USD')
+            ->and($stripe['payment_amount']['amount'])->toBe('10.00')
+            ->and($stripe['display_amount']['amount'])->toBe('500.00');
     });
 
     it('offers Stripe and PayPal internationally but not to customers declared in Egypt', function (): void {
         addToPaymentCart($this->user, $this->variant);
 
+        // OD-1: Paymob is now offered to a customer declared and located in Egypt whatever the
+        // display currency (here USD); before OD-1 a USD display offered nothing in Egypt.
         expect(offeredGateways(optionsFor('US', 'US')))->toBe(['stripe', 'paypal'])
-            ->and(offeredGateways(optionsFor('EG', 'EG')))->toBe([]);
+            ->and(offeredGateways(optionsFor('EG', 'EG')))->toBe(['paymob']);
     });
 
     it('charges PayPal in its default currency when the customer browses in EGP, SAR or AED, and says so', function (string $display): void {

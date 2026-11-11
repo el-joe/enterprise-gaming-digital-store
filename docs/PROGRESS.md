@@ -19,6 +19,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M10 | Payments | Complete (all three adapters mocked only, awaiting sandbox verification; Stripe also awaits BD1) |
 | M11 | Wallet, promotions, affiliates, reviews, support | Complete (wallet is internal, no provider; affiliate payouts, guest tickets and admin screens not built) |
 | M12 | Storefront | Complete (Blade pages EN/AR; web checkout requires sign-in by owner decision 4, flag `storefront.guest_checkout`; payments mocked only; newsletter, wishlist and account area not built) |
+| OD-1 | Owner decisions, backend (`OWNER_DECISIONS.md` 1, 3, 4, 5, 6) | Complete (2026-11-11, not committed; Flutter only DTO fields and fixtures) |
 | M13 | Customer account | Not started |
 | M14 | Admin core | Not started |
 | M15 | Admin remaining | Not started |
@@ -1270,3 +1271,72 @@ This unblocks M12 to M15, M18 and M-A10 to M-A17.
 - a "buy on the web" state only if the store-policy review requires it.
 
 **Build order** (one agent at a time, owner rule): M12, M13, M14, M15, M18, then M-A10 to M-A19, then M19. M20 and M-A20 need credentials, servers and developer accounts.
+
+## OD-1: Owner decisions, backend
+
+Date completed: 2026-11-11. Completed by: BEL (senior Laravel backend developer), alone and in sequence. Not committed.
+
+### Summary of completed work
+
+The backend side of `OWNER_DECISIONS.md` decisions 1, 3, 4, 5 and 6 (the implementation table at the end of that file). Design: `PROJECT_ARCHITECTURE.md` ADR-040 (biometric re-auth) and ADR-041 (display and payment currency); API: `API_DOCUMENTATION.md` section 1g.
+
+### Files created
+
+- Currency: `Enums/DisplayCurrencySource.php`, `DTOs/DisplayCurrencyDecision.php`, `Services/DisplayCurrencyResolver.php`.
+- Fulfillment: `Enums/DeviceIntegrity.php`.
+- Identity: `Enums/RecentAuthMethod.php`, `Enums/BiometricKeyRevocationReason.php`, `Models/MobileBiometricKey.php`, `Models/MobileBiometricChallenge.php`, `DTOs/BiometricChallenge.php`, `Services/BiometricAuthService.php`; factories for both models.
+- HTTP: `Controllers/Mobile/Auth/BiometricController.php`, `Requests/Mobile/Auth/RegisterBiometricKeyRequest.php`, `Requests/Mobile/Auth/ConfirmBiometricRequest.php`.
+- Tests: `tests/Feature/Currency/DisplayCurrencyTest.php`, `tests/Feature/Mobile/BiometricAuthTest.php`; fixture `docs/api-fixtures/checkout/place_order_guest_checkout_disabled.json`.
+
+### Migrations
+
+- `2026_11_15_010001_remove_charge_display_currency_only_from_payment_gateways` (data only).
+- `2026_11_15_010002_add_device_integrity_to_digital_code_accesses_table`.
+- `2026_11_15_010003_add_recent_auth_method_to_personal_access_tokens_table`.
+- `2026_11_15_010004_create_mobile_biometric_keys_table`.
+- `2026_11_15_010005_create_mobile_biometric_challenges_table`.
+
+### Features implemented
+
+1. **Display currency by country (decision 1).** `ResolvesDisplayCurrency` (used by every storefront controller, `StorefrontRequest` and so every Blade page) now delegates to `DisplayCurrencyResolver`: `X-Currency`, `currency` cookie, saved `users.display_currency` (explicit, always win); else the country currency of `users.country_code`, else of the GeoIP country, only when active with a fresh rate; else USD. Cached on the request. `GeoIpResolver::sourceHeader()` added; `PublicCacheHeaders` adds the GeoIP header to `Vary` on priced public reads.
+2. **Payment currency per gateway (decision 1).** `PaymentGateway::chargeCurrency()` (`default_currency`: Paymob EGP, others USD, seeded); `PaymentEligibilityService::paymentCurrency` ignores the display currency; `charge_display_currency_only` removed from the seeder and existing rows. Place-order, payment-options, snapshot, margin floor, `price_changed`, idempotency and refunds are unchanged code paths. The wallet charges USD and its ledger is in the base currency (USD), so they are consistent.
+3. **App config (decision 3).** `features.web_checkout_redirect` (default false, `MOBILE_WEB_CHECKOUT_REDIRECT`) and `links.web_checkout` (default `/checkout` on `APP_URL`, `MOBILE_WEB_CHECKOUT_URL`), both settable with `mobile:app-config`.
+4. **No guest checkout in the app (decision 4).** The `/api/v1/mobile` place-order refuses guests with 401 `guest_checkout_disabled` under `storefront.guest_checkout`; `features.guest_checkout_enabled` is published true only while that flag is on.
+5. **Device integrity (decision 5).** `X-Device-Integrity` on mobile reveals stored in `digital_code_accesses.device_integrity` and the reveal audit; never blocks.
+6. **Biometric re-auth (decision 6).** Key registration (password-confirmed token), revocation, single-use challenge and `confirm-biometric`, which sets `password_confirmed_at` (and `recent_auth_method = biometric`) on the current token; `mobile-biometric` limiter; audit and security events; keys revoked on password change and reset, after five bad signatures, and dead once the device's sign-in ends.
+
+### Behaviour changes to existing endpoints
+
+- Display currency without an explicit choice is the country currency instead of USD (signed-in customer with a profile country; guests only with `GEOIP_DRIVER=header`).
+- `payment-options` and place-order: Paymob is offered and placeable for any display currency (EG declared and IP country still required) and always charges EGP; a gateway whose merchant account also enables the display currency now still charges its fixed currency.
+- `POST /api/v1/mobile/checkout/place-order` by a guest: 401 `guest_checkout_disabled` by default (was allowed).
+- `GET /app/config`: `features.guest_checkout_enabled` false by default (was true); new `features.web_checkout_redirect` and `links.web_checkout`.
+- `Vary` on `/storefront/home` and `/storefront/catalog/products/{slug}` includes the GeoIP header when the header driver is on.
+- Reveal audit rows carry `device_integrity`.
+
+### Tests changed (behaviour changed by a decision)
+
+- `Payments/EligibilityAndCheckoutTest`: the "display in USD" case left the "does not offer Paymob" dataset and became a positive test (Paymob offered for USD and SAR displays, charging EGP 500.00 for USD 10.00); "refuses Paymob at place-order for a non-EGP order" became "places a Paymob order from a USD display, charging EGP once at the snapshot rate", plus a kept refusal for a non-Egyptian declared country; "Stripe and PayPal internationally" now expects `['paymob']` for an Egyptian customer instead of `[]`. New: Stripe still charges USD when the merchant also enables EGP.
+- `Mobile/AppConfigTest`: the features map now has `guest_checkout_enabled: false` and `web_checkout_redirect: false`, plus `links.web_checkout`; new cases for the guest flag and the redirect flag.
+- `Mobile/MobileCheckoutTest`, `Mobile/MobilePaymentReturnTest`, `MobileContract/CartCheckoutContractTest`: the guest place-order blocks set `storefront.guest_checkout = true` (they test the guest flow, which stays available behind the flag); new tests for the 401 and its fixture.
+- `Mobile/MobileAccountTest`: new device-integrity cases.
+
+### Tests and results
+
+- Backend: `php artisan test --compact` (sequential) 2321 passed, 16272 assertions, about 2.7 minutes (2265 before OD-1, so 56 more cases; new files `DisplayCurrencyTest` 17 and `BiometricAuthTest` 16, the rest in the adapted files listed above). `vendor/bin/pint --dirty` clean.
+- Contract fixtures regenerated with `UPDATE_API_FIXTURES=1`: `app_config/config_ok.json` and `config_ar.json` changed (flags and `links.web_checkout`), `checkout/place_order_guest_checkout_disabled.json` added; copied to the app with `application/tool/sync_fixtures.sh`.
+- Flutter: `AppFeaturesDto`/`AppFeatures.webCheckoutRedirect` (default false) and `LinksDto`/`AppLinks.webCheckout` added and regenerated; repository test asserts them. `application/tool/ci.sh` passed, 350 tests.
+- Schema: `SchemaAcceptanceTest` lists the two new tables; `DATABASE_DESIGN.md` documents them and the two new columns.
+
+### Outstanding requirements
+
+- Key attestation (Play Integrity key attestation, Apple App Attest) is not verified: the server trusts the app to create the biometric key with user authentication required (ADR-040).
+- Public cached storefront reads stay anonymous: a signed-in app user sees the profile currency there only if the app sends `X-Currency` (cart, checkout and account use the profile directly).
+- With the default null GeoIP driver, guests browse in USD; set `GEOIP_DRIVER=header` behind Cloudflare in production.
+- No admin screen for a gateway's charge currency or for biometric keys; the device list does not show whether biometric unlock is on.
+- The risk engine does not yet read `device_integrity`.
+- No contract fixtures for the biometric endpoints yet (the app builds them at M-A10/M-A16).
+
+### Next milestone
+
+M13 (customer account), per the build order.

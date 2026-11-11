@@ -7,6 +7,7 @@ use App\Domains\Audit\Enums\AuditLogActorType;
 use App\Domains\Audit\Services\AuditLogger;
 use App\Domains\Identity\DTOs\AccountDevice;
 use App\Domains\Identity\Enums\AccountDeviceType;
+use App\Domains\Identity\Enums\BiometricKeyRevocationReason;
 use App\Domains\Identity\Enums\TokenRevocationReason;
 use App\Domains\Identity\Exceptions\CurrentDeviceRevocation;
 use App\Domains\Identity\Models\MobileRefreshToken;
@@ -36,6 +37,7 @@ class AccountSessionService
         private MobileTokenRepository $tokens,
         private WebSessionRepository $webSessions,
         private AuditLogger $audit,
+        private BiometricAuthService $biometrics,
     ) {}
 
     /**
@@ -120,6 +122,8 @@ class AccountSessionService
     {
         $revoked = DB::transaction(function () use ($user, $newPassword, $currentToken, $currentSessionId): array {
             $user->forceFill(['password' => $newPassword, 'remember_token' => Str::random(60)])->save();
+            // OD-1 (ADR-040): biometric keys are re-enrolled after a password change, on every device.
+            $this->biometrics->revokeAllForUser($user, BiometricKeyRevocationReason::PasswordChanged);
 
             return [
                 'mobile_families' => $this->tokens->revokeAllForUserExcept($user, $this->currentFamilyId($currentToken), $currentToken?->getKey() === null ? null : (int) $currentToken->getKey(), TokenRevocationReason::PasswordChanged),
@@ -139,6 +143,8 @@ class AccountSessionService
      */
     public function signOutEverywhere(User $user, TokenRevocationReason $reason): array
     {
+        $this->biometrics->revokeAllForUser($user, BiometricKeyRevocationReason::PasswordReset);
+
         return [
             'mobile_families' => $this->tokens->revokeAllForUserExcept($user, null, null, $reason),
             'web_sessions' => $this->webSessions->deleteAllExcept($user->id, null),

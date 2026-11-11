@@ -1279,7 +1279,7 @@ as String?,
 /// @nodoc
 mixin _$AppFeaturesDto {
 
- bool get checkoutEnabled; bool get guestCheckoutEnabled; bool get walletEnabled; bool get reviewsEnabled; bool get supportEnabled;
+ bool get checkoutEnabled; bool get guestCheckoutEnabled; bool get walletEnabled; bool get reviewsEnabled; bool get supportEnabled; bool get webCheckoutRedirect;
 /// Create a copy of AppFeaturesDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1293,20 +1293,20 @@ $AppFeaturesDtoCopyWith<AppFeaturesDto> get copyWith => _$AppFeaturesDtoCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as AppFeaturesDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppFeaturesDto&&(identical(other.checkoutEnabled, _this.checkoutEnabled) || other.checkoutEnabled == _this.checkoutEnabled)&&(identical(other.guestCheckoutEnabled, _this.guestCheckoutEnabled) || other.guestCheckoutEnabled == _this.guestCheckoutEnabled)&&(identical(other.walletEnabled, _this.walletEnabled) || other.walletEnabled == _this.walletEnabled)&&(identical(other.reviewsEnabled, _this.reviewsEnabled) || other.reviewsEnabled == _this.reviewsEnabled)&&(identical(other.supportEnabled, _this.supportEnabled) || other.supportEnabled == _this.supportEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppFeaturesDto&&(identical(other.checkoutEnabled, _this.checkoutEnabled) || other.checkoutEnabled == _this.checkoutEnabled)&&(identical(other.guestCheckoutEnabled, _this.guestCheckoutEnabled) || other.guestCheckoutEnabled == _this.guestCheckoutEnabled)&&(identical(other.walletEnabled, _this.walletEnabled) || other.walletEnabled == _this.walletEnabled)&&(identical(other.reviewsEnabled, _this.reviewsEnabled) || other.reviewsEnabled == _this.reviewsEnabled)&&(identical(other.supportEnabled, _this.supportEnabled) || other.supportEnabled == _this.supportEnabled)&&(identical(other.webCheckoutRedirect, _this.webCheckoutRedirect) || other.webCheckoutRedirect == _this.webCheckoutRedirect));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as AppFeaturesDto;
-  return Object.hash(runtimeType,_this.checkoutEnabled,_this.guestCheckoutEnabled,_this.walletEnabled,_this.reviewsEnabled,_this.supportEnabled);
+  return Object.hash(runtimeType,_this.checkoutEnabled,_this.guestCheckoutEnabled,_this.walletEnabled,_this.reviewsEnabled,_this.supportEnabled,_this.webCheckoutRedirect);
 }
 
 @override
 String toString() {
   final _this = this as AppFeaturesDto;
-  return 'AppFeaturesDto(checkoutEnabled: ${_this.checkoutEnabled}, guestCheckoutEnabled: ${_this.guestCheckoutEnabled}, walletEnabled: ${_this.walletEnabled}, reviewsEnabled: ${_this.reviewsEnabled}, supportEnabled: ${_this.supportEnabled})';
+  return 'AppFeaturesDto(checkoutEnabled: ${_this.checkoutEnabled}, guestCheckoutEnabled: ${_this.guestCheckoutEnabled}, walletEnabled: ${_this.walletEnabled}, reviewsEnabled: ${_this.reviewsEnabled}, supportEnabled: ${_this.supportEnabled}, webCheckoutRedirect: ${_this.webCheckoutRedirect})';
 }
 
 
@@ -1317,7 +1317,7 @@ abstract mixin class $AppFeaturesDtoCopyWith<$Res>  {
   factory $AppFeaturesDtoCopyWith(AppFeaturesDto value, $Res Function(AppFeaturesDto) _then) = _$AppFeaturesDtoCopyWithImpl;
 @useResult
 $Res call({
- bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled
+ bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled, bool webCheckoutRedirect
 });
 
 
@@ -1334,13 +1334,14 @@ class _$AppFeaturesDtoCopyWithImpl<$Res>
 
 /// Create a copy of AppFeaturesDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,Object? webCheckoutRedirect = null,}) {
   return _then(AppFeaturesDto(
 checkoutEnabled: null == checkoutEnabled ? _self.checkoutEnabled : checkoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,guestCheckoutEnabled: null == guestCheckoutEnabled ? _self.guestCheckoutEnabled : guestCheckoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,walletEnabled: null == walletEnabled ? _self.walletEnabled : walletEnabled // ignore: cast_nullable_to_non_nullable
 as bool,reviewsEnabled: null == reviewsEnabled ? _self.reviewsEnabled : reviewsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,supportEnabled: null == supportEnabled ? _self.supportEnabled : supportEnabled // ignore: cast_nullable_to_non_nullable
+as bool,webCheckoutRedirect: null == webCheckoutRedirect ? _self.webCheckoutRedirect : webCheckoutRedirect // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -1426,10 +1427,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled,  bool webCheckoutRedirect)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppFeaturesDto() when $default != null:
-return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled);case _:
+return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled,_that.webCheckoutRedirect);case _:
   return orElse();
 
 }
@@ -1447,10 +1448,10 @@ return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEna
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled,  bool webCheckoutRedirect)  $default,) {final _that = this;
 switch (_that) {
 case _AppFeaturesDto():
-return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled);case _:
+return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled,_that.webCheckoutRedirect);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1467,10 +1468,10 @@ return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEna
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled,  bool webCheckoutRedirect)?  $default,) {final _that = this;
 switch (_that) {
 case _AppFeaturesDto() when $default != null:
-return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled);case _:
+return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled,_that.webCheckoutRedirect);case _:
   return null;
 
 }
@@ -1482,7 +1483,7 @@ return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEna
 @JsonSerializable()
 
 class _AppFeaturesDto extends AppFeaturesDto {
-  const _AppFeaturesDto({required this.checkoutEnabled, required this.guestCheckoutEnabled, required this.walletEnabled, required this.reviewsEnabled, required this.supportEnabled}): super._();
+  const _AppFeaturesDto({required this.checkoutEnabled, required this.guestCheckoutEnabled, required this.walletEnabled, required this.reviewsEnabled, required this.supportEnabled, this.webCheckoutRedirect = false}): super._();
   factory _AppFeaturesDto.fromJson(Map<String, dynamic> json) => _$AppFeaturesDtoFromJson(json);
 
 @override final  bool checkoutEnabled;
@@ -1490,6 +1491,7 @@ class _AppFeaturesDto extends AppFeaturesDto {
 @override final  bool walletEnabled;
 @override final  bool reviewsEnabled;
 @override final  bool supportEnabled;
+@override@JsonKey() final  bool webCheckoutRedirect;
 
 /// Create a copy of AppFeaturesDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1504,18 +1506,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppFeaturesDto&&(identical(other.checkoutEnabled, checkoutEnabled) || other.checkoutEnabled == checkoutEnabled)&&(identical(other.guestCheckoutEnabled, guestCheckoutEnabled) || other.guestCheckoutEnabled == guestCheckoutEnabled)&&(identical(other.walletEnabled, walletEnabled) || other.walletEnabled == walletEnabled)&&(identical(other.reviewsEnabled, reviewsEnabled) || other.reviewsEnabled == reviewsEnabled)&&(identical(other.supportEnabled, supportEnabled) || other.supportEnabled == supportEnabled));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppFeaturesDto&&(identical(other.checkoutEnabled, checkoutEnabled) || other.checkoutEnabled == checkoutEnabled)&&(identical(other.guestCheckoutEnabled, guestCheckoutEnabled) || other.guestCheckoutEnabled == guestCheckoutEnabled)&&(identical(other.walletEnabled, walletEnabled) || other.walletEnabled == walletEnabled)&&(identical(other.reviewsEnabled, reviewsEnabled) || other.reviewsEnabled == reviewsEnabled)&&(identical(other.supportEnabled, supportEnabled) || other.supportEnabled == supportEnabled)&&(identical(other.webCheckoutRedirect, webCheckoutRedirect) || other.webCheckoutRedirect == webCheckoutRedirect));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,checkoutEnabled,guestCheckoutEnabled,walletEnabled,reviewsEnabled,supportEnabled);
+    return Object.hash(runtimeType,checkoutEnabled,guestCheckoutEnabled,walletEnabled,reviewsEnabled,supportEnabled,webCheckoutRedirect);
 }
 
 @override
 String toString() {
-    return 'AppFeaturesDto(checkoutEnabled: $checkoutEnabled, guestCheckoutEnabled: $guestCheckoutEnabled, walletEnabled: $walletEnabled, reviewsEnabled: $reviewsEnabled, supportEnabled: $supportEnabled)';
+    return 'AppFeaturesDto(checkoutEnabled: $checkoutEnabled, guestCheckoutEnabled: $guestCheckoutEnabled, walletEnabled: $walletEnabled, reviewsEnabled: $reviewsEnabled, supportEnabled: $supportEnabled, webCheckoutRedirect: $webCheckoutRedirect)';
 }
 
 
@@ -1526,7 +1528,7 @@ abstract mixin class _$AppFeaturesDtoCopyWith<$Res> implements $AppFeaturesDtoCo
   factory _$AppFeaturesDtoCopyWith(_AppFeaturesDto value, $Res Function(_AppFeaturesDto) _then) = __$AppFeaturesDtoCopyWithImpl;
 @override @useResult
 $Res call({
- bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled
+ bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled, bool webCheckoutRedirect
 });
 
 
@@ -1543,13 +1545,14 @@ class __$AppFeaturesDtoCopyWithImpl<$Res>
 
 /// Create a copy of AppFeaturesDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,Object? webCheckoutRedirect = null,}) {
   return _then(_AppFeaturesDto(
 checkoutEnabled: null == checkoutEnabled ? _self.checkoutEnabled : checkoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,guestCheckoutEnabled: null == guestCheckoutEnabled ? _self.guestCheckoutEnabled : guestCheckoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,walletEnabled: null == walletEnabled ? _self.walletEnabled : walletEnabled // ignore: cast_nullable_to_non_nullable
 as bool,reviewsEnabled: null == reviewsEnabled ? _self.reviewsEnabled : reviewsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,supportEnabled: null == supportEnabled ? _self.supportEnabled : supportEnabled // ignore: cast_nullable_to_non_nullable
+as bool,webCheckoutRedirect: null == webCheckoutRedirect ? _self.webCheckoutRedirect : webCheckoutRedirect // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -2668,7 +2671,7 @@ as String,
 /// @nodoc
 mixin _$LinksDto {
 
- String? get support; String? get terms; String? get privacy; String? get refund;
+ String? get support; String? get terms; String? get privacy; String? get refund; String? get webCheckout;
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2682,20 +2685,20 @@ $LinksDtoCopyWith<LinksDto> get copyWith => _$LinksDtoCopyWithImpl<LinksDto>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as LinksDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinksDto&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinksDto&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund)&&(identical(other.webCheckout, _this.webCheckout) || other.webCheckout == _this.webCheckout));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as LinksDto;
-  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund);
+  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund,_this.webCheckout);
 }
 
 @override
 String toString() {
   final _this = this as LinksDto;
-  return 'LinksDto(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund})';
+  return 'LinksDto(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund}, webCheckout: ${_this.webCheckout})';
 }
 
 
@@ -2706,7 +2709,7 @@ abstract mixin class $LinksDtoCopyWith<$Res>  {
   factory $LinksDtoCopyWith(LinksDto value, $Res Function(LinksDto) _then) = _$LinksDtoCopyWithImpl;
 @useResult
 $Res call({
- String? support, String? terms, String? privacy, String? refund
+ String? support, String? terms, String? privacy, String? refund, String? webCheckout
 });
 
 
@@ -2723,12 +2726,13 @@ class _$LinksDtoCopyWithImpl<$Res>
 
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
   return _then(LinksDto(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as String?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as String?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as String?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
+as String?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -2814,10 +2818,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LinksDto() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
   return orElse();
 
 }
@@ -2835,10 +2839,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout)  $default,) {final _that = this;
 switch (_that) {
 case _LinksDto():
-return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2855,10 +2859,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? support,  String? terms,  String? privacy,  String? refund)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout)?  $default,) {final _that = this;
 switch (_that) {
 case _LinksDto() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
   return null;
 
 }
@@ -2870,13 +2874,14 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
 @JsonSerializable()
 
 class _LinksDto implements LinksDto {
-  const _LinksDto({this.support, this.terms, this.privacy, this.refund});
+  const _LinksDto({this.support, this.terms, this.privacy, this.refund, this.webCheckout});
   factory _LinksDto.fromJson(Map<String, dynamic> json) => _$LinksDtoFromJson(json);
 
 @override final  String? support;
 @override final  String? terms;
 @override final  String? privacy;
 @override final  String? refund;
+@override final  String? webCheckout;
 
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
@@ -2891,18 +2896,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinksDto&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinksDto&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund)&&(identical(other.webCheckout, webCheckout) || other.webCheckout == webCheckout));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,support,terms,privacy,refund);
+    return Object.hash(runtimeType,support,terms,privacy,refund,webCheckout);
 }
 
 @override
 String toString() {
-    return 'LinksDto(support: $support, terms: $terms, privacy: $privacy, refund: $refund)';
+    return 'LinksDto(support: $support, terms: $terms, privacy: $privacy, refund: $refund, webCheckout: $webCheckout)';
 }
 
 
@@ -2913,7 +2918,7 @@ abstract mixin class _$LinksDtoCopyWith<$Res> implements $LinksDtoCopyWith<$Res>
   factory _$LinksDtoCopyWith(_LinksDto value, $Res Function(_LinksDto) _then) = __$LinksDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String? support, String? terms, String? privacy, String? refund
+ String? support, String? terms, String? privacy, String? refund, String? webCheckout
 });
 
 
@@ -2930,12 +2935,13 @@ class __$LinksDtoCopyWithImpl<$Res>
 
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
   return _then(_LinksDto(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as String?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as String?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as String?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
+as String?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

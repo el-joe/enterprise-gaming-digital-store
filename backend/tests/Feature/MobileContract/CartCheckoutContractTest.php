@@ -64,8 +64,20 @@ describe('cart', function (): void {
     });
 });
 
+describe('guest checkout disabled', function (): void {
+    it('refuses a guest place-order while guest checkout is off (owner decision 4)', function (): void {
+        gatewayFor('stripe');
+        $cart = ['X-Cart-Token' => mobileGuestCart(contractVariant())];
+
+        contractFixture('checkout/place_order_guest_checkout_disabled', statelessCall('POST', 'api/v1/mobile/checkout/place-order', placeOrderBody('10.00', ['gateway' => 'stripe', 'email' => 'guest@example.com']), [...$cart, 'Idempotency-Key' => 'contract-guest-disabled'])->assertUnauthorized());
+    });
+});
+
 describe('checkout', function (): void {
     beforeEach(function (): void {
+        // OD-1 (owner decision 4): guest checkout is off by default on the app route too; these
+        // tests cover the guest flow, which stays available behind `storefront.guest_checkout`.
+        config(['storefront.guest_checkout' => true]);
         gatewayFor('stripe');
         fakeStripe(overrides: ['api.stripe.com/v1/payment_intents' => Http::response(stripeIntent('pi_contract', 'requires_payment_method'))]);
         $this->variant = contractVariant();

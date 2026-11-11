@@ -32,8 +32,10 @@ use Illuminate\Database\Eloquent\Collection;
  * currency), base amount bounds, `allow_guest` (false: the rule applies to signed-in customers
  * only) and `max_risk_level`.
  *
- * A gateway with `settings.charge_display_currency_only` (seeded for Paymob) is eligible only
- * when it can charge the display currency itself, never through a conversion.
+ * The payment currency is fixed per gateway (owner decision 1, OD-1): the gateway's
+ * `default_currency` (seeded: Paymob EGP; Stripe, PayPal and the wallet USD), whatever the display
+ * currency. It must still be enabled for the merchant and supported by the adapter; the base
+ * total is converted to it once with the checkout rate.
  *
  * An internal-ledger gateway (the wallet) needs no credentials, but is offered only to a signed-in,
  * verified, active customer whose wallet balance covers the payment amount (M11).
@@ -85,7 +87,7 @@ class PaymentEligibilityService
             return $refuse('product_excluded');
         }
 
-        $currency = $this->paymentCurrency($gateway, $adapter, $context->displayCurrency);
+        $currency = $this->paymentCurrency($gateway, $adapter);
 
         if ($currency === null) {
             return $refuse('currency_not_supported');
@@ -117,23 +119,15 @@ class PaymentEligibilityService
     }
 
     /**
-     * The display currency when both the provider and the merchant account can charge it;
-     * otherwise the gateway's default currency under the same two checks (architecture 11.2).
+     * The gateway's fixed charge currency (OD-1), when both the provider and the merchant account
+     * can charge it; otherwise none. The display currency plays no part.
      */
-    private function paymentCurrency(PaymentGateway $gateway, GatewayAdapter $adapter, string $displayCurrency): ?string
+    private function paymentCurrency(PaymentGateway $gateway, GatewayAdapter $adapter): ?string
     {
-        $enabled = $gateway->paymentGatewayCurrencies->where('is_enabled', true)->keyBy('currency');
-        $usable = static fn (string $currency): bool => $enabled->has($currency) && $adapter->supportsCurrency($currency);
+        $currency = $gateway->chargeCurrency();
+        $enabled = $gateway->paymentGatewayCurrencies->contains(static fn (PaymentGatewayCurrency $row): bool => $row->is_enabled && strtoupper($row->currency) === $currency);
 
-        if ($usable($displayCurrency)) {
-            return $displayCurrency;
-        }
-
-        if (($gateway->settings['charge_display_currency_only'] ?? false) === true) {
-            return null;
-        }
-
-        return $usable($gateway->default_currency) ? $gateway->default_currency : null;
+        return $enabled && $adapter->supportsCurrency($currency) ? $currency : null;
     }
 
     private function paymentAmount(Money $totalBase, string $currency): ?Money

@@ -11,4 +11,10 @@ use Illuminate\Http\Request;
 interface GeoIpResolver
 {
     public function countryFor(Request $request): ?string;
+
+    /**
+     * The request header the country is read from, or null when it does not come from a header.
+     * A publicly cached response priced by country (OD-1) must `Vary` on it.
+     */
+    public function sourceHeader(): ?string;
 }

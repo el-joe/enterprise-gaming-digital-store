@@ -24,4 +24,9 @@ class HeaderGeoIpResolver implements GeoIpResolver
 
         return $value;
     }
+
+    public function sourceHeader(): ?string
+    {
+        return $this->header;
+    }
 }

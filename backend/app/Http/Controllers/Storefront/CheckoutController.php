@@ -52,12 +52,14 @@ class CheckoutController extends Controller
      * also on a replay (the stored body never holds a token, so a client whose first response was
      * lost can still follow its order).
      *
-     * M12 (owner decision 4): a browser guest is refused with 401 `guest_checkout_disabled` while
-     * `storefront.guest_checkout` is off. The stateless app route is not affected here.
+     * Owner decision 4: a guest is refused with 401 `guest_checkout_disabled` while
+     * `storefront.guest_checkout` is off (the default), on the browser route (M12) and on the
+     * stateless `/api/v1/mobile` route alike (OD-1). Access to existing guest orders by token or
+     * session proof is unchanged.
      */
     public function placeOrder(PlaceOrderRequest $request, PlaceOrderAction $action, GeoIpResolver $geoIp, CheckoutPaymentService $payments, AffiliateTracker $affiliates, GuestOrderTokenService $guestTokens): JsonResponse
     {
-        if ($request->hasSession() && $request->user() === null && ! config('storefront.guest_checkout')) {
+        if ($request->user() === null && ! config('storefront.guest_checkout')) {
             throw new GuestCheckoutDisabled;
         }
 

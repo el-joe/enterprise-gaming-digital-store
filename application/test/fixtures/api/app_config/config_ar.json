@@ -15,16 +15,18 @@
                 },
                 "features": {
                     "checkout_enabled": true,
-                    "guest_checkout_enabled": true,
+                    "guest_checkout_enabled": false,
                     "reviews_enabled": true,
                     "support_enabled": true,
-                    "wallet_enabled": true
+                    "wallet_enabled": true,
+                    "web_checkout_redirect": false
                 },
                 "links": {
                     "privacy": null,
                     "refund": null,
                     "support": "https://help.boxcards.test",
-                    "terms": "https://boxcards.test/pages/terms"
+                    "terms": "https://boxcards.test/pages/terms",
+                    "web_checkout": "https://boxcards.test/checkout"
                 },
                 "locales": {
                     "default": "en",

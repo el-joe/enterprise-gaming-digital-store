@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Services;
 
+use App\Domains\Identity\Enums\RecentAuthMethod;
 use Carbon\CarbonImmutable;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -10,6 +11,10 @@ use Laravel\Sanctum\PersonalAccessToken;
  * confirmation time in the framework's `auth.password_confirmed_at` key; a bearer client keeps it
  * on its access token (`personal_access_tokens.password_confirmed_at`, M-A3, ADR-036). Both use
  * the same window, `fulfillment.reveal_recent_auth_minutes`.
+ *
+ * OD-1 (ADR-040): a bearer token also records how it was confirmed (`recent_auth_method`): the
+ * password, or a signed biometric challenge. Either satisfies a reveal; registering a biometric
+ * key needs a recent password confirmation.
  */
 class RecentAuthService
 {
@@ -26,9 +31,18 @@ class RecentAuthService
             && now()->getTimestamp() - $confirmedAtTimestamp <= 60 * $this->windowMinutes();
     }
 
-    public function confirmToken(PersonalAccessToken $token): void
+    public function confirmToken(PersonalAccessToken $token, RecentAuthMethod $method = RecentAuthMethod::Password): void
     {
-        $token->forceFill(['password_confirmed_at' => now()])->save();
+        $token->forceFill(['password_confirmed_at' => now(), 'recent_auth_method' => $method->value])->save();
+    }
+
+    /**
+     * Recent, and given with the password itself (not a biometric confirmation).
+     */
+    public function tokenHasRecentPassword(PersonalAccessToken $token): bool
+    {
+        return $this->tokenIsRecent($token)
+            && RecentAuthMethod::tryFrom((string) $token->getAttribute('recent_auth_method')) !== RecentAuthMethod::Biometric;
     }
 
     public function tokenIsRecent(PersonalAccessToken $token): bool
@@ -45,7 +59,7 @@ class RecentAuthService
         $confirmedAt = $from === null ? null : self::tokenConfirmedAt($from);
 
         if ($confirmedAt !== null) {
-            $to->forceFill(['password_confirmed_at' => $confirmedAt])->save();
+            $to->forceFill(['password_confirmed_at' => $confirmedAt, 'recent_auth_method' => $from?->getAttribute('recent_auth_method')])->save();
         }
     }
 

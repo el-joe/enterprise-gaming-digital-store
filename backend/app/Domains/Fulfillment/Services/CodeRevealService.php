@@ -149,13 +149,14 @@ class CodeRevealService
                 'denial_reason' => $reason,
                 'ip' => $context->ip,
                 'user_agent' => $context->userAgent === null ? null : Str::limit($context->userAgent, 252),
+                'device_integrity' => $context->deviceIntegrity,
             ])->save();
         }
 
         $this->audit->record(new AuditEntry(
             action: $granted ? 'digital_codes.revealed' : 'digital_codes.reveal_denied',
             subject: $code,
-            after: [...$subject, 'actor' => $context->actorType->value, 'purpose' => $context->purpose->value, 'denial_reason' => $reason],
+            after: [...$subject, 'actor' => $context->actorType->value, 'purpose' => $context->purpose->value, 'denial_reason' => $reason, 'device_integrity' => $context->deviceIntegrity?->value],
             reason: $context->reason,
         ));
     }

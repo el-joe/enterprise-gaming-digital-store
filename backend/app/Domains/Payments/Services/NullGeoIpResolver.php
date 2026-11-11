@@ -15,4 +15,9 @@ class NullGeoIpResolver implements GeoIpResolver
     {
         return null;
     }
+
+    public function sourceHeader(): ?string
+    {
+        return null;
+    }
 }

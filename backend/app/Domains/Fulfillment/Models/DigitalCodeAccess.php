@@ -2,6 +2,7 @@
 
 namespace App\Domains\Fulfillment\Models;
 
+use App\Domains\Fulfillment\Enums\DeviceIntegrity;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessActorType;
 use App\Domains\Fulfillment\Enums\DigitalCodeAccessPurpose;
 use App\Domains\Shared\Models\Concerns\AppendOnly;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Table('digital_code_accesses')]
-#[Fillable(['digital_code_id', 'actor_type', 'actor_id', 'purpose', 'reason', 'granted', 'denial_reason', 'ip', 'user_agent'])]
+#[Fillable(['digital_code_id', 'actor_type', 'actor_id', 'purpose', 'reason', 'granted', 'denial_reason', 'ip', 'user_agent', 'device_integrity'])]
 #[UseFactory(DigitalCodeAccessFactory::class)]
 class DigitalCodeAccess extends Model
 {
@@ -35,6 +36,7 @@ class DigitalCodeAccess extends Model
             'actor_id' => 'integer',
             'purpose' => DigitalCodeAccessPurpose::class,
             'granted' => 'boolean',
+            'device_integrity' => DeviceIntegrity::class,
         ];
     }
 

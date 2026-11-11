@@ -50,6 +50,7 @@ abstract class AppConfigDto with _$AppConfigDto {
       terms: _uri(links.terms),
       privacy: _uri(links.privacy),
       refund: _uri(links.refund),
+      webCheckout: _uri(links.webCheckout),
     ),
     paymentGateways: paymentGateways,
     update: update?.toEntity(),
@@ -134,6 +135,8 @@ abstract class AppFeaturesDto with _$AppFeaturesDto {
     required bool walletEnabled,
     required bool reviewsEnabled,
     required bool supportEnabled,
+    // OD-1 (owner decision 3): "Complete purchase on boxcards.shop"; absent on older servers.
+    @Default(false) bool webCheckoutRedirect,
   }) = _AppFeaturesDto;
 
   const AppFeaturesDto._();
@@ -147,6 +150,7 @@ abstract class AppFeaturesDto with _$AppFeaturesDto {
     walletEnabled: walletEnabled,
     reviewsEnabled: reviewsEnabled,
     supportEnabled: supportEnabled,
+    webCheckoutRedirect: webCheckoutRedirect,
   );
 }
 
@@ -200,6 +204,7 @@ abstract class LinksDto with _$LinksDto {
     String? terms,
     String? privacy,
     String? refund,
+    String? webCheckout,
   }) = _LinksDto;
 
   factory LinksDto.fromJson(Map<String, dynamic> json) =>

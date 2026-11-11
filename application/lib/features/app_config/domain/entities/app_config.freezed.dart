@@ -942,7 +942,9 @@ as bool,
 /// @nodoc
 mixin _$AppFeatures {
 
- bool get checkoutEnabled; bool get guestCheckoutEnabled; bool get walletEnabled; bool get reviewsEnabled; bool get supportEnabled;
+ bool get checkoutEnabled; bool get guestCheckoutEnabled; bool get walletEnabled; bool get reviewsEnabled; bool get supportEnabled;/// OD-1 (owner decision 3): checkout opens [AppLinks.webCheckout] in the
+/// system browser instead of the in-app checkout.
+ bool get webCheckoutRedirect;
 /// Create a copy of AppFeatures
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -954,20 +956,20 @@ $AppFeaturesCopyWith<AppFeatures> get copyWith => _$AppFeaturesCopyWithImpl<AppF
 @override
 bool operator ==(Object other) {
   final _this = this as AppFeatures;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppFeatures&&(identical(other.checkoutEnabled, _this.checkoutEnabled) || other.checkoutEnabled == _this.checkoutEnabled)&&(identical(other.guestCheckoutEnabled, _this.guestCheckoutEnabled) || other.guestCheckoutEnabled == _this.guestCheckoutEnabled)&&(identical(other.walletEnabled, _this.walletEnabled) || other.walletEnabled == _this.walletEnabled)&&(identical(other.reviewsEnabled, _this.reviewsEnabled) || other.reviewsEnabled == _this.reviewsEnabled)&&(identical(other.supportEnabled, _this.supportEnabled) || other.supportEnabled == _this.supportEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppFeatures&&(identical(other.checkoutEnabled, _this.checkoutEnabled) || other.checkoutEnabled == _this.checkoutEnabled)&&(identical(other.guestCheckoutEnabled, _this.guestCheckoutEnabled) || other.guestCheckoutEnabled == _this.guestCheckoutEnabled)&&(identical(other.walletEnabled, _this.walletEnabled) || other.walletEnabled == _this.walletEnabled)&&(identical(other.reviewsEnabled, _this.reviewsEnabled) || other.reviewsEnabled == _this.reviewsEnabled)&&(identical(other.supportEnabled, _this.supportEnabled) || other.supportEnabled == _this.supportEnabled)&&(identical(other.webCheckoutRedirect, _this.webCheckoutRedirect) || other.webCheckoutRedirect == _this.webCheckoutRedirect));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppFeatures;
-  return Object.hash(runtimeType,_this.checkoutEnabled,_this.guestCheckoutEnabled,_this.walletEnabled,_this.reviewsEnabled,_this.supportEnabled);
+  return Object.hash(runtimeType,_this.checkoutEnabled,_this.guestCheckoutEnabled,_this.walletEnabled,_this.reviewsEnabled,_this.supportEnabled,_this.webCheckoutRedirect);
 }
 
 @override
 String toString() {
   final _this = this as AppFeatures;
-  return 'AppFeatures(checkoutEnabled: ${_this.checkoutEnabled}, guestCheckoutEnabled: ${_this.guestCheckoutEnabled}, walletEnabled: ${_this.walletEnabled}, reviewsEnabled: ${_this.reviewsEnabled}, supportEnabled: ${_this.supportEnabled})';
+  return 'AppFeatures(checkoutEnabled: ${_this.checkoutEnabled}, guestCheckoutEnabled: ${_this.guestCheckoutEnabled}, walletEnabled: ${_this.walletEnabled}, reviewsEnabled: ${_this.reviewsEnabled}, supportEnabled: ${_this.supportEnabled}, webCheckoutRedirect: ${_this.webCheckoutRedirect})';
 }
 
 
@@ -978,7 +980,7 @@ abstract mixin class $AppFeaturesCopyWith<$Res>  {
   factory $AppFeaturesCopyWith(AppFeatures value, $Res Function(AppFeatures) _then) = _$AppFeaturesCopyWithImpl;
 @useResult
 $Res call({
- bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled
+ bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled, bool webCheckoutRedirect
 });
 
 
@@ -995,13 +997,14 @@ class _$AppFeaturesCopyWithImpl<$Res>
 
 /// Create a copy of AppFeatures
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,Object? webCheckoutRedirect = null,}) {
   return _then(AppFeatures(
 checkoutEnabled: null == checkoutEnabled ? _self.checkoutEnabled : checkoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,guestCheckoutEnabled: null == guestCheckoutEnabled ? _self.guestCheckoutEnabled : guestCheckoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,walletEnabled: null == walletEnabled ? _self.walletEnabled : walletEnabled // ignore: cast_nullable_to_non_nullable
 as bool,reviewsEnabled: null == reviewsEnabled ? _self.reviewsEnabled : reviewsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,supportEnabled: null == supportEnabled ? _self.supportEnabled : supportEnabled // ignore: cast_nullable_to_non_nullable
+as bool,webCheckoutRedirect: null == webCheckoutRedirect ? _self.webCheckoutRedirect : webCheckoutRedirect // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -1087,10 +1090,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled,  bool webCheckoutRedirect)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppFeatures() when $default != null:
-return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled);case _:
+return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled,_that.webCheckoutRedirect);case _:
   return orElse();
 
 }
@@ -1108,10 +1111,10 @@ return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEna
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled,  bool webCheckoutRedirect)  $default,) {final _that = this;
 switch (_that) {
 case _AppFeatures():
-return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled);case _:
+return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled,_that.webCheckoutRedirect);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1128,10 +1131,10 @@ return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEna
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool checkoutEnabled,  bool guestCheckoutEnabled,  bool walletEnabled,  bool reviewsEnabled,  bool supportEnabled,  bool webCheckoutRedirect)?  $default,) {final _that = this;
 switch (_that) {
 case _AppFeatures() when $default != null:
-return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled);case _:
+return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEnabled,_that.reviewsEnabled,_that.supportEnabled,_that.webCheckoutRedirect);case _:
   return null;
 
 }
@@ -1143,7 +1146,7 @@ return $default(_that.checkoutEnabled,_that.guestCheckoutEnabled,_that.walletEna
 
 
 class _AppFeatures implements AppFeatures {
-  const _AppFeatures({required this.checkoutEnabled, required this.guestCheckoutEnabled, required this.walletEnabled, required this.reviewsEnabled, required this.supportEnabled});
+  const _AppFeatures({required this.checkoutEnabled, required this.guestCheckoutEnabled, required this.walletEnabled, required this.reviewsEnabled, required this.supportEnabled, this.webCheckoutRedirect = false});
   
 
 @override final  bool checkoutEnabled;
@@ -1151,6 +1154,9 @@ class _AppFeatures implements AppFeatures {
 @override final  bool walletEnabled;
 @override final  bool reviewsEnabled;
 @override final  bool supportEnabled;
+/// OD-1 (owner decision 3): checkout opens [AppLinks.webCheckout] in the
+/// system browser instead of the in-app checkout.
+@override@JsonKey() final  bool webCheckoutRedirect;
 
 /// Create a copy of AppFeatures
 /// with the given fields replaced by the non-null parameter values.
@@ -1162,18 +1168,18 @@ _$AppFeaturesCopyWith<_AppFeatures> get copyWith => __$AppFeaturesCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppFeatures&&(identical(other.checkoutEnabled, checkoutEnabled) || other.checkoutEnabled == checkoutEnabled)&&(identical(other.guestCheckoutEnabled, guestCheckoutEnabled) || other.guestCheckoutEnabled == guestCheckoutEnabled)&&(identical(other.walletEnabled, walletEnabled) || other.walletEnabled == walletEnabled)&&(identical(other.reviewsEnabled, reviewsEnabled) || other.reviewsEnabled == reviewsEnabled)&&(identical(other.supportEnabled, supportEnabled) || other.supportEnabled == supportEnabled));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppFeatures&&(identical(other.checkoutEnabled, checkoutEnabled) || other.checkoutEnabled == checkoutEnabled)&&(identical(other.guestCheckoutEnabled, guestCheckoutEnabled) || other.guestCheckoutEnabled == guestCheckoutEnabled)&&(identical(other.walletEnabled, walletEnabled) || other.walletEnabled == walletEnabled)&&(identical(other.reviewsEnabled, reviewsEnabled) || other.reviewsEnabled == reviewsEnabled)&&(identical(other.supportEnabled, supportEnabled) || other.supportEnabled == supportEnabled)&&(identical(other.webCheckoutRedirect, webCheckoutRedirect) || other.webCheckoutRedirect == webCheckoutRedirect));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,checkoutEnabled,guestCheckoutEnabled,walletEnabled,reviewsEnabled,supportEnabled);
+    return Object.hash(runtimeType,checkoutEnabled,guestCheckoutEnabled,walletEnabled,reviewsEnabled,supportEnabled,webCheckoutRedirect);
 }
 
 @override
 String toString() {
-    return 'AppFeatures(checkoutEnabled: $checkoutEnabled, guestCheckoutEnabled: $guestCheckoutEnabled, walletEnabled: $walletEnabled, reviewsEnabled: $reviewsEnabled, supportEnabled: $supportEnabled)';
+    return 'AppFeatures(checkoutEnabled: $checkoutEnabled, guestCheckoutEnabled: $guestCheckoutEnabled, walletEnabled: $walletEnabled, reviewsEnabled: $reviewsEnabled, supportEnabled: $supportEnabled, webCheckoutRedirect: $webCheckoutRedirect)';
 }
 
 
@@ -1184,7 +1190,7 @@ abstract mixin class _$AppFeaturesCopyWith<$Res> implements $AppFeaturesCopyWith
   factory _$AppFeaturesCopyWith(_AppFeatures value, $Res Function(_AppFeatures) _then) = __$AppFeaturesCopyWithImpl;
 @override @useResult
 $Res call({
- bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled
+ bool checkoutEnabled, bool guestCheckoutEnabled, bool walletEnabled, bool reviewsEnabled, bool supportEnabled, bool webCheckoutRedirect
 });
 
 
@@ -1201,13 +1207,14 @@ class __$AppFeaturesCopyWithImpl<$Res>
 
 /// Create a copy of AppFeatures
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? checkoutEnabled = null,Object? guestCheckoutEnabled = null,Object? walletEnabled = null,Object? reviewsEnabled = null,Object? supportEnabled = null,Object? webCheckoutRedirect = null,}) {
   return _then(_AppFeatures(
 checkoutEnabled: null == checkoutEnabled ? _self.checkoutEnabled : checkoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,guestCheckoutEnabled: null == guestCheckoutEnabled ? _self.guestCheckoutEnabled : guestCheckoutEnabled // ignore: cast_nullable_to_non_nullable
 as bool,walletEnabled: null == walletEnabled ? _self.walletEnabled : walletEnabled // ignore: cast_nullable_to_non_nullable
 as bool,reviewsEnabled: null == reviewsEnabled ? _self.reviewsEnabled : reviewsEnabled // ignore: cast_nullable_to_non_nullable
 as bool,supportEnabled: null == supportEnabled ? _self.supportEnabled : supportEnabled // ignore: cast_nullable_to_non_nullable
+as bool,webCheckoutRedirect: null == webCheckoutRedirect ? _self.webCheckoutRedirect : webCheckoutRedirect // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -1485,7 +1492,7 @@ as CurrencyInfo,
 /// @nodoc
 mixin _$AppLinks {
 
- Uri? get support; Uri? get terms; Uri? get privacy; Uri? get refund;
+ Uri? get support; Uri? get terms; Uri? get privacy; Uri? get refund; Uri? get webCheckout;
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1497,20 +1504,20 @@ $AppLinksCopyWith<AppLinks> get copyWith => _$AppLinksCopyWithImpl<AppLinks>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as AppLinks;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppLinks&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppLinks&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund)&&(identical(other.webCheckout, _this.webCheckout) || other.webCheckout == _this.webCheckout));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppLinks;
-  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund);
+  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund,_this.webCheckout);
 }
 
 @override
 String toString() {
   final _this = this as AppLinks;
-  return 'AppLinks(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund})';
+  return 'AppLinks(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund}, webCheckout: ${_this.webCheckout})';
 }
 
 
@@ -1521,7 +1528,7 @@ abstract mixin class $AppLinksCopyWith<$Res>  {
   factory $AppLinksCopyWith(AppLinks value, $Res Function(AppLinks) _then) = _$AppLinksCopyWithImpl;
 @useResult
 $Res call({
- Uri? support, Uri? terms, Uri? privacy, Uri? refund
+ Uri? support, Uri? terms, Uri? privacy, Uri? refund, Uri? webCheckout
 });
 
 
@@ -1538,12 +1545,13 @@ class _$AppLinksCopyWithImpl<$Res>
 
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
   return _then(AppLinks(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as Uri?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as Uri?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as Uri?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
+as Uri?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
 as Uri?,
   ));
 }
@@ -1629,10 +1637,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppLinks() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
   return orElse();
 
 }
@@ -1650,10 +1658,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout)  $default,) {final _that = this;
 switch (_that) {
 case _AppLinks():
-return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1670,10 +1678,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout)?  $default,) {final _that = this;
 switch (_that) {
 case _AppLinks() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
   return null;
 
 }
@@ -1685,13 +1693,14 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund);case _:
 
 
 class _AppLinks implements AppLinks {
-  const _AppLinks({this.support, this.terms, this.privacy, this.refund});
+  const _AppLinks({this.support, this.terms, this.privacy, this.refund, this.webCheckout});
   
 
 @override final  Uri? support;
 @override final  Uri? terms;
 @override final  Uri? privacy;
 @override final  Uri? refund;
+@override final  Uri? webCheckout;
 
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
@@ -1703,18 +1712,18 @@ _$AppLinksCopyWith<_AppLinks> get copyWith => __$AppLinksCopyWithImpl<_AppLinks>
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppLinks&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppLinks&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund)&&(identical(other.webCheckout, webCheckout) || other.webCheckout == webCheckout));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,support,terms,privacy,refund);
+    return Object.hash(runtimeType,support,terms,privacy,refund,webCheckout);
 }
 
 @override
 String toString() {
-    return 'AppLinks(support: $support, terms: $terms, privacy: $privacy, refund: $refund)';
+    return 'AppLinks(support: $support, terms: $terms, privacy: $privacy, refund: $refund, webCheckout: $webCheckout)';
 }
 
 
@@ -1725,7 +1734,7 @@ abstract mixin class _$AppLinksCopyWith<$Res> implements $AppLinksCopyWith<$Res>
   factory _$AppLinksCopyWith(_AppLinks value, $Res Function(_AppLinks) _then) = __$AppLinksCopyWithImpl;
 @override @useResult
 $Res call({
- Uri? support, Uri? terms, Uri? privacy, Uri? refund
+ Uri? support, Uri? terms, Uri? privacy, Uri? refund, Uri? webCheckout
 });
 
 
@@ -1742,12 +1751,13 @@ class __$AppLinksCopyWithImpl<$Res>
 
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
   return _then(_AppLinks(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as Uri?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as Uri?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as Uri?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
+as Uri?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
 as Uri?,
   ));
 }

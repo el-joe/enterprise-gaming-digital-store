@@ -35,6 +35,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Biometric re-authentication (OD-1, owner decisions 5 and 6, ADR-040)
+    |--------------------------------------------------------------------------
+    |
+    | A device-bound ECDSA P-256 key, registered per sign-in after a password confirmation,
+    | answers a single-use challenge to satisfy the code-reveal re-auth without the password.
+    | `challenge_ttl_seconds` is how long a challenge may be signed; after
+    | `max_failed_attempts` consecutive bad signatures the key is revoked (password again).
+    | `per_minute` limits challenge and confirm requests per customer.
+    |
+    */
+    'biometric' => [
+        'challenge_ttl_seconds' => (int) (env('MOBILE_BIOMETRIC_CHALLENGE_TTL_SECONDS') ?: 60),
+        'max_failed_attempts' => 5,
+        'per_minute' => 10,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | App configuration defaults (M-A4, GET /api/v1/app/config, gap G9)
     |--------------------------------------------------------------------------
     |
@@ -58,10 +76,17 @@ return [
         'maintenance_message' => null,
 
         'checkout_enabled' => (bool) env('MOBILE_CHECKOUT_ENABLED', true),
+        // Published as true only while `storefront.guest_checkout` is also on (owner decision 4).
         'guest_checkout_enabled' => (bool) env('MOBILE_GUEST_CHECKOUT_ENABLED', true),
         'wallet_enabled' => (bool) env('MOBILE_WALLET_ENABLED', true),
         'reviews_enabled' => (bool) env('MOBILE_REVIEWS_ENABLED', true),
         'support_enabled' => (bool) env('MOBILE_SUPPORT_ENABLED', true),
+
+        // Owner decision 3 (OD-1): when store review forbids in-app purchase, the app shows
+        // "Complete purchase on boxcards.shop" and opens `web_checkout_url` (published as
+        // `links.web_checkout`) in the system browser instead of its own checkout. Off by default.
+        'web_checkout_redirect' => (bool) env('MOBILE_WEB_CHECKOUT_REDIRECT', false),
+        'web_checkout_url' => env('MOBILE_WEB_CHECKOUT_URL') ?: '/checkout',
 
         // Absolute https URLs (or site paths, made absolute with APP_URL); null hides the link.
         'support_url' => env('MOBILE_SUPPORT_URL') ?: null,

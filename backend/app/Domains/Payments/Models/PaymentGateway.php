@@ -41,6 +41,15 @@ class PaymentGateway extends Model
     }
 
     /**
+     * The one currency this gateway charges (owner decision 1, OD-1): `default_currency`, seeded
+     * EGP for Paymob and USD for every other gateway. It does not follow the display currency.
+     */
+    public function chargeCurrency(): string
+    {
+        return strtoupper((string) $this->default_currency);
+    }
+
+    /**
      * @return BelongsTo<Currency, $this>
      */
     public function defaultCurrencyRecord(): BelongsTo

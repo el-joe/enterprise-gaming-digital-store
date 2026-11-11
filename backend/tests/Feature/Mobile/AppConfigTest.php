@@ -48,7 +48,10 @@ describe('content', function (): void {
             ->assertJsonPath('data.config.versions.ios', ['min_supported_version' => '1.0.0', 'latest_version' => '1.0.0'])
             ->assertJsonPath('data.config.update', null)
             ->assertJsonPath('data.config.maintenance', ['enabled' => false, 'message' => null])
-            ->assertJsonPath('data.config.features', ['checkout_enabled' => true, 'guest_checkout_enabled' => true, 'wallet_enabled' => true, 'reviews_enabled' => true, 'support_enabled' => true])
+            // OD-1: `guest_checkout_enabled` now follows `storefront.guest_checkout` (default off,
+            // owner decision 4) and `web_checkout_redirect` is new (owner decision 3, default off).
+            ->assertJsonPath('data.config.features', ['checkout_enabled' => true, 'guest_checkout_enabled' => false, 'wallet_enabled' => true, 'reviews_enabled' => true, 'support_enabled' => true, 'web_checkout_redirect' => false])
+            ->assertJsonPath('data.config.links.web_checkout', rtrim((string) config('app.url'), '/').'/checkout')
             ->assertJsonPath('data.config.locales', ['supported' => ['en', 'ar'], 'default' => 'en'])
             ->assertJsonPath('data.config.currencies.base', 'USD')
             ->assertJsonPath('data.config.links.terms', rtrim((string) config('app.url'), '/').'/pages/terms')
@@ -71,6 +74,26 @@ describe('content', function (): void {
         appConfig()->assertOk()
             ->assertJsonPath('data.config.versions.android.min_supported_version', '2.3.0')
             ->assertJsonPath('data.config.features.checkout_enabled', false);
+    });
+
+    it('publishes guest checkout only while the server allows it (owner decision 4)', function (bool $server, bool $app, bool $published): void {
+        config(['storefront.guest_checkout' => $server, 'mobile.app.guest_checkout_enabled' => $app]);
+
+        appConfig()->assertOk()->assertJsonPath('data.config.features.guest_checkout_enabled', $published);
+    })->with([
+        'both on' => [true, true, true],
+        'server off' => [false, true, false],
+        'app off' => [true, false, false],
+    ]);
+
+    it('switches the web checkout redirect on without a deploy and publishes its URL (owner decision 3)', function (): void {
+        $this->artisan('mobile:app-config', ['action' => 'set', 'key' => 'web_checkout_redirect', 'value' => 'true'])->assertSuccessful();
+        $this->artisan('mobile:app-config', ['action' => 'set', 'key' => 'web_checkout_url', 'value' => 'https://boxcards.shop/cart'])->assertSuccessful();
+        $this->artisan('mobile:app-config', ['action' => 'set', 'key' => 'web_checkout_url', 'value' => 'javascript:alert(1)'])->assertFailed();
+
+        appConfig()->assertOk()
+            ->assertJsonPath('data.config.features.web_checkout_redirect', true)
+            ->assertJsonPath('data.config.links.web_checkout', 'https://boxcards.shop/cart');
     });
 
     it('turns maintenance on and off with a localized message', function (): void {

@@ -87,6 +87,7 @@ _AppFeaturesDto _$AppFeaturesDtoFromJson(Map<String, dynamic> json) =>
       walletEnabled: json['wallet_enabled'] as bool,
       reviewsEnabled: json['reviews_enabled'] as bool,
       supportEnabled: json['support_enabled'] as bool,
+      webCheckoutRedirect: json['web_checkout_redirect'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$AppFeaturesDtoToJson(_AppFeaturesDto instance) =>
@@ -96,6 +97,7 @@ Map<String, dynamic> _$AppFeaturesDtoToJson(_AppFeaturesDto instance) =>
       'wallet_enabled': instance.walletEnabled,
       'reviews_enabled': instance.reviewsEnabled,
       'support_enabled': instance.supportEnabled,
+      'web_checkout_redirect': instance.webCheckoutRedirect,
     };
 
 _LocalesDto _$LocalesDtoFromJson(Map<String, dynamic> json) => _LocalesDto(
@@ -152,6 +154,7 @@ _LinksDto _$LinksDtoFromJson(Map<String, dynamic> json) => _LinksDto(
   terms: json['terms'] as String?,
   privacy: json['privacy'] as String?,
   refund: json['refund'] as String?,
+  webCheckout: json['web_checkout'] as String?,
 );
 
 Map<String, dynamic> _$LinksDtoToJson(_LinksDto instance) => <String, dynamic>{
@@ -159,4 +162,5 @@ Map<String, dynamic> _$LinksDtoToJson(_LinksDto instance) => <String, dynamic>{
   'terms': instance.terms,
   'privacy': instance.privacy,
   'refund': instance.refund,
+  'web_checkout': instance.webCheckout,
 };

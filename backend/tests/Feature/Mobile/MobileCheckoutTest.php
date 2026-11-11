@@ -59,6 +59,9 @@ function mobileAccessLink(Order $order): string
 
 describe('guest place-order', function (): void {
     beforeEach(function (): void {
+        // OD-1 (owner decision 4): guest checkout is off by default on the app route too; these
+        // tests cover the guest flow, which stays available behind `storefront.guest_checkout`.
+        config(['storefront.guest_checkout' => true]);
         fakePayments();
         $this->cartToken = mobileGuestCart(sellableVariant('10'));
     });
@@ -122,6 +125,17 @@ describe('guest place-order', function (): void {
 
         statelessCall('GET', guestOrderPath($publicId, 'status'), token: $access)->assertOk();
         statelessCall('GET', guestOrderPath($publicId, 'status'), token: mobileSignIn(User::factory()->create())['access_token'])->assertNotFound();
+    });
+});
+
+describe('guest checkout switch (owner decision 4, OD-1)', function (): void {
+    it('refuses a guest place-order on the app route with 401 guest_checkout_disabled by default, creating nothing', function (): void {
+        fakePayments();
+        $cartToken = mobileGuestCart(sellableVariant('10'));
+
+        mobilePlaceOrder($cartToken)->assertUnauthorized()->assertJsonPath('code', 'guest_checkout_disabled');
+
+        expect(Order::query()->exists())->toBeFalse();
     });
 });
 
