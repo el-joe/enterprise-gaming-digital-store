@@ -26,3 +26,9 @@ These are binding product decisions from the owner. Each one says where it is bu
 | 5 | `X-Device-Integrity` (`ok`, `compromised`, `unknown`) stored in `digital_code_accesses.device_integrity` and the reveal audit; never blocks | App detection and warning sheet (M-A14); risk-engine rule using the signal |
 | 6 | Device-bound biometric re-auth: `POST /mobile/auth/biometric-key`, `DELETE /mobile/auth/biometric-key`, `POST /mobile/auth/biometric-challenge`, `POST /mobile/auth/confirm-biometric` (ECDSA P-256 key in secure hardware, single-use challenges, sets `password_confirmed_at` on the token). ADR-040 | App enrolment and unlock (M-A10, M-A16); key attestation not verified yet |
 | 7, 8 | Nothing (no backend change) | Web and app |
+
+## 2026-11-11: push notifications provider
+
+| # | Question | Owner answer | Decision as built | Where |
+|---|---|---|---|---|
+| 9 | Push provider for the app (roadmap open decision 3) | Use Firebase Cloud Messaging (FCM). | FCM for Android, and for iOS through APNs (FCM relays to Apple's service). The backend gets device registration, a `push` channel in the notification preferences, and sends for order delivered, payment failed and ticket reply. Payloads carry ids and short text only: never codes, secrets or amounts beyond what the inbox shows. The app asks for permission after the first purchase, registers and refreshes the token, and opens the order or ticket on tap. Until the owner creates a Firebase project and supplies `google-services.json` / `GoogleService-Info.plist` and the server credentials, sending is faked in tests and switched off by configuration. | M-A18 (backend and app) |
