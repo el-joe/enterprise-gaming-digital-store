@@ -272,7 +272,9 @@ final class ContractNormalizer
             return $value;
         }
 
-        if (in_array($key, self::TOKEN_KEYS, true)) {
+        // Inside a validation envelope (`errors.<field>`) the values are messages about the field, not
+        // the field's value, so `errors.token` keeps "The token field is required." (M-A18).
+        if (in_array($key, self::TOKEN_KEYS, true) && ! str_contains($path, '.errors.')) {
             return 'fixture-'.str_replace('_', '-', $key);
         }
 

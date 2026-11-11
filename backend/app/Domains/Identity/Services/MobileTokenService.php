@@ -111,6 +111,14 @@ class MobileTokenService
      * Sign out the device holding this access token: revoke its family (refresh tokens and
      * access tokens).
      */
+    /**
+     * The sign-in (refresh-token family) an access token belongs to, or null when it isn't an app sign-in.
+     */
+    public function familyIdForAccessToken(PersonalAccessToken $accessToken): ?string
+    {
+        return $this->tokens->refreshTokenForAccessToken((int) $accessToken->getKey())?->family_id;
+    }
+
     public function revokeCurrent(PersonalAccessToken $accessToken): void
     {
         DB::transaction(function () use ($accessToken): void {

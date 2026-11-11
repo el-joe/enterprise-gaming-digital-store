@@ -30,8 +30,8 @@ use App\Domains\Payments\Notifications\PaymentFailed;
 use App\Domains\Payments\Services\PaymentStateApplier;
 use App\Domains\Support\Models\SupportTicket;
 use App\Domains\Support\Notifications\SupportTicketReplied;
+use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Request;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -88,7 +88,7 @@ function enablePushWithTestKey(): OpenSSLAsymmetricKey
 /**
  * Fake Google's OAuth endpoint and FCM. `$fcm` is the FCM answer for every send.
  */
-function fakeFcm(?Response $fcm = null): void
+function fakeFcm(?PromiseInterface $fcm = null): void
 {
     Http::preventStrayRequests();
     Http::fake([

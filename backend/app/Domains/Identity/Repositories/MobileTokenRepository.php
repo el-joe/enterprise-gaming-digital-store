@@ -2,12 +2,12 @@
 
 namespace App\Domains\Identity\Repositories;
 
+use App\Domains\Identity\Contracts\DevicePushTokens;
 use App\Domains\Identity\Enums\TokenRevocationReason;
 use App\Domains\Identity\Models\MobileBiometricChallenge;
 use App\Domains\Identity\Models\MobileLoginChallenge;
 use App\Domains\Identity\Models\MobileRefreshToken;
 use App\Domains\Identity\Models\User;
-use App\Domains\Notifications\Repositories\PushTokenRepository;
 use Illuminate\Support\Collection;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -18,7 +18,7 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class MobileTokenRepository
 {
-    public function __construct(private PushTokenRepository $pushTokens) {}
+    public function __construct(private DevicePushTokens $pushTokens) {}
 
     public function lockRefreshTokenByHash(string $hash): ?MobileRefreshToken
     {

@@ -41,6 +41,14 @@ function contractValuesOf(mixed $node, array $keys): array
 
     if (is_array($node)) {
         foreach ($node as $key => $child) {
+            // A validation envelope (`errors.<field>`) holds messages about a field, such as "The token
+            // field is required.", never the field's value (M-A18). Those messages are still covered
+            // by the forbidden patterns, which scan the whole file.
+            if ($key === 'errors' && is_array($child) && array_is_list($child) === false
+                && array_filter($child, static fn (mixed $messages): bool => ! is_array($messages) || ! array_is_list($messages)) === []) {
+                continue;
+            }
+
             if (is_string($key) && in_array($key, $keys, true)) {
                 $found[] = $child;
             }

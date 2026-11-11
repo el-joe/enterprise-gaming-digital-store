@@ -18,12 +18,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
-it('seeds reference data, no rates, no users and no orders', function (): void {
+it('seeds reference data, no rates, no customers and no orders, and only the configured Super Admin', function (): void {
     $this->seed();
 
-    expect(DB::table('exchange_rates')->count())->toBe(0)
+    // The owner added SuperAdminSeeder to DatabaseSeeder (2026-11-11): the only user is the staff
+    // Super Admin from SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD (test values in phpunit.xml).
+    $admin = User::query()->sole();
+
+    expect($admin->email)->toBe('superadmin@example.test')
+        ->and($admin->type)->toBe(UserType::Staff)
+        ->and($admin->hasRole(RoleName::SuperAdmin->value))->toBeTrue()
+        ->and(User::query()->where('type', UserType::Customer)->count())->toBe(0)
+        ->and(DB::table('exchange_rates')->count())->toBe(0)
         ->and(DB::table('exchange_rate_history')->count())->toBe(0)
-        ->and(User::query()->count())->toBe(0)
         ->and(Order::query()->count())->toBe(0)
         ->and(DB::table('products')->count())->toBe(0)
         ->and(Currency::query()->where('code', 'USD')->value('is_active'))->toBeTrue()

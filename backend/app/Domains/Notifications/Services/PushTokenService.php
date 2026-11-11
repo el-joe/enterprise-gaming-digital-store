@@ -6,7 +6,7 @@ use App\Domains\Audit\DTOs\AuditEntry;
 use App\Domains\Audit\Enums\AuditLogActorType;
 use App\Domains\Audit\Services\AuditLogger;
 use App\Domains\Identity\Models\User;
-use App\Domains\Identity\Repositories\MobileTokenRepository;
+use App\Domains\Identity\Services\MobileTokenService;
 use App\Domains\Notifications\Enums\PushPlatform;
 use App\Domains\Notifications\Models\MobilePushToken;
 use App\Domains\Shared\Exceptions\ApplicationException;
@@ -22,13 +22,13 @@ use Laravel\Sanctum\PersonalAccessToken;
  *   token leaves the previous sign-in, so notifications of the old account stop.
  * - Unregistering (the app's sign-out, or notifications turned off) deletes the device's token.
  *   Logout, sign-out everywhere, device revocation, refresh-token reuse and a password change delete
- *   it as well (`MobileTokenRepository`).
+ *   it as well (Identity, through the `DevicePushTokens` contract).
  * - Both are audited without the token value.
  */
 class PushTokenService
 {
     public function __construct(
-        private MobileTokenRepository $tokens,
+        private MobileTokenService $tokens,
         private AuditLogger $audit,
     ) {}
 
@@ -87,7 +87,7 @@ class PushTokenService
      */
     private function familyOf(PersonalAccessToken $accessToken): string
     {
-        $familyId = $this->tokens->refreshTokenForAccessToken((int) $accessToken->getKey())?->family_id;
+        $familyId = $this->tokens->familyIdForAccessToken($accessToken);
 
         if ($familyId === null) {
             throw new ApplicationException('Push notifications need a signed-in mobile device.', 'push_not_available', 403);

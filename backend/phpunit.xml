@@ -32,6 +32,9 @@
         <env name="DIGITAL_CODE_KEYS" value="1:leAn/2LNolW8/NgFlK6W2OyXpl+8JhoAlzXY1uoP8zA=,2:Jfh7N9JV12lrBqJ3Vd3dzz6cyQCuc61yoe9QvkSHrnU="/>
         <env name="DIGITAL_CODE_ACTIVE_KID" value="1"/>
         <env name="DIGITAL_CODE_BLIND_INDEX_KEY" value="beb8142fdba11be5e392d3f477696005c9125c2cc0c9f5352ed8f5bd229267e9"/>
+        <!-- Test-only Super Admin for DatabaseSeeder (the owner added SuperAdminSeeder to it); never a real account. -->
+        <env name="SUPER_ADMIN_EMAIL" value="superadmin@example.test"/>
+        <env name="SUPER_ADMIN_PASSWORD" value="TestOnlyAdmin2026"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

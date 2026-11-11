@@ -2,6 +2,7 @@
 
 namespace App\Domains\Notifications\Repositories;
 
+use App\Domains\Identity\Contracts\DevicePushTokens;
 use App\Domains\Identity\Models\MobileRefreshToken;
 use App\Domains\Notifications\Models\MobilePushToken;
 
@@ -10,7 +11,7 @@ use App\Domains\Notifications\Models\MobilePushToken;
  * (refresh-token family) is live; the revocation paths delete it, and the prune removes what an
  * expired sign-in left behind.
  */
-class PushTokenRepository
+class PushTokenRepository implements DevicePushTokens
 {
     /**
      * Ids of the customer's tokens whose sign-in is live (a refresh token not used, not revoked,

@@ -13,8 +13,10 @@ use App\Domains\Catalog\Services\ContentTranslator;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
+use App\Domains\Identity\Contracts\DevicePushTokens;
 use App\Domains\Mcp\DTOs\McpCaller;
 use App\Domains\Notifications\Channels\PushChannel;
+use App\Domains\Notifications\Repositories\PushTokenRepository;
 use App\Domains\Orders\Events\OrderStatusChanged;
 use App\Domains\Orders\Listeners\RecognizeOrderFinancials;
 use App\Domains\Orders\Listeners\SendFulfilmentNotifications;
@@ -62,6 +64,8 @@ class AppServiceProvider extends ServiceProvider
         // limits; UnavailableCheckoutCoupons remains the fail-closed implementation of the contract.
         $this->app->bind(PaymentCurrencyResolver::class, EligiblePaymentCurrencyResolver::class);
         $this->app->bind(CheckoutCoupons::class, DatabaseCheckoutCoupons::class);
+        // M-A18 (ADR-042): Identity drops push tokens with revoked sign-ins through this contract.
+        $this->app->bind(DevicePushTokens::class, PushTokenRepository::class);
         $this->app->singleton(PaymentGatewayRegistry::class);
         $this->app->bind(GeoIpResolver::class, static fn (): GeoIpResolver => config('payments.geoip.driver') === 'header'
             ? new HeaderGeoIpResolver((string) config('payments.geoip.header'))
