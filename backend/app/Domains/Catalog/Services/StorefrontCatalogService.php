@@ -83,6 +83,18 @@ class StorefrontCatalogService
     }
 
     /**
+     * Cards of listed products by id, in the given order, priced like the listing (wishlist,
+     * M13). Ids of products that are no longer listed are skipped.
+     *
+     * @param  list<int>  $ids
+     * @return Collection<int, ProductCard>
+     */
+    public function cardsForIds(array $ids, string $displayCurrency): Collection
+    {
+        return $this->cards($this->products->storefrontPricedByIds($ids), $displayCurrency);
+    }
+
+    /**
      * An active product with its card price, delivery fields, variant summary and SEO metadata.
      *
      * @throws ModelNotFoundException

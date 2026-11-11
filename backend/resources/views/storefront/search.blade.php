@@ -19,12 +19,12 @@
 
         <div class="mt-6 flex flex-col gap-4 md:flex-row md:gap-10">
             <div data-recent-searches hidden>
-                <p class="overline mb-2 text-content-muted">{{ __('storefront.search.recent') }}</p>
+                <p class="eyebrow mb-2 text-content-muted">{{ __('storefront.search.recent') }}</p>
                 <ul class="flex flex-wrap gap-2" data-recent-list></ul>
             </div>
             @if ($popular !== [])
                 <div>
-                    <p class="overline mb-2 text-content-muted">{{ __('storefront.search.popular') }}</p>
+                    <p class="eyebrow mb-2 text-content-muted">{{ __('storefront.search.popular') }}</p>
                     <ul class="flex flex-wrap gap-2">
                         @foreach ($popular as $popularTerm)
                             <li><a href="{{ url()->current().'?q='.urlencode($popularTerm) }}" class="chip min-h-8 hover:text-content-primary">{{ $popularTerm }}</a></li>
@@ -37,7 +37,7 @@
         @if ($term !== '')
             @if ($links !== [])
                 <section class="mt-10" aria-labelledby="search-links">
-                    <h2 id="search-links" class="overline text-content-muted">{{ __('storefront.search.platforms_categories') }}</h2>
+                    <h2 id="search-links" class="eyebrow text-content-muted">{{ __('storefront.search.platforms_categories') }}</h2>
                     <ul class="mt-3 flex flex-wrap gap-2">
                         @foreach ($links as $link)
                             <li>

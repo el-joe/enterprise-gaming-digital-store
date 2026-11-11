@@ -13,6 +13,7 @@ use App\Http\Controllers\Account\ReviewController;
 use App\Http\Controllers\Account\SupportTicketController;
 use App\Http\Controllers\Account\TwoFactorController;
 use App\Http\Controllers\Account\WalletController;
+use App\Http\Controllers\Account\WishlistController;
 use App\Http\Controllers\Storefront\Auth\EmailVerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,7 @@ Route::middleware('throttle:account')->group(static function (): void {
     Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/eligible', [ReviewController::class, 'eligible'])->name('reviews.eligible');
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::patch('/reviews/{review}', [ReviewController::class, 'update'])->whereNumber('review')->name('reviews.update');
 
     Route::get('/tickets', [SupportTicketController::class, 'index'])->name('tickets.index');
     Route::post('/tickets', [SupportTicketController::class, 'store'])->name('tickets.store');
@@ -55,6 +57,7 @@ Route::middleware('throttle:account')->group(static function (): void {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
+    Route::post('/devices/sign-out-others', [DeviceController::class, 'signOutOthers'])->middleware('throttle:auth')->name('devices.sign-out-others');
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->where('device', '[A-Za-z0-9_]{1,64}')->name('devices.destroy');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -64,4 +67,11 @@ Route::middleware('throttle:account')->group(static function (): void {
 
     Route::get('/notification-preferences', [NotificationPreferenceController::class, 'show'])->name('notification-preferences.show');
     Route::patch('/notification-preferences', [NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
+});
+
+// M13: wishlist (spec section 9)
+Route::middleware('throttle:account')->group(static function (): void {
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist', [WishlistController::class, 'store'])->name('wishlist.store');
+    Route::delete('/wishlist/{slug}', [WishlistController::class, 'destroy'])->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('wishlist.destroy');
 });

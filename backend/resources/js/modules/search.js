@@ -37,7 +37,7 @@ export default function search(form) {
 
         groups.filter((group) => group.items.length > 0).forEach((group) => {
             const heading = document.createElement('p');
-            heading.className = 'overline mb-1 mt-3 text-content-muted first:mt-0';
+            heading.className = 'eyebrow mb-1 mt-3 text-content-muted first:mt-0';
             heading.textContent = group.title;
             panel.appendChild(heading);
 

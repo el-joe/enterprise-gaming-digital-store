@@ -137,6 +137,28 @@ class AccountSessionService
     }
 
     /**
+     * "Sign out everywhere else" (M13): every mobile sign-in and browser session except the
+     * caller's, and the remember-me token is rotated. The password is unchanged.
+     *
+     * @return array{mobile_families: int, web_sessions: int}
+     */
+    public function signOutOthers(User $user, ?PersonalAccessToken $currentToken, ?string $currentSessionId): array
+    {
+        $revoked = DB::transaction(function () use ($user, $currentToken, $currentSessionId): array {
+            $user->forceFill(['remember_token' => Str::random(60)])->save();
+
+            return [
+                'mobile_families' => $this->tokens->revokeAllForUserExcept($user, $this->currentFamilyId($currentToken), $currentToken?->getKey() === null ? null : (int) $currentToken->getKey(), TokenRevocationReason::LogoutAll),
+                'web_sessions' => $this->webSessions->deleteAllExcept($user->id, $currentSessionId),
+            ];
+        });
+
+        $this->audited('account.signed_out_others', $user, $revoked);
+
+        return $revoked;
+    }
+
+    /**
      * After a password reset by email: no device stays signed in.
      *
      * @return array{mobile_families: int, web_sessions: int}

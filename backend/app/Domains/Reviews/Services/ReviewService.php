@@ -3,6 +3,7 @@
 namespace App\Domains\Reviews\Services;
 
 use App\Domains\Audit\DTOs\AuditEntry;
+use App\Domains\Audit\Enums\AuditLogActorType;
 use App\Domains\Audit\Services\AuditLogger;
 use App\Domains\Catalog\Models\Product;
 use App\Domains\Identity\Models\User;
@@ -11,6 +12,7 @@ use App\Domains\Reviews\Models\Review;
 use App\Domains\Reviews\Repositories\ReviewRepository;
 use App\Domains\Shared\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
@@ -52,6 +54,48 @@ class ReviewService
         } catch (UniqueConstraintViolationException) {
             throw new ApplicationException('You have already reviewed this item.', 'review_exists', 409);
         }
+
+        return $review->load('product:id,name,slug');
+    }
+
+    /**
+     * The customer edits their own review (M13). The new text goes back to moderation: the
+     * review becomes `pending` (and stops being featured), and an approved review leaves the
+     * product rating until staff approve it again. Another customer's review is not found.
+     *
+     * @param  array{rating: int, title?: ?string, body?: ?string}  $input
+     *
+     * @throws ModelNotFoundException
+     */
+    public function revise(User $user, int $reviewId, array $input): Review
+    {
+        $review = $this->reviews->findMine($user->id, $reviewId) ?? throw (new ModelNotFoundException)->setModel(Review::class);
+
+        DB::transaction(function () use ($review, $input): void {
+            Product::query()->whereKey($review->product_id)->lockForUpdate()->first();
+            $before = ['status' => $review->status->value, 'rating' => $review->rating];
+
+            $review->forceFill([
+                'rating' => (int) $input['rating'],
+                'title' => self::plain($input['title'] ?? null),
+                'body' => self::plain($input['body'] ?? null),
+                'status' => ReviewStatus::Pending,
+                'is_featured' => false,
+            ])->save();
+
+            if ($before['status'] === ReviewStatus::Approved->value) {
+                $this->refreshRating($review->product_id);
+            }
+
+            $this->audit->record(new AuditEntry(
+                action: 'reviews.review.revised',
+                subject: $review,
+                before: $before,
+                after: ['status' => ReviewStatus::Pending->value, 'rating' => $review->rating],
+                actorType: AuditLogActorType::Customer,
+                actorId: $review->user_id,
+            ));
+        });
 
         return $review->load('product:id,name,slug');
     }

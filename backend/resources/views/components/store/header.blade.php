@@ -64,6 +64,12 @@
                     </div>
                 </div>
 
+                @if ($storefront['user'])
+                    <a href="{{ url()->localized('storefront.account.wishlist') }}" class="hidden size-10 items-center justify-center rounded-md text-content-secondary hover:text-content-primary sm:inline-flex">
+                        <x-store.icon name="heart" :label="__('account.nav.wishlist')" />
+                    </a>
+                @endif
+
                 <a href="{{ url()->localized('storefront.cart') }}" class="relative inline-flex size-10 items-center justify-center rounded-md text-content-secondary hover:text-content-primary">
                     <x-store.icon name="bag" :label="__('storefront.nav.bag_count', ['count' => $storefront['bag_count']])" />
                     <span @class(['absolute end-0.5 top-0.5 min-w-4 rounded-full bg-accent-primary px-1 text-center text-[11px] leading-4 font-semibold text-content-on-accent', 'hidden' => $storefront['bag_count'] === 0]) data-bag-count aria-hidden="true">{{ $storefront['bag_count'] }}</span>

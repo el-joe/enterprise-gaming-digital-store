@@ -20,7 +20,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M11 | Wallet, promotions, affiliates, reviews, support | Complete (wallet is internal, no provider; affiliate payouts, guest tickets and admin screens not built) |
 | M12 | Storefront | Complete (Blade pages EN/AR; web checkout requires sign-in by owner decision 4, flag `storefront.guest_checkout`; payments mocked only; newsletter, wishlist and account area not built) |
 | OD-1 | Owner decisions, backend (`OWNER_DECISIONS.md` 1, 3, 4, 5, 6) | Complete (2026-11-11, not committed; Flutter only DTO fields and fixtures) |
-| M13 | Customer account | Not started |
+| M13 | Customer account | Complete (2026-11-11, not committed; every spec section 9 module in EN/AR including wishlist; ticket attachments not built, no API) |
 | M14 | Admin core | Not started |
 | M15 | Admin remaining | Not started |
 | M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
@@ -939,6 +939,103 @@ Every spec Phase 4 storefront page as server-rendered Blade with Tailwind 4 and 
 ### Next milestone
 
 M13: Customer account.
+
+---
+
+## M13: Customer account
+
+Date completed: 2026-11-11
+Completed by: Senior Laravel Frontend Developer, alone and in sequence. Not committed.
+
+### Summary of completed work
+
+Every spec section 9 module as server-rendered Blade pages with Tailwind 4 and plain JavaScript modules through Vite (no Livewire), in English (LTR) and Arabic (RTL, `/ar/...`), from the approved Figma file `JkUUSR3WGBYC9ewy2qRFQO` (Account page 2:5: dashboard, orders, order details, code reveal flow, wallet, wishlist, tickets, security at 1440 and 375; RTL page 2:7: Account / Digital Codes at 390). Pages read through the existing repositories, services and API resources; every change goes through the JSON account routes with the session and CSRF, and envelope errors show beside the fields. Money is only printed from server `formatted` strings (wallet amounts are formatted by `CurrencyConverter::present` in the controller). The `/account` placeholder is replaced, the email links `/account/orders/{id}` and `/account/tickets/{id}` resolve to real pages, and the basic reveal of `/orders/{id}` now uses the same reveal component as the account (owner decision 7).
+
+### Pages and routes
+
+All under `routes/storefront_pages.php` (registered per language), middleware `auth` and `account.active`, `noindex,nofollow`, strict nonce CSP.
+
+| Page | EN / AR URL | Route name | Notes |
+|---|---|---|---|
+| Dashboard | `/account`, `/ar/account` | `storefront.account` | Orders (total, in progress), wallet credit, unrevealed codes; "a code is ready" notice; recent orders; picked for you (featured, else top listed) |
+| Orders | `/account/orders` | `storefront.account.orders` | Status and period filters (invalid query redirects to the unfiltered page), table from md, cards below, pagination |
+| Order detail | `/account/orders/{public_id}` | `storefront.account.orders.show` | `no-store`; units with masked codes and the reveal component; progress timeline; display price, payment amount and currency, payment status, method, refunds; retry payment when unpaid and open; refund request form when paid with no open request; "Need help" opens a ticket about the order. OrderPolicy: another customer's or a guest order is 404 |
+| Digital codes | `/account/codes` | `storefront.account.codes` | `no-store`; every delivered code of paid orders, masked, state filter (not revealed, revealed, refunded) and search (product or order number); per-unit reveal |
+| Wallet | `/account/wallet` | `storefront.account.wallet` | Balance, "credits and refunds only" (BD3), statement |
+| Wishlist | `/account/wishlist` | `storefront.account.wishlist` | Saved products as listing cards in the display currency, remove button; heart toggle added to the product page buy box and a heart link in the header |
+| Reviews | `/account/reviews` | `storefront.account.reviews` | Items waiting for a review (write), own reviews with status (edit, back to moderation) |
+| Tickets | `/account/tickets`, `/account/tickets/new`, `/account/tickets/{public_id}` | `storefront.account.tickets(.create, .show)` | List and thread side by side from lg; reply; new ticket optionally about an own order (`?order=`); internal notes never shown |
+| Notifications | `/account/notifications`, `/account/notifications/preferences` | `storefront.account.notifications(.preferences)` | Inbox with links to account pages, mark read, mark all read; preference matrix (mandatory cells locked) |
+| Profile | `/account/profile` | `storefront.account.profile` | Name, country, language, display currency (automatic = country currency by `DisplayCurrencyResolver`); email read only |
+| Security | `/account/security` | `storefront.account.security` | `no-store`; change password; two-step verification on (QR code, setup key, confirm, recovery codes shown once) and off; code reveal history (granted and denied); signed-in devices with sign-out; sign out everywhere else |
+| 2FA QR | `/account/security/two-factor/qr` | `storefront.account.two-factor-qr` | SVG of the pending enrolment, `no-store`, 404 when none pending |
+
+Email verification banner with "send the link again" on every account page while the email is unverified.
+
+### Code reveal (owner decision 7)
+
+`<x-store.code-reveal>` and `<x-store.code-unit>` (used by the account order page, the digital codes page and `/orders/{id}`) and `resources/js/modules/reveal.js`: masked by default (the stored `masked_code` only; the code is never in a page before a reveal); step 1 confirm intent on a first reveal; step 2 password when the server answers 423 `recent_auth_required` (`POST /api/v1/account/confirm-password`, then the reveal is retried; guests use the link and email code, unchanged); step 3 the code, PIN, redemption link (https only) and instructions written as text into a native `<dialog>`, with copy and hide; step 4 the 429 limit with a support link. The code is wiped from the DOM when the dialog closes, after `fulfillment.web_reveal_hide_seconds` (60) with a visible countdown, and at once on `visibilitychange` to hidden or `pagehide`. A copied code is cleared from the clipboard after 60 seconds (`navigator.clipboard.writeText('')`, retried on the next focus where the browser refused). Nothing is written to localStorage, sessionStorage or data attributes. Reveal responses keep `Cache-Control: no-store, private` and `Pragma: no-cache`; pages that hold reveal buttons are `no-store, private`.
+
+### Files created
+
+- Controllers `app/Http/Controllers/Web/Account/`: `DashboardController`, `OrderController`, `DigitalCodeController`, `WalletController`, `WishlistController`, `ReviewController`, `TicketController`, `NotificationController`, `ProfileController`, `SecurityController`, `Concerns/PresentsAccountData`. `app/Http/Controllers/Account/WishlistController` (JSON).
+- Requests: `app/Http/Requests/Web/Account/{AccountPageRequest,OrderListPageRequest,CodeListPageRequest}`, `app/Http/Requests/Account/{UpdateReviewRequest,SignOutOtherDevicesRequest,StoreWishlistItemRequest}`.
+- Domain: `app/Domains/Catalog/Services/WishlistService`, `app/Domains/Shared/Services/QrCodeSvg` (in-house QR encoder, byte mode, level M, versions 1 to 20; checked module for module against bacon/bacon-qr-code 3.1 on 61 payloads, then that package was removed again, since CLAUDE.md allows no dependency change without approval). `app/View/Composers/AccountLayoutComposer`.
+- Views: `layouts/account`, `components/account/{nav,time,status,badge,page-head,ticket-status,review-form}`, `components/store/{code-reveal,code-unit}`, `account/{dashboard,codes,wallet,wishlist,reviews,profile,security}`, `account/orders/{index,show}`, `account/tickets/{index,create}`, `account/notifications/{index,preferences}`, `account/partials/{orders-table,pagination}`.
+- JavaScript: `modules/{account-form,account-action,account-nav,two-factor,wishlist}.js`; `modules/reveal.js` rewritten.
+- Translations: `lang/en/account.php`, `lang/ar/account.php` (same keys, tested).
+- Tests: `tests/Feature/Storefront/{AccountPagesTest,AccountAuthorizationTest,AccountRevealTest}.php`, `tests/Feature/Account/AccountM13RoutesTest.php`, `tests/Unit/Shared/QrCodeSvgTest.php`, `tests/Support/AccountPageFixtures.php`.
+
+### Files changed
+
+- `routes/storefront_pages.php` (account group; placeholder route removed), `routes/account.php` (PATCH `/reviews/{id}`, POST `/devices/sign-out-others`, `/wishlist`).
+- `ReviewService::revise`, `ReviewRepository::findMine`, `AccountSessionService::signOutOthers`, `TwoFactorService::pendingOtpauthUri`, `CustomerOrderRepository::{findByPublicId,findForCustomer,dashboardCounts,recentForCustomer,latestSealedUnit,paginateCodeUnits,recentRevealAttempts}`, `ProductRepository::storefrontPricedByIds`, `StorefrontCatalogService::cardsForIds`, `Account/ReviewController::update`, `Account/DeviceController::signOutOthers`.
+- `config/fulfillment.php` (`web_reveal_hide_seconds` = 60), `StorefrontServiceProvider` (account composer), `layouts/storefront` (wishlist route, account JS strings), `components/store/header` (wishlist heart), `components/store/icon` (account icons), `storefront/partials/buy-box` and `Web/ProductController` (wishlist toggle), `storefront/orders/show` (shared reveal component), `lib/forms.js` (`formValues` sends only the checked radio).
+- Removed: `Web/AccountController`, `storefront/account.blade.php` and the `storefront.account.*` placeholder strings.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| All spec section 9 modules | Met | Dashboard, profile, orders, order details, digital code history, wallet and transactions, wishlist, support tickets, reviews, notifications, security; ticket attachments not built (no API) |
+| Object-level authorization tests | Met | `AccountAuthorizationTest` (14): another customer's order (EN and AR), guest order, ticket (EN and AR) are 404; no list page shows another customer's orders, codes, tickets, reviews, wishlist, wallet, notifications or devices; reveal (even after the intruder's own password confirmation), ticket reply, review edit, device sign-out, notification read and payment retry are 404; refund request and ticket about another customer's order are 422 "This order was not found." with nothing created; wishlist actions only touch the caller's rows |
+| Code reveal UX with re-auth | Met | `AccountRevealTest` (10): component and 60 s hide and clipboard wiring on all three pages in EN and AR, configurable; 423, wrong password, confirm, reveal with `no-store` and `Pragma`; revealed state afterwards; no code in pages, logs or audit; reveal module has no browser storage and is wired to visibility, timers, clipboard clearing, 423 and 429. Headless Chrome: intent, 423 password step, wrong password error beside the field, code and PIN shown with countdown, wiped on tab hide and on Hide, re-reveal without a password inside the window, nothing in localStorage or sessionStorage |
+| Feature tests per page in both locales | Met | `AccountPagesTest` (48) |
+| Responsive at 375, 768, 1280; no console errors or CSP violations | Met | Headless Chrome (CDP) over 15 pages x 3 widths x EN/AR (87 loads): no console errors, exceptions or CSP violations, no horizontal overflow; screenshots compared with Figma. The only console lines in the interactive run were the browser's network entries for the intended 423 and 422 responses |
+
+### Tests and results
+
+- New: 89 tests (`AccountPagesTest` 48, `AccountAuthorizationTest` 14, `AccountRevealTest` 10, `AccountM13RoutesTest` 11, `QrCodeSvgTest` 6).
+- Full suite: `php artisan test --compact` (sequential, MySQL) **2410 passed, 0 failed, 17080 assertions, about 163 s** (2321 after OD-1). `vendor/bin/pint --dirty`: passed. `npm run build`: passed.
+- Existing test changed (adaptation, not weakening): `Storefront/AuthPagesTest` "sends a signed-in customer ... to the account page" now expects the dashboard greeting "Welcome back, Sara Ali" (Figma) instead of the placeholder's "Hello, Sara Ali"; it still checks the name and the sign-out control.
+- Headless checks ran against a preview copy of the data in the testing database (rebuilt by `migrate:fresh` at the start of every test run); the development database was not touched.
+
+### Deviations from Figma
+
+- Orders list: no free-text order search and no column sorting (the order history filter has status and dates only); filters are a status select and a period select with an Apply button; pagination is previous / next with "Showing x to y of z" instead of numbered pages and a per-page select.
+- Order detail: the revealed code shows in the reveal dialog (Figma step 3) rather than inline in the unit row; the row then reads "Revealed <time>". The "With supplier" pill is the unit status text. "Paid with" shows the gateway, not the card's last four (not stored for customers).
+- Reveal flow: no "one-time email code instead" link in the password step (no such re-auth API for customers); no per-hour remaining count or "try again in N minutes" (the 429 carries no count); the intent step shows a generic region reminder (the order detail has no region field).
+- Dashboard: "Codes unrevealed" card links to the sealed codes filter; product tiles use the M12 vector dials.
+- Security: the two-step toggle is a password-confirmed form (on: QR, setup key, code, recovery codes; off: password) rather than a bare switch; device rows show the masked IP and user agent (no city: no GeoIP city data).
+- Navigation adds Reviews, Notifications and Profile items not drawn in the Figma sidebar, plus Sign out.
+- Digital codes (RTL): instructions ("how to use") come with the reveal response, so they appear in the reveal dialog rather than as a collapsible card section; the platform initials badge is the platform tile.
+
+### Outstanding requirements
+
+- Ticket attachments: the `support_ticket_attachments` table exists but no upload API; the ticket page says attachments are not supported yet.
+- A JSON `GET /account/digital-codes` for the app is still not built (the web page reads the repository; the app uses the order detail).
+- Email links are unprefixed (`/account/orders/{id}`), so an Arabic customer lands on the English page and can switch language; a redirect by the saved profile locale is not built.
+- The profile display currency is honoured by `DisplayCurrencyResolver` only when no `currency` cookie or header is set; the page says so.
+- Pre-existing M12 glitch noticed: the custom `overline` utility in `app.css` shares its name with Tailwind's core `overline` text decoration, so overline labels (for example on product cards) also draw a line over the text. M13 views avoid the class; fixing it for M12 pages is left for the owner's review.
+- The reveal "one-time email code" alternative for customers and a 429 retry time need backend support.
+
+### Design changes made
+
+- `API_DOCUMENTATION.md`: section 4 table and new section 4d (review edit, sign out other devices, wishlist, the web QR route).
+
+### Next milestone
+
+M14: Admin core.
 
 ---
 

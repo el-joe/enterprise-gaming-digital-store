@@ -29,7 +29,7 @@
     @if ($overline || $name)
         <div class="relative min-w-0">
             @if ($overline)
-                <p class="overline text-ink-200">{{ $overline }}</p>
+                <p class="eyebrow text-ink-200">{{ $overline }}</p>
             @endif
             @if ($name)
                 <p @class(['truncate font-semibold text-white', 'text-lg leading-[26px]' => ! $large, 'font-display text-3xl font-bold md:text-4xl' => $large])>{{ $name }}</p>

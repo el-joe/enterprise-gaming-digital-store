@@ -59,14 +59,12 @@
             </div>
         </div>
 
-        <section class="keycut mt-4 border border-line-subtle bg-surface-raised p-5 md:p-6" aria-labelledby="items-title"
-            data-module="reveal" data-guest="{{ $isGuest ? '1' : '0' }}"
-            data-reveal-url="{{ $isGuest ? url('/api/v1/checkout/guest/orders/'.$order['public_id'].'/units/__unit__/reveal') : url('/api/v1/account/orders/'.$order['public_id'].'/units/__unit__/reveal') }}"
-            data-confirm-url="{{ url('/api/v1/account/confirm-password') }}">
+        <x-store.code-reveal class="keycut mt-4 block border border-line-subtle bg-surface-raised p-5 md:p-6" aria-labelledby="items-title" :guest="$isGuest"
+            :reveal-url="$isGuest ? url('/api/v1/checkout/guest/orders/'.$order['public_id'].'/units/__unit__/reveal') : url('/api/v1/account/orders/'.$order['public_id'].'/units/__unit__/reveal')">
             <h2 id="items-title" class="text-xl font-semibold">{{ __('storefront.order.items') }}</h2>
             <ul class="mt-4 flex flex-col gap-3">
                 @foreach ($order['items'] as $item)
-                    <li class="rounded-md bg-surface-sunken p-3">
+                    <li class="rounded-md bg-surface-base p-3">
                         <div class="flex items-center gap-3">
                             <x-store.tile :slug="$item['product']['slug'] ?? ''" class="h-12 w-[72px] shrink-0" />
                             <div class="min-w-0 flex-1">
@@ -74,40 +72,18 @@
                                 <p class="text-xs text-content-muted" dir="ltr">{{ $item['line_total']['formatted'] ?? '' }}</p>
                             </div>
                         </div>
-                        <ul class="mt-3 flex flex-col gap-2">
+                        <div class="mt-3 flex flex-col gap-2">
                             @foreach ($item['units'] as $unit)
-                                <li class="flex flex-wrap items-center justify-between gap-2 border-t border-line-subtle pt-2" data-unit="{{ $unit['public_id'] }}">
-                                    <span @class([
-                                        'inline-flex items-center gap-1.5 rounded-xs px-2 py-0.5 text-xs font-medium',
-                                        'bg-status-success-tint text-status-success' => $unit['status'] === 'delivered',
-                                        'bg-status-danger-tint text-status-danger' => in_array($unit['status'], ['failed', 'refunded', 'cancelled'], true),
-                                        'bg-status-info-tint text-status-info' => ! in_array($unit['status'], ['delivered', 'failed', 'refunded', 'cancelled'], true),
-                                    ])><span class="size-1.5 rounded-full bg-current" aria-hidden="true"></span>{{ Lang::has('storefront.unit.'.$unit['status']) ? __('storefront.unit.'.$unit['status']) : \Illuminate\Support\Str::headline($unit['status']) }}</span>
-                                    @if ($unit['masked_code'])<span class="font-mono text-xs text-content-muted" dir="ltr" data-code-slot>{{ $unit['masked_code'] }}</span>@endif
-                                    @if ($unit['revealable'] && $canReveal)
-                                        <button type="button" class="keycut-sm inline-flex h-8 items-center gap-1.5 bg-accent-primary px-3 text-xs font-semibold text-content-on-accent" data-reveal="{{ $unit['public_id'] }}">
-                                            <x-store.icon name="eye" :size="14" /> {{ __('storefront.order.reveal') }}
-                                        </button>
-                                    @elseif ($unit['revealable'] && $isGuest)
-                                        <span class="text-xs text-content-muted">{{ __('storefront.order.reveal_needs_link') }}</span>
-                                    @endif
-                                </li>
+                                <x-store.code-unit :unit="$unit" :can-reveal="$canReveal" />
+                                @if ($unit['revealable'] && ! $canReveal && $isGuest)
+                                    <p class="text-xs text-content-muted">{{ __('storefront.order.reveal_needs_link') }}</p>
+                                @endif
                             @endforeach
-                        </ul>
+                        </div>
                     </li>
                 @endforeach
             </ul>
-
-            <div class="mt-4 flex flex-col gap-3 rounded-md border border-line-default p-4" data-password-prompt hidden>
-                <label for="reveal-password" class="text-sm font-medium">{{ __('storefront.order.confirm_password') }}</label>
-                <div class="flex gap-2">
-                    <input id="reveal-password" type="password" autocomplete="current-password" class="field-input" data-password-input>
-                    <button type="button" class="btn-primary" data-password-submit>{{ __('storefront.order.confirm') }}</button>
-                </div>
-                <p class="field-error" data-error-for="password" hidden></p>
-            </div>
-            <p class="mt-3 text-sm text-status-danger" data-reveal-error hidden role="alert"></p>
-        </section>
+        </x-store.code-reveal>
 
         <section class="keycut mt-4 border border-line-subtle bg-surface-raised p-5 md:p-6" aria-labelledby="payment-summary-title">
             <h2 id="payment-summary-title" class="text-xl font-semibold">{{ __('storefront.order.payment') }}</h2>
@@ -127,7 +103,7 @@
         <div class="mt-8 flex flex-wrap gap-3">
             <a href="{{ url()->localized('storefront.home') }}" class="btn-secondary">{{ __('storefront.common.back_to_store') }}</a>
             @unless ($isGuest)
-                <a href="{{ url()->localized('storefront.account') }}" class="btn-ghost">{{ __('storefront.nav.account') }}</a>
+                <a href="{{ url()->localized('storefront.account.orders.show', ['orderPublicId' => $order['public_id']]) }}" class="btn-ghost">{{ __('account.orders.open_in_account') }}</a>
             @endunless
         </div>
     </div>

@@ -11,6 +11,7 @@ use App\Domains\Catalog\Models\Product;
 use App\Domains\Catalog\Models\ProductVariant;
 use App\Domains\Catalog\Services\ContentTranslator;
 use App\Domains\Catalog\Services\StorefrontCatalogService;
+use App\Domains\Catalog\Services\WishlistService;
 use App\Domains\Payments\Services\PaymentPublicCredentials;
 use App\Domains\Reviews\Repositories\ReviewRepository;
 use App\Http\Controllers\Controller;
@@ -35,7 +36,7 @@ class ProductController extends Controller
 
     public function __construct(private StorefrontCatalogService $catalog, private ContentTranslator $translator) {}
 
-    public function show(Request $request, string $slug, StorefrontRequest $storefront, ReviewRepository $reviews, PaymentPublicCredentials $gateways): View
+    public function show(Request $request, string $slug, StorefrontRequest $storefront, ReviewRepository $reviews, PaymentPublicCredentials $gateways, WishlistService $wishlist): View
     {
         $currency = $storefront->currency($request);
         $detail = $this->catalog->detail($slug, $currency);
@@ -59,6 +60,7 @@ class ProductController extends Controller
             'reviews' => ProductReviewResource::collection($reviews->approvedFor($product->id, 1, self::REVIEWS_SHOWN)->getCollection())->resolve($request),
             'related' => $this->related($product, $currency, $request),
             'paymentMethods' => array_keys($gateways->forActiveGateways()),
+            'saved' => $request->user() !== null && $wishlist->contains($request->user(), $product->id),
         ]);
     }
 

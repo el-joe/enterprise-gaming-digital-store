@@ -116,7 +116,7 @@
     }
 
     /* Arabic: no letter spacing, no uppercase, roomier line height (DESIGN_TOKENS.md). */
-    [dir='rtl'] .overline,
+    [dir='rtl'] .eyebrow,
     [dir='rtl'] .tracking-wide,
     [dir='rtl'] .uppercase {
         letter-spacing: 0;
@@ -142,7 +142,7 @@
     @apply mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-20;
 }
 
-@utility overline {
+@utility eyebrow {
     @apply font-display text-xs leading-4 font-semibold tracking-[0.12em] uppercase;
 }
 

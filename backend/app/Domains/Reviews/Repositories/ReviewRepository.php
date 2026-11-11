@@ -42,6 +42,14 @@ class ReviewRepository
             ->get();
     }
 
+    /**
+     * One of the customer's own reviews; null for an unknown id or another customer's review.
+     */
+    public function findMine(int $userId, int $reviewId): ?Review
+    {
+        return Review::query()->whereKey($reviewId)->where('user_id', $userId)->first();
+    }
+
     public function mine(int $userId, int $page, int $perPage): LengthAwarePaginator
     {
         return Review::query()->with('product:id,name,slug')->where('user_id', $userId)->orderByDesc('id')->paginate($perPage, ['*'], 'page', $page);

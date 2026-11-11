@@ -24,5 +24,13 @@ return [
     'guest_link_hours' => 72,
     'reveal_per_hour' => 10,
 
+    /*
+    | Web code reveal (M13, owner decision 7): a revealed code is hidden again after
+    | this many seconds (and at once when the tab is hidden), and a copied code is
+    | cleared from the clipboard after the same time where the browser allows it.
+    */
+
+    'web_reveal_hide_seconds' => 60,
+
     'stock_import_max_codes' => 1000,
 ];

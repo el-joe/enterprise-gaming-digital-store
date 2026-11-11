@@ -120,6 +120,10 @@
                             <button type="submit" name="intent" value="add" class="btn-secondary btn-lg flex-1 whitespace-nowrap px-3" @disabled(! ($selected['purchasable'] ?? false)) data-add-button>
                                 <x-store.icon name="bag" :size="18" /> {{ __('storefront.product.add') }}
                             </button>
+                            <button type="button" class="btn-secondary btn-lg w-13 shrink-0 px-0 text-content-secondary aria-pressed:border-accent-ember aria-pressed:text-accent-ember-text" data-module="wishlist" data-slug="{{ $product['slug'] }}" aria-pressed="{{ $saved ? 'true' : 'false' }}">
+                                <x-store.icon name="heart" :size="20" @class(['fill-current' => $saved]) />
+                                <span class="sr-only" data-wishlist-label>{{ $saved ? __('account.wishlist.saved') : __('account.wishlist.add') }}</span>
+                            </button>
                         </div>
                         <p class="field-error" data-error-for="quantity" hidden></p>
                         <button type="submit" name="intent" value="buy" class="btn-primary btn-lg w-full" @disabled(! ($selected['purchasable'] ?? false)) data-buy-button>

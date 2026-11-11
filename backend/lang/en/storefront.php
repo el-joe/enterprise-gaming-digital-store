@@ -444,16 +444,6 @@ return [
         ],
     ],
 
-    'account' => [
-        'title' => 'Your account',
-        'hello' => 'Hello, :name',
-        'unverified' => 'Your email address is not verified yet.',
-        'verify_now' => 'Verify now',
-        'soon_title' => 'Your account area is on its way',
-        'soon_text' => 'Order history, digital codes, store credit, reviews, support tickets and security settings arrive here soon. Order links in your emails keep working.',
-        'sign_out' => 'Sign out',
-    ],
-
     'pages' => [
         'updated' => 'Updated :date',
         'built_in_note' => 'Summary of store policy. The full text is published by the store owner.',

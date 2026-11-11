@@ -86,6 +86,24 @@ class ProductRepository
     }
 
     /**
+     * Listed products among these ids with their lowest active base price (`price_from_base`)
+     * and card relations, in the order of `$ids` (wishlist, M13).
+     *
+     * @param  list<int>  $ids
+     * @return Collection<int, Product>
+     */
+    public function storefrontPricedByIds(array $ids): Collection
+    {
+        if ($ids === []) {
+            return new Collection;
+        }
+
+        $products = $this->storefrontQuery(ProductListingFilter::all())->whereIn('products.id', $ids)->with(self::cardRelations())->get()->keyBy('id');
+
+        return new Collection(array_values(array_filter(array_map(static fn (int $id): ?Product => $products->get($id), $ids))));
+    }
+
+    /**
      * An active product by slug with its lowest active base price (`price_from_base`), whether
      * or not a variant is priced yet; null when unknown, not active or deleted.
      */

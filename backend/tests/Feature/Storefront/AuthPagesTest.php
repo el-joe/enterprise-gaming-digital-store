@@ -31,7 +31,7 @@ it('sends a signed-in customer from sign-in and registration to the account page
 
     $this->get('/login')->assertRedirect(url('/account'));
     $this->get('/ar/register')->assertRedirect(url('/ar/account'));
-    $this->get('/account')->assertOk()->assertSee('Hello, Sara Ali')->assertSee('data-module="logout"', false);
+    $this->get('/account')->assertOk()->assertSee('Welcome back, Sara Ali')->assertSee('data-module="logout"', false);
 });
 
 it('requires sign-in for the account and verification pages and redirects guests to the localized sign-in page', function (): void {

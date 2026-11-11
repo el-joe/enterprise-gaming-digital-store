@@ -44,6 +44,19 @@ class TwoFactorService
     }
 
     /**
+     * The `otpauth://` URI of an enrolment that was started and not confirmed yet (the web QR
+     * code, M13); null when none is pending.
+     */
+    public function pendingOtpauthUri(User $user): ?string
+    {
+        if ($user->hasTwoFactorEnabled() || $user->two_factor_secret === null) {
+            return null;
+        }
+
+        return $this->google2fa->getQRCodeUrl((string) config('app.name'), $user->email, (string) $user->two_factor_secret);
+    }
+
+    /**
      * Confirm enrolment with a live code and return the recovery codes, shown only once.
      *
      * @return list<string>

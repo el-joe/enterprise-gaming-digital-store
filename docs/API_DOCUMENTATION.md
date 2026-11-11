@@ -10,7 +10,7 @@
 |---|---|---|---|
 | Public JSON (storefront JS) | `/api/v1/storefront` | Session optional, CSRF for writes, rate limited | catalog, search and currency built (2a); cart built (3a); reviews and affiliate clicks built (2b); product detail, platforms, categories, countries, home built (2c); newsletter planned |
 | App config | `/api/v1/app/config` (and `/api/v1/mobile/app/config`) | none, public, cached 60 s | built (M-A4, section 1d) |
-| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); wallet, reviews, tickets, refund requests built (4b); orders, profile, password, devices, notifications and preferences built (4c, M-A5); digital-codes list and wishlist planned |
+| Customer JSON | `/api/v1/account` | Session, verified email where noted | two-factor, confirm-password and code reveal built (4a); wallet, reviews, tickets, refund requests built (4b); orders, profile, password, devices, notifications and preferences built (4c, M-A5); wishlist, review edit and sign-out-others built (4d, M13); digital-codes JSON list not built |
 | Checkout JSON | `/api/v1/checkout` | Session or guest cart token, CSRF | validate, place-order, status, guest OTP (3a), guest code access (4a) and payment routes (3b) built |
 | Admin JSON | `/admin/api` | Session, `type=staff`, confirmed 2FA with a session that passed the challenge, permission per route, CSRF | `GET /me`, sections 5a to 5d built; rest planned |
 | Yajra DataTables | `/admin/api/tables/{table}` | As admin | planned |
@@ -463,18 +463,18 @@ Base `/api/v1/account` (web session) and `/api/v1/mobile/account` (customer bear
 | POST | `/orders/{public_id}/units/{unit_public_id}/reveal` | built (4a): requires recent auth, returns code, audited |
 | GET, PATCH | `/profile` | built (4c, M-A5) |
 | PUT | `/password` | built (4c, M-A5) |
-| GET, DELETE | `/devices`, `/devices/{id}` | built (4c, M-A5; replaces the planned `/sessions`) |
+| GET, DELETE | `/devices`, `/devices/{id}` | built (4c, M-A5; replaces the planned `/sessions`); POST `/devices/sign-out-others` built (4d, M13) |
 | GET, POST | `/notifications`, `/notifications/unread-count`, `/notifications/{id}/read`, `/notifications/read-all` | built (4c, M-A5) |
 | GET, PATCH | `/notification-preferences` | built (4c, M-A5) |
 | POST | `/email/verification-notification` | built (4c, M-A5; the web route `POST /email/verification-notification` stays) |
 | GET | `/wallet`, `/wallet/transactions` | built (4b) |
 | GET, POST | `/tickets`; POST `/tickets/{public_id}/messages` | built (4b) |
-| GET, POST | `/reviews` | built (4b) |
+| GET, POST | `/reviews` | built (4b); PATCH `/reviews/{id}` built (4d, M13) |
 | GET, POST | `/refund-requests` | built (4b) |
 | POST, DELETE | `/security/two-factor` | built: POST starts enrolment and DELETE disables, both need `current_password`; DELETE is 403 for staff |
 | POST | `/security/two-factor/confirm` | built: `code`; returns recovery codes once |
-| GET | `/digital-codes` (masked only) | planned (the masked code is in the order detail) |
-| GET, POST, DELETE | `/wishlist` | planned (not in the app scope) |
+| GET | `/digital-codes` (masked only) | not built as JSON; the web page `/account/codes` (M13) reads the repository directly, and the app uses the order detail |
+| GET, POST, DELETE | `/wishlist`, `/wishlist/{slug}` | built (4d, M13) |
 
 Reveal response: `{ code, pin, redemption_url, instructions }`, `Cache-Control: no-store`.
 
@@ -575,6 +575,20 @@ Locale: a web session uses the saved `locale` for its next requests (`Content-La
 - Payloads hold identifiers and the order or ticket number only: never a code, PIN, redemption URL or message body.
 - Defaults without a saved row: `mail` and `database` on for orders, support and security; `sms` off (opt-in, ADR-034); marketing follows the latest marketing consent of the channel (email marketing for mail and the inbox, SMS marketing for SMS). Mandatory (always on, cannot be disabled): `orders.mail` (delivery link and failure notice, ADR-009) and `security.mail` (password reset and verification are always sent).
 - The customer notifications `OrderDelivered`, `OrderFulfilmentFailed` and `SupportTicketReplied` follow these preferences for `mail` and `database` (M-A5); guests get email only. `sms` remains the n8n channel read by `CustomerContactPolicy`.
+
+### 4d. Built account routes (M13)
+
+Base `/api/v1/account` and `/api/v1/mobile/account` (routes/account.php). Added for the web account pages; the pages themselves are Blade (`/account/...`, section "Web pages" in `PROGRESS.md` M13) and send every change through these JSON routes with CSRF.
+
+| Method | Path | Body | Limiter | Result |
+|---|---|---|---|---|
+| PATCH | `/reviews/{id}` | `rating` 1 to 5, `title?`, `body?` | `account` | `{ review }` with `status: pending`: the edit goes back to moderation, `is_featured` is cleared, and an approved review leaves the product rating until approved again. Tags are stripped. Audited `reviews.review.revised`. 404 for an unknown id or another customer's review |
+| POST | `/devices/sign-out-others` | `current_password` | `auth` | `{ signed_out: { mobile_families, web_sessions } }`: every other app sign-in (`logout_all`) and browser session (database driver) is signed out and the remember-me token is rotated; the caller stays signed in; the password does not change. Audited `account.signed_out_others` |
+| GET | `/wishlist` | | `account` | `{ items: [product card] }` (the storefront listing card, priced in the display currency), newest first, at most 200; saved products that are no longer listed are not shown |
+| POST | `/wishlist` | `product_slug` | `account` | 201 `{ product_slug, saved: true }`; idempotent. 404 for an unknown or unlisted product |
+| DELETE | `/wishlist/{slug}` | | `account` | `{ product_slug, saved: false }`; idempotent |
+
+Web-only (session, `storefront` group): `GET /account/security/two-factor/qr` returns the QR code of a pending two-factor enrolment as `image/svg+xml` with `Cache-Control: no-store, private` (404 when none is pending), drawn by the in-house `QrCodeSvg` encoder, so the secret never appears in a page or script.
 
 ## 5. Admin JSON
 

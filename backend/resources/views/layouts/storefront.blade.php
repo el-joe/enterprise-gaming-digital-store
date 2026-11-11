@@ -30,9 +30,10 @@
             'login' => url()->localized('storefront.login'),
             'account' => url()->localized('storefront.account'),
             'logout' => url('/logout'),
+            'wishlist' => url('/api/v1/account/wishlist'),
             'home' => url()->localized('storefront.home'),
         ],
-        'i18n' => trans('storefront.js'),
+        'i18n' => trans('storefront.js') + trans('account.js'),
     ];
 @endphp
 <!DOCTYPE html>
