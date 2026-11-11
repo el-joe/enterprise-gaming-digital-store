@@ -8,17 +8,20 @@ part of 'app_router.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The app's go_router. Guard inputs are providers; any change re-runs [redirectFor].
+/// The app's go_router. Guard inputs are providers; any change re-runs [redirectFor]. The app
+/// starts on the splash (app config check), which continues to onboarding or home.
 
 @ProviderFor(appRouter)
 final appRouterProvider = AppRouterProvider._();
 
-/// The app's go_router. Guard inputs are providers; any change re-runs [redirectFor].
+/// The app's go_router. Guard inputs are providers; any change re-runs [redirectFor]. The app
+/// starts on the splash (app config check), which continues to onboarding or home.
 
 final class AppRouterProvider
     extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
     with $Provider<GoRouter> {
-  /// The app's go_router. Guard inputs are providers; any change re-runs [redirectFor].
+  /// The app's go_router. Guard inputs are providers; any change re-runs [redirectFor]. The app
+  /// starts on the splash (app config check), which continues to onboarding or home.
   AppRouterProvider._()
     : super(
         from: null,
@@ -52,4 +55,4 @@ final class AppRouterProvider
   }
 }
 
-String _$appRouterHash() => r'76cd4e69c1da9ee850fb8749a3226a7c9c176bdc';
+String _$appRouterHash() => r'8a5c330ba3def2ba596ba1c4057e626a8f95b5d7';

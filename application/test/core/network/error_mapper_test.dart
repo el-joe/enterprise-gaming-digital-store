@@ -247,6 +247,17 @@ void main() {
       );
     });
 
+    test('423 biometric_locked -> BiometricLockedFailure (OD-1)', () {
+      expect(
+        mapError(_response(423, code: 'biometric_locked')),
+        isA<BiometricLockedFailure>(),
+      );
+      expect(
+        mapError(_response(423, code: 'recent_auth_required')),
+        isA<RecentAuthRequiredFailure>(),
+      );
+    });
+
     test('503 maintenance -> MaintenanceFailure', () {
       expect(
         mapError(_response(503, code: 'maintenance')),

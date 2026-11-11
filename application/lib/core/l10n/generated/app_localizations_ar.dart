@@ -63,4 +63,474 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backToHome => 'العودة إلى الرئيسية';
+
+  @override
+  String get actionTryAgain => 'حاول مرة أخرى';
+
+  @override
+  String get actionContinue => 'متابعة';
+
+  @override
+  String get actionBack => 'رجوع';
+
+  @override
+  String get actionClose => 'إغلاق';
+
+  @override
+  String get actionCancel => 'إلغاء';
+
+  @override
+  String get actionNotNow => 'ليس الآن';
+
+  @override
+  String get loadingLabel => 'جارٍ التحميل';
+
+  @override
+  String get showPassword => 'إظهار كلمة المرور';
+
+  @override
+  String get hidePassword => 'إخفاء كلمة المرور';
+
+  @override
+  String requestReference(String id) {
+    return 'المرجع: $id';
+  }
+
+  @override
+  String get failureNetwork => 'أنت غير متصل. تحقّق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get failureTimeout => 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get failureUnauthenticated =>
+      'انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.';
+
+  @override
+  String get failureForbidden => 'لا يمكنك القيام بذلك بهذا الحساب.';
+
+  @override
+  String get failureEmailUnverified => 'أكّد بريدك الإلكتروني للمتابعة.';
+
+  @override
+  String get failureNotFound => 'لم نتمكن من العثور على ما تبحث عنه.';
+
+  @override
+  String failureRateLimited(String time) {
+    return 'محاولات كثيرة جدًا. حاول مرة أخرى بعد $time.';
+  }
+
+  @override
+  String get failureRateLimitedNoTime =>
+      'محاولات كثيرة جدًا. يرجى الانتظار ثم المحاولة مرة أخرى.';
+
+  @override
+  String get failureMaintenance =>
+      'المتجر قيد الصيانة. يرجى المحاولة بعد قليل.';
+
+  @override
+  String get failureServer => 'حدث خطأ من جهتنا. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get failureValidation => 'تحقّق من الحقول المحددة وحاول مرة أخرى.';
+
+  @override
+  String get failureRecentAuth => 'أكّد كلمة المرور للمتابعة.';
+
+  @override
+  String get failureGeneric => 'حدث خطأ ما. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get splashChecking => 'جارٍ البحث عن تحديثات…';
+
+  @override
+  String get offlineTitle => 'أنت غير متصل';
+
+  @override
+  String get offlineBody =>
+      'اتصل بشبكة Wi-Fi أو بيانات الجوال لفتح المتجر. لا تُخزَّن رموزك على هذا الجهاز أبدًا.';
+
+  @override
+  String get startupErrorTitle => 'تعذّر فتح المتجر';
+
+  @override
+  String updateRequiredVersions(String installed, String minimum) {
+    return 'المثبّت $installed · الحد الأدنى $minimum';
+  }
+
+  @override
+  String get updateNow => 'حدّث الآن';
+
+  @override
+  String get updateStoreUnavailable =>
+      'افتح متجر التطبيقات وحدّث boxcards.shop.';
+
+  @override
+  String get maintenanceOrdersSafeTitle => 'طلباتك في أمان';
+
+  @override
+  String get maintenanceOrdersSafeBody => 'الرموز التي اشتريتها تبقى في حسابك.';
+
+  @override
+  String get contactSupport => 'تواصل مع الدعم';
+
+  @override
+  String get linkOpenFailed => 'تعذّر فتح الصفحة. حاول لاحقًا.';
+
+  @override
+  String onboardingStep(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get onboardingLanguageTitle => 'اختر لغتك';
+
+  @override
+  String get onboardingLanguageBody => 'يمكنك تغييرها لاحقًا من الإعدادات.';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageEnglishDetail => 'الإنجليزية (من اليسار إلى اليمين)';
+
+  @override
+  String get languageArabic => 'العربية';
+
+  @override
+  String get languageArabicDetail => 'العربية (من اليمين إلى اليسار)';
+
+  @override
+  String get onboardingCurrencyTitle => 'اختر عملة العرض';
+
+  @override
+  String get onboardingCurrencyBody =>
+      'تظهر الأسعار بهذه العملة. إذا تخطّيت هذه الخطوة نستخدم عملة بلدك.';
+
+  @override
+  String get displayCurrencyLabel => 'عملة العرض';
+
+  @override
+  String get chargeNoticeTitle => 'قد يتم التحصيل بالدولار الأمريكي';
+
+  @override
+  String get chargeNoticeBody =>
+      'بعض طرق الدفع تحصّل بعملة أخرى. سترى المبلغ دائمًا قبل الدفع.';
+
+  @override
+  String get startShopping => 'ابدأ التسوق';
+
+  @override
+  String get skipForNow => 'تخطَّ الآن';
+
+  @override
+  String get loginTitle => 'تسجيل الدخول';
+
+  @override
+  String get loginSubtitle => 'رموزك وطلباتك على أي جهاز.';
+
+  @override
+  String get emailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get passwordLabel => 'كلمة المرور';
+
+  @override
+  String get forgotPasswordLink => 'نسيت كلمة المرور؟';
+
+  @override
+  String get signInAction => 'تسجيل الدخول';
+
+  @override
+  String get newHere => 'جديد هنا؟';
+
+  @override
+  String get createAccountLink => 'إنشاء حساب';
+
+  @override
+  String get rateLimitedTitle => 'محاولات كثيرة جدًا';
+
+  @override
+  String rateLimitedBody(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'حاول مرة أخرى بعد $seconds ثانية.',
+      many: 'حاول مرة أخرى بعد $seconds ثانية.',
+      few: 'حاول مرة أخرى بعد $seconds ثوانٍ.',
+      two: 'حاول مرة أخرى بعد ثانيتين.',
+      one: 'حاول مرة أخرى بعد ثانية واحدة.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String tryAgainIn(String time) {
+    return 'حاول مرة أخرى بعد $time';
+  }
+
+  @override
+  String get fieldRequired => 'هذا الحقل مطلوب.';
+
+  @override
+  String get emailInvalid => 'أدخل بريدًا إلكترونيًا صحيحًا.';
+
+  @override
+  String get signInFailedTitle => 'تعذّر تسجيل الدخول';
+
+  @override
+  String get twoFactorAppBar => 'التحقق بخطوتين';
+
+  @override
+  String get twoFactorCodeTitle => 'أدخل الرمز المكوّن من 6 أرقام';
+
+  @override
+  String get twoFactorCodeBody =>
+      'افتح تطبيق المصادقة. يتغيّر الرمز كل 30 ثانية.';
+
+  @override
+  String get otpSemantics => 'رمز من 6 أرقام';
+
+  @override
+  String twoFactorExpiresIn(String time) {
+    return 'تنتهي صلاحية طلب تسجيل الدخول خلال $time';
+  }
+
+  @override
+  String get useRecoveryCode => 'استخدم رمز استرداد بدلًا من ذلك';
+
+  @override
+  String get recoveryTitle => 'استخدم رمز استرداد';
+
+  @override
+  String get recoveryBody =>
+      'أدخل أحد رموز الاسترداد التي حفظتها عند تفعيل التحقق بخطوتين. يعمل كل رمز مرة واحدة.';
+
+  @override
+  String get recoveryCodeLabel => 'رمز الاسترداد';
+
+  @override
+  String get useAuthenticatorCode => 'استخدم رمز تطبيق المصادقة';
+
+  @override
+  String get verifyAction => 'تحقّق';
+
+  @override
+  String get twoFactorInvalid =>
+      'هذا الرمز غير صالح. تحقّق منه وحاول مرة أخرى.';
+
+  @override
+  String get twoFactorExpiredTitle => 'انتهت صلاحية طلب تسجيل الدخول';
+
+  @override
+  String get twoFactorExpiredBody =>
+      'حفاظًا على أمانك، ابدأ من جديد من شاشة تسجيل الدخول.';
+
+  @override
+  String get backToSignIn => 'العودة إلى تسجيل الدخول';
+
+  @override
+  String get otpIncomplete => 'أدخل الأرقام الستة كلها.';
+
+  @override
+  String get registerTitle => 'إنشاء حساب';
+
+  @override
+  String get fullNameLabel => 'الاسم الكامل';
+
+  @override
+  String get passwordHelper => '8 أحرف على الأقل تتضمن حروفًا وأرقامًا.';
+
+  @override
+  String get confirmPasswordLabel => 'تأكيد كلمة المرور';
+
+  @override
+  String get acceptTerms => 'أوافق على الشروط وسياسة الخصوصية';
+
+  @override
+  String get readTerms => 'اقرأ الشروط';
+
+  @override
+  String get termsRequired => 'وافق على الشروط لإنشاء حساب.';
+
+  @override
+  String get passwordMismatch => 'كلمتا المرور غير متطابقتين.';
+
+  @override
+  String formErrorsTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تحقّق من $count حقل',
+      many: 'تحقّق من $count حقلًا',
+      few: 'تحقّق من $count حقول',
+      two: 'تحقّق من حقلين',
+      one: 'تحقّق من حقل واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get formErrorsBody => 'صحّح الحقول المحددة وحاول مرة أخرى.';
+
+  @override
+  String get haveAccount => 'لديك حساب بالفعل؟';
+
+  @override
+  String get verifyEmailTitle => 'تحقّق من بريدك الوارد';
+
+  @override
+  String verifyEmailBody(String email) {
+    return 'أرسلنا رابطًا إلى $email. افتحه على هذا الهاتف لتأكيد بريدك. تحتاج إلى بريد مؤكَّد لكشف الرموز وكتابة التقييمات.';
+  }
+
+  @override
+  String get verifyEmailBodyNoEmail =>
+      'أرسلنا رابطًا إلى بريدك الإلكتروني. افتحه على هذا الهاتف لتأكيد بريدك. تحتاج إلى بريد مؤكَّد لكشف الرموز وكتابة التقييمات.';
+
+  @override
+  String get verificationSent => 'تم إرسال رسالة التأكيد.';
+
+  @override
+  String resendIn(String time) {
+    return 'يمكنك إعادة الإرسال بعد $time';
+  }
+
+  @override
+  String get resendEmail => 'إعادة إرسال الرسالة';
+
+  @override
+  String get iVerified => 'أكّدت بريدي الإلكتروني';
+
+  @override
+  String get stillUnverified =>
+      'لم يتم تأكيد بريدك بعد. افتح الرابط الذي أرسلناه ثم حاول مرة أخرى.';
+
+  @override
+  String get emailVerifiedDone => 'تم تأكيد البريد. شكرًا لك!';
+
+  @override
+  String get forgotTitle => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get forgotBody =>
+      'تتم إعادة تعيين كلمة المرور على boxcards.shop. سنفتح صفحة إعادة التعيين في متصفحك: أدخل بريد حسابك هناك وسنرسل لك رابطًا.';
+
+  @override
+  String get openResetPage => 'افتح صفحة إعادة التعيين';
+
+  @override
+  String get resetPageOpenedTitle => 'تحقّق من متصفحك';
+
+  @override
+  String get resetPageOpenedBody =>
+      'أكمل على boxcards.shop ثم عد وسجّل الدخول بكلمة المرور الجديدة.';
+
+  @override
+  String get resetPageUnavailable =>
+      'صفحة إعادة التعيين غير متاحة حاليًا. حاول لاحقًا.';
+
+  @override
+  String get signOutAction => 'تسجيل الخروج';
+
+  @override
+  String get signOutConfirmTitle => 'تسجيل الخروج من boxcards.shop؟';
+
+  @override
+  String get signOutConfirmBody =>
+      'ستحتاج إلى كلمة المرور لتسجيل الدخول مرة أخرى. سيتم إيقاف فتح القفل بالبصمة على هذا الجهاز.';
+
+  @override
+  String get signedOutMessage => 'تم تسجيل خروجك.';
+
+  @override
+  String homeSignedInAs(String email) {
+    return 'مسجّل الدخول باسم $email';
+  }
+
+  @override
+  String get homeSignedIn => 'أنت مسجّل الدخول.';
+
+  @override
+  String get homeSignedOut => 'سجّل الدخول لرؤية طلباتك ورموزك.';
+
+  @override
+  String get homeAccountTitle => 'الحساب';
+
+  @override
+  String get biometricOfferTitle => 'فتح القفل بالبصمة؟';
+
+  @override
+  String get biometricOfferBody =>
+      'استخدم بصمتك أو وجهك لفتح boxcards.shop بعد 5 دقائق في الخلفية، ولتأكيد هويتك قبل عرض الرموز. يمكنك إيقافه في أي وقت.';
+
+  @override
+  String get biometricTurnOn => 'تفعيل';
+
+  @override
+  String get biometricPromptEnrol => 'أكّد لتفعيل فتح القفل بالبصمة';
+
+  @override
+  String get biometricPromptUnlock => 'افتح قفل boxcards.shop';
+
+  @override
+  String get biometricPromptConfirm => 'أكّد هويتك';
+
+  @override
+  String get biometricEnabled => 'تم تفعيل فتح القفل بالبصمة.';
+
+  @override
+  String get biometricDisabled => 'تم إيقاف فتح القفل بالبصمة.';
+
+  @override
+  String get biometricUnavailable =>
+      'لا توجد بصمة أو ميزة التعرّف على الوجه مُعدّة على هذا الجهاز.';
+
+  @override
+  String get biometricFailed => 'تعذّر تفعيل فتح القفل بالبصمة. حاول لاحقًا.';
+
+  @override
+  String get biometricSettingTitle => 'فتح القفل بالبصمة';
+
+  @override
+  String get biometricSettingSubtitle => 'بعد 5 دقائق في الخلفية';
+
+  @override
+  String get passwordSheetTitle => 'أكّد كلمة المرور';
+
+  @override
+  String get passwordSheetBody =>
+      'حفاظًا على أمانك، أدخل كلمة المرور للمتابعة.';
+
+  @override
+  String get confirmAction => 'تأكيد';
+
+  @override
+  String get lockTitle => 'boxcards.shop مقفل';
+
+  @override
+  String get lockBody => 'افتح القفل ببصمتك أو وجهك، أو استخدم كلمة المرور.';
+
+  @override
+  String get lockUseBiometric => 'افتح بالبصمة';
+
+  @override
+  String get lockUsePassword => 'استخدم كلمة المرور';
+
+  @override
+  String get lockBiometricChanged =>
+      'تغيّرت بياناتك الحيوية، لذا أُوقف فتح القفل بالبصمة. استخدم كلمة المرور.';
+
+  @override
+  String get unlockAction => 'فتح القفل';
+
+  @override
+  String get integrityTitle => 'قد يكون هذا الجهاز مكسور الحماية';
+
+  @override
+  String get integrityBody =>
+      'التطبيقات والرموز أقل حماية على الأجهزة المعدّلة. يمكنك الاستمرار في استخدام boxcards.shop، وسنطلب منك تأكيد هويتك قبل عرض الرموز.';
+
+  @override
+  String get integrityAcknowledge => 'فهمت';
 }

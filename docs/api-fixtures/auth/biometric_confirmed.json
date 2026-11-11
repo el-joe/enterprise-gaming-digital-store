@@ -1,0 +1,19 @@
+{
+    "body": {
+        "data": {
+            "confirmed_for_minutes": 15
+        },
+        "message": "Identity confirmed.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/confirm-biometric"
+    },
+    "status": 200
+}

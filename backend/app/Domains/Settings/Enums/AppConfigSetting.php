@@ -30,6 +30,7 @@ enum AppConfigSetting: string
     case TermsUrl = 'terms_url';
     case PrivacyUrl = 'privacy_url';
     case RefundUrl = 'refund_url';
+    case ForgotPasswordUrl = 'forgot_password_url';
 
     public function type(): SettingType
     {
@@ -52,7 +53,7 @@ enum AppConfigSetting: string
 
     public function isUrl(): bool
     {
-        return in_array($this, [self::SupportUrl, self::TermsUrl, self::PrivacyUrl, self::RefundUrl, self::WebCheckoutUrl], true);
+        return in_array($this, [self::SupportUrl, self::TermsUrl, self::PrivacyUrl, self::RefundUrl, self::WebCheckoutUrl, self::ForgotPasswordUrl], true);
     }
 
     /**

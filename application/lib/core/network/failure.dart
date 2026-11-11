@@ -66,6 +66,12 @@ final class RecentAuthRequiredFailure extends Failure {
   const RecentAuthRequiredFailure({super.requestId});
 }
 
+/// 423 `biometric_locked` (OD-1, API_DOCUMENTATION.md 1g): the fifth bad signature revoked this
+/// device's biometric key; the customer must confirm the password.
+final class BiometricLockedFailure extends Failure {
+  const BiometricLockedFailure({super.requestId});
+}
+
 /// 422 `validation_failed`. Keys use Laravel dot notation (`variants.0.price`).
 final class ValidationFailure extends Failure {
   const ValidationFailure(this.fieldErrors, {this.message, super.requestId});

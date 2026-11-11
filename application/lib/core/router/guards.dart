@@ -17,6 +17,7 @@ final class GuardState {
     required this.session,
     required this.availability,
     this.emailVerified,
+    this.biometricOfferPending = false,
   });
 
   final SessionStatus session;
@@ -24,12 +25,17 @@ final class GuardState {
 
   /// Null until the profile is loaded; only `false` sends the customer to verification.
   final bool? emailVerified;
+
+  /// The one-time biometric unlock offer is due after this sign-in (owner decision 6).
+  final bool biometricOfferPending;
 }
 
 /// Returns where to send the user instead of [location], or null to stay.
 ///
 /// Order: update required, maintenance, sign-in for protected routes, email verification, and
-/// leaving sign-in once signed in.
+/// leaving the guest-only routes (sign-in, register, two-factor, forgot password) once signed in:
+/// to the return location (`from`), to email verification after registering, through the
+/// biometric offer first when it is due.
 String? redirectFor({
   required GuardState state,
   required Uri location,
@@ -53,7 +59,9 @@ String? redirectFor({
 
   final signedIn = state.session == SessionStatus.signedIn;
 
-  if (access != RouteAccess.public && !signedIn) {
+  final protected =
+      access == RouteAccess.signedIn || access == RouteAccess.verifiedEmail;
+  if (protected && !signedIn) {
     return Uri(
       path: Routes.login.path,
       queryParameters: {Routes.fromParameter: location.toString()},
@@ -64,8 +72,18 @@ String? redirectFor({
     return Routes.verifyEmail.path;
   }
 
-  if (path == Routes.login.path && signedIn) {
-    return safeReturnLocation(location.queryParameters[Routes.fromParameter]);
+  if (signedIn &&
+      (access == RouteAccess.guestOnly || path == Routes.login.path)) {
+    final target = path == Routes.register.path
+        ? Routes.verifyEmail.path
+        : safeReturnLocation(location.queryParameters[Routes.fromParameter]);
+    if (state.biometricOfferPending) {
+      return Uri(
+        path: Routes.biometricOffer.path,
+        queryParameters: {Routes.nextParameter: target},
+      ).toString();
+    }
+    return target;
   }
 
   return null;
@@ -81,7 +99,8 @@ String safeReturnLocation(String? from) {
   if (parsed == null || parsed.hasScheme || parsed.hasAuthority) {
     return Routes.home.path;
   }
-  if (parsed.path == Routes.login.path) {
+  final route = Routes.byPath(parsed.path);
+  if (route != null && route.access == RouteAccess.guestOnly) {
     return Routes.home.path;
   }
   return from;
@@ -114,6 +133,9 @@ class EmailVerification extends _$EmailVerification {
   bool? build() => null;
 
   void update({required bool verified}) => state = verified;
+
+  /// Unknown again (signed out).
+  void reset() => state = null;
 }
 
 @Riverpod(keepAlive: true)
@@ -122,4 +144,14 @@ class Availability extends _$Availability {
   AppAvailability build() => AppAvailability.available;
 
   void update(AppAvailability availability) => state = availability;
+}
+
+/// Whether the one-time biometric unlock offer is due at the next sign-in (owner decision 6). Set
+/// by the auth feature at launch from the device's support and the saved flags.
+@Riverpod(keepAlive: true)
+class BiometricOfferDue extends _$BiometricOfferDue {
+  @override
+  bool build() => false;
+
+  void update({required bool due}) => state = due;
 }

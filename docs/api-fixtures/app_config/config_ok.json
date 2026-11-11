@@ -22,6 +22,7 @@
                     "web_checkout_redirect": false
                 },
                 "links": {
+                    "forgot_password": "https://boxcards.test/forgot-password",
                     "privacy": null,
                     "refund": null,
                     "support": "https://help.boxcards.test",

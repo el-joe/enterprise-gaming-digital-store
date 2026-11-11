@@ -45,7 +45,19 @@ class PreferencesStore {
   static const currencyKey = 'prefs.currency';
   static const onboardingCompletedKey = 'prefs.onboarding_completed';
 
-  static const allowedKeys = {localeKey, currencyKey, onboardingCompletedKey};
+  /// The biometric unlock offer was shown once after a first sign-in (owner decision 6).
+  static const biometricOfferShownKey = 'prefs.biometric_offer_shown';
+
+  /// The rooted or jailbroken device warning was shown once (owner decision 5).
+  static const integrityWarningShownKey = 'prefs.integrity_warning_shown';
+
+  static const allowedKeys = {
+    localeKey,
+    currencyKey,
+    onboardingCompletedKey,
+    biometricOfferShownKey,
+    integrityWarningShownKey,
+  };
 
   final PreferencesBackend _backend;
 
@@ -77,6 +89,18 @@ class PreferencesStore {
 
   Future<void> setOnboardingCompleted() =>
       _backend.setBool(onboardingCompletedKey, value: true);
+
+  bool get biometricOfferShown =>
+      _backend.getBool(biometricOfferShownKey) ?? false;
+
+  Future<void> setBiometricOfferShown() =>
+      _backend.setBool(biometricOfferShownKey, value: true);
+
+  bool get integrityWarningShown =>
+      _backend.getBool(integrityWarningShownKey) ?? false;
+
+  Future<void> setIntegrityWarningShown() =>
+      _backend.setBool(integrityWarningShownKey, value: true);
 }
 
 /// Overridden in `bootstrap.dart` with the opened store.

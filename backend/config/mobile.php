@@ -88,6 +88,11 @@ return [
         'web_checkout_redirect' => (bool) env('MOBILE_WEB_CHECKOUT_REDIRECT', false),
         'web_checkout_url' => env('MOBILE_WEB_CHECKOUT_URL') ?: '/checkout',
 
+        // M-A10: the app has no stateless forgot-password endpoint (POST /forgot-password is a
+        // session route), so "Forgot password?" opens this page in the system browser.
+        // Published as `links.forgot_password`.
+        'forgot_password_url' => env('MOBILE_FORGOT_PASSWORD_URL') ?: '/forgot-password',
+
         // Absolute https URLs (or site paths, made absolute with APP_URL); null hides the link.
         'support_url' => env('MOBILE_SUPPORT_URL') ?: null,
         'terms_url' => env('MOBILE_TERMS_URL') ?: null,

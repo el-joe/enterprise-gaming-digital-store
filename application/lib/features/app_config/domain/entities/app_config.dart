@@ -83,5 +83,8 @@ abstract class AppLinks with _$AppLinks {
     Uri? privacy,
     Uri? refund,
     Uri? webCheckout,
+
+    /// M-A10: the web "Forgot password?" page, opened in the system browser.
+    Uri? forgotPassword,
   }) = _AppLinks;
 }

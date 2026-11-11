@@ -5,6 +5,7 @@ import 'package:application/core/theme/theme_extensions.dart';
 import 'package:application/core/theme/tokens/elevation.dart';
 import 'package:application/core/theme/tokens/radii.dart';
 import 'package:application/core/theme/tokens/spacing.dart';
+import 'package:application/features/auth/presentation/widgets/account_card.dart';
 import 'package:application/shared/widgets/app_button.dart';
 import 'package:application/shared/widgets/brand_logo.dart';
 import 'package:flutter/material.dart';
@@ -122,6 +123,8 @@ class FoundationHomePage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: Spacing.s6),
+          const AccountCard(),
+          const SizedBox(height: Spacing.s6),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: AppButton(
@@ -145,7 +148,8 @@ class FoundationHomePage extends ConsumerWidget {
 
 enum NoticeKind { maintenance, updateRequired, notFound }
 
-/// Full-screen notice for maintenance, unsupported version and unknown routes.
+/// Full-screen notice for unknown routes (maintenance and force update have their own pages since
+/// M-A10, `features/launch`).
 class NoticePage extends StatelessWidget {
   const NoticePage({required this.kind, super.key});
 

@@ -52,6 +52,7 @@ describe('content', function (): void {
             // owner decision 4) and `web_checkout_redirect` is new (owner decision 3, default off).
             ->assertJsonPath('data.config.features', ['checkout_enabled' => true, 'guest_checkout_enabled' => false, 'wallet_enabled' => true, 'reviews_enabled' => true, 'support_enabled' => true, 'web_checkout_redirect' => false])
             ->assertJsonPath('data.config.links.web_checkout', rtrim((string) config('app.url'), '/').'/checkout')
+            ->assertJsonPath('data.config.links.forgot_password', rtrim((string) config('app.url'), '/').'/forgot-password')
             ->assertJsonPath('data.config.locales', ['supported' => ['en', 'ar'], 'default' => 'en'])
             ->assertJsonPath('data.config.currencies.base', 'USD')
             ->assertJsonPath('data.config.links.terms', rtrim((string) config('app.url'), '/').'/pages/terms')
@@ -94,6 +95,17 @@ describe('content', function (): void {
         appConfig()->assertOk()
             ->assertJsonPath('data.config.features.web_checkout_redirect', true)
             ->assertJsonPath('data.config.links.web_checkout', 'https://boxcards.shop/cart');
+    });
+
+    it('publishes the forgot-password page the app opens, settable without a deploy (M-A10)', function (): void {
+        appConfig()->assertOk()
+            ->assertJsonPath('data.config.links.forgot_password', rtrim((string) config('app.url'), '/').'/forgot-password');
+
+        $this->artisan('mobile:app-config', ['action' => 'set', 'key' => 'forgot_password_url', 'value' => 'https://boxcards.shop/ar/forgot-password'])->assertSuccessful();
+        $this->artisan('mobile:app-config', ['action' => 'set', 'key' => 'forgot_password_url', 'value' => 'javascript:alert(1)'])->assertFailed();
+
+        appConfig()->assertOk()
+            ->assertJsonPath('data.config.links.forgot_password', 'https://boxcards.shop/ar/forgot-password');
     });
 
     it('turns maintenance on and off with a localized message', function (): void {
@@ -200,8 +212,30 @@ describe('payment gateways', function (): void {
             expect($json)->not->toContain($secret);
         }
 
+        // Field names are checked on the JSON keys (M-A10: `links.forgot_password` is the public URL of
+        // the web page `/forgot-password`, a name and value that legitimately contain "password").
+        $keys = [];
+        $collect = static function (mixed $node) use (&$collect, &$keys): void {
+            if (is_array($node)) {
+                foreach ($node as $key => $child) {
+                    if (is_string($key)) {
+                        $keys[] = strtolower($key);
+                    }
+                    $collect($child);
+                }
+            }
+        };
+        $collect(json_decode($json, true));
+        $keys = array_values(array_diff($keys, ['forgot_password']));
+
         foreach (['secret', 'password', 'api_key', 'webhook', 'credential', 'token'] as $fieldName) {
-            expect(strtolower($json))->not->toContain($fieldName);
+            expect(implode(' ', $keys))->not->toContain($fieldName);
+        }
+
+        $withoutRecoveryLink = str_replace([(string) json_encode(appConfig()->json('data.config.links.forgot_password')), '"forgot_password"'], '', $json);
+
+        foreach (['secret', 'password', 'api_key', 'webhook', 'credential', 'token'] as $fieldName) {
+            expect(strtolower($withoutRecoveryLink))->not->toContain($fieldName);
         }
     });
 });

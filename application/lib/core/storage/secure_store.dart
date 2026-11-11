@@ -28,6 +28,10 @@ class SecureStore {
   static const guestOrderTokenPrefix = 'guest_order.token.';
   static const pendingCheckoutKey = 'checkout.pending';
 
+  /// Set while this sign-in has a registered biometric key (owner decision 6). Wiped with the
+  /// tokens on sign-out, so a new sign-in starts with biometric unlock off.
+  static const biometricEnabledKey = 'auth.biometric_enabled';
+
   final FlutterSecureStorage _storage;
 
   Future<String?> readAccessToken() => _storage.read(key: accessTokenKey);
@@ -81,6 +85,13 @@ class SecureStore {
 
   Future<void> deletePendingCheckout() =>
       _storage.delete(key: pendingCheckoutKey);
+
+  Future<bool> readBiometricEnabled() async =>
+      await _storage.read(key: biometricEnabledKey) == 'true';
+
+  Future<void> writeBiometricEnabled({required bool enabled}) => enabled
+      ? _storage.write(key: biometricEnabledKey, value: 'true')
+      : _storage.delete(key: biometricEnabledKey);
 
   /// Removes everything this app stored (sign out of the device).
   Future<void> wipe() => _storage.deleteAll();

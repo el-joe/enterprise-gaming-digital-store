@@ -1,0 +1,23 @@
+{
+    "body": {
+        "data": {
+            "biometric_key": {
+                "algorithm": "ES256",
+                "created_at": "2026-11-10T12:00:00+00:00",
+                "id": "01JF0000000000000000000001"
+            }
+        },
+        "message": "Biometric unlock is on.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/biometric-key"
+    },
+    "status": 201
+}

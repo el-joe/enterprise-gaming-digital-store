@@ -37,6 +37,10 @@ void main() {
         config.links.webCheckout,
         Uri.parse('https://boxcards.test/checkout'),
       );
+      expect(
+        config.links.forgotPassword,
+        Uri.parse('https://boxcards.test/forgot-password'),
+      );
       expect(config.stripePublishableKey, 'pk_test_fixture');
       expect(config.isGatewayActive('paypal'), isFalse);
       expect(

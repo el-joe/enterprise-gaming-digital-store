@@ -2671,7 +2671,7 @@ as String,
 /// @nodoc
 mixin _$LinksDto {
 
- String? get support; String? get terms; String? get privacy; String? get refund; String? get webCheckout;
+ String? get support; String? get terms; String? get privacy; String? get refund; String? get webCheckout; String? get forgotPassword;
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2685,20 +2685,20 @@ $LinksDtoCopyWith<LinksDto> get copyWith => _$LinksDtoCopyWithImpl<LinksDto>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as LinksDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinksDto&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund)&&(identical(other.webCheckout, _this.webCheckout) || other.webCheckout == _this.webCheckout));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinksDto&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund)&&(identical(other.webCheckout, _this.webCheckout) || other.webCheckout == _this.webCheckout)&&(identical(other.forgotPassword, _this.forgotPassword) || other.forgotPassword == _this.forgotPassword));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as LinksDto;
-  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund,_this.webCheckout);
+  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund,_this.webCheckout,_this.forgotPassword);
 }
 
 @override
 String toString() {
   final _this = this as LinksDto;
-  return 'LinksDto(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund}, webCheckout: ${_this.webCheckout})';
+  return 'LinksDto(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund}, webCheckout: ${_this.webCheckout}, forgotPassword: ${_this.forgotPassword})';
 }
 
 
@@ -2709,7 +2709,7 @@ abstract mixin class $LinksDtoCopyWith<$Res>  {
   factory $LinksDtoCopyWith(LinksDto value, $Res Function(LinksDto) _then) = _$LinksDtoCopyWithImpl;
 @useResult
 $Res call({
- String? support, String? terms, String? privacy, String? refund, String? webCheckout
+ String? support, String? terms, String? privacy, String? refund, String? webCheckout, String? forgotPassword
 });
 
 
@@ -2726,13 +2726,14 @@ class _$LinksDtoCopyWithImpl<$Res>
 
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,Object? forgotPassword = freezed,}) {
   return _then(LinksDto(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as String?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as String?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as String?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
 as String?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
+as String?,forgotPassword: freezed == forgotPassword ? _self.forgotPassword : forgotPassword // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -2818,10 +2819,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout,  String? forgotPassword)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LinksDto() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout,_that.forgotPassword);case _:
   return orElse();
 
 }
@@ -2839,10 +2840,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCh
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout,  String? forgotPassword)  $default,) {final _that = this;
 switch (_that) {
 case _LinksDto():
-return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout,_that.forgotPassword);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2859,10 +2860,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCh
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? support,  String? terms,  String? privacy,  String? refund,  String? webCheckout,  String? forgotPassword)?  $default,) {final _that = this;
 switch (_that) {
 case _LinksDto() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout,_that.forgotPassword);case _:
   return null;
 
 }
@@ -2874,7 +2875,7 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCh
 @JsonSerializable()
 
 class _LinksDto implements LinksDto {
-  const _LinksDto({this.support, this.terms, this.privacy, this.refund, this.webCheckout});
+  const _LinksDto({this.support, this.terms, this.privacy, this.refund, this.webCheckout, this.forgotPassword});
   factory _LinksDto.fromJson(Map<String, dynamic> json) => _$LinksDtoFromJson(json);
 
 @override final  String? support;
@@ -2882,6 +2883,7 @@ class _LinksDto implements LinksDto {
 @override final  String? privacy;
 @override final  String? refund;
 @override final  String? webCheckout;
+@override final  String? forgotPassword;
 
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
@@ -2896,18 +2898,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinksDto&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund)&&(identical(other.webCheckout, webCheckout) || other.webCheckout == webCheckout));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinksDto&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund)&&(identical(other.webCheckout, webCheckout) || other.webCheckout == webCheckout)&&(identical(other.forgotPassword, forgotPassword) || other.forgotPassword == forgotPassword));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,support,terms,privacy,refund,webCheckout);
+    return Object.hash(runtimeType,support,terms,privacy,refund,webCheckout,forgotPassword);
 }
 
 @override
 String toString() {
-    return 'LinksDto(support: $support, terms: $terms, privacy: $privacy, refund: $refund, webCheckout: $webCheckout)';
+    return 'LinksDto(support: $support, terms: $terms, privacy: $privacy, refund: $refund, webCheckout: $webCheckout, forgotPassword: $forgotPassword)';
 }
 
 
@@ -2918,7 +2920,7 @@ abstract mixin class _$LinksDtoCopyWith<$Res> implements $LinksDtoCopyWith<$Res>
   factory _$LinksDtoCopyWith(_LinksDto value, $Res Function(_LinksDto) _then) = __$LinksDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String? support, String? terms, String? privacy, String? refund, String? webCheckout
+ String? support, String? terms, String? privacy, String? refund, String? webCheckout, String? forgotPassword
 });
 
 
@@ -2935,13 +2937,14 @@ class __$LinksDtoCopyWithImpl<$Res>
 
 /// Create a copy of LinksDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,Object? forgotPassword = freezed,}) {
   return _then(_LinksDto(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as String?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as String?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as String?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
 as String?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
+as String?,forgotPassword: freezed == forgotPassword ? _self.forgotPassword : forgotPassword // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

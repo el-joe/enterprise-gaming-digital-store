@@ -51,6 +51,7 @@ abstract class AppConfigDto with _$AppConfigDto {
       privacy: _uri(links.privacy),
       refund: _uri(links.refund),
       webCheckout: _uri(links.webCheckout),
+      forgotPassword: _uri(links.forgotPassword),
     ),
     paymentGateways: paymentGateways,
     update: update?.toEntity(),
@@ -205,6 +206,7 @@ abstract class LinksDto with _$LinksDto {
     String? privacy,
     String? refund,
     String? webCheckout,
+    String? forgotPassword,
   }) = _LinksDto;
 
   factory LinksDto.fromJson(Map<String, dynamic> json) =>

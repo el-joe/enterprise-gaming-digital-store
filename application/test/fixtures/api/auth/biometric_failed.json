@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "biometric_failed",
+        "message": "Biometric confirmation failed. Try again or confirm your password.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/confirm-biometric"
+    },
+    "status": 422
+}

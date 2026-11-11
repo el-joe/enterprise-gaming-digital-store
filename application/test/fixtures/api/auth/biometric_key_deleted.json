@@ -1,0 +1,17 @@
+{
+    "body": {
+        "data": {},
+        "message": "Biometric unlock is off.",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "DELETE",
+        "path": "/api/v1/mobile/auth/biometric-key"
+    },
+    "status": 200
+}

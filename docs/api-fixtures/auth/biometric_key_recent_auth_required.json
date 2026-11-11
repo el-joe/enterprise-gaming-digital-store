@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "recent_auth_required",
+        "message": "Confirm your password to turn on biometric unlock.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/biometric-key"
+    },
+    "status": 423
+}

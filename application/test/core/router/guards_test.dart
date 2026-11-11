@@ -107,9 +107,48 @@ void main() {
     expect(go(signedOut, Routes.updateRequired.path), Routes.home.path);
   });
 
+  test('guest-only routes send a signed-in customer on (M-A10)', () {
+    expect(
+      go(signedIn, '/login/two-factor?from=%2Fcart', RouteAccess.guestOnly),
+      '/cart',
+    );
+    expect(go(signedIn, '/forgot-password', RouteAccess.guestOnly), '/');
+    // Registering leads to the verify-email prompt.
+    expect(
+      go(signedIn, Routes.register.path, RouteAccess.guestOnly),
+      Routes.verifyEmail.path,
+    );
+    expect(go(signedOut, Routes.register.path, RouteAccess.guestOnly), isNull);
+  });
+
+  test('the biometric offer comes first when it is due', () {
+    const due = GuardState(
+      session: SessionStatus.signedIn,
+      availability: AppAvailability.available,
+      biometricOfferPending: true,
+    );
+    final target = Uri.parse(go(due, '/login?from=%2Fcart')!);
+    expect(target.path, Routes.biometricOffer.path);
+    expect(target.queryParameters[Routes.nextParameter], '/cart');
+    expect(
+      Uri.parse(go(due, Routes.register.path, RouteAccess.guestOnly)!)
+          .queryParameters[Routes.nextParameter],
+      Routes.verifyEmail.path,
+    );
+    // The offer page itself is a normal signed-in route.
+    expect(go(due, Routes.biometricOffer.path, RouteAccess.signedIn), isNull);
+  });
+
+  test('a return path never lands on a guest-only route', () {
+    expect(safeReturnLocation('/register'), Routes.home.path);
+    expect(safeReturnLocation('/login/two-factor'), Routes.home.path);
+  });
+
   test('route table lookup', () {
     expect(Routes.byPath('/'), Routes.home);
     expect(Routes.byPath('/verify-email')?.access, RouteAccess.signedIn);
+    expect(Routes.byPath('/login')?.access, RouteAccess.guestOnly);
+    expect(Routes.byPath('/splash'), Routes.splash);
     expect(Routes.byPath('/nope'), isNull);
     expect(Routes.byPath(null), isNull);
   });

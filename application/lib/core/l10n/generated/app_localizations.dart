@@ -187,6 +187,822 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to home'**
   String get backToHome;
+
+  /// Button that repeats a failed action.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get actionTryAgain;
+
+  /// Primary button moving to the next step.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get actionContinue;
+
+  /// Screen reader label of the app bar back button.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get actionBack;
+
+  /// Screen reader label of a close button.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get actionClose;
+
+  /// Cancels a dialog or a system prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get actionCancel;
+
+  /// Declines an optional offer.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get actionNotNow;
+
+  /// Screen reader label of a progress indicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading'**
+  String get loadingLabel;
+
+  /// Tooltip of the button that reveals the typed password.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// Tooltip of the button that hides the typed password.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// Request id shown under a server error so support can find it.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference: {id}'**
+  String requestReference(String id);
+
+  /// No connection.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline. Check your connection and try again.'**
+  String get failureNetwork;
+
+  /// Request timed out.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection timed out. Please try again.'**
+  String get failureTimeout;
+
+  /// 401 after refresh failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended. Please sign in again.'**
+  String get failureUnauthenticated;
+
+  /// Generic 403.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t do this with this account.'**
+  String get failureForbidden;
+
+  /// 403 email_unverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email to continue.'**
+  String get failureEmailUnverified;
+
+  /// 404.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find what you were looking for.'**
+  String get failureNotFound;
+
+  /// 429 with a wait time such as 0:58.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {time}.'**
+  String failureRateLimited(String time);
+
+  /// 429 without a wait time.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait and try again.'**
+  String get failureRateLimitedNoTime;
+
+  /// 503 maintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'The store is under maintenance. Please try again shortly.'**
+  String get failureMaintenance;
+
+  /// 5xx or an unexpected response.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong on our side. Please try again.'**
+  String get failureServer;
+
+  /// 422 validation without a field on screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the highlighted fields and try again.'**
+  String get failureValidation;
+
+  /// 423 recent authentication required.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your password to continue.'**
+  String get failureRecentAuth;
+
+  /// Any other failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get failureGeneric;
+
+  /// Shown under the logo while the app config is loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get splashChecking;
+
+  /// Title of the offline banner on the splash screen.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline'**
+  String get offlineTitle;
+
+  /// Body of the offline banner on the splash screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Wi-Fi or mobile data to open the store. Your codes are never stored on this device.'**
+  String get offlineBody;
+
+  /// Title of the banner when the app config request failed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open the store'**
+  String get startupErrorTitle;
+
+  /// Installed and minimum app versions on the update screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed {installed} · Minimum {minimum}'**
+  String updateRequiredVersions(String installed, String minimum);
+
+  /// Opens the store listing to update the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get updateNow;
+
+  /// Shown when the store listing cannot be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your app store and update boxcards.shop.'**
+  String get updateStoreUnavailable;
+
+  /// Info banner title on the maintenance screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your orders are safe'**
+  String get maintenanceOrdersSafeTitle;
+
+  /// Info banner body on the maintenance screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Codes you already bought stay in your account.'**
+  String get maintenanceOrdersSafeBody;
+
+  /// Opens the support page.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupport;
+
+  /// A web page could not be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t open the page. Try again later.'**
+  String get linkOpenFailed;
+
+  /// Onboarding progress label.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String onboardingStep(int current, int total);
+
+  /// Onboarding step 1 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your language'**
+  String get onboardingLanguageTitle;
+
+  /// Onboarding step 1 body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change it later in Settings.'**
+  String get onboardingLanguageBody;
+
+  /// Name of English, always written in English.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// Detail line of the English option.
+  ///
+  /// In en, this message translates to:
+  /// **'English (LTR)'**
+  String get languageEnglishDetail;
+
+  /// Name of Arabic, always written in Arabic.
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get languageArabic;
+
+  /// Detail line of the Arabic option.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic (RTL)'**
+  String get languageArabicDetail;
+
+  /// Onboarding step 2 title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your display currency'**
+  String get onboardingCurrencyTitle;
+
+  /// Onboarding step 2 body.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices show in this currency. If you skip, we use your country\'s currency.'**
+  String get onboardingCurrencyBody;
+
+  /// Label above the currency chips.
+  ///
+  /// In en, this message translates to:
+  /// **'Display currency'**
+  String get displayCurrencyLabel;
+
+  /// Info banner title about the charge currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices may be charged in USD'**
+  String get chargeNoticeTitle;
+
+  /// Info banner body about the charge currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Some payment methods charge another currency. You always see the amount before paying.'**
+  String get chargeNoticeBody;
+
+  /// Finishes onboarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Start shopping'**
+  String get startShopping;
+
+  /// Finishes onboarding without choosing.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get skipForNow;
+
+  /// Sign-in page title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginTitle;
+
+  /// Sign-in page subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your codes and orders, on any device.'**
+  String get loginSubtitle;
+
+  /// Email field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get emailLabel;
+
+  /// Password field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// Link to the forgot-password page.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPasswordLink;
+
+  /// Sign-in button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInAction;
+
+  /// Text before the create-account link.
+  ///
+  /// In en, this message translates to:
+  /// **'New here?'**
+  String get newHere;
+
+  /// Link to the register page.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccountLink;
+
+  /// Rate-limit banner title.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts'**
+  String get rateLimitedTitle;
+
+  /// Rate-limit banner body with the seconds left.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {seconds} seconds.'**
+  String rateLimitedBody(int seconds);
+
+  /// Disabled button label during a rate limit, with m:ss.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {time}'**
+  String tryAgainIn(String time);
+
+  /// Local check: empty field.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required.'**
+  String get fieldRequired;
+
+  /// Local check: malformed email.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get emailInvalid;
+
+  /// Banner title when sign-in failed for a reason other than fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign in'**
+  String get signInFailedTitle;
+
+  /// Two-factor page app bar title.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-step verification'**
+  String get twoFactorAppBar;
+
+  /// Two-factor code title.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code'**
+  String get twoFactorCodeTitle;
+
+  /// Two-factor code body.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your authenticator app. The code changes every 30 seconds.'**
+  String get twoFactorCodeBody;
+
+  /// Screen reader label of the code boxes.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get otpSemantics;
+
+  /// Challenge expiry countdown, m:ss.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in request expires in {time}'**
+  String twoFactorExpiresIn(String time);
+
+  /// Switches to recovery code mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a recovery code instead'**
+  String get useRecoveryCode;
+
+  /// Recovery code title.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a recovery code'**
+  String get recoveryTitle;
+
+  /// Recovery code body.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter one of the recovery codes you saved when you turned on two-step verification. Each code works once.'**
+  String get recoveryBody;
+
+  /// Recovery code field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code'**
+  String get recoveryCodeLabel;
+
+  /// Switches back to the 6-digit code.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the authenticator code'**
+  String get useAuthenticatorCode;
+
+  /// Submits the two-factor code.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get verifyAction;
+
+  /// two_factor_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is not valid. Check it and try again.'**
+  String get twoFactorInvalid;
+
+  /// two_factor_expired banner title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in request expired'**
+  String get twoFactorExpiredTitle;
+
+  /// two_factor_expired banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, start again from the sign-in screen.'**
+  String get twoFactorExpiredBody;
+
+  /// Returns to the sign-in page.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get backToSignIn;
+
+  /// Local check: incomplete code.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter all 6 digits.'**
+  String get otpIncomplete;
+
+  /// Register page title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get registerTitle;
+
+  /// Name field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get fullNameLabel;
+
+  /// Password rules helper.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters with letters and numbers.'**
+  String get passwordHelper;
+
+  /// Password confirmation field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPasswordLabel;
+
+  /// Terms checkbox label.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Terms and Privacy Policy'**
+  String get acceptTerms;
+
+  /// Opens the terms page.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the terms'**
+  String get readTerms;
+
+  /// Local check: terms not accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the terms to create an account.'**
+  String get termsRequired;
+
+  /// Local check: confirmation differs.
+  ///
+  /// In en, this message translates to:
+  /// **'The passwords do not match.'**
+  String get passwordMismatch;
+
+  /// Summary banner title with the number of fields in error.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Check 1 field} other{Check {count} fields}}'**
+  String formErrorsTitle(int count);
+
+  /// Summary banner body.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix the highlighted fields and try again.'**
+  String get formErrorsBody;
+
+  /// Text before the sign-in link on register.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get haveAccount;
+
+  /// Verify-email title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your inbox'**
+  String get verifyEmailTitle;
+
+  /// Verify-email body with the address.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a link to {email}. Open it on this phone to verify your email. You need a verified email to reveal codes and write reviews.'**
+  String verifyEmailBody(String email);
+
+  /// Verify-email body before the address is known.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a link to your email address. Open it on this phone to verify your email. You need a verified email to reveal codes and write reviews.'**
+  String get verifyEmailBodyNoEmail;
+
+  /// Snackbar after a resend.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent.'**
+  String get verificationSent;
+
+  /// Resend cooldown, m:ss.
+  ///
+  /// In en, this message translates to:
+  /// **'You can resend in {time}'**
+  String resendIn(String time);
+
+  /// Resend button.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get resendEmail;
+
+  /// Re-checks the verification status.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve verified my email'**
+  String get iVerified;
+
+  /// Snackbar when the email is still unverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email is not verified yet. Open the link we sent, then try again.'**
+  String get stillUnverified;
+
+  /// Snackbar when the email is verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified. Thank you!'**
+  String get emailVerifiedDone;
+
+  /// Forgot-password title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get forgotTitle;
+
+  /// Forgot-password body.
+  ///
+  /// In en, this message translates to:
+  /// **'Password resets happen on boxcards.shop. We\'ll open the reset page in your browser: enter your account email there and we\'ll send a reset link.'**
+  String get forgotBody;
+
+  /// Opens the web reset page.
+  ///
+  /// In en, this message translates to:
+  /// **'Open reset page'**
+  String get openResetPage;
+
+  /// Banner after the reset page opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your browser'**
+  String get resetPageOpenedTitle;
+
+  /// Banner body after the reset page opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish on boxcards.shop, then come back and sign in with your new password.'**
+  String get resetPageOpenedBody;
+
+  /// No reset URL in the app config.
+  ///
+  /// In en, this message translates to:
+  /// **'The reset page is not available right now. Try again later.'**
+  String get resetPageUnavailable;
+
+  /// Sign-out button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOutAction;
+
+  /// Sign-out dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of boxcards.shop?'**
+  String get signOutConfirmTitle;
+
+  /// Sign-out dialog body.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll need your password to sign in again. Biometric unlock is turned off on this device.'**
+  String get signOutConfirmBody;
+
+  /// Snackbar after signing out.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re signed out.'**
+  String get signedOutMessage;
+
+  /// Account card line on home.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String homeSignedInAs(String email);
+
+  /// Account card line before the email is known.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re signed in.'**
+  String get homeSignedIn;
+
+  /// Account card line when signed out.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see your orders and codes.'**
+  String get homeSignedOut;
+
+  /// Account card title on home.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get homeAccountTitle;
+
+  /// Biometric offer title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with biometrics?'**
+  String get biometricOfferTitle;
+
+  /// Biometric offer body.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint or face to open boxcards.shop after 5 minutes in the background, and to confirm it\'s you before showing codes. You can turn it off any time.'**
+  String get biometricOfferBody;
+
+  /// Turns biometric unlock on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get biometricTurnOn;
+
+  /// System biometric prompt when enrolling.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to turn on biometric unlock'**
+  String get biometricPromptEnrol;
+
+  /// System biometric prompt when unlocking.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock boxcards.shop'**
+  String get biometricPromptUnlock;
+
+  /// System biometric prompt for re-authentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you'**
+  String get biometricPromptConfirm;
+
+  /// Snackbar after enrolling.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock is on.'**
+  String get biometricEnabled;
+
+  /// Snackbar after turning off.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock is off.'**
+  String get biometricDisabled;
+
+  /// Biometrics unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no fingerprint or face unlock set up.'**
+  String get biometricUnavailable;
+
+  /// Enrolment failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock could not be turned on. Try again later.'**
+  String get biometricFailed;
+
+  /// Biometric switch title.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock'**
+  String get biometricSettingTitle;
+
+  /// Biometric switch subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'After 5 minutes in the background'**
+  String get biometricSettingSubtitle;
+
+  /// Password confirmation sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your password'**
+  String get passwordSheetTitle;
+
+  /// Password confirmation sheet body.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, enter your password to continue.'**
+  String get passwordSheetBody;
+
+  /// Confirms the password.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirmAction;
+
+  /// App lock title.
+  ///
+  /// In en, this message translates to:
+  /// **'boxcards.shop is locked'**
+  String get lockTitle;
+
+  /// App lock body.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with your fingerprint or face, or use your password.'**
+  String get lockBody;
+
+  /// App lock biometric button.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with biometrics'**
+  String get lockUseBiometric;
+
+  /// App lock password option.
+  ///
+  /// In en, this message translates to:
+  /// **'Use password'**
+  String get lockUsePassword;
+
+  /// Shown when the key was invalidated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your biometrics changed, so biometric unlock was turned off. Use your password.'**
+  String get lockBiometricChanged;
+
+  /// App lock password submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlockAction;
+
+  /// Device integrity sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'This device may be rooted or jailbroken'**
+  String get integrityTitle;
+
+  /// Device integrity sheet body.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps and codes are less protected on modified devices. You can keep using boxcards.shop; we\'ll ask you to confirm it\'s you before showing codes.'**
+  String get integrityBody;
+
+  /// Closes the device integrity sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand'**
+  String get integrityAcknowledge;
 }
 
 class _AppLocalizationsDelegate

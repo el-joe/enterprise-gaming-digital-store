@@ -3,9 +3,11 @@
 Flutter app for boxcards.shop (Android and iOS). The plan, architecture and milestones live in
 `../docs/MOBILE_APP_ROADMAP.md`; this README covers running and maintaining the code.
 
-Status: **M-A7 data layers and repositories** (2026-11-10) on the **M-A1 foundation**. The app boots to
-a token-styled shell; every feature has its data and domain layer, tested against the backend's
-contract fixtures; there are no feature screens yet (feature UI waits for the approved designs, M-A9).
+Status: **M-A10 auth and onboarding UI** (2026-11-11) on the M-A7 data layers and the M-A1 foundation.
+The app starts on the splash (app config check: force update, maintenance, offline), runs onboarding
+(language, display currency) once, and has sign in, two-step verification, register, verify email,
+forgot password (web page), sign out, the rooted-device warning and biometric unlock (owner decision 6).
+Home is still the foundation placeholder with an account card; catalog screens arrive with M-A11.
 
 ## Requirements
 
@@ -58,7 +60,14 @@ lib/
   core/money/                    Money (Decimal), CurrencyInfo, MoneyFormatter
   core/security/                 FLAG_SECURE screen guard, clipboard guard (Android channel)
   core/utils/ulid.dart           request ids and idempotency keys
-  shared/widgets/                BrandLogo, AppButton
+  core/platform/                 NativeBridge: device integrity, device name, open https page / store
+                                 listing (the app's own `shop.boxcards.app/security` channel)
+  core/utils/clock.dart          injectable clock (countdowns, app lock)
+  shared/widgets/                BrandLogo, AppButton and the Mobile App components of the M-A8
+                                 Figma page `74:13`: MobileAppBar, StatusBanner, app snackbar,
+                                 OtpInput, SheetHeader, AppListTile, AppChip, OptionTile,
+                                 AppTextField (server field errors), CountdownBuilder, IconBadge,
+                                 FlowScaffold (sticky footer)
 assets/brand/                    logo-master.png, mark-master.png (from backend/resources/assets/images/brand/)
 assets/fonts/                    Changa, Readex Pro, IBM Plex Mono (OFL, licences next to the files)
 test/                            core tests, helpers, goldens (en LTR and ar RTL)
@@ -82,7 +91,69 @@ test/fixtures/api/               committed copy of docs/api-fixtures (backend co
 tool/sync_fixtures.sh            copies docs/api-fixtures here; --check compares
 ```
 
-`presentation/` folders arrive with the UI milestones (M-A10 onwards).
+`presentation/` (controllers, pages, widgets) exists for `auth` and the new `launch` feature (splash,
+force update, maintenance, onboarding, rooted-device sheet) since M-A10; the other features get theirs
+in M-A11 onwards. `features/auth/auth_launch.dart` is the auth feature's launch hook (reload the user,
+app lock at a cold start, biometric offer), called by the launch feature after the config check.
+
+## Auth, onboarding and launch (M-A10)
+
+- **Routing.** go_router starts on `/splash`. Guards (`core/router/guards.dart`): force update, then
+  maintenance, then `signedIn`/`verifiedEmail` routes to `/login?from=`, then the guest-only routes
+  (`/login`, `/login/two-factor`, `/register`, `/forgot-password`) send a signed-in customer on: to `from`
+  (in-app paths only), to `/verify-email` after registering, through `/biometric-offer?next=` first when
+  the one-time offer is due. Login is required before any `signedIn` route; checkout (M-A13) will be one.
+- **Controllers** are Riverpod codegen notifiers (`features/*/presentation/controllers`); pages only render
+  state and forward taps. Failures are mapped to localized text by `core/l10n/failure_messages.dart`;
+  422 field errors (already localized by `Accept-Language`) are shown beside their fields; 429 shows
+  "Too many attempts" and a disabled "Try again in m:ss" button from `Retry-After` (60 s without it).
+- **Two-factor** challenge token and expiry are held in memory only (`PendingTwoFactor`), never stored.
+- **Forgot password** opens `links.forgot_password` from `GET /app/config` in the system browser (the
+  reset form is a session route; added to the app config by M-A10, `API_DOCUMENTATION.md` 1d).
+- **Device name** for `device_name` comes from the native channel (`Build.MANUFACTURER`/`MODEL`,
+  `UIDevice.model`), printable ASCII, at most 100 characters.
+- **Version**: `core/config/app_version.dart` holds the build name sent with `platform` to
+  `GET /app/config`; a test keeps it equal to `pubspec.yaml`.
+- **Rooted / jailbroken**: a minimal native check (Android: `test-keys`, `su` paths, Magisk paths; iOS:
+  jailbreak paths and a write outside the sandbox) behind the same channel; a sheet is shown once
+  (`prefs.integrity_warning_shown`) and nothing is blocked (owner decision 5). `deviceIntegrityProvider`
+  gives the `X-Device-Integrity` value for M-A14. Bypassable by design: a signal, not a control.
+
+## Biometric unlock (owner decision 6)
+
+Package: **`biometric_signature` 13.3.0** (pinned exactly; MIT; `github.com/chamodanethra/biometric_signature`).
+Why: it is the maintained plugin (13.3.0 published 2026-10-24, pigeon-typed API, SwiftPM and CocoaPods,
+AGP 9 support) that creates **hardware-backed ECDSA P-256 keys** in the Android Keystore (StrongBox when
+present) and the iOS Secure Enclave, gated by a **strong** biometric prompt (`setUserAuthenticationRequired`,
+`.biometryCurrentSet`), **invalidated when biometrics change**, and signs with SHA256withECDSA returning a
+base64 DER signature and a base64 DER SubjectPublicKeyInfo public key, exactly what ADR-040 /
+`API_DOCUMENTATION.md` 1g verify. `local_auth` was **not** added: a boolean prompt cannot prove anything
+to the server, and unlocking by signing with the same key (below) also gives the "biometrics changed ->
+password" fallback the owner asked for. No other package was added in M-A10.
+
+Native requirements it brings: `MainActivity` extends `FlutterFragmentActivity` (androidx BiometricPrompt),
+`USE_BIOMETRIC` in the manifest, `NSFaceIDUsageDescription` in `ios/Runner/Info.plist`; compileSdk 36
+(Flutter default) is above its floor of 35.
+
+Flow (`features/auth/domain/usecases/biometric_unlock.dart`, all tested with fakes of the key store and the
+server):
+- **Offer**: once per install after the first sign-in, when a strong biometric is enrolled
+  (`prefs.biometric_offer_shown`). "Turn on" creates the key (prompt), `POST /mobile/auth/biometric-key`;
+  on 423 the password sheet asks for the password, `confirm-password`, then registers once more. Any failure
+  deletes the new local key. The flag `auth.biometric_enabled` lives in secure storage and is wiped on
+  sign-out together with the local key (the server key dies with the sign-in).
+- **App lock**: with unlock on, the app locks after **5 minutes** in the background (`AppLifecycleListener`)
+  and at a cold start; `AppLockGate` covers the navigator (state kept). Unlock signs a fresh random nonce
+  with the key, which the platform releases only after a successful strong biometric prompt; a changed
+  enrolment (`keyInvalidated`) turns unlock off and asks for the password (`confirm-password`). It gates
+  opening the app only.
+- **Recent-auth re-auth** for code reveal (M-A14): `confirmRecentAuthWithBiometricProvider` runs
+  challenge -> sign -> `confirm-biometric`; `BiometricCheck.usePassword` tells the caller to show the
+  password sheet (not enrolled, key unknown to the server, biometrics changed, `biometric_locked`).
+- **Turn off**: `BiometricUnlockSettings.disable()` (`DELETE /mobile/auth/biometric-key`, delete key, clear
+  flag). The switch (`BiometricUnlockTile`) sits on the home account card until the Security screen (M-A16).
+- Not verified here: the prompts on real devices (no emulator with biometrics in this environment) and the
+  iOS build (no macOS host). Key attestation is not sent (ADR-040 outstanding).
 
 ## Conventions
 
@@ -158,6 +229,15 @@ bash tool/sync_fixtures.sh        # copy docs/api-fixtures into test/fixtures/ap
 ```
 
 Goldens are rendered with the bundled fonts on Linux; regenerate them on the CI platform.
+
+## Tests (M-A10 additions)
+
+Controller tests (`test/features/auth/auth_controllers_test.dart`, `test/features/launch/launch_controllers_test.dart`),
+biometric use cases and the plugin adapter with fakes (`biometric_unlock_test.dart`), the biometric endpoints against
+the new contract fixtures (`biometric_repository_test.dart`), widget tests of every page in `en` and `ar`
+(`auth_pages_test.dart`, `launch_pages_test.dart`), tap-target and label guidelines (`accessibility_test.dart`) and
+goldens of the key states in LTR and RTL (`test/goldens/m_a10/`). `test/helpers/pump_app.dart` `buildHarness` /
+`pumpHarness` wire every fake (config, auth, account, key store, biometric server, native bridge, clock).
 
 ## Screen and clipboard protection
 

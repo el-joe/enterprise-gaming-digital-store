@@ -1,0 +1,37 @@
+import 'package:application/features/auth/auth_providers.dart';
+import 'package:application/features/auth/presentation/controllers/biometric_controllers.dart';
+import 'package:application/features/auth/presentation/controllers/session_user.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'sign_out_controller.g.dart';
+
+/// Sign out (17.4): revokes this device's sign-in (`POST /mobile/auth/logout`), wipes secure
+/// storage (also when the call fails), deletes the local biometric key (the server key died with
+/// the sign-in) and clears the in-memory account state. State: busy.
+@riverpod
+class SignOutController extends _$SignOutController {
+  @override
+  bool build() => false;
+
+  Future<void> signOut() async {
+    if (state) {
+      return;
+    }
+    state = true;
+    final link = ref.keepAlive();
+    try {
+      await ref.read(authRepositoryProvider).logout();
+      await ref
+          .read(disableBiometricUnlockProvider)
+          .call(revokeOnServer: false);
+      ref.read(currentUserProvider.notifier).clear();
+      ref.read(appLockProvider.notifier).reset();
+      ref.invalidate(biometricUnlockSettingsProvider);
+    } finally {
+      if (ref.mounted) {
+        state = false;
+      }
+      link.close();
+    }
+  }
+}

@@ -1,36 +1,673 @@
 {
   "@@locale": "en",
   "appTitle": "boxcards.shop",
-  "@appTitle": {"description": "App name shown by the OS task switcher and in the header. Brand name, not translated."},
+  "@appTitle": {
+    "description": "App name shown by the OS task switcher and in the header. Brand name, not translated."
+  },
   "brandLogoLabel": "boxcards.shop",
-  "@brandLogoLabel": {"description": "Screen reader label of the brand logo."},
+  "@brandLogoLabel": {
+    "description": "Screen reader label of the brand logo."
+  },
   "environmentBadge": "{flavor, select, dev{Development} staging{Staging} other{Production}}",
   "@environmentBadge": {
     "description": "Badge naming the build environment; hidden in production.",
-    "placeholders": {"flavor": {"type": "String"}}
+    "placeholders": {
+      "flavor": {
+        "type": "String"
+      }
+    }
   },
   "homeOverline": "Store",
-  "@homeOverline": {"description": "Small label above the home title."},
+  "@homeOverline": {
+    "description": "Small label above the home title."
+  },
   "homeTitle": "Welcome to boxcards.shop",
-  "@homeTitle": {"description": "Home placeholder title."},
+  "@homeTitle": {
+    "description": "Home placeholder title."
+  },
   "homeBody": "Gift cards and game top-ups. The full store arrives in the next app releases.",
-  "@homeBody": {"description": "Home placeholder text until the catalog screens ship."},
+  "@homeBody": {
+    "description": "Home placeholder text until the catalog screens ship."
+  },
   "switchLanguage": "العربية",
-  "@switchLanguage": {"description": "Button that switches the app to the other language, written in that language."},
+  "@switchLanguage": {
+    "description": "Button that switches the app to the other language, written in that language."
+  },
   "switchLanguageHint": "Switch the app language to Arabic",
-  "@switchLanguageHint": {"description": "Screen reader hint of the language switch button."},
+  "@switchLanguageHint": {
+    "description": "Screen reader hint of the language switch button."
+  },
   "maintenanceTitle": "We'll be right back",
-  "@maintenanceTitle": {"description": "Title shown while the store is in maintenance."},
+  "@maintenanceTitle": {
+    "description": "Title shown while the store is in maintenance."
+  },
   "maintenanceBody": "The store is under maintenance. Please try again in a few minutes.",
-  "@maintenanceBody": {"description": "Body shown while the store is in maintenance."},
+  "@maintenanceBody": {
+    "description": "Body shown while the store is in maintenance."
+  },
   "updateRequiredTitle": "Update required",
-  "@updateRequiredTitle": {"description": "Title shown when this app version is no longer supported."},
+  "@updateRequiredTitle": {
+    "description": "Title shown when this app version is no longer supported."
+  },
   "updateRequiredBody": "This version of the app is no longer supported. Please update it from your app store.",
-  "@updateRequiredBody": {"description": "Body shown when this app version is no longer supported."},
+  "@updateRequiredBody": {
+    "description": "Body shown when this app version is no longer supported."
+  },
   "notFoundTitle": "Page not found",
-  "@notFoundTitle": {"description": "Title for an unknown route."},
+  "@notFoundTitle": {
+    "description": "Title for an unknown route."
+  },
   "notFoundBody": "The page you opened does not exist.",
-  "@notFoundBody": {"description": "Body for an unknown route."},
+  "@notFoundBody": {
+    "description": "Body for an unknown route."
+  },
   "backToHome": "Back to home",
-  "@backToHome": {"description": "Button returning to the home page."}
+  "@backToHome": {
+    "description": "Button returning to the home page."
+  },
+  "actionTryAgain": "Try again",
+  "@actionTryAgain": {
+    "description": "Button that repeats a failed action."
+  },
+  "actionContinue": "Continue",
+  "@actionContinue": {
+    "description": "Primary button moving to the next step."
+  },
+  "actionBack": "Back",
+  "@actionBack": {
+    "description": "Screen reader label of the app bar back button."
+  },
+  "actionClose": "Close",
+  "@actionClose": {
+    "description": "Screen reader label of a close button."
+  },
+  "actionCancel": "Cancel",
+  "@actionCancel": {
+    "description": "Cancels a dialog or a system prompt."
+  },
+  "actionNotNow": "Not now",
+  "@actionNotNow": {
+    "description": "Declines an optional offer."
+  },
+  "loadingLabel": "Loading",
+  "@loadingLabel": {
+    "description": "Screen reader label of a progress indicator."
+  },
+  "showPassword": "Show password",
+  "@showPassword": {
+    "description": "Tooltip of the button that reveals the typed password."
+  },
+  "hidePassword": "Hide password",
+  "@hidePassword": {
+    "description": "Tooltip of the button that hides the typed password."
+  },
+  "requestReference": "Reference: {id}",
+  "@requestReference": {
+    "description": "Request id shown under a server error so support can find it.",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "failureNetwork": "You are offline. Check your connection and try again.",
+  "@failureNetwork": {
+    "description": "No connection."
+  },
+  "failureTimeout": "The connection timed out. Please try again.",
+  "@failureTimeout": {
+    "description": "Request timed out."
+  },
+  "failureUnauthenticated": "Your session has ended. Please sign in again.",
+  "@failureUnauthenticated": {
+    "description": "401 after refresh failed."
+  },
+  "failureForbidden": "You can't do this with this account.",
+  "@failureForbidden": {
+    "description": "Generic 403."
+  },
+  "failureEmailUnverified": "Verify your email to continue.",
+  "@failureEmailUnverified": {
+    "description": "403 email_unverified."
+  },
+  "failureNotFound": "We couldn't find what you were looking for.",
+  "@failureNotFound": {
+    "description": "404."
+  },
+  "failureRateLimited": "Too many attempts. Try again in {time}.",
+  "@failureRateLimited": {
+    "description": "429 with a wait time such as 0:58.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "failureRateLimitedNoTime": "Too many attempts. Please wait and try again.",
+  "@failureRateLimitedNoTime": {
+    "description": "429 without a wait time."
+  },
+  "failureMaintenance": "The store is under maintenance. Please try again shortly.",
+  "@failureMaintenance": {
+    "description": "503 maintenance."
+  },
+  "failureServer": "Something went wrong on our side. Please try again.",
+  "@failureServer": {
+    "description": "5xx or an unexpected response."
+  },
+  "failureValidation": "Check the highlighted fields and try again.",
+  "@failureValidation": {
+    "description": "422 validation without a field on screen."
+  },
+  "failureRecentAuth": "Confirm your password to continue.",
+  "@failureRecentAuth": {
+    "description": "423 recent authentication required."
+  },
+  "failureGeneric": "Something went wrong. Please try again.",
+  "@failureGeneric": {
+    "description": "Any other failure."
+  },
+  "splashChecking": "Checking for updates…",
+  "@splashChecking": {
+    "description": "Shown under the logo while the app config is loading."
+  },
+  "offlineTitle": "You are offline",
+  "@offlineTitle": {
+    "description": "Title of the offline banner on the splash screen."
+  },
+  "offlineBody": "Connect to Wi-Fi or mobile data to open the store. Your codes are never stored on this device.",
+  "@offlineBody": {
+    "description": "Body of the offline banner on the splash screen."
+  },
+  "startupErrorTitle": "We couldn't open the store",
+  "@startupErrorTitle": {
+    "description": "Title of the banner when the app config request failed."
+  },
+  "updateRequiredVersions": "Installed {installed} · Minimum {minimum}",
+  "@updateRequiredVersions": {
+    "description": "Installed and minimum app versions on the update screen.",
+    "placeholders": {
+      "installed": {
+        "type": "String"
+      },
+      "minimum": {
+        "type": "String"
+      }
+    }
+  },
+  "updateNow": "Update now",
+  "@updateNow": {
+    "description": "Opens the store listing to update the app."
+  },
+  "updateStoreUnavailable": "Open your app store and update boxcards.shop.",
+  "@updateStoreUnavailable": {
+    "description": "Shown when the store listing cannot be opened."
+  },
+  "maintenanceOrdersSafeTitle": "Your orders are safe",
+  "@maintenanceOrdersSafeTitle": {
+    "description": "Info banner title on the maintenance screen."
+  },
+  "maintenanceOrdersSafeBody": "Codes you already bought stay in your account.",
+  "@maintenanceOrdersSafeBody": {
+    "description": "Info banner body on the maintenance screen."
+  },
+  "contactSupport": "Contact support",
+  "@contactSupport": {
+    "description": "Opens the support page."
+  },
+  "linkOpenFailed": "We couldn't open the page. Try again later.",
+  "@linkOpenFailed": {
+    "description": "A web page could not be opened."
+  },
+  "onboardingStep": "Step {current} of {total}",
+  "@onboardingStep": {
+    "description": "Onboarding progress label.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingLanguageTitle": "Choose your language",
+  "@onboardingLanguageTitle": {
+    "description": "Onboarding step 1 title."
+  },
+  "onboardingLanguageBody": "You can change it later in Settings.",
+  "@onboardingLanguageBody": {
+    "description": "Onboarding step 1 body."
+  },
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "Name of English, always written in English."
+  },
+  "languageEnglishDetail": "English (LTR)",
+  "@languageEnglishDetail": {
+    "description": "Detail line of the English option."
+  },
+  "languageArabic": "العربية",
+  "@languageArabic": {
+    "description": "Name of Arabic, always written in Arabic."
+  },
+  "languageArabicDetail": "Arabic (RTL)",
+  "@languageArabicDetail": {
+    "description": "Detail line of the Arabic option."
+  },
+  "onboardingCurrencyTitle": "Choose your display currency",
+  "@onboardingCurrencyTitle": {
+    "description": "Onboarding step 2 title."
+  },
+  "onboardingCurrencyBody": "Prices show in this currency. If you skip, we use your country's currency.",
+  "@onboardingCurrencyBody": {
+    "description": "Onboarding step 2 body."
+  },
+  "displayCurrencyLabel": "Display currency",
+  "@displayCurrencyLabel": {
+    "description": "Label above the currency chips."
+  },
+  "chargeNoticeTitle": "Prices may be charged in USD",
+  "@chargeNoticeTitle": {
+    "description": "Info banner title about the charge currency."
+  },
+  "chargeNoticeBody": "Some payment methods charge another currency. You always see the amount before paying.",
+  "@chargeNoticeBody": {
+    "description": "Info banner body about the charge currency."
+  },
+  "startShopping": "Start shopping",
+  "@startShopping": {
+    "description": "Finishes onboarding."
+  },
+  "skipForNow": "Skip for now",
+  "@skipForNow": {
+    "description": "Finishes onboarding without choosing."
+  },
+  "loginTitle": "Sign in",
+  "@loginTitle": {
+    "description": "Sign-in page title."
+  },
+  "loginSubtitle": "Your codes and orders, on any device.",
+  "@loginSubtitle": {
+    "description": "Sign-in page subtitle."
+  },
+  "emailLabel": "Email address",
+  "@emailLabel": {
+    "description": "Email field label."
+  },
+  "passwordLabel": "Password",
+  "@passwordLabel": {
+    "description": "Password field label."
+  },
+  "forgotPasswordLink": "Forgot password?",
+  "@forgotPasswordLink": {
+    "description": "Link to the forgot-password page."
+  },
+  "signInAction": "Sign in",
+  "@signInAction": {
+    "description": "Sign-in button."
+  },
+  "newHere": "New here?",
+  "@newHere": {
+    "description": "Text before the create-account link."
+  },
+  "createAccountLink": "Create account",
+  "@createAccountLink": {
+    "description": "Link to the register page."
+  },
+  "rateLimitedTitle": "Too many attempts",
+  "@rateLimitedTitle": {
+    "description": "Rate-limit banner title."
+  },
+  "rateLimitedBody": "Try again in {seconds} seconds.",
+  "@rateLimitedBody": {
+    "description": "Rate-limit banner body with the seconds left.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "tryAgainIn": "Try again in {time}",
+  "@tryAgainIn": {
+    "description": "Disabled button label during a rate limit, with m:ss.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fieldRequired": "This field is required.",
+  "@fieldRequired": {
+    "description": "Local check: empty field."
+  },
+  "emailInvalid": "Enter a valid email address.",
+  "@emailInvalid": {
+    "description": "Local check: malformed email."
+  },
+  "signInFailedTitle": "Couldn't sign in",
+  "@signInFailedTitle": {
+    "description": "Banner title when sign-in failed for a reason other than fields."
+  },
+  "twoFactorAppBar": "Two-step verification",
+  "@twoFactorAppBar": {
+    "description": "Two-factor page app bar title."
+  },
+  "twoFactorCodeTitle": "Enter the 6-digit code",
+  "@twoFactorCodeTitle": {
+    "description": "Two-factor code title."
+  },
+  "twoFactorCodeBody": "Open your authenticator app. The code changes every 30 seconds.",
+  "@twoFactorCodeBody": {
+    "description": "Two-factor code body."
+  },
+  "otpSemantics": "6-digit code",
+  "@otpSemantics": {
+    "description": "Screen reader label of the code boxes."
+  },
+  "twoFactorExpiresIn": "This sign-in request expires in {time}",
+  "@twoFactorExpiresIn": {
+    "description": "Challenge expiry countdown, m:ss.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "useRecoveryCode": "Use a recovery code instead",
+  "@useRecoveryCode": {
+    "description": "Switches to recovery code mode."
+  },
+  "recoveryTitle": "Use a recovery code",
+  "@recoveryTitle": {
+    "description": "Recovery code title."
+  },
+  "recoveryBody": "Enter one of the recovery codes you saved when you turned on two-step verification. Each code works once.",
+  "@recoveryBody": {
+    "description": "Recovery code body."
+  },
+  "recoveryCodeLabel": "Recovery code",
+  "@recoveryCodeLabel": {
+    "description": "Recovery code field label."
+  },
+  "useAuthenticatorCode": "Use the authenticator code",
+  "@useAuthenticatorCode": {
+    "description": "Switches back to the 6-digit code."
+  },
+  "verifyAction": "Verify",
+  "@verifyAction": {
+    "description": "Submits the two-factor code."
+  },
+  "twoFactorInvalid": "That code is not valid. Check it and try again.",
+  "@twoFactorInvalid": {
+    "description": "two_factor_invalid."
+  },
+  "twoFactorExpiredTitle": "Sign-in request expired",
+  "@twoFactorExpiredTitle": {
+    "description": "two_factor_expired banner title."
+  },
+  "twoFactorExpiredBody": "For your security, start again from the sign-in screen.",
+  "@twoFactorExpiredBody": {
+    "description": "two_factor_expired banner body."
+  },
+  "backToSignIn": "Back to sign in",
+  "@backToSignIn": {
+    "description": "Returns to the sign-in page."
+  },
+  "otpIncomplete": "Enter all 6 digits.",
+  "@otpIncomplete": {
+    "description": "Local check: incomplete code."
+  },
+  "registerTitle": "Create account",
+  "@registerTitle": {
+    "description": "Register page title."
+  },
+  "fullNameLabel": "Full name",
+  "@fullNameLabel": {
+    "description": "Name field label."
+  },
+  "passwordHelper": "At least 8 characters with letters and numbers.",
+  "@passwordHelper": {
+    "description": "Password rules helper."
+  },
+  "confirmPasswordLabel": "Confirm password",
+  "@confirmPasswordLabel": {
+    "description": "Password confirmation field label."
+  },
+  "acceptTerms": "I accept the Terms and Privacy Policy",
+  "@acceptTerms": {
+    "description": "Terms checkbox label."
+  },
+  "readTerms": "Read the terms",
+  "@readTerms": {
+    "description": "Opens the terms page."
+  },
+  "termsRequired": "Accept the terms to create an account.",
+  "@termsRequired": {
+    "description": "Local check: terms not accepted."
+  },
+  "passwordMismatch": "The passwords do not match.",
+  "@passwordMismatch": {
+    "description": "Local check: confirmation differs."
+  },
+  "formErrorsTitle": "{count, plural, =1{Check 1 field} other{Check {count} fields}}",
+  "@formErrorsTitle": {
+    "description": "Summary banner title with the number of fields in error.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "formErrorsBody": "Fix the highlighted fields and try again.",
+  "@formErrorsBody": {
+    "description": "Summary banner body."
+  },
+  "haveAccount": "Already have an account?",
+  "@haveAccount": {
+    "description": "Text before the sign-in link on register."
+  },
+  "verifyEmailTitle": "Check your inbox",
+  "@verifyEmailTitle": {
+    "description": "Verify-email title."
+  },
+  "verifyEmailBody": "We sent a link to {email}. Open it on this phone to verify your email. You need a verified email to reveal codes and write reviews.",
+  "@verifyEmailBody": {
+    "description": "Verify-email body with the address.",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailBodyNoEmail": "We sent a link to your email address. Open it on this phone to verify your email. You need a verified email to reveal codes and write reviews.",
+  "@verifyEmailBodyNoEmail": {
+    "description": "Verify-email body before the address is known."
+  },
+  "verificationSent": "Verification email sent.",
+  "@verificationSent": {
+    "description": "Snackbar after a resend."
+  },
+  "resendIn": "You can resend in {time}",
+  "@resendIn": {
+    "description": "Resend cooldown, m:ss.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resendEmail": "Resend email",
+  "@resendEmail": {
+    "description": "Resend button."
+  },
+  "iVerified": "I've verified my email",
+  "@iVerified": {
+    "description": "Re-checks the verification status."
+  },
+  "stillUnverified": "Your email is not verified yet. Open the link we sent, then try again.",
+  "@stillUnverified": {
+    "description": "Snackbar when the email is still unverified."
+  },
+  "emailVerifiedDone": "Email verified. Thank you!",
+  "@emailVerifiedDone": {
+    "description": "Snackbar when the email is verified."
+  },
+  "forgotTitle": "Reset your password",
+  "@forgotTitle": {
+    "description": "Forgot-password title."
+  },
+  "forgotBody": "Password resets happen on boxcards.shop. We'll open the reset page in your browser: enter your account email there and we'll send a reset link.",
+  "@forgotBody": {
+    "description": "Forgot-password body."
+  },
+  "openResetPage": "Open reset page",
+  "@openResetPage": {
+    "description": "Opens the web reset page."
+  },
+  "resetPageOpenedTitle": "Check your browser",
+  "@resetPageOpenedTitle": {
+    "description": "Banner after the reset page opened."
+  },
+  "resetPageOpenedBody": "Finish on boxcards.shop, then come back and sign in with your new password.",
+  "@resetPageOpenedBody": {
+    "description": "Banner body after the reset page opened."
+  },
+  "resetPageUnavailable": "The reset page is not available right now. Try again later.",
+  "@resetPageUnavailable": {
+    "description": "No reset URL in the app config."
+  },
+  "signOutAction": "Sign out",
+  "@signOutAction": {
+    "description": "Sign-out button."
+  },
+  "signOutConfirmTitle": "Sign out of boxcards.shop?",
+  "@signOutConfirmTitle": {
+    "description": "Sign-out dialog title."
+  },
+  "signOutConfirmBody": "You'll need your password to sign in again. Biometric unlock is turned off on this device.",
+  "@signOutConfirmBody": {
+    "description": "Sign-out dialog body."
+  },
+  "signedOutMessage": "You're signed out.",
+  "@signedOutMessage": {
+    "description": "Snackbar after signing out."
+  },
+  "homeSignedInAs": "Signed in as {email}",
+  "@homeSignedInAs": {
+    "description": "Account card line on home.",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "homeSignedIn": "You're signed in.",
+  "@homeSignedIn": {
+    "description": "Account card line before the email is known."
+  },
+  "homeSignedOut": "Sign in to see your orders and codes.",
+  "@homeSignedOut": {
+    "description": "Account card line when signed out."
+  },
+  "homeAccountTitle": "Account",
+  "@homeAccountTitle": {
+    "description": "Account card title on home."
+  },
+  "biometricOfferTitle": "Unlock with biometrics?",
+  "@biometricOfferTitle": {
+    "description": "Biometric offer title."
+  },
+  "biometricOfferBody": "Use your fingerprint or face to open boxcards.shop after 5 minutes in the background, and to confirm it's you before showing codes. You can turn it off any time.",
+  "@biometricOfferBody": {
+    "description": "Biometric offer body."
+  },
+  "biometricTurnOn": "Turn on",
+  "@biometricTurnOn": {
+    "description": "Turns biometric unlock on."
+  },
+  "biometricPromptEnrol": "Confirm to turn on biometric unlock",
+  "@biometricPromptEnrol": {
+    "description": "System biometric prompt when enrolling."
+  },
+  "biometricPromptUnlock": "Unlock boxcards.shop",
+  "@biometricPromptUnlock": {
+    "description": "System biometric prompt when unlocking."
+  },
+  "biometricPromptConfirm": "Confirm it's you",
+  "@biometricPromptConfirm": {
+    "description": "System biometric prompt for re-authentication."
+  },
+  "biometricEnabled": "Biometric unlock is on.",
+  "@biometricEnabled": {
+    "description": "Snackbar after enrolling."
+  },
+  "biometricDisabled": "Biometric unlock is off.",
+  "@biometricDisabled": {
+    "description": "Snackbar after turning off."
+  },
+  "biometricUnavailable": "This device has no fingerprint or face unlock set up.",
+  "@biometricUnavailable": {
+    "description": "Biometrics unavailable."
+  },
+  "biometricFailed": "Biometric unlock could not be turned on. Try again later.",
+  "@biometricFailed": {
+    "description": "Enrolment failed."
+  },
+  "biometricSettingTitle": "Biometric unlock",
+  "@biometricSettingTitle": {
+    "description": "Biometric switch title."
+  },
+  "biometricSettingSubtitle": "After 5 minutes in the background",
+  "@biometricSettingSubtitle": {
+    "description": "Biometric switch subtitle."
+  },
+  "passwordSheetTitle": "Confirm your password",
+  "@passwordSheetTitle": {
+    "description": "Password confirmation sheet title."
+  },
+  "passwordSheetBody": "For your security, enter your password to continue.",
+  "@passwordSheetBody": {
+    "description": "Password confirmation sheet body."
+  },
+  "confirmAction": "Confirm",
+  "@confirmAction": {
+    "description": "Confirms the password."
+  },
+  "lockTitle": "boxcards.shop is locked",
+  "@lockTitle": {
+    "description": "App lock title."
+  },
+  "lockBody": "Unlock with your fingerprint or face, or use your password.",
+  "@lockBody": {
+    "description": "App lock body."
+  },
+  "lockUseBiometric": "Unlock with biometrics",
+  "@lockUseBiometric": {
+    "description": "App lock biometric button."
+  },
+  "lockUsePassword": "Use password",
+  "@lockUsePassword": {
+    "description": "App lock password option."
+  },
+  "lockBiometricChanged": "Your biometrics changed, so biometric unlock was turned off. Use your password.",
+  "@lockBiometricChanged": {
+    "description": "Shown when the key was invalidated."
+  },
+  "unlockAction": "Unlock",
+  "@unlockAction": {
+    "description": "App lock password submit."
+  },
+  "integrityTitle": "This device may be rooted or jailbroken",
+  "@integrityTitle": {
+    "description": "Device integrity sheet title."
+  },
+  "integrityBody": "Apps and codes are less protected on modified devices. You can keep using boxcards.shop; we'll ask you to confirm it's you before showing codes.",
+  "@integrityBody": {
+    "description": "Device integrity sheet body."
+  },
+  "integrityAcknowledge": "I understand",
+  "@integrityAcknowledge": {
+    "description": "Closes the device integrity sheet."
+  }
 }

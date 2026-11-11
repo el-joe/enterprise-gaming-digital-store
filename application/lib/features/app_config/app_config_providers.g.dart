@@ -104,3 +104,65 @@ final class AppConfigRepositoryProvider
 
 String _$appConfigRepositoryHash() =>
     r'8a23caff9e4845be0d9d005d72a5d7e87d7e218a';
+
+/// The last configuration the launch check received (null before it). Other features read links
+/// and currencies from here (for example the forgot-password page and onboarding).
+
+@ProviderFor(LatestAppConfig)
+final latestAppConfigProvider = LatestAppConfigProvider._();
+
+/// The last configuration the launch check received (null before it). Other features read links
+/// and currencies from here (for example the forgot-password page and onboarding).
+final class LatestAppConfigProvider
+    extends $NotifierProvider<LatestAppConfig, AppConfig?> {
+  /// The last configuration the launch check received (null before it). Other features read links
+  /// and currencies from here (for example the forgot-password page and onboarding).
+  LatestAppConfigProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'latestAppConfigProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$latestAppConfigHash();
+
+  @$internal
+  @override
+  LatestAppConfig create() => LatestAppConfig();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppConfig? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppConfig?>(value),
+    );
+  }
+}
+
+String _$latestAppConfigHash() => r'4202a164a01f90a7ae97fa1734cf3b47d466b3c2';
+
+/// The last configuration the launch check received (null before it). Other features read links
+/// and currencies from here (for example the forgot-password page and onboarding).
+
+abstract class _$LatestAppConfig extends $Notifier<AppConfig?> {
+  AppConfig? build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AppConfig?, AppConfig?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AppConfig?, AppConfig?>,
+              AppConfig?,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

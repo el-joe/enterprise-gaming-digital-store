@@ -162,8 +162,9 @@ function contractFixtureJson(TestResponse $response): string
  */
 final class ContractNormalizer
 {
-    /** Keys whose string value is a secret or bearer value: replaced by `fixture-<key>`. */
-    private const TOKEN_KEYS = ['access_token', 'refresh_token', 'token', 'cart_token', 'challenge_token', 'client_secret', 'secret', 'x-cart-token'];
+    /** Keys whose string value is a secret or bearer value: replaced by `fixture-<key>`. The single-use
+     * biometric `challenge` (M-A10) is random per run. */
+    private const TOKEN_KEYS = ['access_token', 'refresh_token', 'token', 'cart_token', 'challenge_token', 'client_secret', 'secret', 'x-cart-token', 'challenge'];
 
     /** Keys whose string value is a human order or ticket number. */
     private const NUMBER_KEYS = ['order_number', 'number', 'ticket_number'];

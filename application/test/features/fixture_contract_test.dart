@@ -215,6 +215,13 @@ final Map<String, Decoder> decoders = {
   'account/verification_notification_ok': _empty,
   'app_config/config_ar': _config,
   'app_config/config_ok': _config,
+  'auth/biometric_challenge': (d) {
+    expect(objectAt(d, 'challenge')['challenge'], isA<String>());
+    return const <Check>[];
+  },
+  'auth/biometric_confirmed': _empty,
+  'auth/biometric_key_deleted': _empty,
+  'auth/biometric_key_registered': _empty,
   'auth/login_ok': _login,
   'auth/login_two_factor_required': _login,
   'auth/logout_all_ok': _empty,

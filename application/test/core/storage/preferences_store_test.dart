@@ -26,7 +26,13 @@ void main() {
       PreferencesStore.localeKey,
       PreferencesStore.currencyKey,
       PreferencesStore.onboardingCompletedKey,
+      // M-A10: two "shown once" flags; no secret, token or biometric key material.
+      PreferencesStore.biometricOfferShownKey,
+      PreferencesStore.integrityWarningShownKey,
     });
+    for (final key in PreferencesStore.allowedKeys) {
+      expect(key, isNot(matches(RegExp('token|password|secret|key'))));
+    }
   });
 
   test('locale falls back to English and persists the choice', () async {

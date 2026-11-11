@@ -8,6 +8,10 @@ enum RouteAccess {
 
   /// A signed-in customer with a verified email.
   verifiedEmail,
+
+  /// Only while signed out (sign-in, register, two-factor, forgot password); a signed-in customer
+  /// is sent on to the return location.
+  guestOnly,
 }
 
 /// A named route with its path and access rule.
@@ -39,17 +43,80 @@ abstract final class Routes {
     path: '/update-required',
   );
 
-  /// Sign-in. Guards send protected routes here; its page is built in M-A10.
-  static const login = AppRoute(name: 'login', path: '/login');
+  /// Launch: the app config check (force update, maintenance, offline), M-A10.
+  static const splash = AppRoute(name: 'splash', path: '/splash');
 
-  /// Email verification prompt. Guards send unverified customers here; its page is built in M-A10.
+  /// Onboarding step 1: language.
+  static const onboardingLanguage = AppRoute(
+    name: 'onboarding-language',
+    path: '/onboarding/language',
+  );
+
+  /// Onboarding step 2: display currency.
+  static const onboardingCurrency = AppRoute(
+    name: 'onboarding-currency',
+    path: '/onboarding/currency',
+  );
+
+  /// Sign-in. Guards send protected routes here with the return location in [fromParameter].
+  static const login = AppRoute(
+    name: 'login',
+    path: '/login',
+    access: RouteAccess.guestOnly,
+  );
+
+  /// Second factor after a password sign-in (the challenge is held in memory only).
+  static const twoFactor = AppRoute(
+    name: 'two-factor',
+    path: '/login/two-factor',
+    access: RouteAccess.guestOnly,
+  );
+
+  static const register = AppRoute(
+    name: 'register',
+    path: '/register',
+    access: RouteAccess.guestOnly,
+  );
+
+  /// Opens the web reset page from `links.forgot_password`.
+  static const forgotPassword = AppRoute(
+    name: 'forgot-password',
+    path: '/forgot-password',
+    access: RouteAccess.guestOnly,
+  );
+
+  /// Email verification prompt and resend. Guards send unverified customers here.
   static const verifyEmail = AppRoute(
     name: 'verify-email',
     path: '/verify-email',
     access: RouteAccess.signedIn,
   );
 
-  static const all = [home, maintenance, updateRequired, login, verifyEmail];
+  /// The one-time biometric unlock offer after the first sign-in (owner decision 6). The location
+  /// to continue to is in [nextParameter].
+  static const biometricOffer = AppRoute(
+    name: 'biometric-offer',
+    path: '/biometric-offer',
+    access: RouteAccess.signedIn,
+  );
+
+  static const all = [
+    home,
+    maintenance,
+    updateRequired,
+    splash,
+    onboardingLanguage,
+    onboardingCurrency,
+    login,
+    twoFactor,
+    register,
+    forgotPassword,
+    verifyEmail,
+    biometricOffer,
+  ];
+
+  /// Query parameter of [biometricOffer] carrying where to continue.
+  static const nextParameter = 'next';
 
   /// Query parameter carrying the location to return to after sign-in.
   static const fromParameter = 'from';

@@ -1492,7 +1492,8 @@ as CurrencyInfo,
 /// @nodoc
 mixin _$AppLinks {
 
- Uri? get support; Uri? get terms; Uri? get privacy; Uri? get refund; Uri? get webCheckout;
+ Uri? get support; Uri? get terms; Uri? get privacy; Uri? get refund; Uri? get webCheckout;/// M-A10: the web "Forgot password?" page, opened in the system browser.
+ Uri? get forgotPassword;
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1504,20 +1505,20 @@ $AppLinksCopyWith<AppLinks> get copyWith => _$AppLinksCopyWithImpl<AppLinks>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as AppLinks;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppLinks&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund)&&(identical(other.webCheckout, _this.webCheckout) || other.webCheckout == _this.webCheckout));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppLinks&&(identical(other.support, _this.support) || other.support == _this.support)&&(identical(other.terms, _this.terms) || other.terms == _this.terms)&&(identical(other.privacy, _this.privacy) || other.privacy == _this.privacy)&&(identical(other.refund, _this.refund) || other.refund == _this.refund)&&(identical(other.webCheckout, _this.webCheckout) || other.webCheckout == _this.webCheckout)&&(identical(other.forgotPassword, _this.forgotPassword) || other.forgotPassword == _this.forgotPassword));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AppLinks;
-  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund,_this.webCheckout);
+  return Object.hash(runtimeType,_this.support,_this.terms,_this.privacy,_this.refund,_this.webCheckout,_this.forgotPassword);
 }
 
 @override
 String toString() {
   final _this = this as AppLinks;
-  return 'AppLinks(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund}, webCheckout: ${_this.webCheckout})';
+  return 'AppLinks(support: ${_this.support}, terms: ${_this.terms}, privacy: ${_this.privacy}, refund: ${_this.refund}, webCheckout: ${_this.webCheckout}, forgotPassword: ${_this.forgotPassword})';
 }
 
 
@@ -1528,7 +1529,7 @@ abstract mixin class $AppLinksCopyWith<$Res>  {
   factory $AppLinksCopyWith(AppLinks value, $Res Function(AppLinks) _then) = _$AppLinksCopyWithImpl;
 @useResult
 $Res call({
- Uri? support, Uri? terms, Uri? privacy, Uri? refund, Uri? webCheckout
+ Uri? support, Uri? terms, Uri? privacy, Uri? refund, Uri? webCheckout, Uri? forgotPassword
 });
 
 
@@ -1545,13 +1546,14 @@ class _$AppLinksCopyWithImpl<$Res>
 
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,Object? forgotPassword = freezed,}) {
   return _then(AppLinks(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as Uri?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as Uri?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as Uri?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
 as Uri?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
+as Uri?,forgotPassword: freezed == forgotPassword ? _self.forgotPassword : forgotPassword // ignore: cast_nullable_to_non_nullable
 as Uri?,
   ));
 }
@@ -1637,10 +1639,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout,  Uri? forgotPassword)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppLinks() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout,_that.forgotPassword);case _:
   return orElse();
 
 }
@@ -1658,10 +1660,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCh
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout,  Uri? forgotPassword)  $default,) {final _that = this;
 switch (_that) {
 case _AppLinks():
-return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout,_that.forgotPassword);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1678,10 +1680,10 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCh
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Uri? support,  Uri? terms,  Uri? privacy,  Uri? refund,  Uri? webCheckout,  Uri? forgotPassword)?  $default,) {final _that = this;
 switch (_that) {
 case _AppLinks() when $default != null:
-return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout);case _:
+return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCheckout,_that.forgotPassword);case _:
   return null;
 
 }
@@ -1693,7 +1695,7 @@ return $default(_that.support,_that.terms,_that.privacy,_that.refund,_that.webCh
 
 
 class _AppLinks implements AppLinks {
-  const _AppLinks({this.support, this.terms, this.privacy, this.refund, this.webCheckout});
+  const _AppLinks({this.support, this.terms, this.privacy, this.refund, this.webCheckout, this.forgotPassword});
   
 
 @override final  Uri? support;
@@ -1701,6 +1703,8 @@ class _AppLinks implements AppLinks {
 @override final  Uri? privacy;
 @override final  Uri? refund;
 @override final  Uri? webCheckout;
+/// M-A10: the web "Forgot password?" page, opened in the system browser.
+@override final  Uri? forgotPassword;
 
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
@@ -1712,18 +1716,18 @@ _$AppLinksCopyWith<_AppLinks> get copyWith => __$AppLinksCopyWithImpl<_AppLinks>
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppLinks&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund)&&(identical(other.webCheckout, webCheckout) || other.webCheckout == webCheckout));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppLinks&&(identical(other.support, support) || other.support == support)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.privacy, privacy) || other.privacy == privacy)&&(identical(other.refund, refund) || other.refund == refund)&&(identical(other.webCheckout, webCheckout) || other.webCheckout == webCheckout)&&(identical(other.forgotPassword, forgotPassword) || other.forgotPassword == forgotPassword));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,support,terms,privacy,refund,webCheckout);
+    return Object.hash(runtimeType,support,terms,privacy,refund,webCheckout,forgotPassword);
 }
 
 @override
 String toString() {
-    return 'AppLinks(support: $support, terms: $terms, privacy: $privacy, refund: $refund, webCheckout: $webCheckout)';
+    return 'AppLinks(support: $support, terms: $terms, privacy: $privacy, refund: $refund, webCheckout: $webCheckout, forgotPassword: $forgotPassword)';
 }
 
 
@@ -1734,7 +1738,7 @@ abstract mixin class _$AppLinksCopyWith<$Res> implements $AppLinksCopyWith<$Res>
   factory _$AppLinksCopyWith(_AppLinks value, $Res Function(_AppLinks) _then) = __$AppLinksCopyWithImpl;
 @override @useResult
 $Res call({
- Uri? support, Uri? terms, Uri? privacy, Uri? refund, Uri? webCheckout
+ Uri? support, Uri? terms, Uri? privacy, Uri? refund, Uri? webCheckout, Uri? forgotPassword
 });
 
 
@@ -1751,13 +1755,14 @@ class __$AppLinksCopyWithImpl<$Res>
 
 /// Create a copy of AppLinks
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? support = freezed,Object? terms = freezed,Object? privacy = freezed,Object? refund = freezed,Object? webCheckout = freezed,Object? forgotPassword = freezed,}) {
   return _then(_AppLinks(
 support: freezed == support ? _self.support : support // ignore: cast_nullable_to_non_nullable
 as Uri?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
 as Uri?,privacy: freezed == privacy ? _self.privacy : privacy // ignore: cast_nullable_to_non_nullable
 as Uri?,refund: freezed == refund ? _self.refund : refund // ignore: cast_nullable_to_non_nullable
 as Uri?,webCheckout: freezed == webCheckout ? _self.webCheckout : webCheckout // ignore: cast_nullable_to_non_nullable
+as Uri?,forgotPassword: freezed == forgotPassword ? _self.forgotPassword : forgotPassword // ignore: cast_nullable_to_non_nullable
 as Uri?,
   ));
 }

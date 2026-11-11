@@ -93,6 +93,8 @@ Failure mapErrorResponse({
         errors: apiError?.errors ?? const {},
         requestId: requestId,
       );
+    case 423 when code == 'biometric_locked':
+      return BiometricLockedFailure(requestId: requestId);
     case 423:
       return RecentAuthRequiredFailure(requestId: requestId);
     case 429:

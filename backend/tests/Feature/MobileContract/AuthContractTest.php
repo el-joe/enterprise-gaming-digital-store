@@ -81,6 +81,37 @@ describe('auth', function (): void {
         contractFixture('auth/logout_ok', mobileCall('POST', 'auth/logout', token: mobileSignIn($user)['access_token'])->assertOk());
         contractFixture('auth/logout_all_ok', mobileCall('POST', 'auth/logout-all', token: mobileSignIn($user, 'Tablet')['access_token'])->assertOk());
     });
+
+    it('enrols a biometric key and confirms recent auth with it (M-A10, API_DOCUMENTATION.md 1g)', function (): void {
+        $access = mobileSignIn(contractCustomer())['access_token'];
+        $key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        $pem = openssl_pkey_get_details($key)['key'];
+        $spki = trim(str_replace(['-----BEGIN PUBLIC KEY-----', '-----END PUBLIC KEY-----', "\n"], '', $pem));
+
+        contractFixture('auth/biometric_key_recent_auth_required', mobileCall('POST', 'auth/biometric-key', ['public_key' => $spki, 'algorithm' => 'ES256'], $access)
+            ->assertStatus(423)->assertJsonPath('code', 'recent_auth_required'));
+        contractFixture('auth/biometric_not_registered', mobileCall('POST', 'auth/biometric-challenge', token: $access)
+            ->assertNotFound()->assertJsonPath('code', 'biometric_not_registered'));
+
+        mobileCall('POST', 'account/confirm-password', ['password' => 'password'], $access)->assertOk();
+        contractFixture('auth/biometric_key_registered', mobileCall('POST', 'auth/biometric-key', ['public_key' => $spki, 'algorithm' => 'ES256'], $access)->assertCreated());
+
+        $challenge = mobileCall('POST', 'auth/biometric-challenge', token: $access)->assertOk();
+        contractFixture('auth/biometric_challenge', $challenge);
+        $value = (string) $challenge->json('data.challenge.challenge');
+
+        openssl_sign('another payload', $wrong, $key, OPENSSL_ALGO_SHA256);
+        contractFixture('auth/biometric_failed', mobileCall('POST', 'auth/confirm-biometric', ['challenge' => $value, 'signature' => base64_encode($wrong)], $access)
+            ->assertUnprocessable()->assertJsonPath('code', 'biometric_failed'));
+
+        $value = (string) mobileCall('POST', 'auth/biometric-challenge', token: $access)->assertOk()->json('data.challenge.challenge');
+        openssl_sign($value, $signature, $key, OPENSSL_ALGO_SHA256);
+        contractFixture('auth/biometric_confirmed', mobileCall('POST', 'auth/confirm-biometric', ['challenge' => $value, 'signature' => base64_encode($signature)], $access)->assertOk());
+        contractFixture('auth/biometric_challenge_invalid', mobileCall('POST', 'auth/confirm-biometric', ['challenge' => $value, 'signature' => base64_encode($signature)], $access)
+            ->assertUnprocessable()->assertJsonPath('code', 'biometric_challenge_invalid'));
+
+        contractFixture('auth/biometric_key_deleted', mobileCall('DELETE', 'auth/biometric-key', token: $access)->assertOk());
+    });
 });
 
 describe('app config', function (): void {

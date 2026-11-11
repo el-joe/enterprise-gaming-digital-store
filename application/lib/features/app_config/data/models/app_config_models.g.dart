@@ -155,6 +155,7 @@ _LinksDto _$LinksDtoFromJson(Map<String, dynamic> json) => _LinksDto(
   privacy: json['privacy'] as String?,
   refund: json['refund'] as String?,
   webCheckout: json['web_checkout'] as String?,
+  forgotPassword: json['forgot_password'] as String?,
 );
 
 Map<String, dynamic> _$LinksDtoToJson(_LinksDto instance) => <String, dynamic>{
@@ -163,4 +164,5 @@ Map<String, dynamic> _$LinksDtoToJson(_LinksDto instance) => <String, dynamic>{
   'privacy': instance.privacy,
   'refund': instance.refund,
   'web_checkout': instance.webCheckout,
+  'forgot_password': instance.forgotPassword,
 };

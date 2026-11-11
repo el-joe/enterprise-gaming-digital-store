@@ -54,7 +54,7 @@ class AppConfigService
 
         $links = [];
 
-        foreach (['support' => AppConfigSetting::SupportUrl, 'terms' => AppConfigSetting::TermsUrl, 'privacy' => AppConfigSetting::PrivacyUrl, 'refund' => AppConfigSetting::RefundUrl, 'web_checkout' => AppConfigSetting::WebCheckoutUrl] as $name => $setting) {
+        foreach (['support' => AppConfigSetting::SupportUrl, 'terms' => AppConfigSetting::TermsUrl, 'privacy' => AppConfigSetting::PrivacyUrl, 'refund' => AppConfigSetting::RefundUrl, 'web_checkout' => AppConfigSetting::WebCheckoutUrl, 'forgot_password' => AppConfigSetting::ForgotPasswordUrl] as $name => $setting) {
             $links[$name] = $this->url($this->value($setting));
         }
 

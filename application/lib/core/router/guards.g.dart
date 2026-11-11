@@ -137,7 +137,7 @@ final class EmailVerificationProvider
   }
 }
 
-String _$emailVerificationHash() => r'a0128871b2c0bf70470b56aa69c070b5d01aca7e';
+String _$emailVerificationHash() => r'62a69dd525304b4e24399c3da3e0b50713782c22';
 
 abstract class _$EmailVerification extends $Notifier<bool?> {
   bool? build();
@@ -202,6 +202,68 @@ abstract class _$Availability extends $Notifier<AppAvailability> {
             as $ClassProviderElement<
               AnyNotifier<AppAvailability, AppAvailability>,
               AppAvailability,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// Whether the one-time biometric unlock offer is due at the next sign-in (owner decision 6). Set
+/// by the auth feature at launch from the device's support and the saved flags.
+
+@ProviderFor(BiometricOfferDue)
+final biometricOfferDueProvider = BiometricOfferDueProvider._();
+
+/// Whether the one-time biometric unlock offer is due at the next sign-in (owner decision 6). Set
+/// by the auth feature at launch from the device's support and the saved flags.
+final class BiometricOfferDueProvider
+    extends $NotifierProvider<BiometricOfferDue, bool> {
+  /// Whether the one-time biometric unlock offer is due at the next sign-in (owner decision 6). Set
+  /// by the auth feature at launch from the device's support and the saved flags.
+  BiometricOfferDueProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'biometricOfferDueProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$biometricOfferDueHash();
+
+  @$internal
+  @override
+  BiometricOfferDue create() => BiometricOfferDue();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$biometricOfferDueHash() => r'391c0a53f7325405f18eb3496da54850ffa6249e';
+
+/// Whether the one-time biometric unlock offer is due at the next sign-in (owner decision 6). Set
+/// by the auth feature at launch from the device's support and the saved flags.
+
+abstract class _$BiometricOfferDue extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
               Object?,
               Object?
             >;

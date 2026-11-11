@@ -1,0 +1,17 @@
+{
+    "body": {
+        "code": "biometric_not_registered",
+        "message": "Biometric unlock is not set up on this device. Confirm your password instead.",
+        "request_id": "01JF00000000000000000000RQ",
+        "success": false
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "POST",
+        "path": "/api/v1/mobile/auth/biometric-challenge"
+    },
+    "status": 404
+}
