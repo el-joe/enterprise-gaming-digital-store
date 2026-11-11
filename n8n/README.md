@@ -105,7 +105,7 @@ Tasks driven by n8n instead of the scheduler (ADR-014) are switched in `settings
 
 ## Local development (Apache, `boxcards.loc` and `n8n.boxcards.loc`)
 
-This runs a local n8n of its own on `127.0.0.1:5679`, so it doesn't clash with any other n8n on the machine. It lives in `n8n/runtime/`, where `node_modules/`, `data/` and `.env` are git-ignored, and uses n8n 1.123.92, pinned.
+This runs a local n8n of its own on `127.0.0.1:5710`, away from the other local n8n instances (5678-5679 and 5690-5691); its task broker is on 5711. It lives in `n8n/runtime/`, where `node_modules/`, `data/` and `.env` are git-ignored, and uses n8n 1.123.92, pinned.
 
 1. Install n8n: `cd n8n/runtime && npm ci`.
 2. Start it as a user service. This creates `.env` with a random `N8N_ENCRYPTION_KEY`; back that key up. Run `./install-user-service.sh`, then check it with `systemctl --user status n8n-boxcards`.

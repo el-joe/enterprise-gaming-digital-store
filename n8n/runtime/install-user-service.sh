@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Local n8n for boxcards.shop as a systemd --user service (no sudo). Idempotent.
 #   1. creates .env from .env.example with a random N8N_ENCRYPTION_KEY (only if .env is missing)
-#   2. installs ~/.config/systemd/user/n8n-boxcards.service and starts it on 127.0.0.1:5679
+#   2. installs ~/.config/systemd/user/n8n-boxcards.service and starts it on 127.0.0.1:5710
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"

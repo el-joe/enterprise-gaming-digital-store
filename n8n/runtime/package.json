@@ -2,7 +2,7 @@
   "name": "boxcards-n8n",
   "private": true,
   "version": "1.0.0",
-  "description": "Local self-hosted n8n for boxcards.shop automations (http://n8n.boxcards.loc -> 127.0.0.1:5679). No Docker.",
+  "description": "Local self-hosted n8n for boxcards.shop automations (http://n8n.boxcards.loc -> 127.0.0.1:5710). No Docker.",
   "engines": {
     "node": ">=20.19 <=24.x"
   },
