@@ -10,6 +10,7 @@ use App\Domains\Automation\DTOs\AutomationCaller;
 use App\Domains\Automation\Listeners\RecordScheduledTaskHeartbeat;
 use App\Domains\Automation\Services\ScheduledTaskHeartbeat;
 use App\Domains\Catalog\Services\ContentTranslator;
+use App\Domains\Currency\Adapters\CurrencyApiProvider;
 use App\Domains\Currency\Adapters\OpenExchangeRatesProvider;
 use App\Domains\Currency\Contracts\ExchangeRateProvider;
 use App\Domains\Fulfillment\Listeners\StartFulfilmentWhenPaid;
@@ -58,7 +59,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(ExchangeRateProvider::class, OpenExchangeRatesProvider::class);
+        // Exchange rate source from the admin setting currency.rates_provider (default: currency_api).
+        $this->app->bind(ExchangeRateProvider::class, static fn ($app): ExchangeRateProvider => config('services.exchange_rates.provider') === 'open_exchange_rates'
+            ? $app->make(OpenExchangeRatesProvider::class)
+            : $app->make(CurrencyApiProvider::class));
 
         // M10: payment currency through eligibility (default deny). M11: real coupon validity and
         // limits; UnavailableCheckoutCoupons remains the fail-closed implementation of the contract.

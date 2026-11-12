@@ -145,6 +145,7 @@ return [
             'applied' => true,
             'fields' => [
                 'max_age_minutes' => ['type' => 'int', 'rules' => ['required', 'integer', 'min:60', 'max:10080'], 'default' => 1440],
+                'rates_provider' => ['type' => 'select', 'options' => ['currency_api', 'open_exchange_rates'], 'rules' => ['sometimes', 'required', 'in:currency_api,open_exchange_rates'], 'config' => 'services.exchange_rates.provider', 'default' => 'currency_api'],
                 'max_change_pct' => ['type' => 'decimal', 'rules' => ['required', 'regex:/^\d{1,3}(\.\d{1,4})?$/'], 'default' => '10'],
                 'oxr_base_url' => ['type' => 'string', 'rules' => ['sometimes', 'required', 'string', 'max:190'], 'format' => 'url', 'config' => 'services.open_exchange_rates.base_url', 'env' => 'OPEN_EXCHANGE_RATES_BASE_URL'],
                 'oxr_connect_timeout' => ['type' => 'int', 'rules' => ['sometimes', 'required', 'integer', 'min:1', 'max:60'], 'config' => 'services.open_exchange_rates.connect_timeout', 'env' => 'OPEN_EXCHANGE_RATES_CONNECT_TIMEOUT'],

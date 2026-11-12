@@ -29,6 +29,23 @@ return [
         'region' => 'us-east-1',
     ],
 
+    // Which exchange rate source currency:fetch-rates uses: currency_api (free, daily, no key;
+    // default) or open_exchange_rates (needs an app id). Admin setting currency.rates_provider.
+    'exchange_rates' => [
+        'provider' => 'currency_api',
+    ],
+
+    'currency_api' => [
+        // Tried in order; the second is the project's official mirror.
+        'urls' => [
+            'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/{base}.json',
+            'https://latest.currency-api.pages.dev/v1/currencies/{base}.json',
+        ],
+        'connect_timeout' => 5,
+        'timeout' => 15,
+        'max_staleness_days' => 3,
+    ],
+
     'open_exchange_rates' => [
         // Admin setting currency.oxr_app_id (encrypted), applied by SettingsOverlay.
         'app_id' => null,
