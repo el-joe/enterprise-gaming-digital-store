@@ -1,34 +1,42 @@
 @props(['storefront'])
 
+{{-- Storefront footer, v2 information architecture: all products and the categories, the top
+     brands, support and company pages. The v1 links (fixed category slugs, platforms) are gone. --}}
 @php
-    $columns = [
-        __('storefront.footer.shop') => [
-            __('storefront.nav.gift_cards') => url()->localized('storefront.category', ['slug' => 'gift-cards']),
-            __('storefront.footer.game_top_ups') => url()->localized('storefront.category', ['slug' => 'game-top-ups']),
-            __('storefront.nav.subscriptions') => url()->localized('storefront.category', ['slug' => 'subscriptions']),
-            __('storefront.footer.gaming_wallets') => url()->localized('storefront.category', ['slug' => 'gaming-wallets']),
-        ],
-        __('storefront.footer.platforms') => [
-            __('storefront.footer.all_platforms') => url()->localized('storefront.platforms.index'),
-            __('storefront.search.title') => url()->localized('storefront.search'),
-        ],
+    $navigation = $storefront['navigation'] ?? ['categories' => [], 'brands' => []];
+    $shop = [__('storefront.catalog.all_products') => url()->localized('storefront.products.index')];
+
+    foreach (array_slice($navigation['categories'], 0, 6) as $category) {
+        $shop[$category['name']] = url()->localized('storefront.category', ['slug' => $category['slug']]);
+    }
+
+    $brands = [];
+
+    foreach (array_slice($navigation['brands'], 0, 6) as $brand) {
+        $brands[$brand['name']] = url()->localized('storefront.brand', ['slug' => $brand['slug']]);
+    }
+
+    $columns = array_filter([
+        __('storefront.footer.shop') => $shop,
+        __('storefront.catalog.top_brands') => $brands,
         __('storefront.footer.support') => [
             __('storefront.footer.contact') => url()->localized('storefront.pages.show', ['slug' => 'contact']),
             __('storefront.footer.refund_policy') => url()->localized('storefront.pages.show', ['slug' => 'refund-policy']),
             __('storefront.nav.account') => url()->localized('storefront.account'),
+            __('storefront.search.title') => url()->localized('storefront.search'),
         ],
         __('storefront.footer.company') => [
             __('storefront.footer.about') => url()->localized('storefront.pages.show', ['slug' => 'about']),
             __('storefront.footer.terms') => url()->localized('storefront.pages.show', ['slug' => 'terms']),
             __('storefront.footer.privacy') => url()->localized('storefront.pages.show', ['slug' => 'privacy']),
         ],
-    ];
+    ]);
 @endphp
 
 <footer class="mt-16 border-t border-line-subtle bg-surface-base py-12 md:mt-24">
     <div class="container-page">
-        <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.6fr_repeat(4,1fr)]">
-            <div class="flex flex-col gap-4">
+        <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.6fr_repeat(4,1fr)] grid-cols-2">
+            <div class="col-span-2 flex flex-col gap-4 md:col-span-2 lg:col-span-1">
                 <a href="{{ url()->localized('storefront.home') }}" class="self-start"><x-brand.logo :height="36" /></a>
                 <p class="max-w-sm text-sm leading-6 text-content-secondary">{{ __('storefront.footer.tagline') }}</p>
             </div>
@@ -37,7 +45,7 @@
                     <h2 class="mb-3 text-base font-semibold">{{ $heading }}</h2>
                     <ul class="flex flex-col gap-2.5">
                         @foreach ($links as $label => $href)
-                            <li><a href="{{ $href }}" class="text-sm text-content-secondary hover:text-content-primary">{{ $label }}</a></li>
+                            <li><a href="{{ $href }}" class="inline-flex min-h-6 text-sm text-content-secondary hover:text-content-primary">{{ $label }}</a></li>
                         @endforeach
                     </ul>
                 </nav>

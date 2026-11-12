@@ -100,8 +100,8 @@
                         <ul class="mt-4 flex flex-col gap-3">
                             @foreach ($cart['items'] as $item)
                                 <li class="flex items-center gap-3">
-                                    <x-store.tile :slug="$item['product']['slug'] ?? ''" class="h-12 w-[72px] shrink-0" />
-                                    <p class="min-w-0 flex-1 text-sm font-medium">{{ $item['product']['name'] }} <span class="text-content-secondary" dir="ltr">· {{ $item['variant']['title'] }} × {{ $item['quantity'] }}</span></p>
+                                    <x-store.product-image :slug="$item['product']['slug'] ?? ''" :name="$item['product']['name']" :image="($item['product']['image_source'] ?? null) === 'product' ? $item['product']['image'] : null" :logo="($item['product']['image_source'] ?? null) === 'brand' ? $item['product']['image'] : null" class="h-12 w-[72px] shrink-0" data-line-image />
+                                    <p class="min-w-0 flex-1 text-sm font-medium">{{ $item['product']['name'] }} <span class="text-content-secondary" dir="ltr">· {{ $item['variant']['title'] }} × {{ $item['quantity'] }}</span>@if ($item['variant']['face_value'] ?? null)<span class="block text-xs text-content-muted" dir="ltr">{{ __('storefront.catalog.face_value') }}: {{ $item['variant']['face_value'] }}</span>@endif</p>
                                     <span class="text-sm font-semibold" dir="ltr">{{ $item['total']['formatted'] ?? '—' }}</span>
                                 </li>
                             @endforeach

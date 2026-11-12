@@ -41,7 +41,7 @@
                     <ul class="mt-3 flex flex-wrap gap-2">
                         @foreach ($links as $link)
                             <li>
-                                <a href="{{ $link->type === 'gaming_platform' ? url()->localized('storefront.platforms.show', ['slug' => $link->slug]) : url()->localized('storefront.category', ['slug' => $link->slug]) }}"
+                                <a href="{{ $link->type === 'gaming_platform' ? url()->localized('storefront.brand', ['slug' => $link->slug]) : url()->localized('storefront.category', ['slug' => $link->slug]) }}"
                                     class="inline-flex min-h-10 items-center gap-2 rounded-md border border-line-default bg-surface-raised px-3 text-sm hover:border-line-strong">
                                     <x-store.icon name="{{ $link->type === 'gaming_platform' ? 'grid' : 'tag' }}" :size="16" class="text-content-muted" />
                                     {{ $link->title }}
@@ -57,7 +57,7 @@
                 <h2 id="search-products" class="font-display text-2xl font-bold">{{ trans_choice('storefront.search.found', count($products), ['count' => count($products), 'term' => $term]) }}</h2>
                 @if ($products === [])
                     <x-store.empty-state art="no-search-results" :title="__('storefront.search.empty_title')" :text="__('storefront.search.empty_text')">
-                        <a href="{{ url()->localized('storefront.platforms.index') }}" class="btn-secondary mt-2">{{ __('storefront.search.browse') }}</a>
+                        <a href="{{ url()->localized('storefront.products.index') }}" class="btn-secondary mt-2">{{ __('storefront.search.browse') }}</a>
                     </x-store.empty-state>
                 @else
                     <ul class="mt-6 grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">

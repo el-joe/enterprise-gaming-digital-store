@@ -21,6 +21,8 @@
                         },
                         "name": "Orbit Card - 10 USD",
                         "product": {
+                            "image": null,
+                            "image_source": null,
                             "slug": "orbit-card"
                         },
                         "quantity": 1,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web\Account;
 
+use App\Domains\Catalog\Services\ProductImages;
 use App\Domains\Fulfillment\Services\CodeRevealService;
 use App\Domains\Orders\Enums\OrderItemUnitStatus;
 use App\Domains\Orders\Models\OrderItemUnit;
@@ -25,11 +26,15 @@ class DigitalCodeController extends Controller
             ->withPath($request->url())
             ->appends(array_filter(['state' => $request->state(), 'q' => $request->search()]));
 
+        $images = app(ProductImages::class);
+        $images->load($page->getCollection()->map(static fn (OrderItemUnit $unit) => $unit->orderItem?->product));
+
         $units = $page->getCollection()->map(static fn (OrderItemUnit $unit): array => [
             'public_id' => $unit->public_id,
             'status' => $unit->status->value,
             'name' => $unit->orderItem?->name_snapshot,
             'product_slug' => $unit->orderItem?->product?->slug,
+            'product_image' => $images->resolve($unit->orderItem?->product),
             'order_public_id' => $unit->order?->public_id,
             'order_number' => $unit->order?->order_number,
             'masked_code' => $unit->digitalCode?->masked_code,

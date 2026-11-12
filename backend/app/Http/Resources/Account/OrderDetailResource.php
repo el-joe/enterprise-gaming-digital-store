@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Account;
 
+use App\Domains\Catalog\Services\ProductImages;
 use App\Domains\Currency\Services\CurrencyConverter;
 use App\Domains\Fulfillment\Services\CodeRevealService;
 use App\Domains\Orders\Enums\OrderStatus;
@@ -36,6 +37,8 @@ class OrderDetailResource extends OrderSummaryResource
     {
         $converter = app(CurrencyConverter::class);
         $money = static fn (mixed $amount, ?string $currency): ?array => $amount === null || $currency === null ? null : $converter->present(Money::of($amount, $currency));
+        $images = app(ProductImages::class);
+        $images->load($this->orderItems->pluck('product'));
 
         return [
             ...parent::toArray($request),
@@ -44,7 +47,7 @@ class OrderDetailResource extends OrderSummaryResource
             'items' => $this->orderItems->map(fn (OrderItem $item): array => [
                 'id' => $item->id,
                 'name' => $item->name_snapshot,
-                'product' => $item->product === null ? null : ['slug' => $item->product->slug],
+                'product' => $item->product === null ? null : ['slug' => $item->product->slug, ...$images->fields($item->product)],
                 'delivery_type' => $item->delivery_type->value,
                 'quantity' => $item->quantity,
                 'unit_price' => $money($item->pricing_breakdown['display_unit_amount'] ?? null, $this->display_currency),

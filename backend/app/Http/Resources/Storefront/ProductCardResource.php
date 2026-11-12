@@ -5,6 +5,7 @@ namespace App\Http\Resources\Storefront;
 use App\Domains\Catalog\DTOs\ProductCard;
 use App\Domains\Catalog\Models\ProductImage;
 use App\Domains\Catalog\Services\ContentTranslator;
+use App\Domains\Catalog\Services\FaceValueFormatter;
 use App\Domains\Cms\Services\MediaUrls;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -19,6 +20,11 @@ class ProductCardResource extends JsonResource
      * locale, with the English base column as the fallback (ContentTranslator). `image.path` is
      * kept for existing clients; `image.url` is absolute (M-A4, MediaUrls). `platform.logo` is the
      * platform's active logo (staff upload or supplier brand logo), null without one.
+     *
+     * Storefront v2 (additive): `face_value` is the gift card's value in its own currency
+     * (FaceValueFormatter), never converted; `quick_add` says how the card's bag button adds:
+     * `variant_id` when exactly one variant is purchasable and no delivery field is required,
+     * otherwise the client opens the variant chooser (`/catalog/products/{slug}/quick-add`).
      *
      * @return array<string, mixed>
      */
@@ -47,6 +53,25 @@ class ProductCardResource extends JsonResource
             'price_may_vary' => $this->resource->priceMayVary,
             'is_featured' => $product->is_featured,
             'rating_avg' => $product->rating_avg,
+            'face_value' => app(FaceValueFormatter::class)->card(
+                self::decimal($product->getAttribute('face_min')),
+                self::decimal($product->getAttribute('face_max')),
+                $product->getAttribute('face_currency'),
+                (int) $product->getAttribute('face_currencies'),
+                self::decimal($product->getAttribute('custom_min')),
+                self::decimal($product->getAttribute('custom_max')),
+                $product->getAttribute('custom_currency'),
+            ),
+            'quick_add' => [
+                'variant_count' => (int) $product->getAttribute('purchasable_variants'),
+                'variant_id' => (int) $product->getAttribute('purchasable_variants') === 1 && (int) $product->getAttribute('required_fields') === 0 ? $product->getAttribute('quick_variant') : null,
+                'requires_fields' => (int) $product->getAttribute('required_fields') > 0,
+            ],
         ];
+    }
+
+    private static function decimal(mixed $value): ?string
+    {
+        return $value === null ? null : (string) $value;
     }
 }

@@ -26,6 +26,10 @@ class ResourcePageController extends Controller
     {
         $screen = $this->screen($request);
 
+        if ($screen->indexView() !== null) {
+            return view($screen->indexView(), ['screen' => $screen, ...$screen->indexData()]);
+        }
+
         return view('admin.resource.index', [
             'screen' => $screen,
             'table' => $tables->make($screen::table(), $request->user()),
@@ -56,6 +60,7 @@ class ResourcePageController extends Controller
             'translationValues' => $record !== null && $screen->translations() !== null ? $this->translations->values($record) : [],
             'panel' => $record !== null && $screen->panel() !== null ? $screen->panelData($record) : [],
             'seoValues' => $record !== null && $screen->seoType() !== null ? $this->seo->values($record) : [],
+            'aside' => $screen->asideData($record),
         ])->header('Cache-Control', 'no-store, private');
     }
 

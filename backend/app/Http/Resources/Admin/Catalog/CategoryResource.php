@@ -27,6 +27,11 @@ class CategoryResource extends JsonResource
             'banner_media_id' => $this->banner_media_id,
             'is_active' => $this->is_active,
             'sort_order' => $this->sort_order,
+            'featured_in_header' => $this->featured_in_header,
+            'header_order' => $this->header_order,
+            'show_on_home' => $this->show_on_home,
+            'home_position' => $this->home_position,
+            'home_limit' => $this->home_limit,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

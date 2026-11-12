@@ -111,11 +111,11 @@ it('excludes drafts, inactive and noindex pages and never lists private pages', 
         ->flatMap(fn (string $child): array => sitemapLocations($this->get(parse_url($child, PHP_URL_PATH))->getContent()))
         ->all();
 
-    expect($all)->toContain(url('/'), url('/ar'), url('/gaming'), url('/blog'), url('/gift-cards'), url('/gaming/steam'),
+    expect($all)->toContain(url('/'), url('/ar'), url('/products'), url('/blog'), url('/c/gift-cards'), url('/b/steam'),
         url('/products/'.$listed->slug), url('/products/'.$hiddenInArabic->slug), url('/pages/shipping'), url('/pages/terms'),
         url('/blog/live-post'), url('/ar/blog/live-post'))
         ->and($all)->not->toContain(url('/products/'.$draft->slug), url('/ar/products/'.$hiddenInArabic->slug),
-            url('/empty-category'), url('/inactive-category'), url('/pages/secret-draft'), url('/blog/draft-post'),
+            url('/c/empty-category'), url('/c/inactive-category'), url('/pages/secret-draft'), url('/blog/draft-post'),
             url('/search'), url('/cart'), url('/checkout'), url('/account'), url('/login'));
 
     // A URL noindex in one language lists no alternate for that language.

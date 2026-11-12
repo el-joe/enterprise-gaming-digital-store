@@ -4,7 +4,7 @@
                     <div>
                         <div class="flex flex-wrap gap-2">
                             @if ($product['platform']['slug'])
-                                <a href="{{ url()->localized('storefront.platforms.show', ['slug' => $product['platform']['slug']]) }}" class="chip inline-flex items-center gap-1.5 hover:text-content-primary"><x-store.platform-logo :image="$product['platform']['logo'] ?? null" class="size-4" />{{ $product['platform']['name'] }}</a>
+                                <a href="{{ url()->localized('storefront.brand', ['slug' => $product['platform']['slug']]) }}" class="chip inline-flex items-center gap-1.5 hover:text-content-primary"><x-store.platform-logo :image="$product['platform']['logo'] ?? null" class="size-4" />{{ $product['platform']['name'] }}</a>
                             @endif
                             @if ($product['category']['slug'])
                                 <a href="{{ url()->localized('storefront.category', ['slug' => $product['category']['slug']]) }}" class="chip hover:text-content-primary">{{ $product['category']['name'] }}</a>
@@ -49,6 +49,9 @@
                                         @if ($variant['region'] !== $selectedRegion) hidden @endif
                                         class="flex min-h-[72px] flex-col items-center justify-center gap-0.5 rounded-md border border-line-default bg-surface-raised px-2 py-2 hover:border-line-strong disabled:cursor-not-allowed disabled:opacity-40 aria-pressed:border-accent-primary aria-pressed:bg-accent-tint">
                                         <span class="font-display text-lg font-bold" dir="ltr">{{ $variant['title'] }}</span>
+                                        @if (($variant['face_value'] ?? null) && $variant['face_value'] !== $variant['title'])
+                                            <span class="text-xs text-content-muted" dir="ltr" data-face-value>{{ $variant['face_value'] }}</span>
+                                        @endif
                                         <span class="text-xs text-content-secondary">
                                             @if ($variant['purchasable'] && $variant['price'])
                                                 {!! __('storefront.product.pay', ['amount' => '<bdi dir="ltr">'.e($variant['price']['formatted']).'</bdi>']) !!}

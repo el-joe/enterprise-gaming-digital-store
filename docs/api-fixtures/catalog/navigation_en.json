@@ -1,0 +1,111 @@
+{
+    "body": {
+        "data": {
+            "all_products": {
+                "type": "listing",
+                "url": "https://boxcards.test/products",
+                "value": ""
+            },
+            "brands": [
+                {
+                    "count": 1,
+                    "link": {
+                        "type": "platform",
+                        "url": "https://boxcards.test/b/orbit",
+                        "value": "orbit"
+                    },
+                    "logo": {
+                        "alt": null,
+                        "formats": {
+                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                        },
+                        "height": 600,
+                        "path": "media/2026/11/orbit-logo.webp",
+                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                        "width": 1200
+                    },
+                    "name": "Orbit",
+                    "slug": "orbit"
+                },
+                {
+                    "count": 1,
+                    "link": {
+                        "type": "platform",
+                        "url": "https://boxcards.test/b/nova",
+                        "value": "nova"
+                    },
+                    "logo": null,
+                    "name": "Nova",
+                    "slug": "nova"
+                }
+            ],
+            "categories": [
+                {
+                    "brand_count": 1,
+                    "brands": [
+                        {
+                            "count": 1,
+                            "link": {
+                                "type": "platform",
+                                "url": "https://boxcards.test/b/orbit",
+                                "value": "orbit"
+                            },
+                            "logo": {
+                                "alt": null,
+                                "formats": {
+                                    "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                                },
+                                "height": 600,
+                                "path": "media/2026/11/orbit-logo.webp",
+                                "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                                "width": 1200
+                            },
+                            "name": "Orbit",
+                            "slug": "orbit"
+                        }
+                    ],
+                    "image": null,
+                    "link": {
+                        "type": "category",
+                        "url": "https://boxcards.test/c/gift-cards",
+                        "value": "gift-cards"
+                    },
+                    "name": "Gift Cards",
+                    "popular_filters": [
+                        {
+                            "key": "delivery_type",
+                            "label": "Instant code",
+                            "value": "instant_code"
+                        }
+                    ],
+                    "product_count": 1,
+                    "slug": "gift-cards"
+                }
+            ],
+            "featured": [
+                {
+                    "link": {
+                        "type": "category",
+                        "url": "https://boxcards.test/c/gift-cards",
+                        "value": "gift-cards"
+                    },
+                    "name": "Gift Cards",
+                    "slug": "gift-cards"
+                }
+            ],
+            "total": 2
+        },
+        "message": "OK",
+        "meta": {},
+        "success": true
+    },
+    "headers": {
+        "cache-control": "max-age=300, public",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/navigation"
+    },
+    "status": 200
+}

@@ -116,6 +116,9 @@ function contractHome(): void
     HomepageSection::factory()->create(['key' => 'best_sellers', 'title' => 'Best sellers', 'source' => HomepageSectionSource::Auto, 'sort_order' => 2, 'settings' => ['limit' => 2]]);
     HomepageSection::factory()->create(['key' => 'customer_reviews', 'title' => 'Reviews', 'source' => HomepageSectionSource::Auto, 'sort_order' => 3, 'settings' => ['limit' => 1]]);
     HomepageSection::factory()->create(['key' => 'trust_indicators', 'title' => 'Why us', 'sort_order' => 4]);
+    // Storefront v2: automatic category tiles and a category rail after the managed sections.
+    HomepageSection::factory()->create(['key' => 'category_tiles', 'title' => 'Shop by category', 'source' => HomepageSectionSource::Auto, 'sort_order' => 0, 'settings' => ['type' => 'category_tiles']]);
+    $category->update(['show_on_home' => true, 'home_position' => 1, 'home_limit' => 4]);
 
     Banner::factory()->create(['title' => 'Orbit week', 'subtitle' => 'Save on Orbit', 'cta_label' => 'Shop', 'cta_url' => '/products/orbit-card', 'media_id' => contractMedia('media/2026/11/hero.webp')->id, 'mobile_media_id' => contractMedia('media/2026/11/hero-mobile.webp')->id, 'starts_at' => now()->subDay(), 'ends_at' => now()->addDay(), 'sort_order' => 1]);
     Banner::factory()->create(['title' => 'Search steam', 'placement' => BannerPlacement::HomePromo, 'cta_url' => '/search?q=steam', 'media_id' => contractMedia('media/2026/11/promo.webp')->id, 'sort_order' => 1]);
@@ -150,6 +153,30 @@ describe('catalog', function (): void {
         contractFixture('catalog/currency_invalid', statelessCall('GET', 'api/v1/mobile/storefront/catalog/products', headers: ['X-Currency' => 'XXX'])->assertUnprocessable());
         contractFixture('catalog/products_validation_failed', mobileCall('GET', 'storefront/catalog/products?sort=cheapest')->assertUnprocessable());
     });
+});
+
+describe('storefront v2', function (): void {
+    it('returns the listing facets, the multi-value listing and the navigation', function (string $locale): void {
+        ['category' => $category] = contractCatalog();
+        $category->update(['featured_in_header' => true, 'header_order' => 1]);
+        $headers = ['Accept-Language' => $locale];
+
+        contractFixture("catalog/facets_{$locale}", statelessCall('GET', 'api/v1/mobile/storefront/catalog/facets?platform=orbit,nova&in_stock=1', headers: $headers)->assertOk());
+        contractFixture("catalog/navigation_{$locale}", statelessCall('GET', 'api/v1/mobile/storefront/navigation', headers: $headers)->assertOk());
+    })->with(['en', 'ar']);
+
+    it('lists with several values per facet, best selling and the category page facets', function (): void {
+        contractCatalog();
+
+        contractFixture('catalog/products_multi', statelessCall('GET', 'api/v1/mobile/storefront/catalog/products?category=gift-cards,top-ups&region=US,GL&sort=best_selling')->assertOk());
+        contractFixture('catalog/facets_category_page', statelessCall('GET', 'api/v1/mobile/storefront/catalog/facets?category=gift-cards&hide=category', headers: ['X-Currency' => 'USD'])->assertOk());
+    });
+
+    it('returns the card add-to-bag chooser', function (string $locale): void {
+        contractCatalog();
+
+        contractFixture("product/quick_add_{$locale}", statelessCall('GET', 'api/v1/mobile/storefront/catalog/products/orbit-card/quick-add', headers: ['Accept-Language' => $locale])->assertOk());
+    })->with(['en', 'ar']);
 });
 
 describe('product', function (): void {

@@ -6,6 +6,7 @@ use App\Domains\Analytics\Services\PageAnalytics;
 use App\Domains\Catalog\Models\Category;
 use App\Domains\Catalog\Models\GamingPlatform;
 use App\Domains\Catalog\Models\Product;
+use App\Domains\Catalog\Services\StorefrontNavigationService;
 use App\Domains\Cms\Models\BlogPost;
 use App\Domains\Cms\Models\Page;
 use App\Domains\Seo\Services\SeoResolver;
@@ -58,7 +59,7 @@ class StorefrontServiceProvider extends ServiceProvider
         // M18: a changed slug redirects the old URL of every language (SEO_STRATEGY.md section 7).
         $slugRoutes = [
             Product::class => 'storefront.products.show',
-            GamingPlatform::class => 'storefront.platforms.show',
+            GamingPlatform::class => 'storefront.brand',
             Category::class => 'storefront.category',
             Page::class => 'storefront.pages.show',
             BlogPost::class => 'storefront.blog.show',
@@ -70,6 +71,12 @@ class StorefrontServiceProvider extends ServiceProvider
                     app(SlugRedirectRecorder::class)->record($route, (string) $record->getOriginal('slug'), (string) $record->getAttribute('slug'));
                 }
             });
+        }
+
+        // Storefront v2: the header and mega menu list categories and brands (cached a few minutes).
+        foreach ([Category::class, GamingPlatform::class] as $model) {
+            $model::saved(static fn () => StorefrontNavigationService::forget());
+            $model::deleted(static fn () => StorefrontNavigationService::forget());
         }
 
         // Registered on the class, so booting never resolves the URL generator (and its request).

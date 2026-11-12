@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Table('categories')]
-#[Fillable(['parent_id', 'name', 'slug', 'description', 'banner_media_id', 'is_active', 'sort_order'])]
+#[Fillable(['parent_id', 'name', 'slug', 'description', 'banner_media_id', 'is_active', 'sort_order', 'featured_in_header', 'header_order', 'show_on_home', 'home_position', 'home_limit'])]
 #[UseFactory(CategoryFactory::class)]
 class Category extends Model
 {
@@ -32,6 +32,11 @@ class Category extends Model
         return [
             'is_active' => 'boolean',
             'sort_order' => 'integer',
+            'featured_in_header' => 'boolean',
+            'header_order' => 'integer',
+            'show_on_home' => 'boolean',
+            'home_position' => 'integer',
+            'home_limit' => 'integer',
         ];
     }
 

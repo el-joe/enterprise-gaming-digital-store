@@ -7,9 +7,9 @@
 --}}
 @php
     $defaults = [
-        ['art' => 'hero-01-keycut', 'key' => 'one', 'href' => url()->localized('storefront.category', ['slug' => 'gift-cards'])],
-        ['art' => 'hero-02-vault-dial', 'key' => 'two', 'href' => url()->localized('storefront.category', ['slug' => 'game-top-ups'])],
-        ['art' => 'hero-03-glass-cards', 'key' => 'three', 'href' => url()->localized('storefront.platforms.index')],
+        ['art' => 'hero-01-keycut', 'key' => 'one', 'href' => url()->localized('storefront.products.index')],
+        ['art' => 'hero-02-vault-dial', 'key' => 'two', 'href' => url()->localized('storefront.products.index').'?delivery_type=direct_topup'],
+        ['art' => 'hero-03-glass-cards', 'key' => 'three', 'href' => url()->localized('storefront.products.index').'?sort=best_selling'],
     ];
 
     $slides = $banners !== []
@@ -67,7 +67,7 @@
                                 <a href="{{ $slide['href'] }}" class="btn-primary btn-lg w-full sm:w-auto">{{ $slide['cta'] }} <x-store.icon name="arrow" :size="18" /></a>
                             @endif
                             @if ($loop->first && $banners === [])
-                                <a href="{{ url()->localized('storefront.category', ['slug' => 'game-top-ups']) }}" class="btn-secondary btn-lg hidden sm:inline-flex">{{ __('storefront.hero.secondary') }}</a>
+                                <a href="#categories" class="btn-secondary btn-lg hidden sm:inline-flex">{{ __('storefront.catalog.browse_categories') }}</a>
                             @endif
                         </div>
                     </div>

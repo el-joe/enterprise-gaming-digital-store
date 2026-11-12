@@ -198,6 +198,27 @@ class SupplierMappingService extends CrudService
     protected function afterSave(Model $model, array $attributes): void
     {
         $this->dirty->forVariants([$model->product_variant_id]);
+        $this->attachSupplierImage($model);
+    }
+
+    /**
+     * A product mapped by hand gets the supplier's image like an imported one (owner decision 12,
+     * Storefront v2 "right image on every card"): attached now when it is downloaded; an image
+     * downloaded later attaches itself to every mapped product (SupplierImageService::refresh,
+     * `suppliers:sync-images`).
+     */
+    private function attachSupplierImage(SupplierProductMapping $mapping): void
+    {
+        $source = $mapping->supplierProduct;
+        $product = $mapping->productVariant?->product;
+
+        if ($source === null || $product === null) {
+            return;
+        }
+
+        if ($source->image_media_id !== null) {
+            app(SupplierImageService::class)->attach($source, $product);
+        }
     }
 
     /**

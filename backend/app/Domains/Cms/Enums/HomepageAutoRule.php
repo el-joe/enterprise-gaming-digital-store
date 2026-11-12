@@ -15,6 +15,10 @@ enum HomepageAutoRule: string
     case Featured = 'featured';
     case Reviews = 'reviews';
     case Faqs = 'faqs';
+    /** Storefront v2 product rails: variants under their compare-at price, one category, one brand. */
+    case OnSale = 'on_sale';
+    case Category = 'category';
+    case Brand = 'brand';
 
     public static function defaultFor(string $sectionKey): ?self
     {
@@ -31,7 +35,7 @@ enum HomepageAutoRule: string
 
     public function listsProducts(): bool
     {
-        return in_array($this, [self::BestSellers, self::Newest, self::Trending, self::Featured], true);
+        return in_array($this, [self::BestSellers, self::Newest, self::Trending, self::Featured, self::OnSale, self::Category, self::Brand], true);
     }
 
     /**

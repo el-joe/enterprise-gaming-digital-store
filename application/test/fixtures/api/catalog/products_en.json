@@ -7,6 +7,14 @@
                     "slug": "gift-cards"
                 },
                 "delivery_type": "instant_code",
+                "face_value": {
+                    "currency": "USD",
+                    "is_custom": false,
+                    "is_range": true,
+                    "label": "10–25 USD",
+                    "max": "25",
+                    "min": "10"
+                },
                 "image": {
                     "alt": "Orbit Card front",
                     "formats": {
@@ -20,6 +28,16 @@
                 "is_featured": true,
                 "name": "Orbit Card",
                 "platform": {
+                    "logo": {
+                        "alt": "Orbit",
+                        "formats": {
+                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                        },
+                        "height": 600,
+                        "path": "media/2026/11/orbit-logo.webp",
+                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                        "width": 1200
+                    },
                     "name": "Orbit",
                     "slug": "orbit"
                 },
@@ -30,6 +48,11 @@
                 },
                 "price_may_vary": false,
                 "public_id": "01jf0000000000000000000001",
+                "quick_add": {
+                    "requires_fields": true,
+                    "variant_count": 2,
+                    "variant_id": null
+                },
                 "rating_avg": "4.50",
                 "short_description": "Top up Orbit",
                 "slug": "orbit-card"
@@ -40,10 +63,12 @@
                     "slug": "top-ups"
                 },
                 "delivery_type": "instant_code",
+                "face_value": null,
                 "image": null,
                 "is_featured": false,
                 "name": "Nova Points",
                 "platform": {
+                    "logo": null,
                     "name": "Nova",
                     "slug": "nova"
                 },
@@ -54,6 +79,11 @@
                 },
                 "price_may_vary": false,
                 "public_id": "01jf0000000000000000000002",
+                "quick_add": {
+                    "requires_fields": false,
+                    "variant_count": 1,
+                    "variant_id": "01jf0000000000000000000003"
+                },
                 "rating_avg": "0.00",
                 "short_description": "Points for Nova",
                 "slug": "nova-points"

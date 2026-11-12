@@ -89,11 +89,12 @@ describe('pages and permissions', function (): void {
     it('renders the list and a read-only edit page with only the view permission', function (string $key): void {
         $screen = ResourceScreens::all()[$key];
         $record = screenRecord($key);
-        adminWith([explode('|', $screen::viewPermission())[0]]);
+        $viewer = adminWith([explode('|', $screen::viewPermission())[0]]);
 
         $list = $this->get(route($screen::routeName('index')))->assertOk();
         assertCspSafeHtml($list);
-        $list->assertSee('data-module="table"', false);
+        // Storefront v2: a screen with its own list page (homepage sections, Figma 116:11200) has no table.
+        $list->assertSee(ResourceScreens::make($key, $viewer)->indexView() === null ? 'data-module="table"' : 'data-section-list', false);
 
         $edit = $this->get(route($screen::routeName('edit'), ['record' => $record]))->assertOk()->assertHeader('Cache-Control', 'no-store, private');
         assertCspSafeHtml($edit);

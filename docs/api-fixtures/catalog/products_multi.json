@@ -1,0 +1,80 @@
+{
+    "body": {
+        "data": [
+            {
+                "category": {
+                    "name": "Gift Cards",
+                    "slug": "gift-cards"
+                },
+                "delivery_type": "instant_code",
+                "face_value": {
+                    "currency": "USD",
+                    "is_custom": false,
+                    "is_range": true,
+                    "label": "10–25 USD",
+                    "max": "25",
+                    "min": "10"
+                },
+                "image": {
+                    "alt": "Orbit Card front",
+                    "formats": {
+                        "webp": "https://media.boxcards.test/media/2026/11/orbit-card.webp"
+                    },
+                    "height": 600,
+                    "path": "media/2026/11/orbit-card.webp",
+                    "url": "https://media.boxcards.test/media/2026/11/orbit-card.webp",
+                    "width": 1200
+                },
+                "is_featured": true,
+                "name": "Orbit Card",
+                "platform": {
+                    "logo": {
+                        "alt": "Orbit",
+                        "formats": {
+                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                        },
+                        "height": 600,
+                        "path": "media/2026/11/orbit-logo.webp",
+                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                        "width": 1200
+                    },
+                    "name": "Orbit",
+                    "slug": "orbit"
+                },
+                "price_from": {
+                    "amount": "10.00",
+                    "currency": "USD",
+                    "formatted": "USD10.00"
+                },
+                "price_may_vary": false,
+                "public_id": "01jf0000000000000000000001",
+                "quick_add": {
+                    "requires_fields": true,
+                    "variant_count": 2,
+                    "variant_id": null
+                },
+                "rating_avg": "4.50",
+                "short_description": "Top up Orbit",
+                "slug": "orbit-card"
+            }
+        ],
+        "message": "OK",
+        "meta": {
+            "current_page": 1,
+            "display_currency": "USD",
+            "last_page": 1,
+            "per_page": 20,
+            "total": 1
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/catalog/products?category=gift-cards%2Ctop-ups&region=US%2CGL&sort=best_selling"
+    },
+    "status": 200
+}

@@ -35,11 +35,11 @@
                             @foreach ($items as $item)
                                 <li class="card flex flex-col gap-4 p-3 sm:p-4" data-cart-item="{{ $item['id'] }}">
                                     <div class="flex gap-4">
-                                        <x-store.tile :slug="$item['product']['slug'] ?? ''" class="h-16 w-24 shrink-0" />
+                                        <x-store.product-image :slug="$item['product']['slug'] ?? ''" :name="$item['product']['name']" :image="($item['product']['image_source'] ?? null) === 'product' ? $item['product']['image'] : null" :logo="($item['product']['image_source'] ?? null) === 'brand' ? $item['product']['image'] : null" class="h-16 w-24 shrink-0" data-line-image />
                                         <div class="min-w-0 flex-1">
                                             <a href="{{ url()->localized('storefront.products.show', ['slug' => $item['product']['slug']]) }}" class="font-semibold hover:underline">{{ $item['product']['name'] }}</a>
                                             <p class="text-sm text-content-secondary">
-                                                <span dir="ltr">{{ $item['variant']['title'] }}</span> · {{ __('storefront.delivery.'.$item['product']['delivery_type']) }}
+                                                <span dir="ltr">{{ $item['variant']['title'] }}</span>@if ($item['variant']['face_value'] ?? null) · <span dir="ltr" data-face-value>{{ __('storefront.catalog.face_value') }}: {{ $item['variant']['face_value'] }}</span>@endif · {{ __('storefront.delivery.'.$item['product']['delivery_type']) }}
                                             </p>
                                             @foreach ((array) $item['delivery_values'] as $key => $value)
                                                 <p class="text-xs text-content-muted">{{ \Illuminate\Support\Str::headline($key) }}: <span dir="ltr" class="font-mono">{{ $value }}</span></p>

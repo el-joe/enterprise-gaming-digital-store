@@ -38,7 +38,7 @@
                 @php($hasCodes = collect($item['units'])->contains(fn ($unit) => $unit['masked_code'] !== null))
                 <section class="rounded-xl rounded-se-[28px] border border-line-subtle bg-surface-raised p-4 md:p-5" aria-label="{{ $item['name'] }}">
                     <div class="flex items-center gap-3">
-                        <x-store.tile :slug="$item['product']['slug'] ?? ''" class="h-12 w-[72px] shrink-0 rounded-md" />
+                        <x-store.product-image :slug="($item['product'] ?? [])['slug'] ?? ''" :name="$item['name']" :image="(($item['product'] ?? [])['image_source'] ?? null) === 'product' ? ($item['product'] ?? [])['image'] : null" :logo="(($item['product'] ?? [])['image_source'] ?? null) === 'brand' ? ($item['product'] ?? [])['image'] : null" class="h-12 w-[72px] shrink-0 rounded-md" data-line-image />
                         <div class="min-w-0 flex-1">
                             <h2 class="font-semibold">{{ $item['name'] }} <span class="text-content-secondary" dir="ltr">× {{ $item['quantity'] }}</span></h2>
                             <p class="text-xs text-content-muted">{{ __('storefront.delivery.'.$item['delivery_type']) }}@if ($item['line_total']) · <span dir="ltr">{{ $item['line_total']['formatted'] }}</span>@endif</p>

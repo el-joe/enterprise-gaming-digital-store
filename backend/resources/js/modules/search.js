@@ -56,6 +56,18 @@ export default function search(form) {
                     : 'flex min-h-10 items-center justify-between gap-3 rounded-md px-2 text-sm hover:bg-surface-raised aria-selected:bg-surface-raised';
                 link.textContent = item.label;
 
+                if (item.image) {
+                    // The product image (Storefront v2): product image, else the brand logo.
+                    const picture = document.createElement('img');
+                    picture.src = item.image.formats?.webp_480 ?? item.image.formats?.webp ?? item.image.url;
+                    picture.alt = '';
+                    picture.loading = 'lazy';
+                    picture.decoding = 'async';
+                    picture.className = 'size-8 shrink-0 rounded-xs bg-surface-overlay object-cover';
+                    link.prepend(picture);
+                    link.classList.add('justify-start');
+                }
+
                 if (item.hint) {
                     const hint = document.createElement('span');
                     hint.className = 'text-xs text-content-muted';
@@ -110,7 +122,7 @@ export default function search(form) {
         const suggestions = result.ok ? result.body?.data?.suggestions ?? [] : [];
         const routes = config().routes;
         const link = (type, slug) => (routes[type] ?? routes.search).replace('__slug__', encodeURIComponent(slug));
-        const of = (type, route, hint) => suggestions.filter((item) => item.type === type).map((item) => ({ label: item.title, href: link(route, item.slug), hint }));
+        const of = (type, route, hint) => suggestions.filter((item) => item.type === type).map((item) => ({ label: item.title, href: link(route, item.slug), hint, image: item.image ?? null }));
 
         render([
             { title: t('suggest_products'), items: of('product', 'product', t('type_product')) },

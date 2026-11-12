@@ -21,7 +21,7 @@ class HomeTranslations
         $models = [];
 
         foreach ($page->sections as $section) {
-            $models[] = $section->section;
+            $models[] = $section->category ?? $section->section;
 
             foreach ($section->items as $item) {
                 /** @var HomeItem $item */

@@ -3,7 +3,7 @@
     the envelope error (`[data-error-for]` with the dot key). `record` is the model being edited
     (null on create); `disabled` renders read-only for staff without the manage permission.
 --}}
-@props(['field', 'record' => null, 'disabled' => false, 'idPrefix' => 'f'])
+@props(['field', 'record' => null, 'disabled' => false, 'idPrefix' => 'f', 'formId' => null])
 
 @php
     $id = $idPrefix.'-'.preg_replace('/[^a-z0-9]+/i', '-', $field->name);
@@ -18,7 +18,7 @@
 <div @class(['md:col-span-2' => $field->wide])>
     @if ($field->type === 'toggle')
         <label class="flex min-h-10 items-center gap-3 text-sm">
-            <input id="{{ $id }}" type="checkbox" name="{{ $name }}" class="size-5 accent-(--color-accent-text)" @checked($value) @disabled($disabled) aria-describedby="{{ $describedBy }}">
+            <input id="{{ $id }}" type="checkbox" name="{{ $name }}" @if ($formId) form="{{ $formId }}" @endif class="size-5 accent-(--color-accent-text)" @checked($value) @disabled($disabled) aria-describedby="{{ $describedBy }}">
             <span>{{ $field->label }}</span>
         </label>
     @elseif ($field->type === 'multi')
@@ -40,7 +40,7 @@
     @else
         <label for="{{ $id }}" class="field-label">{{ $field->label }}@if ($field->required)<span class="text-status-danger" aria-hidden="true"> *</span>@endif</label>
         @if ($field->type === 'select')
-            <select id="{{ $id }}" name="{{ $name }}" class="admin-input" @disabled($disabled) @if ($field->nullable) data-nullable @endif aria-describedby="{{ $describedBy }}">
+            <select id="{{ $id }}" name="{{ $name }}" @if ($formId) form="{{ $formId }}" @endif class="admin-input" @disabled($disabled) @if ($field->nullable) data-nullable @endif aria-describedby="{{ $describedBy }}">
                 @if ($field->nullable || ! $field->required)
                     <option value="">{{ __('admin.common.none_selected') }}</option>
                 @endif
@@ -51,7 +51,7 @@
         @elseif (in_array($field->type, ['textarea', 'html', 'json'], true))
             <textarea id="{{ $id }}" name="{{ $name }}" rows="{{ $field->type === 'html' ? 12 : ($field->type === 'json' ? 6 : 4) }}" @class(['admin-input py-2', 'font-mono text-xs' => in_array($field->type, ['json', 'html'], true)]) @if ($field->maxLength) maxlength="{{ $field->maxLength }}" @endif @if ($field->ltr) dir="ltr" @endif @if ($field->nullable) data-nullable @endif @if ($field->type === 'json') data-json @endif @disabled($disabled) aria-describedby="{{ $describedBy }}">{{ $value }}</textarea>
         @else
-            <input id="{{ $id }}" name="{{ $name }}"
+            <input id="{{ $id }}" name="{{ $name }}" @if ($formId) form="{{ $formId }}" @endif
                 type="{{ match ($field->type) { 'number' => 'number', 'datetime' => 'datetime-local', 'password' => 'password', default => 'text' } }}"
                 value="{{ $value }}"
                 class="admin-input"

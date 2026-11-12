@@ -66,7 +66,7 @@
                 @foreach ($order['items'] as $item)
                     <li class="rounded-md bg-surface-base p-3">
                         <div class="flex items-center gap-3">
-                            <x-store.tile :slug="$item['product']['slug'] ?? ''" class="h-12 w-[72px] shrink-0" />
+                            <x-store.product-image :slug="($item['product'] ?? [])['slug'] ?? ''" :name="$item['name']" :image="(($item['product'] ?? [])['image_source'] ?? null) === 'product' ? ($item['product'] ?? [])['image'] : null" :logo="(($item['product'] ?? [])['image_source'] ?? null) === 'brand' ? ($item['product'] ?? [])['image'] : null" class="h-12 w-[72px] shrink-0" data-line-image />
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm font-semibold">{{ $item['name'] }} <span class="text-content-secondary">× {{ $item['quantity'] }}</span></p>
                                 <p class="text-xs text-content-muted" dir="ltr">{{ $item['line_total']['formatted'] ?? '' }}</p>

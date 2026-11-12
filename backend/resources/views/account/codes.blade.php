@@ -38,7 +38,7 @@
             @foreach ($units as $unit)
                 <article class="rounded-xl rounded-se-[28px] border border-line-subtle bg-surface-raised p-4 md:p-5" aria-label="{{ $unit['name'] }}">
                     <div class="flex items-start gap-3">
-                        <x-store.tile :slug="$unit['product_slug'] ?? ''" class="h-11 w-11 shrink-0 rounded-md" />
+                        <x-store.product-image :slug="$unit['product_slug'] ?? ''" :name="(string) $unit['name']" :image="($unit['product_image']['source'] ?? null) === 'product' ? $unit['product_image']['image'] : null" :logo="($unit['product_image']['source'] ?? null) === 'brand' ? $unit['product_image']['image'] : null" class="h-11 w-11 shrink-0 rounded-md" data-line-image />
                         <div class="min-w-0 flex-1">
                             <h2 class="font-semibold">{{ $unit['name'] }}</h2>
                             <p class="text-xs text-content-muted">

@@ -1,0 +1,116 @@
+{
+    "body": {
+        "data": {
+            "facets": [
+                {
+                    "key": "category",
+                    "options": [
+                        {
+                            "count": 1,
+                            "label": "Gift Cards",
+                            "selected": false,
+                            "value": "gift-cards"
+                        },
+                        {
+                            "count": 1,
+                            "label": "Top-ups",
+                            "selected": false,
+                            "value": "top-ups"
+                        }
+                    ],
+                    "type": "multi"
+                },
+                {
+                    "key": "platform",
+                    "options": [
+                        {
+                            "count": 1,
+                            "label": "Nova",
+                            "logo": null,
+                            "selected": true,
+                            "value": "nova"
+                        },
+                        {
+                            "count": 1,
+                            "label": "Orbit",
+                            "logo": {
+                                "alt": null,
+                                "formats": {
+                                    "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                                },
+                                "height": 600,
+                                "path": "media/2026/11/orbit-logo.webp",
+                                "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                                "width": 1200
+                            },
+                            "selected": true,
+                            "value": "orbit"
+                        }
+                    ],
+                    "type": "multi"
+                },
+                {
+                    "key": "region",
+                    "options": [
+                        {
+                            "count": 1,
+                            "label": "Global",
+                            "selected": false,
+                            "value": "GL"
+                        },
+                        {
+                            "count": 1,
+                            "label": "United States",
+                            "selected": false,
+                            "value": "US"
+                        }
+                    ],
+                    "type": "multi"
+                },
+                {
+                    "currency": "USD",
+                    "key": "price",
+                    "max": "26",
+                    "min": "5",
+                    "selected_max": null,
+                    "selected_min": null,
+                    "type": "range"
+                },
+                {
+                    "key": "delivery_type",
+                    "options": [
+                        {
+                            "count": 2,
+                            "label": "Instant code",
+                            "selected": false,
+                            "value": "instant_code"
+                        }
+                    ],
+                    "type": "multi"
+                },
+                {
+                    "count": 2,
+                    "key": "in_stock",
+                    "selected": true,
+                    "type": "toggle"
+                }
+            ],
+            "selected": 3,
+            "total": 2
+        },
+        "message": "OK",
+        "meta": {
+            "display_currency": "USD"
+        },
+        "success": true
+    },
+    "headers": {
+        "cache-control": "no-cache, private",
+        "content-language": "en"
+    },
+    "request": {
+        "method": "GET",
+        "path": "/api/v1/mobile/storefront/catalog/facets?in_stock=1&platform=orbit%2Cnova"
+    },
+    "status": 200
+}

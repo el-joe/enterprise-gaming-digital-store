@@ -6,6 +6,7 @@
                     "availability": "in_stock",
                     "denomination_currency": "USD",
                     "denomination_value": "10.000000",
+                    "face_value": "10 USD",
                     "is_custom_amount": false,
                     "price": {
                         "amount": "10.00",
@@ -23,6 +24,7 @@
                     "availability": "limited",
                     "denomination_currency": "USD",
                     "denomination_value": "25.000000",
+                    "face_value": "25 USD",
                     "is_custom_amount": false,
                     "price": {
                         "amount": "25.50",

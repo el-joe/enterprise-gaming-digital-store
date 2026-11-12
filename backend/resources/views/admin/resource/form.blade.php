@@ -21,14 +21,14 @@
 
 @section('content')
     <div class="grid gap-4 md:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <form class="flex min-w-0 flex-col gap-4 md:gap-6" data-module="form"
+        <form id="resource-form" class="flex min-w-0 flex-col gap-4 md:gap-6" data-module="form"
             data-action="{{ $screen->apiUrl($record) }}"
             data-method="{{ $record === null ? 'POST' : $screen->updateMethod() }}"
             data-success="{{ $record === null ? 'redirect' : 'reload' }}"
             data-redirect="{{ $screen->indexUrl() }}"
             novalidate>
             <x-admin.form-alerts />
-            @foreach ($groups as $group => $fields)
+            @foreach (\Illuminate\Support\Arr::except($groups, $screen->asideGroups()) as $group => $fields)
                 <x-admin.card :title="__('admin.groups.'.$group)">
                     <div class="grid gap-4 md:grid-cols-2">
                         @foreach ($fields as $field)
@@ -48,6 +48,18 @@
         </form>
 
         <div class="flex flex-col gap-4 md:gap-6">
+            @foreach (\Illuminate\Support\Arr::only($groups, $screen->asideGroups()) as $group => $fields)
+                <x-admin.card :title="__('admin.groups.'.$group)" data-aside-group="{{ $group }}">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        @foreach ($fields as $field)
+                            <x-admin.input :field="$field" :record="$record" :disabled="! $canManage" form-id="resource-form" />
+                        @endforeach
+                    </div>
+                    @if ($screen->asideNote())
+                        @include($screen->asideNote(), ['record' => $record, 'aside' => $aside])
+                    @endif
+                </x-admin.card>
+            @endforeach
             @if ($record !== null)
                 @if ($screen->panel())
                     @include($screen->panel(), ['record' => $record, 'screen' => $screen, 'canManage' => $canManage, 'panel' => $panel])

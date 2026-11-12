@@ -7,6 +7,14 @@
                     "slug": "gift-cards"
                 },
                 "delivery_type": "instant_code",
+                "face_value": {
+                    "currency": "USD",
+                    "is_custom": false,
+                    "is_range": true,
+                    "label": "10–25 USD",
+                    "max": "25",
+                    "min": "10"
+                },
                 "image": {
                     "alt": "Orbit Card front",
                     "formats": {
@@ -40,6 +48,11 @@
                 },
                 "price_may_vary": false,
                 "public_id": "01jf0000000000000000000001",
+                "quick_add": {
+                    "requires_fields": true,
+                    "variant_count": 2,
+                    "variant_id": null
+                },
                 "rating_avg": "4.50",
                 "short_description": "Top up Orbit",
                 "slug": "orbit-card"

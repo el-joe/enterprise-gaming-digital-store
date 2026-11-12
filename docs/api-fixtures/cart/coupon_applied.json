@@ -18,6 +18,8 @@
                         "id": 1,
                         "product": {
                             "delivery_type": "instant_code",
+                            "image": null,
+                            "image_source": null,
                             "name": "Orbit Card",
                             "slug": "orbit-card"
                         },
@@ -39,6 +41,7 @@
                             "formatted": "USD10.00"
                         },
                         "variant": {
+                            "face_value": null,
                             "public_id": "01jf0000000000000000000002",
                             "sku": "ORB-10-US",
                             "title": "10 USD"

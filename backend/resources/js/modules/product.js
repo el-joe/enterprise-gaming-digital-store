@@ -1,6 +1,7 @@
 import { config, t } from '../lib/config.js';
 import { post } from '../lib/http.js';
 import { busy, clearErrors, formValues, showErrors, toast } from '../lib/forms.js';
+import { updateBagCount } from '../lib/bag.js';
 
 /**
  * Product buy box: region and amount selection (prices are the server-formatted strings in the
@@ -74,11 +75,7 @@ export default function product(form) {
 
         trackAddToCart(form, variantButtons.find((option) => option.dataset.variantOption === body.variant_id), body.quantity);
 
-        const count = (result.body?.data?.cart?.items ?? []).reduce((sum, item) => sum + Number(item.quantity), 0);
-        document.querySelectorAll('[data-bag-count]').forEach((badge) => {
-            badge.textContent = String(count);
-            badge.classList.toggle('hidden', count === 0);
-        });
+        updateBagCount(result.body?.data?.cart);
 
         if (intent === 'buy') {
             window.location.assign(config().routes.checkoutPage);

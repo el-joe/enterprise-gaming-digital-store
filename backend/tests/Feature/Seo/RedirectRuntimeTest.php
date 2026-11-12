@@ -46,10 +46,10 @@ it('answers 410 Gone with the designed page for a removed URL, in the language o
 it('ignores inactive redirects and never redirects a page that exists', function (): void {
     storefrontProduct();
     seoRedirect('/sleeping', '/gaming', active: false);
-    seoRedirect('/gift-cards', '/gaming');
+    seoRedirect('/c/gift-cards', '/gaming');
 
     $this->get('/sleeping')->assertNotFound();
-    $this->get('/gift-cards')->assertOk();
+    $this->get('/c/gift-cards')->assertOk();
 });
 
 it('applies a change to a cached redirect at once', function (): void {
@@ -113,16 +113,16 @@ it('creates 301s in every language when a slug changes, without loops when it ch
 
     $platform->update(['slug' => 'psn']);
 
-    $this->assertDatabaseHas('redirects', ['source_hash' => RedirectService::hash('/gaming/playstation'), 'target_path' => '/gaming/psn', 'status_code' => 301]);
-    $this->assertDatabaseHas('redirects', ['source_hash' => RedirectService::hash('/ar/gaming/playstation'), 'target_path' => '/ar/gaming/psn']);
-    $this->get('/gaming/playstation')->assertMovedPermanently()->assertRedirect(url('/gaming/psn'));
+    $this->assertDatabaseHas('redirects', ['source_hash' => RedirectService::hash('/b/playstation'), 'target_path' => '/b/psn', 'status_code' => 301]);
+    $this->assertDatabaseHas('redirects', ['source_hash' => RedirectService::hash('/ar/b/playstation'), 'target_path' => '/ar/b/psn']);
+    $this->get('/b/playstation')->assertMovedPermanently()->assertRedirect(url('/b/psn'));
 
     $platform->update(['slug' => 'playstation-store']);
-    expect(Redirect::query()->where('source_hash', RedirectService::hash('/gaming/playstation'))->value('target_path'))->toBe('/gaming/playstation-store');
+    expect(Redirect::query()->where('source_hash', RedirectService::hash('/b/playstation'))->value('target_path'))->toBe('/b/playstation-store');
 
     $platform->update(['slug' => 'playstation']);
-    expect(Redirect::query()->where('source_hash', RedirectService::hash('/gaming/playstation'))->exists())->toBeFalse()
-        ->and(Redirect::query()->where('source_hash', RedirectService::hash('/gaming/psn'))->value('target_path'))->toBe('/gaming/playstation');
+    expect(Redirect::query()->where('source_hash', RedirectService::hash('/b/playstation'))->exists())->toBeFalse()
+        ->and(Redirect::query()->where('source_hash', RedirectService::hash('/b/psn'))->value('target_path'))->toBe('/b/playstation');
 });
 
 it('logs storefront misses with a hit count, without the query string, and shows popular searches', function (): void {

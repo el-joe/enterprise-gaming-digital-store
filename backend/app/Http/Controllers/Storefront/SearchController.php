@@ -25,6 +25,7 @@ class SearchController extends Controller
             'type' => $suggestion->type,
             'title' => $suggestion->title,
             'slug' => $suggestion->slug,
+            'image' => $suggestion->image,
         ], $suggestions)]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\View\Composers;
 
 use App\Domains\Catalog\Services\StorefrontCatalogService;
+use App\Domains\Catalog\Services\StorefrontNavigationService;
 use App\Domains\Identity\Models\User;
 use App\Domains\Orders\Services\CartService;
 use App\Http\Support\LocalizedRoutes;
@@ -22,6 +23,7 @@ class StorefrontLayoutComposer
         private StorefrontCatalogService $catalog,
         private CartService $carts,
         private StorefrontRequest $storefront,
+        private StorefrontNavigationService $navigation,
     ) {}
 
     public function compose(View $view): void
@@ -46,6 +48,8 @@ class StorefrontLayoutComposer
             'currency' => $this->storefront->currency($this->request),
             'bag_count' => $owner === null ? 0 : $this->carts->unitCount($owner),
             'user' => $user instanceof User ? ['name' => $user->name, 'email_verified' => $user->hasVerifiedEmail()] : null,
+            // Storefront v2: categories, top brands and featured header categories (cached).
+            'navigation' => $this->navigation->build(),
         ]);
     }
 }

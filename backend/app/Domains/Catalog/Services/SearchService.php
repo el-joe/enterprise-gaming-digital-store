@@ -21,7 +21,7 @@ class SearchService
 
     private const int RESULTS_LIMIT = 48;
 
-    public function __construct(private SearchRepository $search) {}
+    public function __construct(private SearchRepository $search, private ProductImages $images) {}
 
     /**
      * @return list<SearchSuggestion>
@@ -30,12 +30,16 @@ class SearchService
     {
         $normalized = $this->normalize($term);
 
-        $suggestions = $this->search->suggest($normalized, $locale, self::SUGGESTION_LIMIT)
-            ->filter(static fn (SearchDocument $document): bool => $document->searchable !== null)
-            ->map(static fn (SearchDocument $document): SearchSuggestion => new SearchSuggestion(
+        $documents = $this->search->suggest($normalized, $locale, self::SUGGESTION_LIMIT)
+            ->filter(static fn (SearchDocument $document): bool => $document->searchable !== null);
+        $this->images->load($documents->map(static fn (SearchDocument $document) => $document->searchable instanceof Product ? $document->searchable : null));
+
+        $suggestions = $documents
+            ->map(fn (SearchDocument $document): SearchSuggestion => new SearchSuggestion(
                 type: $document->searchable_type,
                 title: $document->title,
                 slug: (string) $document->searchable->slug,
+                image: $document->searchable instanceof Product ? $this->images->resolve($document->searchable)['image'] ?? null : null,
             ))
             ->values()
             ->all();

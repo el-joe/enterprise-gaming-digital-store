@@ -9,9 +9,10 @@ use App\Domains\Cms\Enums\LinkTargetType;
 /**
  * Maps a stored web link (banner `cta_url`: a site-relative path or an http(s) URL, SafeUrl) to
  * a structured target (M-A4), following the web URL scheme of SEO_STRATEGY.md section 2:
- * `/products/{slug}` product, `/gaming/{slug}` platform, `/search?q=` search, `/{slug}` category
- * (when not a reserved first segment), an optional `/{locale}` prefix ignored. Anything else,
- * including any URL on another host, is `url` with the absolute URL.
+ * `/products/{slug}` product, `/b/{slug}` (or the v1 `/gaming/{slug}`) platform, `/c/{slug}` (or
+ * the v1 `/{slug}` when not a reserved first segment) category, `/products?…` listing (Storefront
+ * v2, `value` is the query string), `/search?q=` search, an optional `/{locale}` prefix ignored.
+ * Anything else, including any URL on another host, is `url` with the absolute URL.
  */
 class LinkTargetResolver
 {
@@ -48,7 +49,9 @@ class LinkTargetResolver
 
         return match (true) {
             count($segments) === 2 && $segments[0] === 'products' && preg_match($slugPattern, $segments[1]) === 1 => new LinkTarget(LinkTargetType::Product, $segments[1], $absolute),
-            count($segments) === 2 && $segments[0] === 'gaming' && preg_match($slugPattern, $segments[1]) === 1 => new LinkTarget(LinkTargetType::Platform, $segments[1], $absolute),
+            count($segments) === 2 && in_array($segments[0], ['b', 'gaming'], true) && preg_match($slugPattern, $segments[1]) === 1 => new LinkTarget(LinkTargetType::Platform, $segments[1], $absolute),
+            count($segments) === 2 && $segments[0] === 'c' && preg_match($slugPattern, $segments[1]) === 1 => new LinkTarget(LinkTargetType::Category, $segments[1], $absolute),
+            count($segments) === 1 && $segments[0] === 'products' => new LinkTarget(LinkTargetType::Listing, (string) ($parts['query'] ?? ''), $absolute),
             count($segments) === 1 && $segments[0] === 'search' && is_string($query['q'] ?? null) && trim($query['q']) !== '' => new LinkTarget(LinkTargetType::Search, trim($query['q']), $absolute),
             count($segments) === 1 && preg_match($slugPattern, $segments[0]) === 1 && ! $this->reserved->isReserved($segments[0]) => new LinkTarget(LinkTargetType::Category, $segments[0], $absolute),
             default => new LinkTarget(LinkTargetType::Url, $absolute, $absolute),
@@ -62,11 +65,19 @@ class LinkTargetResolver
     {
         $path = match ($type) {
             LinkTargetType::Product => "/products/{$slug}",
-            LinkTargetType::Platform => "/gaming/{$slug}",
-            default => "/{$slug}",
+            LinkTargetType::Platform => "/b/{$slug}",
+            default => "/c/{$slug}",
         };
 
         return new LinkTarget($type, $slug, $this->webUrl($path));
+    }
+
+    /**
+     * The product listing with a query string (`sort=newest`), Storefront v2 "See all".
+     */
+    public function forListing(string $query = ''): LinkTarget
+    {
+        return new LinkTarget(LinkTargetType::Listing, $query, $this->webUrl('/products'.($query === '' ? '' : '?'.$query)));
     }
 
     /**

@@ -76,22 +76,25 @@ describe('home', function (): void {
     ]);
 });
 
-describe('platforms', function (): void {
-    it('lists active platforms with their product counts and BD8 neutral tiles', function (): void {
+describe('brands (v1 platforms)', function (): void {
+    it('sends the v1 platform list to all products with a 301', function (): void {
         storefrontProduct();
         GamingPlatform::factory()->create(['name' => 'Retired Console', 'slug' => 'retired', 'is_active' => false]);
 
-        $this->get('/gaming')->assertOk()
-            ->assertSee('Gaming platforms')
+        $this->get('/gaming')->assertMovedPermanently()->assertRedirect(url('/products'));
+
+        $this->get('/products')->assertOk()
+            ->assertSee('All products')
             ->assertSee('Steam')
             ->assertSee('1 product')
             ->assertDontSee('Retired Console');
     });
 
-    it('shows a platform with its products, in both languages', function (string $prefix, string $text): void {
+    it('shows a brand with its products, in both languages', function (string $prefix, string $text): void {
         storefrontProduct('Steam Wallet $20', '20');
 
-        $this->get($prefix.'/gaming/steam')->assertOk()
+        $this->get($prefix.'/gaming/steam')->assertMovedPermanently()->assertRedirect(url($prefix.'/b/steam'));
+        $this->get($prefix.'/b/steam')->assertOk()
             ->assertSee($text)
             ->assertSee('Steam Wallet $20')
             ->assertSee(storefrontPrice('20.00'));
@@ -100,8 +103,8 @@ describe('platforms', function (): void {
         'ar' => ['/ar', 'بطاقات هدايا وشحن Steam'],
     ]);
 
-    it('is 404 with the storefront error page for an unknown platform', function (): void {
-        $this->get('/gaming/nope')->assertNotFound()->assertSee('This vault is empty.');
+    it('is 404 with the storefront error page for an unknown brand', function (): void {
+        $this->get('/b/nope')->assertNotFound()->assertSee('This vault is empty.');
     });
 });
 
@@ -110,11 +113,11 @@ describe('category listing', function (): void {
         storefrontProduct('Steam Wallet $20', '20');
         storefrontProduct('Steam Wallet $50', '50');
 
-        $response = $this->get('/gift-cards?sort=price_desc')->assertOk()
+        $response = $this->get('/c/gift-cards?sort=price_desc')->assertOk()
             ->assertSee('Gift cards')
             ->assertSee('2 products')
             ->assertSee('<option value="price_desc" selected', false)
-            ->assertSee('<link rel="canonical" href="'.url('/gift-cards').'">', false)
+            ->assertSee('<link rel="canonical" href="'.url('/c/gift-cards').'">', false)
             ->assertSee('index,follow');
 
         expect(strpos($response->getContent(), 'Steam Wallet $50'))->toBeLessThan(strpos($response->getContent(), 'Steam Wallet $20'));
@@ -125,7 +128,7 @@ describe('category listing', function (): void {
         storefrontProduct('Steam Wallet $20', '20');
         storefrontProduct('Steam Wallet $50', '50');
 
-        $this->get('/gift-cards?min_price=30&platform=steam')->assertOk()
+        $this->get('/c/gift-cards?min_price=30&platform=steam')->assertOk()
             ->assertSee('Steam Wallet $50')
             ->assertDontSee('Steam Wallet $20')
             ->assertSee('noindex,follow');
@@ -134,20 +137,22 @@ describe('category listing', function (): void {
     it('treats empty filters as none and sends an invalid filter back to the plain page', function (): void {
         storefrontProduct();
 
-        $this->get('/gift-cards?platform=&delivery_type=&sort=')->assertOk()->assertSee('1 product');
-        $this->get('/gift-cards?sort=cheapest')->assertRedirect(url('/gift-cards'));
+        $this->get('/c/gift-cards?platform=&delivery_type=&sort=')->assertOk()->assertSee('1 product');
+        $this->get('/c/gift-cards?sort=cheapest')->assertRedirect(url('/c/gift-cards'));
     });
 
     it('shows the empty state when nothing matches', function (): void {
         storefrontProduct();
 
-        $this->get('/gift-cards?min_price=500')->assertOk()->assertSee('Nothing matches these filters');
+        $this->get('/c/gift-cards?min_price=500')->assertOk()->assertSee('No products match these filters')
+            ->assertSee('Clear all filters')->assertSee('Browse all categories');
     });
 
     it('is 404 for an unknown or inactive category, and never shadows reserved routes', function (): void {
+        $this->get('/c/no-such-category')->assertNotFound();
         $this->get('/no-such-category')->assertNotFound();
         $this->get('/login')->assertOk()->assertSee('Welcome back');
-        $this->get('/ar/gift-cards')->assertNotFound()->assertSee('هذه الخزنة فارغة.');
+        $this->get('/ar/c/gift-cards')->assertNotFound()->assertSee('هذه الخزنة فارغة.');
     });
 });
 
@@ -270,8 +275,8 @@ describe('errors and switchers', function (): void {
     it('links each page to the same page in the other language', function (): void {
         storefrontProduct();
 
-        $this->get('/gaming/steam?sort=newest')->assertOk()->assertSee('href="'.url('/ar/gaming/steam').'?sort=newest"', false);
-        $this->get('/ar/gaming')->assertOk()->assertSee('href="'.url('/gaming').'"', false);
+        $this->get('/b/steam?sort=newest')->assertOk()->assertSee('href="'.url('/ar/b/steam').'?sort=newest"', false);
+        $this->get('/ar/products')->assertOk()->assertSee('href="'.url('/products').'"', false);
     });
 
     it('keeps the JSON API envelope for API paths', function (): void {

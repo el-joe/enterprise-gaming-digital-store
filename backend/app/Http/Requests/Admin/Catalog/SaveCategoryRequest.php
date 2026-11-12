@@ -25,6 +25,12 @@ class SaveCategoryRequest extends AdminSaveRequest
             'banner_media_id' => ['sometimes', 'nullable', 'integer', Rule::exists('media', 'id')->whereNull('deleted_at')],
             'is_active' => [$this->presence(), 'boolean'],
             'sort_order' => ['sometimes', 'integer'],
+            // Storefront v2 placement (Figma 117:11830).
+            'featured_in_header' => ['sometimes', 'boolean'],
+            'header_order' => ['sometimes', 'integer', 'min:0', 'max:999'],
+            'show_on_home' => ['sometimes', 'boolean'],
+            'home_position' => ['sometimes', 'integer', 'min:0', 'max:999'],
+            'home_limit' => ['sometimes', 'integer', 'min:4', 'max:24'],
         ];
     }
 }

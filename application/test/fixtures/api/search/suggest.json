@@ -3,11 +3,22 @@
         "data": {
             "suggestions": [
                 {
+                    "image": null,
                     "slug": "orbit",
                     "title": "Orbit",
                     "type": "gaming_platform"
                 },
                 {
+                    "image": {
+                        "alt": "Orbit Card front",
+                        "formats": {
+                            "webp": "https://media.boxcards.test/media/2026/11/orbit-card.webp"
+                        },
+                        "height": 600,
+                        "path": "media/2026/11/orbit-card.webp",
+                        "url": "https://media.boxcards.test/media/2026/11/orbit-card.webp",
+                        "width": 1200
+                    },
                     "slug": "orbit-card",
                     "title": "Orbit Card",
                     "type": "product"

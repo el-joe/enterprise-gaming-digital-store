@@ -4,6 +4,7 @@ namespace App\Http\Resources\Storefront;
 
 use App\Domains\Catalog\DTOs\VariantOffer;
 use App\Domains\Catalog\Services\ContentTranslator;
+use App\Domains\Catalog\Services\FaceValueFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -34,6 +35,8 @@ class VariantOfferResource extends JsonResource
             'purchasable' => $quote->purchasable,
             'price' => $this->resource->price,
             'price_may_vary' => $quote->rate?->isStale ?? false,
+            // Storefront v2 (additive): the face value in the card's own currency, not converted.
+            'face_value' => app(FaceValueFormatter::class)->variant($variant),
         ];
     }
 }

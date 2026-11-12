@@ -30,7 +30,9 @@
             'popular' => url('/api/v1/storefront/search/popular'),
             'search' => url()->localized('storefront.search'),
             'product' => url()->localized('storefront.products.show', ['slug' => '__slug__']),
-            'platform' => url()->localized('storefront.platforms.show', ['slug' => '__slug__']),
+            'platform' => url()->localized('storefront.brand', ['slug' => '__slug__']),
+            'products' => url()->localized('storefront.products.index'),
+            'facets' => url('/api/v1/storefront/catalog/facets'),
             'category' => url()->localized('storefront.category', ['slug' => '__slug__']),
             'cartPage' => url()->localized('storefront.cart'),
             'checkoutPage' => url()->localized('storefront.checkout'),
@@ -90,6 +92,10 @@
     @endunless
 
     <div class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4" aria-live="polite" role="status" data-toast-region></div>
+
+    @unless ($minimal || $headerMode === 'none')
+        @include('storefront.partials.quick-add-dialog')
+    @endunless
 
     @if ($analyticsConfig)
         @include('storefront.partials.consent')

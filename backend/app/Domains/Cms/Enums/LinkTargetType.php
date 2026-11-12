@@ -12,6 +12,8 @@ enum LinkTargetType: string
     case Platform = 'platform';
     case Search = 'search';
     case Url = 'url';
+    /** Storefront v2: the product listing `/products` with `value` as its query string (filters, sort). */
+    case Listing = 'listing';
     // M-A5: account targets of inbox notifications; value is the public id.
     case Order = 'order';
     case Ticket = 'ticket';

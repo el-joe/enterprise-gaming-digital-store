@@ -3,9 +3,10 @@
     field colour is derived from the slug. A product image (staff upload, or the synced supplier
     image under owner decision 12) replaces the art as the background: `<picture>` with AVIF and
     WebP sources (every stored width in `srcset`), intrinsic size, lazy unless `eager`, and `alt`
-    (the product name). Without an image the generated dial art stays.
+    (the product name). Without an image the brand `logo` (when given) sits on the field over the
+    dial art; without either the generated dial art stays (Storefront v2 image priority).
 --}}
-@props(['slug' => '', 'overline' => null, 'name' => null, 'image' => null, 'eager' => false, 'large' => false, 'alt' => null, 'sizes' => null])
+@props(['slug' => '', 'overline' => null, 'name' => null, 'image' => null, 'logo' => null, 'eager' => false, 'large' => false, 'alt' => null, 'sizes' => null])
 
 @php
     $palettes = ['volt', 'ember', 'ultra', 'aqua', 'flux', 'sun'];
@@ -43,7 +44,13 @@
             'absolute -top-1/2 -end-1/5 aspect-square',
             'h-[150%]' => ! $large,
             'h-[140%]' => $large,
+            'opacity-40' => $logo,
         ]) />
+        @if ($logo)
+            <span class="absolute inset-0 -z-10 flex items-center justify-center p-[18%]" data-tile-logo>
+                <x-store.platform-logo :image="$logo" :alt="$alt ?? ''" :eager="$eager" class="max-h-full max-w-full" />
+            </span>
+        @endif
     @endif
 
     @if ($overline || $name)

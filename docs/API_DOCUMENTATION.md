@@ -475,6 +475,33 @@ Same group, middleware and `checkout` limiter as 3a. The order routes are visibl
 
 `next` shapes: Wallet (M11) `{ payment_public_id, gateway: "wallet", type: "wallet" }`, returned when the order is already paid from the wallet balance (no redirect, no provider); Stripe `{ payment_public_id, gateway, type: "stripe", client_secret, return_url? }` (`return_url` for `app` attempts only, section 1e); PayPal `{ ..., type: "paypal", provider_order_id, approve_url }`; Paymob `{ ..., type: "redirect", redirect_url }` (Unified Checkout with the public key and the intention's client secret). Publishable values only.
 
+### 2d. Storefront v2 (built 2026-11-12, additive)
+
+Same base, group, limiter and localization as 2c (`/api/v1/storefront` and `/api/v1/mobile/storefront`). Fixtures: `docs/api-fixtures/catalog/{facets_en,facets_ar,facets_category_page,navigation_en,navigation_ar,products_multi}.json` and `product/quick_add_{en,ar}.json`.
+
+| Method | Path | Cache | Result |
+|---|---|---|---|
+| GET | `/catalog/products` | none | New listing parameters: `category`, `platform` (brand), `region` and `delivery_type` take one value, a comma list (`platform=steam,xbox`) or a list (`platform[]=steam`); OR inside a facet, AND across facets. `in_stock=1` (variant in stock or limited), `on_sale=1` (`compare_at_base` above the price) and `sort=best_selling` (the same as `popular`). The old single values keep working. |
+| GET | `/catalog/facets` | none | The listing parameters plus `hide=category,platform` (the facets a category or brand page pins). `{ total, selected, facets: [...] }` in sidebar order: `category`, `platform`, `region` (`type: multi`, `options: [{ value, label, count, selected, logo? }]`), `price` (`type: range`, `currency`, `min`, `max`: whole display-currency amounts around the matching variants, plus `selected_min` and `selected_max`), `delivery_type` (multi) and `in_stock` (`type: toggle`, `count`, `selected`). Each count is the number of products with that value and every other facet applied. Counts are cached for 60 s per filter hash; `meta.display_currency`. |
+| GET | `/navigation` | 300 s | `{ total, all_products, categories: [{ slug, name, product_count, image, brand_count, brands: [{ slug, name, count, logo, link }], popular_filters: [{ key, value, label }], link }], featured: [{ slug, name, link }], brands: [...] }`. These are the top-level categories, the top 8 brands of each by listed products, and the header row: `featured_in_header`, by `header_order`, at most 8. |
+| GET | `/catalog/products/{slug}/quick-add` | none | The card's "Add to bag" chooser: `{ product: { name, slug, image, platform: { name, slug, logo }, max_quantity }, delivery_fields: [...], variants: [VariantOffer + face_value + region_name] }`. Unavailable variants are listed with `purchasable: false`, and so are custom amounts, which the cart does not sell yet. `meta.display_currency`. |
+
+Additive fields:
+- **Listing card:**
+  - `face_value`: `{ label, currency, min, max, is_range, is_custom }` or null. This is the gift card's value in its own currency, never converted, for example `"€25–100"`, `"$20"`, `"From €10"`.
+  - `quick_add`: `{ variant_count, variant_id, requires_fields }`. `variant_id` is set only when exactly one variant is purchasable and no delivery field is required; the app then adds it directly, otherwise it opens the chooser.
+- **Variant offer:** `face_value` (string or null).
+- **Cart line:** `product.image`, `product.image_source` (`product`, `brand` or null) and `variant.face_value`.
+- **Order line** (account, guest and mobile): `product.image` and `product.image_source`.
+- **Search suggestion:** `image`.
+- **Home section:**
+  - `type`: `hero_banners`, `category_tiles`, `brand_logos`, `product_rail`, `banners`, `reviews`, `faq`, `trust`, `newsletter` or `promo_banners`.
+  - `see_all`: a link target, or null for the hero, banners, reviews and FAQ. Targets: best sellers `{type: listing, value: "sort=best_selling"}`, new arrivals `sort=newest`, on sale `on_sale=1`, category `{type: category}`, brand `{type: platform}`, tiles, logos and a manual pick `{type: listing, value: ""}`.
+  - `category`: the slug of a category rail.
+  - Category rails (`source: "category"`, key `category_{slug}`) follow the managed sections, by `home_position`.
+  - Category and brand tiles carry `product_count`.
+- **Link targets:** the new type `listing` (value = the `/products` query string). `category` and `platform` URLs are now `/c/{slug}` and `/b/{slug}`. Banner links to `/b/…`, `/c/…`, `/products?…` and the v1 paths are all recognised.
+
 ### 2b. Built storefront routes (M11)
 
 | Method | Path | Group | Body or query | Result |

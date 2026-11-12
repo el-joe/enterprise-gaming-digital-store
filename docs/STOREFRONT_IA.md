@@ -1,5 +1,17 @@
 # Storefront information architecture (v2)
 
+**Status: implemented 2026-11-12** (see `PROGRESS.md`, "Storefront v2").
+
+- **URLs:** `/products`, `/c/{slug}` and `/b/{slug}`, each with an `/ar` twin. The v1 URLs 301 to them.
+- **Facets:** in the URL as comma lists.
+- **Admin:** Marketing → Homepage sections (drag or keyboard reorder, the drawer) and the category "Storefront placement" card.
+- **API parity:** API_DOCUMENTATION.md section 2d.
+
+These decisions refine the plan below:
+- **"See all" for best sellers** is `/products?sort=best_selling`. The best-seller period applies to the rail only.
+- **Mega-menu popular filters** are the category's main delivery types plus "In stock". They are not price chips, because a price chip would depend on the display currency.
+- **Brand facet:** it uses `platform` (the gaming platform model) as its URL key, so the existing API parameter keeps working.
+
 Owner request (2026-11-12): customers should be able to see every product and the categories, the top-nav links (Gift Cards, Top-ups, Subscriptions, Platforms) are unclear and must go, the home page data must be controllable with a "See all" on every section, and there must be one product list page with side filters. Follow the pattern of international stores.
 
 ## Research basis

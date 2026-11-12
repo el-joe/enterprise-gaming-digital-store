@@ -72,6 +72,37 @@
             },
             "sections": [
                 {
+                    "category": null,
+                    "items": [
+                        {
+                            "data": {
+                                "banner": null,
+                                "link": {
+                                    "type": "category",
+                                    "url": "https://boxcards.test/c/gift-cards",
+                                    "value": "gift-cards"
+                                },
+                                "name": "Gift Cards",
+                                "product_count": 1,
+                                "slug": "gift-cards"
+                            },
+                            "type": "category"
+                        }
+                    ],
+                    "key": "category_tiles",
+                    "rule": null,
+                    "see_all": {
+                        "type": "listing",
+                        "url": "https://boxcards.test/products",
+                        "value": ""
+                    },
+                    "source": "auto",
+                    "subtitle": null,
+                    "title": "Shop by category",
+                    "type": "category_tiles"
+                },
+                {
+                    "category": null,
                     "items": [
                         {
                             "data": {
@@ -80,6 +111,14 @@
                                     "slug": "gift-cards"
                                 },
                                 "delivery_type": "instant_code",
+                                "face_value": {
+                                    "currency": "USD",
+                                    "is_custom": false,
+                                    "is_range": true,
+                                    "label": "10–25 USD",
+                                    "max": "25",
+                                    "min": "10"
+                                },
                                 "image": {
                                     "alt": "Orbit Card front",
                                     "formats": {
@@ -98,6 +137,16 @@
                                 },
                                 "name": "Orbit Card",
                                 "platform": {
+                                    "logo": {
+                                        "alt": "Orbit",
+                                        "formats": {
+                                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                                        },
+                                        "height": 600,
+                                        "path": "media/2026/11/orbit-logo.webp",
+                                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                                        "width": 1200
+                                    },
                                     "name": "Orbit",
                                     "slug": "orbit"
                                 },
@@ -108,6 +157,11 @@
                                 },
                                 "price_may_vary": false,
                                 "public_id": "01jf0000000000000000000001",
+                                "quick_add": {
+                                    "requires_fields": true,
+                                    "variant_count": 2,
+                                    "variant_id": null
+                                },
                                 "rating_avg": "4.50",
                                 "short_description": "Top up Orbit",
                                 "slug": "orbit-card"
@@ -119,7 +173,7 @@
                                 "banner": null,
                                 "link": {
                                     "type": "platform",
-                                    "url": "https://boxcards.test/gaming/orbit",
+                                    "url": "https://boxcards.test/b/orbit",
                                     "value": "orbit"
                                 },
                                 "logo": {
@@ -133,6 +187,7 @@
                                     "width": 1200
                                 },
                                 "name": "Orbit",
+                                "product_count": 1,
                                 "slug": "orbit"
                             },
                             "type": "platform"
@@ -142,10 +197,11 @@
                                 "banner": null,
                                 "link": {
                                     "type": "category",
-                                    "url": "https://boxcards.test/gift-cards",
+                                    "url": "https://boxcards.test/c/gift-cards",
                                     "value": "gift-cards"
                                 },
                                 "name": "Gift Cards",
+                                "product_count": 1,
                                 "slug": "gift-cards"
                             },
                             "type": "category"
@@ -161,11 +217,18 @@
                     ],
                     "key": "special_offers",
                     "rule": null,
+                    "see_all": {
+                        "type": "listing",
+                        "url": "https://boxcards.test/products",
+                        "value": ""
+                    },
                     "source": "manual",
                     "subtitle": "This week",
-                    "title": "Offers"
+                    "title": "Offers",
+                    "type": "product_rail"
                 },
                 {
+                    "category": null,
                     "items": [
                         {
                             "data": {
@@ -174,6 +237,14 @@
                                     "slug": "gift-cards"
                                 },
                                 "delivery_type": "instant_code",
+                                "face_value": {
+                                    "currency": "USD",
+                                    "is_custom": false,
+                                    "is_range": true,
+                                    "label": "10–25 USD",
+                                    "max": "25",
+                                    "min": "10"
+                                },
                                 "image": {
                                     "alt": "Orbit Card front",
                                     "formats": {
@@ -192,6 +263,16 @@
                                 },
                                 "name": "Orbit Card",
                                 "platform": {
+                                    "logo": {
+                                        "alt": "Orbit",
+                                        "formats": {
+                                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                                        },
+                                        "height": 600,
+                                        "path": "media/2026/11/orbit-logo.webp",
+                                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                                        "width": 1200
+                                    },
                                     "name": "Orbit",
                                     "slug": "orbit"
                                 },
@@ -202,6 +283,11 @@
                                 },
                                 "price_may_vary": false,
                                 "public_id": "01jf0000000000000000000001",
+                                "quick_add": {
+                                    "requires_fields": true,
+                                    "variant_count": 2,
+                                    "variant_id": null
+                                },
                                 "rating_avg": "4.50",
                                 "short_description": "Top up Orbit",
                                 "slug": "orbit-card"
@@ -215,6 +301,7 @@
                                     "slug": "top-ups"
                                 },
                                 "delivery_type": "instant_code",
+                                "face_value": null,
                                 "image": null,
                                 "is_featured": false,
                                 "link": {
@@ -224,6 +311,7 @@
                                 },
                                 "name": "Nova Points",
                                 "platform": {
+                                    "logo": null,
                                     "name": "Nova",
                                     "slug": "nova"
                                 },
@@ -234,6 +322,11 @@
                                 },
                                 "price_may_vary": false,
                                 "public_id": "01jf0000000000000000000002",
+                                "quick_add": {
+                                    "requires_fields": false,
+                                    "variant_count": 1,
+                                    "variant_id": "01jf0000000000000000000003"
+                                },
                                 "rating_avg": "0.00",
                                 "short_description": "Points for Nova",
                                 "slug": "nova-points"
@@ -243,11 +336,18 @@
                     ],
                     "key": "best_sellers",
                     "rule": "best_sellers",
+                    "see_all": {
+                        "type": "listing",
+                        "url": "https://boxcards.test/products?sort=best_selling",
+                        "value": "sort=best_selling"
+                    },
                     "source": "auto",
                     "subtitle": null,
-                    "title": "Best sellers"
+                    "title": "Best sellers",
+                    "type": "product_rail"
                 },
                 {
+                    "category": null,
                     "items": [
                         {
                             "data": {
@@ -273,17 +373,102 @@
                     ],
                     "key": "customer_reviews",
                     "rule": "reviews",
+                    "see_all": null,
                     "source": "auto",
                     "subtitle": null,
-                    "title": "Reviews"
+                    "title": "Reviews",
+                    "type": "reviews"
                 },
                 {
+                    "category": null,
                     "items": [],
                     "key": "trust_indicators",
                     "rule": null,
+                    "see_all": null,
                     "source": "manual",
                     "subtitle": null,
-                    "title": "Why us"
+                    "title": "Why us",
+                    "type": "trust"
+                },
+                {
+                    "category": "gift-cards",
+                    "items": [
+                        {
+                            "data": {
+                                "category": {
+                                    "name": "Gift Cards",
+                                    "slug": "gift-cards"
+                                },
+                                "delivery_type": "instant_code",
+                                "face_value": {
+                                    "currency": "USD",
+                                    "is_custom": false,
+                                    "is_range": true,
+                                    "label": "10–25 USD",
+                                    "max": "25",
+                                    "min": "10"
+                                },
+                                "image": {
+                                    "alt": "Orbit Card front",
+                                    "formats": {
+                                        "webp": "https://media.boxcards.test/media/2026/11/orbit-card.webp"
+                                    },
+                                    "height": 600,
+                                    "path": "media/2026/11/orbit-card.webp",
+                                    "url": "https://media.boxcards.test/media/2026/11/orbit-card.webp",
+                                    "width": 1200
+                                },
+                                "is_featured": true,
+                                "link": {
+                                    "type": "product",
+                                    "url": "https://boxcards.test/products/orbit-card",
+                                    "value": "orbit-card"
+                                },
+                                "name": "Orbit Card",
+                                "platform": {
+                                    "logo": {
+                                        "alt": "Orbit",
+                                        "formats": {
+                                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                                        },
+                                        "height": 600,
+                                        "path": "media/2026/11/orbit-logo.webp",
+                                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                                        "width": 1200
+                                    },
+                                    "name": "Orbit",
+                                    "slug": "orbit"
+                                },
+                                "price_from": {
+                                    "amount": "10.00",
+                                    "currency": "USD",
+                                    "formatted": "USD10.00"
+                                },
+                                "price_may_vary": false,
+                                "public_id": "01jf0000000000000000000001",
+                                "quick_add": {
+                                    "requires_fields": true,
+                                    "variant_count": 2,
+                                    "variant_id": null
+                                },
+                                "rating_avg": "4.50",
+                                "short_description": "Top up Orbit",
+                                "slug": "orbit-card"
+                            },
+                            "type": "product"
+                        }
+                    ],
+                    "key": "category_gift-cards",
+                    "rule": "category",
+                    "see_all": {
+                        "type": "category",
+                        "url": "https://boxcards.test/c/gift-cards",
+                        "value": "gift-cards"
+                    },
+                    "source": "category",
+                    "subtitle": null,
+                    "title": "Gift Cards",
+                    "type": "product_rail"
                 }
             ]
         },

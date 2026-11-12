@@ -3,6 +3,8 @@
 namespace App\Http\Support\AdminScreens\Screens;
 
 use App\Domains\Catalog\Models\Category;
+use App\Domains\Catalog\Services\StorefrontNavigationService;
+use App\Domains\Cms\Models\HomepageSection;
 use App\Domains\Suppliers\Services\SupplierImageCandidates;
 use App\Http\Support\AdminScreens\Field;
 use App\Http\Support\AdminScreens\Options;
@@ -94,6 +96,45 @@ class CategoryScreen extends ResourceScreen
                 Field::number('sort_order', $this->l('sort_order'))->default(0),
                 Field::toggle('is_active', $this->l('is_active'))->default(true),
             ],
+            // Storefront v2 (Figma 117:11830): header row and home page rail.
+            'placement' => [
+                Field::toggle('featured_in_header', $this->l('featured_in_header'))->default(false)->wide(),
+                Field::number('header_order', $this->l('header_order'))->default(0)->wide()->help((string) __('admin.storefront.header_help', ['used' => $this->featuredCount(), 'max' => StorefrontNavigationService::MAX_FEATURED])),
+                Field::toggle('show_on_home', $this->l('show_on_home'))->default(false)->wide(),
+                Field::number('home_position', $this->l('home_position'))->default(0)->help((string) __('admin.storefront.home_position_help')),
+                Field::number('home_limit', $this->l('home_limit'))->default(12)->help((string) __('admin.storefront.home_limit_help')),
+            ],
         ];
+    }
+
+    public function asideGroups(): array
+    {
+        return ['placement'];
+    }
+
+    public function asideNote(): ?string
+    {
+        return 'admin.catalog.category-placement';
+    }
+
+    /**
+     * The computed "See all" path and the home order: managed sections, then the category rails.
+     */
+    public function asideData(?Model $record): array
+    {
+        $managed = HomepageSection::query()->where('is_active', true)->count();
+        $rails = Category::query()->where('is_active', true)->where('show_on_home', true)->orderBy('home_position')->orderBy('id')->get(['id', 'name']);
+
+        return [
+            'see_all' => $record === null ? '/c/{slug}' : '/c/'.$record->getAttribute('slug'),
+            'managed' => $managed,
+            'rails' => $rails->map(static fn (Category $rail): array => ['id' => $rail->id, 'name' => $rail->name])->all(),
+            'current' => $record?->getKey(),
+        ];
+    }
+
+    private function featuredCount(): int
+    {
+        return Category::query()->where('is_active', true)->where('featured_in_header', true)->count();
     }
 }

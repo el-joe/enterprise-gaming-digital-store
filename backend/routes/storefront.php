@@ -19,10 +19,13 @@ Route::prefix('storefront')->name('storefront.')->group(function (): void {
         Route::get('/home', [HomeController::class, 'show'])->middleware('cache.public:60,currency')->name('home');
         Route::get('/platforms', [TaxonomyController::class, 'platforms'])->middleware('cache.public:300')->name('platforms');
         Route::get('/categories', [TaxonomyController::class, 'categories'])->middleware('cache.public:300')->name('categories');
+        Route::get('/navigation', [TaxonomyController::class, 'navigation'])->middleware('cache.public:300')->name('navigation');
         Route::get('/countries', [CountryController::class, 'index'])->middleware('cache.public:3600')->name('countries');
         Route::get('/catalog/products', [CatalogController::class, 'products'])->name('catalog.products');
+        Route::get('/catalog/facets', [CatalogController::class, 'facets'])->name('catalog.facets');
         Route::get('/catalog/products/{slug}', [CatalogController::class, 'show'])->middleware('cache.public:60,currency')->name('catalog.show');
         Route::get('/catalog/products/{product:slug}/variants', [CatalogController::class, 'variants'])->name('catalog.variants');
+        Route::get('/catalog/products/{product:slug}/quick-add', [CatalogController::class, 'quickAdd'])->name('catalog.quick-add');
         Route::get('/catalog/products/{product:slug}/reviews', [ProductReviewController::class, 'index'])->name('catalog.reviews');
         Route::get('/currencies', [CatalogController::class, 'currencies'])->name('currencies');
     });

@@ -192,7 +192,7 @@ it('saves and validates the analytics settings, and prints the Search Console ve
         'search_console_verification' => 'AbCdEf0123456789xyz', 'faq_schema' => false,
     ])->assertOk();
 
-    $this->get('/gaming')->assertOk()->assertSee('<meta name="google-site-verification" content="AbCdEf0123456789xyz">', false);
+    $this->get('/products')->assertOk()->assertSee('<meta name="google-site-verification" content="AbCdEf0123456789xyz">', false);
 });
 
 /**

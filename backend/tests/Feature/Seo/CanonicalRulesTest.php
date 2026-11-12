@@ -51,17 +51,17 @@ it('canonicalizes product query strings to the clean product URL with matching h
 it('canonicalizes one filter or a sort to the unfiltered category and keeps it indexable', function (string $query): void {
     storefrontProduct('Steam Wallet $20', '20');
 
-    $tags = headTags($this->get('/gift-cards?'.$query)->assertOk());
+    $tags = headTags($this->get('/c/gift-cards?'.$query)->assertOk());
 
-    expect($tags['canonical'])->toBe(url('/gift-cards'))
+    expect($tags['canonical'])->toBe(url('/c/gift-cards'))
         ->and($tags['robots'])->toBe('index,follow')
-        ->and($tags['hreflang'])->toBe(['en' => url('/gift-cards'), 'ar' => url('/ar/gift-cards'), 'x-default' => url('/gift-cards')]);
+        ->and($tags['hreflang'])->toBe(['en' => url('/c/gift-cards'), 'ar' => url('/ar/c/gift-cards'), 'x-default' => url('/c/gift-cards')]);
 })->with(['sort=price_desc', 'platform=steam', 'delivery_type=instant_code']);
 
 it('marks two or more filters noindex,follow without canonical or hreflang', function (): void {
     storefrontProduct('Steam Wallet $20', '20');
 
-    $tags = headTags($this->get('/gift-cards?platform=steam&sort=price_desc')->assertOk());
+    $tags = headTags($this->get('/c/gift-cards?platform=steam&sort=price_desc')->assertOk());
 
     expect($tags)->toBe(['canonical' => null, 'robots' => 'noindex,follow', 'hreflang' => []]);
 });
@@ -70,21 +70,21 @@ it('keeps paginated listings self-canonical with the page in hreflang and a "Pag
     storefrontProduct('Steam Wallet $20', '20');
     storefrontProduct('Steam Wallet $50', '50');
 
-    $response = $this->get('/gift-cards?page=2&utm_campaign=x')->assertOk()->assertSee('<title>Gift cards — Page 2 |', false);
+    $response = $this->get('/c/gift-cards?page=2&utm_campaign=x')->assertOk()->assertSee('<title>Gift cards — Page 2 |', false);
 
     expect(headTags($response))->toBe([
-        'canonical' => url('/gift-cards').'?page=2',
+        'canonical' => url('/c/gift-cards').'?page=2',
         'robots' => 'index,follow',
-        'hreflang' => ['en' => url('/gift-cards').'?page=2', 'ar' => url('/ar/gift-cards').'?page=2', 'x-default' => url('/gift-cards').'?page=2'],
+        'hreflang' => ['en' => url('/c/gift-cards').'?page=2', 'ar' => url('/ar/c/gift-cards').'?page=2', 'x-default' => url('/c/gift-cards').'?page=2'],
     ]);
 
-    expect(headTags($this->get('/gaming/steam?page=2')->assertOk())['canonical'])->toBe(url('/gaming/steam').'?page=2');
+    expect(headTags($this->get('/b/steam?page=2')->assertOk())['canonical'])->toBe(url('/b/steam').'?page=2');
 });
 
 it('marks an empty (thin) listing noindex', function (): void {
     storefrontProduct('Steam Wallet $20', '20');
 
-    expect(headTags($this->get('/gift-cards?page=9')->assertOk())['robots'])->toBe('noindex,follow');
+    expect(headTags($this->get('/c/gift-cards?page=9')->assertOk())['robots'])->toBe('noindex,follow');
 });
 
 it('keeps search noindex,follow with no canonical or hreflang', function (): void {
@@ -112,9 +112,9 @@ it('applies an admin robots value, canonical override and title, then templates'
     SeoTemplate::factory()->create(['page_type' => 'product', 'locale' => 'ar', 'title_template' => '{name} من {site}', 'description_template' => 'اشتر {name} من {site}']);
     $this->get('/ar/products/'.$product->slug)->assertOk()->assertSee('<title>Steam Wallet $20 من '.config('brand.name'), false);
 
-    SeoMetadata::factory()->create(['seoable_type' => 'category', 'seoable_id' => $product->primary_category_id, 'locale' => 'en', 'canonical_override' => 'https://boxcards.shop/gift-cards', 'robots' => null, 'title' => null]);
-    $tags = headTags($this->get('/gift-cards')->assertOk());
-    expect($tags['canonical'])->toBe('https://boxcards.shop/gift-cards')
+    SeoMetadata::factory()->create(['seoable_type' => 'category', 'seoable_id' => $product->primary_category_id, 'locale' => 'en', 'canonical_override' => 'https://boxcards.shop/c/gift-cards', 'robots' => null, 'title' => null]);
+    $tags = headTags($this->get('/c/gift-cards')->assertOk());
+    expect($tags['canonical'])->toBe('https://boxcards.shop/c/gift-cards')
         ->and($tags['hreflang'])->toBe([]);
 });
 
@@ -135,6 +135,7 @@ it('sends upper-case storefront paths to their lower-case URL with a 301', funct
     $product = storefrontProduct('Steam Wallet $20', '20');
 
     $this->get('/Gift-Cards')->assertMovedPermanently()->assertRedirect(url('/gift-cards'));
+    $this->get('/C/Gift-Cards')->assertMovedPermanently()->assertRedirect(url('/c/gift-cards'));
     $this->get('/PRODUCTS/'.strtoupper($product->slug))->assertMovedPermanently()->assertRedirect(url('/products/'.$product->slug));
     $this->get('/AR/Gaming')->assertMovedPermanently()->assertRedirect(url('/ar/gaming'));
 });

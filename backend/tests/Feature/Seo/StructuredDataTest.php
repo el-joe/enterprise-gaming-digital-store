@@ -22,7 +22,7 @@ beforeEach(function (): void {
 });
 
 it('describes the organization and the site search on every page, per language', function (): void {
-    $graph = jsonLdGraph($this->get('/gaming')->assertOk());
+    $graph = jsonLdGraph($this->get('/products')->assertOk());
 
     $organization = jsonLdNode($graph, 'Organization');
     expect($organization)->toMatchArray(['name' => config('brand.name'), 'url' => url('/')])
@@ -35,7 +35,7 @@ it('describes the organization and the site search on every page, per language',
         ->and($website['potentialAction']['target']['urlTemplate'])->toBe(url('/search').'?q={search_term_string}')
         ->and($website['potentialAction']['query-input'])->toBe('required name=search_term_string');
 
-    $arabic = jsonLdNode(jsonLdGraph($this->get('/ar/gaming')->assertOk()), 'WebSite');
+    $arabic = jsonLdNode(jsonLdGraph($this->get('/ar/products')->assertOk()), 'WebSite');
     expect($arabic['url'])->toBe(url('/ar'))
         ->and($arabic['inLanguage'])->toBe('ar')
         ->and($arabic['potentialAction']['target']['urlTemplate'])->toBe(url('/ar/search').'?q={search_term_string}');
@@ -62,7 +62,7 @@ it('marks up a product with one priced variant as a Product with an Offer at the
     $breadcrumbs = jsonLdNode($graph, 'BreadcrumbList');
     expect(array_column($breadcrumbs['itemListElement'], 'position'))->toBe([1, 2, 3])
         ->and($breadcrumbs['itemListElement'][0]['item'])->toBe(url('/'))
-        ->and($breadcrumbs['itemListElement'][1]['item'])->toBe(url('/gift-cards'))
+        ->and($breadcrumbs['itemListElement'][1]['item'])->toBe(url('/c/gift-cards'))
         ->and($breadcrumbs['itemListElement'][2])->toMatchArray(['name' => 'Steam Wallet $20', 'item' => url('/products/'.$product->slug)]);
 });
 
@@ -121,15 +121,15 @@ it('never lets catalog text close the JSON-LD script', function (): void {
 it('marks up a category as a CollectionPage listing its products, with breadcrumbs', function (): void {
     $product = storefrontProduct('Steam Wallet $20', '20');
 
-    $graph = jsonLdGraph($this->get('/gift-cards')->assertOk());
+    $graph = jsonLdGraph($this->get('/c/gift-cards')->assertOk());
     $collection = jsonLdNode($graph, 'CollectionPage');
 
-    expect($collection['url'])->toBe(url('/gift-cards'))
+    expect($collection['url'])->toBe(url('/c/gift-cards'))
         ->and($collection['mainEntity']['@type'])->toBe('ItemList')
         ->and($collection['mainEntity']['itemListElement'][0])->toMatchArray(['position' => 1, 'name' => 'Steam Wallet $20', 'url' => url('/products/'.$product->slug)])
         ->and(jsonLdNode($graph, 'BreadcrumbList')['itemListElement'])->toHaveCount(2);
 
-    expect(jsonLdNode(jsonLdGraph($this->get('/gaming/steam')->assertOk()), 'CollectionPage')['url'])->toBe(url('/gaming/steam'));
+    expect(jsonLdNode(jsonLdGraph($this->get('/b/steam')->assertOk()), 'CollectionPage')['url'])->toBe(url('/b/steam'));
 });
 
 it('marks up a blog post as a BlogPosting', function (): void {

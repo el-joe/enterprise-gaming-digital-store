@@ -22,6 +22,14 @@
                 "delivery_time_minutes": 5,
                 "delivery_type": "instant_code",
                 "description": "<p>Load your <strong>wallet</strong>.</p>",
+                "face_value": {
+                    "currency": "USD",
+                    "is_custom": false,
+                    "is_range": true,
+                    "label": "10–25 USD",
+                    "max": "25",
+                    "min": "10"
+                },
                 "image": {
                     "alt": "Orbit Card front",
                     "formats": {
@@ -49,6 +57,16 @@
                 "max_quantity_per_order": 10,
                 "name": "Orbit Card",
                 "platform": {
+                    "logo": {
+                        "alt": "Orbit",
+                        "formats": {
+                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                        },
+                        "height": 600,
+                        "path": "media/2026/11/orbit-logo.webp",
+                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                        "width": 1200
+                    },
                     "name": "Orbit",
                     "slug": "orbit"
                 },
@@ -59,6 +77,11 @@
                 },
                 "price_may_vary": false,
                 "public_id": "01jf0000000000000000000001",
+                "quick_add": {
+                    "requires_fields": true,
+                    "variant_count": 2,
+                    "variant_id": null
+                },
                 "rating": {
                     "average": "4.50",
                     "count": 2

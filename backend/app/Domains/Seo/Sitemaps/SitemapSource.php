@@ -42,7 +42,7 @@ class SitemapSource
         return match ($type) {
             'static' => $this->staticPages(),
             'categories' => $this->taxonomyPages($this->taxonomy->categories(), 'storefront.category'),
-            'platforms' => $this->taxonomyPages($this->taxonomy->platforms(), 'storefront.platforms.show'),
+            'platforms' => $this->taxonomyPages($this->taxonomy->platforms(), 'storefront.brand'),
             'products' => $this->productPages(),
             'pages' => $this->contentPages(),
             'blog' => $this->blogPages(),
@@ -58,7 +58,7 @@ class SitemapSource
         $latestPost = $this->posts->visibleQuery()->max('updated_at');
 
         yield new SitemapEntry('storefront.home', lastModified: $latestProduct === null ? null : now()->parse($latestProduct));
-        yield new SitemapEntry('storefront.platforms.index', lastModified: $latestProduct === null ? null : now()->parse($latestProduct));
+        yield new SitemapEntry('storefront.products.index', lastModified: $latestProduct === null ? null : now()->parse($latestProduct));
 
         if ($latestPost !== null) {
             yield new SitemapEntry('storefront.blog.index', lastModified: now()->parse($latestPost));

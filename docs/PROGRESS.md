@@ -2240,3 +2240,56 @@ Admin → Catalog → Supplier catalog (`/admin/catalog/supplier-catalog`, `cata
 - **Storefront and API:** `platform.logo` (null without one) on product cards and details (web and app; API fixtures regenerated, additive), the logo in the product page platform chip and on the brand page header; platform tiles already used the logo. The dial art stays without an image.
 - **Tests:** `tests/Feature/Suppliers/SupplierImageCandidateTest.php` (13), `tests/Feature/Catalog/AdminImageColumnTest.php` (6). `tests/Feature/{Suppliers,Catalog,Storefront,Cms}` 437 passed; Schema, Admin, MobileContract and Mobile discovery pass except `CatalogDiscoveryTest` "same host" link mapping, which depends on the local `APP_URL` and is unrelated. Pint and `npm run build` passed.
 - **Open:** run the migration, then `php artisan suppliers:sync-images` to backfill brand logos (needs the `sync` worker).
+
+## Storefront v2: categories menu, one listing with side filters, managed home (2026-11-12)
+
+Spec: `docs/STOREFRONT_IA.md`; Figma `JkUUSR3WGBYC9ewy2qRFQO`, page "Storefront v2".
+
+### Routes
+- **Listing pages** (EN and the `/ar` twins): `/products`, `/c/{slug}` (no Category facet) and `/b/{slug}` (no Category or Brand facet).
+- **Old URLs:** `/gaming`, `/gaming/{slug}` and `/{category}` 301 to `/products`, `/b/{slug}` and `/c/{slug}`, keeping the query string. An unknown slug stays 404. A changed brand or category slug records its redirect on `/b/…` or `/c/…`.
+- **API:** `GET /api/v1[/mobile]/storefront/catalog/facets`, `/navigation` and `/catalog/products/{slug}/quick-add` (API_DOCUMENTATION.md section 2d).
+
+### Header, footer and listing
+- **Header:** the v1 links are gone. It now has the "All categories" mega menu (categories with counts, the top 8 brands, "See all in…", popular filters; keyboard: arrows, Esc, Home and End), a featured-categories row (`featured_in_header`, by `header_order`, at most 8) and the mobile categories sheet (accordion, filter box, language and currency, focus trap). Targets are 48 px on mobile.
+- **Footer:** all products, the categories and the top brands.
+- **Listing:** a 280 px sidebar of accordions, each with a selected-count badge and a count per option. It holds brand search, "Show all", a price slider in the display currency and an in-stock switch. Above the grid sit the applied chips and "Clear all", the result count and Sort (best selling, newest, price both ways). The grid is 4 columns (2 on mobile), with numbered crawlable pagination. The empty state offers "Clear all filters" and "Browse all categories"; a skeleton grid shows while the next page loads. Mobile has a sticky Filters / Sort bar and a bottom sheet whose "Apply (N results)" counts live from the facets API.
+- **URL and SEO:** filters live in the URL as comma lists, and the GET form also works without JavaScript. SEO follows SEO_STRATEGY.md section 2: one filter or a sort canonicalizes to the plain page; two or more, or an empty page, are `noindex,follow`.
+
+### Backend
+- **Listing and facets:** `ProductListingFilter` takes several values per facet and gains `inStock`, `onSale` and `salesPeriodDays`. `StorefrontFacetService` runs grouped counts with the other facets applied (cached 60 s per filter hash). `StorefrontNavigationService` is cached 5 min per language and forgotten when a category or brand is saved. `ListingState` builds the URLs, chips and SEO count.
+- **Categories:** migration `2026_11_20_010001` adds `featured_in_header`, `header_order`, `show_on_home`, `home_position` and `home_limit` (default 12, 4–24). The admin category edit page gets a "Storefront placement" card (side column, part of the one form, see-all and home order preview). The fields are validated and audited through `CategoryService`.
+- **Home:**
+  - Data migration `2026_11_20_010002` runs only on a database that already has sections. It adds `category_tiles`, gives `hero` and `featured_platforms` a `settings.type`, and orders the sections hero, category tiles, brand logos, best sellers, new arrivals, then the rest.
+  - `HomepageSectionSeeder` follows the same order.
+  - `HomepageSectionType`, plus the new rules `on_sale`, `category` and `brand` and `settings.period` for best sellers (units paid in 7, 30 or 90 days).
+  - Tiles and logos without manual items fill themselves.
+  - One product rail per category with "Show on home page" follows the managed sections.
+  - `HomeSeeAllResolver` computes "See all" for every section.
+- **Admin → Marketing → Homepage sections** (Figma 116:11200 and drawer 116:11898):
+  - an ordered list you can drag (pointer events, no package) or move with keyboard up and down buttons;
+  - type, EN and AR title, rule, read-only "See all" and visibility for each section;
+  - a drawer for type, titles, rule, period, category or brand, item limit 4–24 and visibility;
+  - the category rails, read-only, with "Edit on category".
+  - Writes go through the existing JSON API. On create, the key and position are generated, and `title_ar` is saved to `content_translations`. Everything is audited and needs `content.homepage`.
+
+### Owner additions
+- **Card face value:** the card shows the face value in its own currency (`FaceValueFormatter`: `$20`, `€25–100`, `From €10`, custom min–max) and the selling price in the display currency as secondary text. The product page, bag and checkout keep the selling price, with the face value as secondary text.
+- **Card bag button:** every card's bag button works. One purchasable variant with no required delivery field is added at once. Otherwise a modal `<dialog>` lists every variant with face value, region, price and availability (unavailable ones disabled), plus quantity and delivery fields with inline 422 errors. The header count follows the cart in each response (`resources/js/lib/bag.js`).
+- **Images:** one product-image component and one priority (`ProductImages`): primary product image (a staff image first, otherwise the active supplier image), then brand logo, then the generated art. It is used on cards, the chooser, search suggestions, bag lines, checkout, orders, codes and the wishlist, and is in the line JSON. Order emails have no product rows.
+- **Supplier image fix:** a hand-made supplier mapping now attaches an already-downloaded supplier image at once (never over a staff image). A late download still attaches to every mapped product through `SupplierImageService::refresh` and `suppliers:sync-images`.
+
+### Tests
+- **New:** `tests/Feature/Storefront/{StorefrontV2ListingTest,StorefrontV2NavigationTest,StorefrontV2HomeTest,CardAddToBagTest,ProductImagesTest}.php`, `tests/Feature/Cms/HomepageSectionsAdminTest.php` and `tests/Feature/Catalog/{CategoryPlacementTest,StorefrontFacetsApiTest}.php`.
+- **Updated to the v2 URLs**, with the same assertions: StorefrontPagesTest, the Seo tests, CatalogDiscoveryTest and AdminResourceScreensTest (custom list page).
+- **Results:**
+  - `tests/Feature/{Storefront,Seo,Catalog,Cms,Mobile,MobileContract}` all pass, apart from `CatalogDiscoveryTest` "same host", which depends on the local `APP_URL`.
+  - Admin, Suppliers, Account, Orders, Schema and Foundation pass, apart from two tests that flag the uncommitted `env('APP_URL')` in `config/app.php`.
+  - Contract fixtures regenerated and synced to the app.
+  - Pint and `npm run build` passed.
+  - Headless Chrome at 1440, 768 and 375, EN and AR: no console errors, no CSP violations, no horizontal overflow.
+
+### Open
+- Run both migrations, then `php artisan suppliers:sync-images`.
+- The Flutter app still has to adopt the facets, navigation, quick-add and see-all fields.
+- The home hero keeps the existing carousel (owner decision 8) rather than the Figma split hero.

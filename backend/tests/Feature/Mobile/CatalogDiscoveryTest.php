@@ -448,7 +448,7 @@ describe('home', function (): void {
             ->assertJsonPath('data.sections.1.items.0.data.slug', 'visible')
             ->assertJsonPath('data.sections.1.items.0.data.link', ['type' => 'product', 'value' => 'visible', 'url' => rtrim((string) config('app.url'), '/').'/products/visible'])
             ->assertJsonPath('data.sections.1.items.1.data.link.type', 'platform')
-            ->assertJsonPath('data.sections.1.items.2.data.link', ['type' => 'category', 'value' => 'gift-cards', 'url' => rtrim((string) config('app.url'), '/').'/gift-cards'])
+            ->assertJsonPath('data.sections.1.items.2.data.link', ['type' => 'category', 'value' => 'gift-cards', 'url' => rtrim((string) config('app.url'), '/').'/c/gift-cards'])
             ->assertJsonPath('data.sections.1.items.3.data.question', 'How fast?');
 
         expect($response->headers->get('Cache-Control'))->toContain('public')->toContain('max-age=60');
@@ -526,6 +526,9 @@ describe('home', function (): void {
         'product' => ['/products/orbit-card', ['type' => 'product', 'value' => 'orbit-card']],
         'arabic prefix' => ['/ar/gaming/orbit', ['type' => 'platform', 'value' => 'orbit']],
         'category' => ['/gift-cards', ['type' => 'category', 'value' => 'gift-cards']],
+        'v2 brand' => ['/b/orbit', ['type' => 'platform', 'value' => 'orbit']],
+        'v2 category' => ['/ar/c/gift-cards', ['type' => 'category', 'value' => 'gift-cards']],
+        'v2 listing' => ['/products?sort=newest', ['type' => 'listing', 'value' => 'sort=newest']],
         'search' => ['/search?q=steam+card', ['type' => 'search', 'value' => 'steam card']],
         'reserved path' => ['/blog/news', ['type' => 'url', 'value' => 'APP/blog/news']],
         // app.url is the setting session.app_url (owner decision 11); in tests its config default.

@@ -90,6 +90,52 @@ abstract class ResourceScreen
     }
 
     /**
+     * A custom list page instead of the server-side table, or null (Storefront v2: the
+     * homepage sections page of Figma 116:11200).
+     */
+    public function indexView(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Data of the custom list page, loaded here so the view never queries.
+     *
+     * @return array<string, mixed>
+     */
+    public function indexData(): array
+    {
+        return [];
+    }
+
+    /**
+     * Field groups shown as cards in the side column (still part of the one form), for example
+     * the category "Storefront placement" card (Storefront v2).
+     *
+     * @return list<string>
+     */
+    public function asideGroups(): array
+    {
+        return [];
+    }
+
+    /**
+     * A read-only Blade partial under the side-column groups, with asideData(), or null.
+     */
+    public function asideNote(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function asideData(?Model $record): array
+    {
+        return [];
+    }
+
+    /**
      * An extra Blade partial shown under the form of an existing record, or null.
      */
     public function panel(): ?string
