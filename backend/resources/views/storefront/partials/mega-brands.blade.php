@@ -11,7 +11,7 @@
         @foreach ($brands as $brand)
             <li>
                 <a href="{{ url()->localized('storefront.brand', ['slug' => $brand['slug']]) }}" class="block transition hover:-translate-y-0.5" data-mega-brand>
-                    <x-store.tile :slug="$brand['slug']" :logo="$brand['logo']" :name="$brand['name']" :alt="__('storefront.catalog.logo', ['name' => $brand['name']])" class="h-24 p-3" />
+                    <x-store.tile :slug="$brand['slug']" :logo="$brand['logo']" :name="$brand['name']" :alt="__('storefront.catalog.logo', ['name' => $brand['name']])" class="aspect-[8/5] w-full" />
                 </a>
             </li>
         @endforeach

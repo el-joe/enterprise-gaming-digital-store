@@ -81,24 +81,24 @@
                 </ul>
             @elseif ($type === 'category')
                 <x-store.section-head :title="$title" :href="$viewAll" :action="__('storefront.catalog.see_all')" :id="$headingId" />
-                <ul id="categories" class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 lg:gap-4">
+                <ul id="categories" class="mt-6 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-x-5 lg:gap-y-6">
                     @foreach ($items as $item)
                         @php $node = $item['data']; @endphp
                         <li>
                             <a href="{{ url()->localized('storefront.category', ['slug' => $node['slug']]) }}" class="block h-full transition duration-200 hover:-translate-y-0.5">
-                                <x-store.tile :slug="$node['slug']" :overline="isset($node['product_count']) ? trans_choice('storefront.catalog.products_label', $node['product_count'], ['count' => number_format($node['product_count'])]) : null" :name="$node['name']" :image="$node['banner']" class="h-28 p-3.5" />
+                                <x-store.tile :slug="$node['slug']" :overline="isset($node['product_count']) ? trans_choice('storefront.catalog.products_label', $node['product_count'], ['count' => number_format($node['product_count'])]) : null" :name="$node['name']" :image="$node['banner']" :alt="$node['name']" class="aspect-[16/10] w-full" />
                             </a>
                         </li>
                     @endforeach
                 </ul>
             @elseif ($type === 'platform')
                 <x-store.section-head :title="$title" :href="$viewAll" :action="__('storefront.catalog.see_all')" :id="$headingId" />
-                <ul class="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-8 lg:gap-4">
+                <ul class="mt-6 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-6 lg:gap-x-5 lg:gap-y-6">
                     @foreach ($items as $item)
                         @php $node = $item['data']; @endphp
                         <li>
                             <a href="{{ url()->localized('storefront.brand', ['slug' => $node['slug']]) }}" class="block transition duration-200 hover:-translate-y-0.5">
-                                <x-store.tile :slug="$node['slug']" :logo="$node['logo']" :name="$node['name']" :alt="__('storefront.catalog.logo', ['name' => $node['name']])" class="h-24 p-2.5" />
+                                <x-store.tile :slug="$node['slug']" :logo="$node['logo']" :name="$node['name']" :alt="__('storefront.catalog.logo', ['name' => $node['name']])" class="aspect-[8/5] w-full" />
                             </a>
                         </li>
                     @endforeach

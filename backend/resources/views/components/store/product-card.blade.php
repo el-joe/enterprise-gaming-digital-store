@@ -1,7 +1,7 @@
 {{--
-    Product card (Figma `Product Card`, 6:1065; Storefront v2): key-cut silhouette, the product
-    image (x-store.product-image: product image, then brand logo, then the generated art), product
-    name, delivery meta, the gift card's face value in its own currency (owner request) with the
+    Product card (Figma `Product Card v3`, owner request 2026-11-12): the product image across the
+    top with nothing over it (x-store.product-image: product image, then brand logo, then the
+    default art), then brand · category, product name, delivery meta, the gift card's face value in its own currency (owner request) with the
     selling price in the display currency under it, and a working bag button: one purchasable
     variant is added at once, several open the variant chooser (resources/js/modules/quick-add.js).
 --}}
@@ -17,15 +17,18 @@
 <article {{ $attributes->class(['card group relative flex flex-col overflow-hidden transition duration-200 ease-(--ease-brand) hover:-translate-y-0.5 hover:border-accent-primary/60 hover:shadow-glow-volt']) }} data-product-card>
     <x-store.product-image
         :slug="$product['platform']['slug'] ?? $product['slug']"
-        :overline="$product['category']['name'] ?? null"
-        :label="$product['platform']['name'] ?? null"
         :image="$product['image']"
         :logo="$product['platform']['logo'] ?? null"
         :name="$product['name']"
         :eager="$eager"
-        class="h-32 p-3.5"
+        flush
+        class="aspect-[8/5] w-full border-b border-line-subtle"
     />
-    <div class="flex flex-1 flex-col gap-2 p-3">
+    <div class="flex flex-1 flex-col gap-1.5 p-3">
+        @php $meta = array_filter([$product['platform']['name'] ?? null, $product['category']['name'] ?? null]); @endphp
+        @if ($meta !== [])
+            <p class="truncate text-xs leading-4 font-medium text-content-muted" data-card-meta>{{ implode(' · ', $meta) }}</p>
+        @endif
         <h3 class="line-clamp-2 min-h-12 text-base leading-6 font-semibold">
             <a href="{{ $url }}" class="after:absolute after:inset-0 focus-visible:outline-none">{{ $product['name'] }}</a>
         </h3>

@@ -32,8 +32,8 @@
         <div class="mt-6 grid gap-8 lg:grid-cols-[1fr_480px] lg:gap-x-12">
             {{-- Gallery (first on every width) --}}
             <div class="min-w-0">
-                <x-store.tile :slug="$product['platform']['slug'] ?? $product['slug']" :overline="$product['category']['name']" :name="$product['platform']['name']"
-                    :image="$product['images'][0] ?? null" :alt="$product['name']" large eager class="aspect-[16/9] p-5 md:aspect-[752/340] md:p-6" />
+                <x-store.tile :slug="$product['platform']['slug'] ?? $product['slug']" :image="$product['images'][0] ?? null" :logo="($product['images'][0] ?? null) ? null : ($product['platform']['logo'] ?? null)"
+                    :alt="$product['name']" large eager class="aspect-[16/9] md:aspect-[752/340]" />
 
                 @if (count($product['images']) > 1)
                     <ul class="mt-2.5 grid grid-cols-3 gap-2" aria-label="{{ __('storefront.product.gallery') }}">

@@ -96,6 +96,11 @@ function sheet(header) {
         return;
     }
 
+    // The header's backdrop-filter makes it the containing block of `position: fixed`
+    // descendants, which boxed the full-screen sheet into the 56 px header bar. Living under
+    // <body> lets `fixed inset-0` cover the viewport again.
+    document.body.appendChild(dialog);
+
     const focusable = () => Array.from(dialog.querySelectorAll('a[href], button:not([disabled]), input, select')).filter((element) => element.offsetParent !== null);
 
     const set = (open) => {

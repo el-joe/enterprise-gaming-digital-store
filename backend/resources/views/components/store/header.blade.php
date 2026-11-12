@@ -203,7 +203,7 @@
                                         @foreach (array_slice($category['brands'], 0, 6) as $brand)
                                             <li>
                                                 <a href="{{ url()->localized('storefront.brand', ['slug' => $brand['slug']]) }}" class="block">
-                                                    <x-store.tile :slug="$brand['slug']" :logo="$brand['logo']" :alt="__('storefront.catalog.logo', ['name' => $brand['name']])" class="h-20 p-2" />
+                                                    <x-store.tile :slug="$brand['slug']" :logo="$brand['logo']" :alt="__('storefront.catalog.logo', ['name' => $brand['name']])" class="aspect-[8/5] w-full" />
                                                     <span class="mt-1 block truncate text-center text-xs font-medium">{{ $brand['name'] }}</span>
                                                 </a>
                                             </li>

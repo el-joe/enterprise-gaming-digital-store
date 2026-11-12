@@ -15,7 +15,7 @@
         <x-store.breadcrumbs :items="[__('storefront.nav.home_short') => url()->localized('storefront.home'), __('storefront.catalog.all_products') => url()->localized('storefront.products.index'), $brand['name'] => null]" />
 
         <section class="keycut mt-4 flex flex-col gap-5 border border-line-subtle bg-surface-raised p-5 sm:flex-row sm:items-center md:p-6">
-            <x-store.tile :slug="$brand['slug']" :logo="$brand['logo']" :name="$brand['logo'] ? null : $brand['name']" :alt="__('storefront.catalog.logo', ['name' => $brand['name']])" eager class="size-28 shrink-0 p-3 md:size-32" data-brand-logo />
+            <x-store.tile :slug="$brand['slug']" :logo="$brand['logo']" :alt="__('storefront.catalog.logo', ['name' => $brand['name']])" eager class="aspect-[8/5] w-44 shrink-0 md:w-52" data-brand-logo />
             <div class="flex min-w-0 flex-col gap-2">
                 <p class="eyebrow text-accent-text">{{ __('storefront.catalog.brand_eyebrow') }}</p>
                 <h1 class="font-display text-[32px] leading-[38px] font-bold md:text-[40px] md:leading-[46px]">{{ $brand['name'] }}</h1>
