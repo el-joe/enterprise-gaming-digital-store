@@ -127,6 +127,22 @@ describe('pricing rules', function (): void {
         return ['name' => 'R', 'scope' => 'global', 'kind' => 'markup', 'percent_markup' => '10', ...$overrides];
     }
 
+    it('saves a price range as a dynamic rule and shows it back in the form fields', function (): void {
+        actingAsStaffWith(['pricing.manage', 'pricing.view']);
+
+        $id = $this->postJson('/admin/api/pricing-rules', rulePayload(['percent_markup' => '15', 'price_from' => '10', 'price_to' => '50']))
+            ->assertCreated()->json('data.id');
+        $rule = PricingRule::query()->findOrFail($id);
+
+        expect($rule->kind->value)->toBe('dynamic')
+            ->and($rule->conditions)->toEqualCanonicalizing(['cost_min' => '10', 'cost_max' => '50']);
+
+        $this->postJson('/admin/api/pricing-rules', rulePayload(['price_from' => '50', 'price_to' => '50']))
+            ->assertUnprocessable()->assertJsonValidationErrors('price_to');
+        $this->postJson('/admin/api/pricing-rules', rulePayload(['price_from' => '100']))
+            ->assertCreated()->assertJsonPath('data.conditions', ['cost_min' => '100']);
+    });
+
     it('refuses the allow policy without the override permission', function (): void {
         actingAsStaffWith(['pricing.manage']);
 

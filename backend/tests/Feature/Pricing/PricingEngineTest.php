@@ -331,8 +331,26 @@ describe('step 4: dynamic rules', function (): void {
     })->with([
         'below band' => ['49', '49.490000'],
         'at bottom' => ['50', '60.000000'],
-        'at top' => ['100', '120.000000'],
+        'at top (not included)' => ['100', '101.000000'],
+        'just below top' => ['99.99', '119.988000'],
         'above band' => ['101', '102.010000'],
+    ]);
+
+    // Owner example (2026-11-12): 15% from $10 to $50, 10% from $50 to $100, 7% from $100 up.
+    it('applies price tiers that share boundaries without overlapping', function (string $cost, string $expected): void {
+        $variant = variantCosting($cost);
+        dynamicRule('15', ['cost_min' => '10', 'cost_max' => '50']);
+        dynamicRule('10', ['cost_min' => '50', 'cost_max' => '100']);
+        dynamicRule('7', ['cost_min' => '100']);
+
+        expect(quote($variant)->baseAmount->amount)->toBe($expected);
+    })->with([
+        '$10 → 15%' => ['10', '11.500000'],
+        '$49.99 → 15%' => ['49.99', '57.488500'],
+        '$50 → 10%' => ['50', '55.000000'],
+        '$99.99 → 10%' => ['99.99', '109.989000'],
+        '$100 → 7%' => ['100', '107.000000'],
+        '$250 → 7%' => ['250', '267.500000'],
     ]);
 
     it('fails closed on an unknown condition or none', function (array $conditions): void {

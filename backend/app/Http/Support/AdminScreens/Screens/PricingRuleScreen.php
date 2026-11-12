@@ -71,6 +71,10 @@ class PricingRuleScreen extends ResourceScreen
                 Field::decimal('min_margin_fixed', $this->l('min_margin_fixed'))->nullable()->help(__('admin.help.base_money')),
                 Field::select('below_margin_policy', $this->l('below_margin_policy'), Options::enum('margin_policy', PricingRuleBelowMarginPolicy::cases()))->nullable(),
                 Field::text('override_reason', $this->l('override_reason'))->nullable()->max(1000)->wide()->help(__('admin.help.override_reason')),
+                Field::decimal('price_from', $this->l('price_from'))->nullable()->help(__('admin.help.price_from'))
+                    ->using(static fn (Model $rule): ?string => $rule->conditions['cost_min'] ?? null),
+                Field::decimal('price_to', $this->l('price_to'))->nullable()->help(__('admin.help.price_to'))
+                    ->using(static fn (Model $rule): ?string => $rule->conditions['cost_max'] ?? null),
                 Field::json('conditions', $this->l('conditions'))->nullable()->help(__('admin.help.conditions_json')),
             ],
             'schedule' => [

@@ -22,6 +22,38 @@ class SavePricingRuleRequest extends AdminSaveRequest
     ];
 
     /**
+     * Price range (owner request 2026-11-12): `price_from` (included) and `price_to` (not included)
+     * are product cost in the base currency. They become the `cost_min` / `cost_max` conditions and
+     * make the rule dynamic, so tiers such as 10-50, 50-100 and 100+ never overlap. Empty fields
+     * remove the range; other conditions (availability) are kept.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('price_from') && ! $this->has('price_to')) {
+            return;
+        }
+
+        $conditions = is_array($this->input('conditions')) ? $this->input('conditions') : [];
+        unset($conditions['cost_min'], $conditions['cost_max']);
+
+        foreach (['price_from' => 'cost_min', 'price_to' => 'cost_max'] as $field => $key) {
+            $value = trim((string) $this->input($field, ''));
+
+            if ($value !== '') {
+                $conditions[$key] = $value;
+            }
+        }
+
+        $merge = ['conditions' => $conditions === [] ? null : $conditions];
+
+        if (isset($conditions['cost_min']) || isset($conditions['cost_max'])) {
+            $merge['kind'] = PricingRuleKind::Dynamic->value;
+        }
+
+        $this->merge($merge);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -46,6 +78,14 @@ class SavePricingRuleRequest extends AdminSaveRequest
             'conditions.availability.*' => ['string', Rule::in(['in_stock', 'limited', 'out_of_stock'])],
             'conditions.cost_min' => ['sometimes', DecimalString::money()],
             'conditions.cost_max' => ['sometimes', DecimalString::money()],
+            'price_from' => ['sometimes', 'nullable', DecimalString::money()],
+            'price_to' => ['sometimes', 'nullable', DecimalString::money(), function (string $attribute, mixed $value, Closure $fail): void {
+                $from = trim((string) $this->input('price_from', ''));
+
+                if ($value !== null && $value !== '' && $from !== '' && bccomp((string) $value, $from, 6) !== 1) {
+                    $fail(__('admin.help.price_to_after_from'));
+                }
+            }],
             'priority' => ['sometimes', 'integer'],
             'starts_at' => ['sometimes', 'nullable', 'date'],
             'ends_at' => ['sometimes', 'nullable', 'date', 'after:starts_at'],

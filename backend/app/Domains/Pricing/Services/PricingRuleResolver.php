@@ -105,8 +105,9 @@ class PricingRuleResolver
     }
 
     /**
-     * Supported conditions: `availability` (list), `cost_min` and `cost_max` (decimal strings).
-     * Any other key, or no keys at all, fails closed.
+     * Supported conditions: `availability` (list), `cost_min` (included) and `cost_max` (not
+     * included), decimal strings in the base currency, so price tiers that share a boundary (10-50,
+     * 50-100) never both match. Any other key, or no keys at all, fails closed.
      */
     private function conditionsHold(PricingRule $rule, ProductVariant $variant, ?Money $cost): bool
     {
@@ -120,14 +121,12 @@ class PricingRuleResolver
             return false;
         }
 
-        foreach (['cost_min' => -1, 'cost_max' => 1] as $key => $outside) {
-            if (! isset($conditions[$key])) {
-                continue;
-            }
+        if (isset($conditions['cost_min']) && ($cost === null || bccomp($cost->amount, (string) $conditions['cost_min'], Money::SCALE) === -1)) {
+            return false;
+        }
 
-            if ($cost === null || bccomp($cost->amount, (string) $conditions[$key], Money::SCALE) === $outside) {
-                return false;
-            }
+        if (isset($conditions['cost_max']) && ($cost === null || bccomp($cost->amount, (string) $conditions['cost_max'], Money::SCALE) !== -1)) {
+            return false;
         }
 
         return true;
