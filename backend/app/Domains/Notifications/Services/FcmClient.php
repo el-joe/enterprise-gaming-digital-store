@@ -6,6 +6,7 @@ use App\Domains\Notifications\DTOs\PushDeliveryResult;
 use App\Domains\Notifications\DTOs\PushMessage;
 use App\Domains\Notifications\Enums\PushDeliveryOutcome;
 use App\Domains\Notifications\Exceptions\PushNotConfigured;
+use App\Domains\Settings\Services\SettingsService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -28,6 +29,10 @@ use Throwable;
  * registration token (400 `INVALID_ARGUMENT` about the token) and `SENDER_ID_MISMATCH` (403) mean
  * the token must be deleted; 429, 5xx, 401 and network failures are retried; anything else fails.
  * Tokens, keys and access tokens are never logged.
+ *
+ * The service-account JSON key is the encrypted admin setting `push.fcm_service_account`
+ * (Settings > Push, write-only), decrypted only here; the project id is `push.fcm.project_id`
+ * (admin setting push.fcm_project_id), else the key's own `project_id`.
  */
 class FcmClient
 {
@@ -37,6 +42,12 @@ class FcmClient
 
     private const string DEFAULT_TOKEN_URI = 'https://oauth2.googleapis.com/token';
 
+    public const string SETTINGS_GROUP = 'push';
+
+    public const string SERVICE_ACCOUNT_KEY = 'fcm_service_account';
+
+    public function __construct(private SettingsService $settings) {}
+
     public function send(string $deviceToken, PushMessage $message): PushDeliveryResult
     {
         $credentials = $this->credentials();
@@ -44,7 +55,7 @@ class FcmClient
         try {
             $response = $this->http()
                 ->withToken($this->accessToken($credentials))
-                ->post($this->sendUrl(), $this->payload($deviceToken, $message));
+                ->post($this->sendUrl($credentials), $this->payload($deviceToken, $message));
         } catch (ConnectionException) {
             Log::warning('push.fcm.unreachable', ['type' => $message->type]);
 
@@ -83,7 +94,7 @@ class FcmClient
      * The signed JWT assertion of the service-account flow (RFC 7523): RS256 over
      * `base64url(header).base64url(claims)`.
      *
-     * @param  array{client_email: string, private_key: string, token_uri?: string}  $credentials
+     * @param  array{client_email: string, private_key: string, token_uri?: string, project_id?: string}  $credentials
      *
      * @throws PushNotConfigured
      */
@@ -108,28 +119,36 @@ class FcmClient
     }
 
     /**
-     * The service-account key named by `push.fcm.credentials_path`.
+     * The service-account key stored encrypted in the settings (`push.fcm_service_account`).
      *
-     * @return array{client_email: string, private_key: string, token_uri?: string}
+     * @return array{client_email: string, private_key: string, token_uri?: string, project_id?: string}
      *
      * @throws PushNotConfigured
      */
     public function credentials(): array
     {
-        $path = config('push.fcm.credentials_path');
+        try {
+            $stored = $this->settings->get(self::SETTINGS_GROUP, self::SERVICE_ACCOUNT_KEY);
+        } catch (Throwable) {
+            throw new PushNotConfigured('The FCM service-account key cannot be decrypted.');
+        }
 
-        if (! is_string(config('push.fcm.project_id')) || config('push.fcm.project_id') === '' || ! is_string($path) || $path === '' || ! is_file($path) || ! is_readable($path)) {
-            throw new PushNotConfigured('FCM is enabled but FCM_PROJECT_ID or FCM_CREDENTIALS_PATH is missing or unreadable.');
+        if (! is_string($stored) || $stored === '') {
+            throw new PushNotConfigured('FCM is enabled but no service-account key is stored (Settings > Push).');
         }
 
         try {
-            $json = json_decode((string) file_get_contents($path), true, 16, JSON_THROW_ON_ERROR);
+            $json = json_decode($stored, true, 16, JSON_THROW_ON_ERROR);
         } catch (Throwable) {
-            throw new PushNotConfigured('The FCM service-account file is not valid JSON.');
+            throw new PushNotConfigured('The FCM service-account key is not valid JSON.');
         }
 
         if (! is_array($json) || ! is_string($json['client_email'] ?? null) || ! is_string($json['private_key'] ?? null)) {
-            throw new PushNotConfigured('The FCM service-account file has no client_email or private_key.');
+            throw new PushNotConfigured('The FCM service-account key has no client_email or private_key.');
+        }
+
+        if ($this->projectId($json) === '') {
+            throw new PushNotConfigured('FCM is enabled but no Firebase project id is set (Settings > Push).');
         }
 
         $tokenUri = $json['token_uri'] ?? self::DEFAULT_TOKEN_URI;
@@ -138,11 +157,11 @@ class FcmClient
             throw new PushNotConfigured('The FCM service-account token_uri must be https.');
         }
 
-        return ['client_email' => $json['client_email'], 'private_key' => $json['private_key'], 'token_uri' => $tokenUri];
+        return ['client_email' => $json['client_email'], 'private_key' => $json['private_key'], 'token_uri' => $tokenUri, 'project_id' => $this->projectId($json)];
     }
 
     /**
-     * @param  array{client_email: string, private_key: string, token_uri?: string}  $credentials
+     * @param  array{client_email: string, private_key: string, token_uri?: string, project_id?: string}  $credentials
      *
      * @throws PushNotConfigured
      */
@@ -179,7 +198,7 @@ class FcmClient
     }
 
     /**
-     * @param  array{client_email: string, private_key: string, token_uri?: string}  $credentials
+     * @param  array{client_email: string, private_key: string, token_uri?: string, project_id?: string}  $credentials
      */
     private function result(Response $response, array $credentials): PushDeliveryResult
     {
@@ -230,9 +249,26 @@ class FcmClient
         return is_string($status) ? $status : null;
     }
 
-    private function sendUrl(): string
+    /**
+     * @param  array{project_id?: string}  $credentials
+     */
+    private function sendUrl(array $credentials): string
     {
-        return rtrim((string) config('push.fcm.base_url'), '/').'/projects/'.rawurlencode((string) config('push.fcm.project_id')).'/messages:send';
+        return rtrim((string) config('push.fcm.base_url'), '/').'/projects/'.rawurlencode((string) ($credentials['project_id'] ?? config('push.fcm.project_id'))).'/messages:send';
+    }
+
+    /**
+     * @param  array<string, mixed>  $json
+     */
+    private function projectId(array $json): string
+    {
+        $configured = config('push.fcm.project_id');
+
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+
+        return is_string($json['project_id'] ?? null) ? $json['project_id'] : '';
     }
 
     private function http(): PendingRequest
@@ -243,11 +279,11 @@ class FcmClient
     }
 
     /**
-     * @param  array{client_email: string, private_key: string, token_uri?: string}  $credentials
+     * @param  array{client_email: string, private_key: string, token_uri?: string, project_id?: string}  $credentials
      */
     private static function cacheKey(array $credentials): string
     {
-        return 'push:fcm:access-token:'.hash('sha256', $credentials['client_email'].'|'.config('push.fcm.project_id'));
+        return 'push:fcm:access-token:'.hash('sha256', $credentials['client_email'].'|'.($credentials['project_id'] ?? config('push.fcm.project_id')));
     }
 
     private static function base64Url(string $value): string

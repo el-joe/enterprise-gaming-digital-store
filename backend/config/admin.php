@@ -11,8 +11,9 @@ return [
     /*
     | Theme: "dark" (the approved Figma admin frames, owner decision 2026-11-11) or "light"
     | (the Figma `Admin Light` mode). Views read it through the `data-theme` attribute only.
+    | Admin setting admin.admin_theme, applied by SettingsOverlay; dark is the built-in default.
     */
-    'theme' => env('ADMIN_THEME', 'dark') === 'light' ? 'light' : 'dark',
+    'theme' => 'dark',
 
     /*
     | Sidebar navigation. An item shows only when its `route` exists and the staff member holds

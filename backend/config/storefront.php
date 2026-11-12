@@ -13,10 +13,11 @@ return [
     | the session place-order route refuses guests with 401 `guest_checkout_disabled`.
     | On: guests check out with an email address, as in the original spec. Guest
     | order access (signed link + email one-time code) works either way.
+    | Admin setting checkout.guest_checkout (settings.manage_critical), applied by SettingsOverlay.
     |
     */
 
-    'guest_checkout' => (bool) env('STOREFRONT_GUEST_CHECKOUT', false),
+    'guest_checkout' => false,
 
     /*
     |--------------------------------------------------------------------------

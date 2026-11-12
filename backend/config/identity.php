@@ -20,8 +20,11 @@ return [
     |--------------------------------------------------------------------------
     | Admin idle timeout
     |--------------------------------------------------------------------------
+    |
+    | Admin setting security.admin_idle_minutes (SettingsOverlay); 30 is the built-in default.
+    |
     */
 
-    'admin_idle_minutes' => (int) env('ADMIN_IDLE_MINUTES', 30),
+    'admin_idle_minutes' => 30,
 
 ];

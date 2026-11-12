@@ -9,22 +9,21 @@ return [
     | Off by default. While `enabled` is false every send is a no-op that logs at debug level, so
     | the app's token registration still works and nothing leaves the server.
     |
-    | - `fcm.project_id`: the Firebase project id (Project settings > General).
-    | - `fcm.credentials_path`: absolute path to the service-account JSON key of that project
-    |   (Project settings > Service accounts > Generate new private key), stored OUTSIDE the web
-    |   root and readable only by the PHP user. The key never goes into the repository, the
-    |   environment file or the database; only its path does.
+    | `enabled` and `fcm.project_id` are admin settings (Settings > Push, group `push`, applied over
+    | these defaults by SettingsOverlay). The service-account JSON key (Project settings > Service
+    | accounts > Generate new private key) is pasted or uploaded there as a write-only secret,
+    | stored encrypted with APP_KEY (`push.fcm_service_account`) and read only by FcmClient. It is
+    | never in the repository, the environment file or config.
     |
     | Messages go to the FCM HTTP v1 API with an OAuth2 access token obtained from a JWT signed with
     | the service account's RSA key (openssl, no SDK). The access token is cached encrypted until
     | shortly before it expires.
     |
     */
-    'enabled' => (bool) env('FCM_ENABLED', false),
+    'enabled' => false,
 
     'fcm' => [
-        'project_id' => env('FCM_PROJECT_ID') ?: null,
-        'credentials_path' => env('FCM_CREDENTIALS_PATH') ?: null,
+        'project_id' => null,
         'base_url' => 'https://fcm.googleapis.com/v1',
         'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
         'connect_timeout' => 5,

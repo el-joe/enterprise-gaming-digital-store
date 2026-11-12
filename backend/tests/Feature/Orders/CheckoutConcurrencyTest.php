@@ -51,7 +51,10 @@ afterEach(function (): void {
 function startWorker(array $payload): Process
 {
     $file = test()->payloadDir.'/'.bin2hex(random_bytes(6)).'.json';
-    file_put_contents($file, json_encode(['gateway_id' => test()->gateway->id, ...$payload], JSON_THROW_ON_ERROR));
+    // M12: web guest checkout is off by default (owner decision 4); these races test guest placement,
+    // so the worker sets the storefront.guest_checkout config override (an admin setting since the
+    // move from .env).
+    file_put_contents($file, json_encode(['gateway_id' => test()->gateway->id, 'guest_checkout' => true, ...$payload], JSON_THROW_ON_ERROR));
 
     $process = new Process([PHP_BINARY, base_path('tests/Support/Concurrency/place_order_worker.php'), $file], base_path(), [
         'APP_ENV' => 'testing',
@@ -63,8 +66,6 @@ function startWorker(array $payload): Process
         'QUEUE_CONNECTION' => 'sync',
         'MAIL_MAILER' => 'array',
         'BCRYPT_ROUNDS' => '4',
-        // M12: web guest checkout is off by default (owner decision 4); these races test guest placement.
-        'STOREFRONT_GUEST_CHECKOUT' => 'true',
     ], null, 60);
     $process->start();
 

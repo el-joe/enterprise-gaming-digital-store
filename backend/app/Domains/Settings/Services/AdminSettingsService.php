@@ -5,7 +5,7 @@ namespace App\Domains\Settings\Services;
 use App\Domains\Identity\Models\User;
 use App\Domains\Settings\Enums\AppConfigSetting;
 use App\Domains\Settings\Enums\SettingType;
-use App\Domains\Settings\Models\Setting;
+use App\Domains\Settings\Rules\SettingValueFormat;
 use App\Domains\Shared\Exceptions\ApplicationException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -17,10 +17,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * only by holders of the group's permission. Secrets are write-only: this service never returns
  * a secret value, only whether one is stored. The mobile group edits the public app config
  * (`AppConfigSetting`, M-A4) with that enum's own parsing.
+ *
+ * Fields and secrets with `config` replaced `.env` keys: their default is the config file's
+ * built-in value (SettingsOverlay::defaultFor), their `format` adds a SettingValueFormat rule,
+ * and a save reaches running code through the overlay.
  */
 class AdminSettingsService
 {
-    public function __construct(private SettingsService $settings) {}
+    public function __construct(private SettingsService $settings, private SettingsOverlay $overlay) {}
 
     /**
      * @return list<string>
@@ -34,7 +38,7 @@ class AdminSettingsService
      * Everything a group's screen shows: fields with current values, secret states and
      * read-only values. Never a secret value.
      *
-     * @return array{key: string, permission: string, applied: bool, fields: array<string, array<string, mixed>>, secrets: array<string, bool>, readonly: array<string, string>}
+     * @return array{key: string, permission: string, applied: bool, fields: array<string, array<string, mixed>>, secrets: array<string, bool>, uploads: list<string>, readonly: array<string, string>}
      */
     public function screen(string $group): array
     {
@@ -43,13 +47,18 @@ class AdminSettingsService
         $fields = [];
 
         foreach ($this->fieldsOf($group) as $key => $field) {
-            $fields[$key] = [...$field, 'value' => $store === null ? null : $this->settings->get($store, $key, $field['default'] ?? null)];
+            $fields[$key] = [...$field, 'value' => $store === null ? null : $this->settings->get($store, $key, $this->defaultOf($field))];
         }
 
         $secrets = [];
+        $uploads = [];
 
-        foreach (array_keys((array) ($definition['secrets'] ?? [])) as $key) {
-            $secrets[$key] = Setting::query()->where('group', $store)->where('key', $key)->whereNotNull('value')->exists();
+        foreach ((array) ($definition['secrets'] ?? []) as $key => $secret) {
+            $secrets[$key] = $this->settings->has((string) $store, $key);
+
+            if (($secret['upload'] ?? false) === true) {
+                $uploads[] = (string) $key;
+            }
         }
 
         return [
@@ -58,6 +67,7 @@ class AdminSettingsService
             'applied' => (bool) ($definition['applied'] ?? false),
             'fields' => $fields,
             'secrets' => $secrets,
+            'uploads' => $uploads,
             'readonly' => $this->readonly((array) ($definition['readonly'] ?? [])),
         ];
     }
@@ -90,6 +100,10 @@ class AdminSettingsService
         foreach ($fields as $key => $field) {
             $rules[$key] = $field['rules'];
 
+            if (isset($field['format'])) {
+                $rules[$key][] = new SettingValueFormat((string) $field['format'], (array) ($field['placeholders'] ?? []));
+            }
+
             if (isset($field['item_rules'])) {
                 $rules["{$key}.*"] = $field['item_rules'];
             }
@@ -104,7 +118,7 @@ class AdminSettingsService
 
             [$value, $type] = $this->typed($field, $values[$key]);
 
-            if ($value !== $this->settings->get($store, $key, $field['default'] ?? null)) {
+            if ($value !== $this->settings->get($store, $key, $this->defaultOf($field))) {
                 $this->settings->set($store, $key, $value, $type, actor: $actor);
             }
         }
@@ -116,17 +130,46 @@ class AdminSettingsService
      * @throws ValidationException
      * @throws ApplicationException
      */
-    public function setSecret(User $actor, string $group, string $key, ?string $value): void
+    public function setSecret(User $actor, string $group, string $key, ?string $value, bool $upload = false): void
     {
         $definition = $this->definition($group);
         $this->authorize($actor, 'settings.manage_critical');
         $secret = $definition['secrets'][$key] ?? throw new NotFoundHttpException;
 
+        if ($upload && ($secret['upload'] ?? false) !== true) {
+            throw ValidationException::withMessages(['file' => [__('admin.settings.upload_not_allowed')]]);
+        }
+
         if ($value !== null) {
-            Validator::make(['value' => $value], ['value' => $secret['rules']])->validate();
+            $rules = $secret['rules'];
+
+            if (isset($secret['format'])) {
+                $rules[] = new SettingValueFormat((string) $secret['format']);
+            }
+
+            Validator::make(['value' => $value], ['value' => $rules], attributes: ['value' => (string) __("admin.settings.field.{$key}")])->validate();
         }
 
         $this->settings->set((string) $definition['store'], $key, $value, SettingType::String, encrypted: true, actor: $actor);
+    }
+
+    /**
+     * The validation rules of one field or secret of a group (its `format` included), for values
+     * that do not come through the screen (settings:import-env).
+     *
+     * @return array<int, mixed>
+     */
+    public function rulesFor(string $group, string $key): array
+    {
+        $definition = $this->definition($group);
+        $item = $definition['fields'][$key] ?? $definition['secrets'][$key] ?? throw new NotFoundHttpException;
+        $rules = (array) $item['rules'];
+
+        if (isset($item['format'])) {
+            $rules[] = new SettingValueFormat((string) $item['format'], (array) ($item['placeholders'] ?? []));
+        }
+
+        return $rules;
     }
 
     /**
@@ -225,8 +268,19 @@ class AdminSettingsService
             'bool' => [(bool) $value, SettingType::Bool],
             'decimal' => [$value === null ? null : (string) $value, SettingType::Decimal],
             'json' => [$value ?? [], SettingType::Json],
-            default => [$value === null || $value === '' ? null : (string) $value, SettingType::String],
+            default => [$value === null || trim((string) $value) === '' ? null : trim((string) $value), SettingType::String],
         };
+    }
+
+    /**
+     * The value used while nothing is stored: the config file's built-in default for a field that
+     * replaced a `.env` key, else the field's `default`.
+     *
+     * @param  array<string, mixed>  $field
+     */
+    private function defaultOf(array $field): mixed
+    {
+        return isset($field['config']) ? $this->overlay->defaultFor((string) $field['config']) : ($field['default'] ?? null);
     }
 
     /**

@@ -91,7 +91,31 @@
                         <x-admin.badge :tone="$configured ? 'success' : 'neutral'" :dot="false">{{ $configured ? __('admin.common.configured') : __('admin.common.not_configured') }}</x-admin.badge>
                     </p>
                     <p class="mt-2 text-xs text-content-muted">{{ __('admin.common.write_only') }}</p>
-                    @if ($canSecrets)
+                    @if ($canSecrets && in_array($key, $screen['uploads'], true))
+                        {{-- A JSON key file (FCM service account): pasted or uploaded, sent once, never shown again. --}}
+                        <form class="mt-3 flex flex-col gap-3" data-module="form" data-multipart data-action="{{ $api.'/secrets/'.$key }}" data-method="PUT" data-success="reload" data-confirm="{{ __('admin.common.replace_confirm') }}" autocomplete="off" novalidate>
+                            <div>
+                                <label for="sec-{{ $key }}" class="field-label">{{ __('admin.settings.paste_json') }}</label>
+                                <textarea id="sec-{{ $key }}" name="value" rows="4" class="admin-input py-2 font-mono text-xs" dir="ltr" autocomplete="off" spellcheck="false"></textarea>
+                                <p class="field-error" data-error-for="value" hidden></p>
+                            </div>
+                            <div>
+                                <label for="sec-file-{{ $key }}" class="field-label">{{ __('admin.settings.upload_json') }}</label>
+                                <input id="sec-file-{{ $key }}" type="file" name="file" accept="application/json,.json" class="admin-input py-2 text-sm">
+                                <p class="field-help">{{ __('admin.settings.help.'.$key) }}</p>
+                                <p class="field-error" data-error-for="file" hidden></p>
+                            </div>
+                            <x-admin.form-alerts />
+                            <div class="flex flex-wrap gap-2"><button type="submit" class="admin-btn">{{ __('admin.settings.replace') }}</button></div>
+                        </form>
+                        @if ($configured)
+                            <form class="mt-2" data-module="form" data-action="{{ $api.'/secrets/'.$key }}" data-method="PUT" data-success="reload" data-confirm="{{ __('admin.settings.clear_confirm') }}" data-confirm-danger novalidate>
+                                <input type="hidden" name="value" value="" data-nullable>
+                                <x-admin.form-alerts />
+                                <button type="submit" class="admin-btn">{{ __('admin.settings.clear') }}</button>
+                            </form>
+                        @endif
+                    @elseif ($canSecrets)
                         <form class="mt-3 flex flex-col gap-3" data-module="form" data-action="{{ $api.'/secrets/'.$key }}" data-method="PUT" data-success="reload" data-confirm="{{ __('admin.common.replace_confirm') }}" autocomplete="off" novalidate>
                             <x-admin.field name="value" :id="'sec-'.$key" type="password" :label="__('admin.settings.new_value')" autocomplete="new-password" dir="ltr" :help="__('admin.settings.clear_help')" />
                             <x-admin.form-alerts />

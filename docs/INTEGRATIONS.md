@@ -198,7 +198,7 @@ Events subscribed: `payment_intent.succeeded`, `payment_intent.processing`, `pay
 
 ---
 
-**Return URL (M-A6).** The PaymentIntent is confirmed by the client (Stripe.js or PaymentSheet), which supplies its own `return_url`; the create request is unchanged. For `client=app` attempts the server publishes the value to use as `next.return_url`. Verified (`https://docs.stripe.com/payments/accept-a-payment?payment-ui=mobile&platform=ios`, section "Set up a return URL", read 2026-11-10): the iOS SDK needs a **custom URL scheme** for redirect-based methods and does not support universal links, so `PAYMENTS_STRIPE_APP_RETURN_URL` must be set to the app's scheme; without it the HTTPS app link is published, which is not expected to work on iOS. Whether the Android SDK reads `returnURL` at all is `UNVERIFIED` here.
+**Return URL (M-A6).** The PaymentIntent is confirmed by the client (Stripe.js or PaymentSheet), which supplies its own `return_url`; the create request is unchanged. For `client=app` attempts the server publishes the value to use as `next.return_url`. Verified (`https://docs.stripe.com/payments/accept-a-payment?payment-ui=mobile&platform=ios`, section "Set up a return URL", read 2026-11-10): the iOS SDK needs a **custom URL scheme** for redirect-based methods and does not support universal links, so the setting `payments.stripe_app_return_url` (Settings > Payment returns, formerly `PAYMENTS_STRIPE_APP_RETURN_URL`) must be set to the app's scheme; without it the HTTPS app link is published, which is not expected to work on iOS. Whether the Android SDK reads `returnURL` at all is `UNVERIFIED` here.
 
 **Adapter status (M10):** `StripePaymentGateway` built; mocked tests only (SDK on a faked transport); awaiting sandbox verification and BD1. Fees are estimated from fee rules because the balance-transaction expansion is `UNVERIFIED`. ISK, UGX, HUF and TWD are refused until their special cases are verified.
 
@@ -225,7 +225,7 @@ Sources: `https://developer.paypal.com/api/rest/requests/`, `/api/rest/authentic
 
 **Create body:** `intent=CAPTURE`; `purchase_units[0]` (schema allows up to 10; we use 1): `reference_id` (max 256), `custom_id` (max 255) = `payment.public_id`, `invoice_id` (max 127) = `{order_number}-{attempt}` (PayPal can reject duplicate invoice IDs per account, so the attempt number must be included), `amount{currency_code,value}`, `description`. `Prefer: return=representation` for the full resource.
 
-**Return and cancel URLs (M-A6).** Sent as `payment_source.paypal.experience_context.return_url` ("The URL where the customer will be redirected upon approving a payment") and `cancel_url` (upon cancelling), both `format: uri`. Verified against the official Orders v2 schema (`https://developer.paypal.com/api/orders/v2/schema.json`, version 2.36, `paypal_wallet_experience_context`, read 2026-11-10); the same schema marks the top-level `application_context` fields deprecated in favour of `experience_context`. `UNVERIFIED`: which approval link rel the create response carries when `payment_source.paypal` is sent (`payer-action` is expected; the adapter accepts `approve` or `payer-action`), whether the order status is then `CREATED` or `PAYER_ACTION_REQUIRED` (both map to requires-action), and which query parameters PayPal appends on return (ignored). Values: web = the return page (`PAYMENTS_RETURN_URL`) and `PAYMENTS_CANCEL_URL` (else the return page); app = `{APP_URL}/app/payments/return/{order}?attempt={payment}` and `/app/payments/cancel/...`.
+**Return and cancel URLs (M-A6).** Sent as `payment_source.paypal.experience_context.return_url` ("The URL where the customer will be redirected upon approving a payment") and `cancel_url` (upon cancelling), both `format: uri`. Verified against the official Orders v2 schema (`https://developer.paypal.com/api/orders/v2/schema.json`, version 2.36, `paypal_wallet_experience_context`, read 2026-11-10); the same schema marks the top-level `application_context` fields deprecated in favour of `experience_context`. `UNVERIFIED`: which approval link rel the create response carries when `payment_source.paypal` is sent (`payer-action` is expected; the adapter accepts `approve` or `payer-action`), whether the order status is then `CREATED` or `PAYER_ACTION_REQUIRED` (both map to requires-action), and which query parameters PayPal appends on return (ignored). Values: web = the return page (setting `payments.return_url`) and `payments.cancel_url` (else the return page); app = `{APP_URL}/app/payments/return/{order}?attempt={payment}` and `/app/payments/cancel/...`.
 
 **Statuses.** Order: `CREATED`, `SAVED`, `APPROVED`, `VOIDED`, `COMPLETED`, `PAYER_ACTION_REQUIRED`. Capture: `COMPLETED`, `DECLINED`, `PARTIALLY_REFUNDED`, `PENDING`, `REFUNDED`, `FAILED`.
 
@@ -337,7 +337,7 @@ Sources: `https://docs.openexchangerates.org/docs/latest-json`, `https://openexc
 
 Why: USD base matches our base currency, simple contract, hourly updates suffice for retail pricing with markup.
 
-**Status: adapter built (`App\Domains\Currency\Adapters\OpenExchangeRatesProvider`), tested with `Http::fake` only, awaiting credentials. It has never called the live API.** `app_id` is read from the encrypted setting `currency.oxr_app_id`, falling back to `OPEN_EXCHANGE_RATES_APP_ID`. Timeouts: connect 5 s, total 15 s. Rates are read from the raw body as decimal text, since `json_decode` would make them floats; provider errors carry no URL because the URL contains the `app_id`.
+**Status: adapter built (`App\Domains\Currency\Adapters\OpenExchangeRatesProvider`), tested with `Http::fake` only, awaiting credentials. It has never called the live API.** `app_id` is the encrypted setting `currency.oxr_app_id` (Settings > Currency; `OPEN_EXCHANGE_RATES_APP_ID` in `.env` is no longer read, `settings:import-env` copies it once). Timeouts: connect 5 s, total 15 s. Rates are read from the raw body as decimal text, since `json_decode` would make them floats; provider errors carry no URL because the URL contains the `app_id`.
 
 Caveats: OXR says the rates are not for precise forex trades and gives no accuracy warranty. Hence markup, spike guard and manual overrides. EGP, SAR and AED availability is `UNVERIFIED` until `currencies.json` is checked with a key. Plan request quotas are `UNVERIFIED`.
 
@@ -407,19 +407,19 @@ Sources (from the FCM HTTP v1 and Google OAuth 2.0 service-account documentation
 
 **Built (backend).** No SDK or composer package (backend/CLAUDE.md): `FcmClient` on the Laravel HTTP client signs the JWT with `openssl_sign` (SHA-256 with RSA) and caches the access token encrypted until 5 minutes before expiry (dropped on 401). `PushChannel` (`Notification::extend('push')`) queues one `SendPushMessage` per live device token; see `API_DOCUMENTATION.md` 1h for what is sent and how answers are handled.
 
-Configuration (`config/push.php`, `.env.example`):
+Configuration: admin settings, Settings > Push (group `push`, `settings.manage_critical`; moved from `.env` on 2026-11-12, `DEPLOYMENT.md` 3.2):
 
-| Key | Meaning |
+| Setting | Meaning |
 |---|---|
-| `FCM_ENABLED` | empty or `false` (default): every send is a no-op logged at debug level |
-| `FCM_PROJECT_ID` | the Firebase project id |
-| `FCM_CREDENTIALS_PATH` | absolute path to the service-account JSON key, outside the web root, readable only by the PHP user (for example `/etc/boxcards/fcm-service-account.json`, mode 0400). Never in the repository, `.env` or the database |
+| `push_enabled` (was `FCM_ENABLED`) | off (default): every send is a no-op logged at debug level |
+| `fcm_project_id` (was `FCM_PROJECT_ID`) | the Firebase project id; empty uses the key's own `project_id` |
+| secret `fcm_service_account` (was the file at `FCM_CREDENTIALS_PATH`) | the service-account JSON key itself, pasted or uploaded once, validated (`type` service_account, `project_id`, `client_email`, a usable `private_key`, https `token_uri`), stored encrypted with `APP_KEY`, write-only (configured or not), read only by `FcmClient`. Never in the repository, `.env`, config or a file on the server |
 
 **Owner steps.**
 1. Create the Firebase project (one per environment is cleanest: dev, staging, prod) and add the Android apps `shop.boxcards.app.dev`, `shop.boxcards.app.staging`, `shop.boxcards.app` and the iOS apps with the same bundle ids.
 2. Download each Android `google-services.json` into `application/android/app/src/<flavor>/` (or one combined file into `application/android/app/`), and each iOS `GoogleService-Info.plist` for the flavor's scheme on the macOS host. Both are git-ignored; `application/README.md` (Push) has the details.
 3. iOS: upload an APNs authentication key (.p8) in Project settings > Cloud Messaging, and enable Push Notifications and Background Modes > Remote notifications in Xcode (entitlement placeholder already in `ios/Runner/Runner.entitlements`).
-4. Server: create a service account key with the Firebase Cloud Messaging API (V1) enabled (Project settings > Service accounts), store it as above, set `FCM_PROJECT_ID`, `FCM_CREDENTIALS_PATH`, `FCM_ENABLED=true`, and run a queue worker for the `notifications` queue.
+4. Server: create a service account key with the Firebase Cloud Messaging API (V1) enabled (Project settings > Service accounts), upload or paste it in Admin > Settings > Push, set the project id, switch "Send push notifications" on, and run a queue worker for the `notifications` queue. Delete the downloaded key file afterwards.
 5. Verify (M-A18 acceptance): on a real Android device with the dev flavor, a delivered order, a failed payment and a staff ticket reply each arrive; switching the push preference off stops them.
 
 `UNVERIFIED` until a live project exists: the exact `INVALID_ARGUMENT` message for a bad token (matched on "registration token"), the APNs relay behaviour for `apns-priority` 10 with `thread-id`, and the new Firebase Installation ID direct-send target that firebase_messaging 17 introduces (the app keeps registration tokens, the stable HTTP v1 target).

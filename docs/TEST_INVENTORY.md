@@ -8,13 +8,13 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ## Backend (Laravel, Pest)
 
-116 files, 1451 declared test cases (207 with datasets, which run once per dataset row).
+118 files, 1485 declared test cases (214 with datasets, which run once per dataset row).
 
 | Area | Files | Declared cases |
 |---|---:|---:|
 | `Feature` | 1 | 1 |
 | `Feature/Account` | 5 | 54 |
-| `Feature/Admin` | 12 | 150 |
+| `Feature/Admin` | 14 | 183 |
 | `Feature/Affiliates` | 1 | 12 |
 | `Feature/Automation` | 8 | 72 |
 | `Feature/Catalog` | 5 | 56 |
@@ -32,7 +32,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 | `Feature/Reviews` | 1 | 10 |
 | `Feature/Schema` | 3 | 28 |
 | `Feature/Seo` | 7 | 70 |
-| `Feature/Storefront` | 6 | 95 |
+| `Feature/Storefront` | 6 | 96 |
 | `Feature/Suppliers` | 2 | 34 |
 | `Feature/Support` | 1 | 14 |
 | `Feature/Wallet` | 3 | 39 |
@@ -146,7 +146,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 ### `Feature/Admin`
 
-<details><summary><code>backend/tests/Feature/Admin/AdminAccessTest.php</code> (19)</summary>
+<details><summary><code>backend/tests/Feature/Admin/AdminAccessTest.php</code> (22)</summary>
 
 - **sign-in and two-step verification**
   - shows the admin sign-in page in English and Arabic with a strict CSP _(dataset)_
@@ -159,6 +159,9 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - serves the setup QR code only for a pending enrolment, never cached
   - sends a verified staff member from the sign-in page to the admin
   - switches the admin language and returns to the admin page
+  - lets staff behind one IP load the sign-in and two-step pages many times
+  - still limits sign-in attempts to five a minute per email and IP
+  - still caps sign-in page loads per IP
 - **permission-based navigation**
   - lists only the sections the staff member may open _(dataset)_
   - shows the M15 sections to holders of their permissions
@@ -290,7 +293,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 - **settings pages**
   - renders every group read-only for settings.view, in English and Arabic _(dataset)_
   - 404s an unknown group
-  - shows guest checkout read-only from configuration
+  - makes guest checkout an editable critical setting that reaches the storefront flag
 - **saving**
   - saves a group with its permission, typed and audited, with envelope errors
   - needs settings.manage_critical for critical groups
@@ -388,6 +391,52 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - saves a role column with roles.manage and refuses E permissions, the Super Admin role and own roles
   - creates and deletes custom roles but never seeded ones
   - refuses the role routes without roles.manage
+
+</details>
+
+<details><summary><code>backend/tests/Feature/Admin/DatabaseSettingsTest.php</code> (23)</summary>
+
+- **overlay**
+  - applies a stored value over the config default, and a cleared one restores the default
+  - lets the database value win when another process boots
+  - re-reads only after a save moved the version, with one cache read otherwise
+  - re-checks before each job in a queue worker
+  - does not re-check per job outside a worker
+  - fails soft without a database or without the settings table _(dataset)_
+  - never applies while configuration is being cached _(dataset)_
+  - keeps no env() call for a moved key in the config files
+- **secrets**
+  - stores the n8n and OXR secrets encrypted, applies them to config and never renders, returns or audits them
+  - takes the FCM service-account key pasted or uploaded, validated, encrypted and read by FcmClient only
+  - refuses a file upload for a secret that is not an upload
+- **permissions**
+  - needs settings.manage_critical for security-sensitive groups _(dataset)_
+  - needs settings.manage for the other moved groups _(dataset)_
+  - applies the saved values to the config keys running code reads
+- **validation**
+  - refuses a bad value with an envelope error beside the field _(dataset)_
+  - accepts http URLs only while the app runs locally
+  - accepts lower-case fingerprints and several packages
+- **audit**
+  - records the old and new value of every changed non-secret setting
+- **settings:import-env**
+  - copies the current values once, prints key names and results only, never a value
+  - is idempotent: a key with a database value is skipped unless forced
+  - imports over a seeded built-in default that staff never changed
+  - imports the FCM service-account JSON from the file at the old FCM_CREDENTIALS_PATH
+  - stores nothing for a value its setting refuses and exits with failure
+
+</details>
+
+<details><summary><code>backend/tests/Feature/Admin/ExplicitGrantCommandTest.php</code> (7)</summary>
+
+  - lists the explicit-grant permissions and which the Super Admin holds
+  - grants chosen permissions, audits it as a system action and records a security event
+  - grants all explicit-grant permissions with "all", then revokes them
+  - does not audit a grant that changes nothing
+  - refuses anyone who is not an active staff Super Admin _(dataset)_
+  - grants only explicit-grant permissions _(dataset)_
+  - fails for an unknown email
 
 </details>
 
@@ -1283,7 +1332,7 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
   - keeps the token on other refusals and on a bare 404 (a wrong project id) _(dataset)_
   - asks for a retry on quota, server errors and an expired access token, honouring Retry-After _(dataset)_
   - caches the OAuth access token between sends
-  - fails without retrying and without sending when the credentials file is missing
+  - fails without retrying and without sending when no service-account key is stored
 - **service-account JWT**
   - signs an RS256 assertion for the FCM scope that the public key verifies
   - refuses a key that cannot sign
@@ -2079,11 +2128,13 @@ Last measured results, before the no-run rule: backend 2,842 passed (M-A15, comm
 
 </details>
 
-<details><summary><code>backend/tests/Feature/Storefront/CheckoutPagesTest.php</code> (13)</summary>
+<details><summary><code>backend/tests/Feature/Storefront/CheckoutPagesTest.php</code> (14)</summary>
 
 - **bag page**
   - shows the empty state
   - shows the lines and server totals, and serves the cart fragment alone
+- **bag badge after a change on the bag page (M19 defect D1)**
+  - returns the cart lines on quantity change and remove, and the bag module updates the header badge from them
 - **checkout access (owner decision 4)**
   - sends a guest to sign in and back to checkout while guest checkout is off
   - shows the guest email field when guest checkout is switched on

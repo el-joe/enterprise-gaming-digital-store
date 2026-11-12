@@ -42,11 +42,12 @@ return [
     | answers a single-use challenge to satisfy the code-reveal re-auth without the password.
     | `challenge_ttl_seconds` is how long a challenge may be signed; after
     | `max_failed_attempts` consecutive bad signatures the key is revoked (password again).
-    | `per_minute` limits challenge and confirm requests per customer.
+    | `per_minute` limits challenge and confirm requests per customer. `challenge_ttl_seconds` is
+    | the admin setting app_links.biometric_challenge_ttl_seconds (this is its default).
     |
     */
     'biometric' => [
-        'challenge_ttl_seconds' => (int) (env('MOBILE_BIOMETRIC_CHALLENGE_TTL_SECONDS') ?: 60),
+        'challenge_ttl_seconds' => 60,
         'max_failed_attempts' => 5,
         'per_minute' => 10,
     ],
@@ -56,8 +57,9 @@ return [
     | App configuration defaults (M-A4, GET /api/v1/app/config, gap G9)
     |--------------------------------------------------------------------------
     |
-    | Defaults only: a value saved in the settings table (group `app`, same key, set with
-    | `php artisan mobile:app-config set <key> <value>`) wins and takes effect without a deploy.
+    | Built-in defaults only: the settings table (group `app`, same key, edited in Admin > Settings >
+    | Mobile app or with `php artisan mobile:app-config set <key> <value>`) is the source of truth
+    | and takes effect without a deploy. There are no `.env` keys for these values.
     | Everything here is public. Never put a secret in this section.
     |
     | Versions are Semantic Versioning 2.0.0. An installed version below `*_min_version` must
@@ -66,38 +68,38 @@ return [
     |
     */
     'app' => [
-        'android_min_version' => env('MOBILE_ANDROID_MIN_VERSION') ?: '1.0.0',
-        'android_latest_version' => env('MOBILE_ANDROID_LATEST_VERSION') ?: '1.0.0',
-        'ios_min_version' => env('MOBILE_IOS_MIN_VERSION') ?: '1.0.0',
-        'ios_latest_version' => env('MOBILE_IOS_LATEST_VERSION') ?: '1.0.0',
+        'android_min_version' => '1.0.0',
+        'android_latest_version' => '1.0.0',
+        'ios_min_version' => '1.0.0',
+        'ios_latest_version' => '1.0.0',
 
-        'maintenance' => (bool) env('MOBILE_MAINTENANCE', false),
+        'maintenance' => false,
         // Per locale, for example {"en": "...", "ar": "..."}; null uses the translated default text.
         'maintenance_message' => null,
 
-        'checkout_enabled' => (bool) env('MOBILE_CHECKOUT_ENABLED', true),
+        'checkout_enabled' => true,
         // Published as true only while `storefront.guest_checkout` is also on (owner decision 4).
-        'guest_checkout_enabled' => (bool) env('MOBILE_GUEST_CHECKOUT_ENABLED', true),
-        'wallet_enabled' => (bool) env('MOBILE_WALLET_ENABLED', true),
-        'reviews_enabled' => (bool) env('MOBILE_REVIEWS_ENABLED', true),
-        'support_enabled' => (bool) env('MOBILE_SUPPORT_ENABLED', true),
+        'guest_checkout_enabled' => true,
+        'wallet_enabled' => true,
+        'reviews_enabled' => true,
+        'support_enabled' => true,
 
         // Owner decision 3 (OD-1): when store review forbids in-app purchase, the app shows
         // "Complete purchase on boxcards.shop" and opens `web_checkout_url` (published as
         // `links.web_checkout`) in the system browser instead of its own checkout. Off by default.
-        'web_checkout_redirect' => (bool) env('MOBILE_WEB_CHECKOUT_REDIRECT', false),
-        'web_checkout_url' => env('MOBILE_WEB_CHECKOUT_URL') ?: '/checkout',
+        'web_checkout_redirect' => false,
+        'web_checkout_url' => '/checkout',
 
         // M-A10: the app has no stateless forgot-password endpoint (POST /forgot-password is a
         // session route), so "Forgot password?" opens this page in the system browser.
         // Published as `links.forgot_password`.
-        'forgot_password_url' => env('MOBILE_FORGOT_PASSWORD_URL') ?: '/forgot-password',
+        'forgot_password_url' => '/forgot-password',
 
         // Absolute https URLs (or site paths, made absolute with APP_URL); null hides the link.
-        'support_url' => env('MOBILE_SUPPORT_URL') ?: null,
-        'terms_url' => env('MOBILE_TERMS_URL') ?: null,
-        'privacy_url' => env('MOBILE_PRIVACY_URL') ?: null,
-        'refund_url' => env('MOBILE_REFUND_URL') ?: null,
+        'support_url' => null,
+        'terms_url' => null,
+        'privacy_url' => null,
+        'refund_url' => null,
 
         'cache_seconds' => 60,
     ],
@@ -109,7 +111,9 @@ return [
     |
     | Served by Laravel at /.well-known/assetlinks.json and /.well-known/apple-app-site-association.
     | Values are supplied by the owner and never invented: with no fingerprint, assetlinks.json
-    | is `[]`; with no iOS app id, the Apple file lists no apps.
+    | is `[]`; with no iOS app id, the Apple file lists no apps. The packages, fingerprints and app
+    | ids are admin settings (Settings > App links, group `app_links`, applied over these
+    | defaults by SettingsOverlay); `paths` stays here.
     |
     | - `android_packages`: application ids (comma-separated), for example
     |   `shop.boxcards.app,shop.boxcards.app.staging,shop.boxcards.app.dev` for the flavors.
@@ -126,9 +130,9 @@ return [
     |
     */
     'app_links' => [
-        'android_packages' => env('MOBILE_ANDROID_PACKAGES') ?: 'shop.boxcards.app',
-        'android_sha256_fingerprints' => env('MOBILE_ANDROID_SHA256_FINGERPRINTS') ?: '',
-        'ios_app_ids' => env('MOBILE_IOS_APP_IDS') ?: '',
+        'android_packages' => 'shop.boxcards.app',
+        'android_sha256_fingerprints' => '',
+        'ios_app_ids' => '',
         'paths' => [
             '/app/*',
             '/products/*',

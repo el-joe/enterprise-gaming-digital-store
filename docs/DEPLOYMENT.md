@@ -21,7 +21,7 @@ Start: 4 vCPU, 8 GB RAM, 80 GB SSD. A static public IP is required, because Relo
 
 ## 3. Environment
 
-Required production values (no real values are ever committed):
+Required production values (no real values are ever committed). `.env` holds only what must exist before the database can be read, what protects data stored in the database, and code-coupled or infrastructure values:
 
 ```
 APP_ENV=production          APP_DEBUG=false          APP_URL=https://example.com
@@ -34,27 +34,55 @@ REDIS_HOST=127.0.0.1        REDIS_PASSWORD=
 MAIL_MAILER=smtp            (host, user, password, from)
 DIGITAL_CODE_KEYS=          DIGITAL_CODE_ACTIVE_KID=  DIGITAL_CODE_BLIND_INDEX_KEY=
 SUPER_ADMIN_EMAIL=          SUPER_ADMIN_PASSWORD=     (first deploy only, removed after)
-GEOIP_DATABASE_PATH=        MAXMIND_LICENSE_KEY=
-AUTOMATION_OUTBOX_ENABLED=true   N8N_WEBHOOK_URL=https://n8n.example.com/webhook/egs-events
-N8N_OUTBOUND_SECRET=        N8N_WEBHOOK_AUTH_TOKEN=
+STRIPE_API_VERSION=         (empty uses the pinned version)
+SEO_SITEMAP_DISK=local
+GEOIP_DATABASE_PATH=        MAXMIND_LICENSE_KEY=      (only if GeoLite2 is ever built, BD9)
 ```
 
-Supplier and gateway credentials are entered in the admin panel and stored encrypted, not in `.env`.
+### 3.1 Which keys stay in `.env`, and why
 
-Mobile payment returns and app links (M-A6, `API_DOCUMENTATION.md` 1e). `APP_URL` must be the HTTPS store domain the app links are verified on (`https://boxcards.shop`); an app attempt is refused in production otherwise.
+| Keys | Why they stay |
+|---|---|
+| `DIGITAL_CODE_KEYS`, `DIGITAL_CODE_ACTIVE_KID`, `DIGITAL_CODE_BLIND_INDEX_KEY` | They encrypt and index the code vault. Stored next to the ciphertext in the same database, one database dump would hold both the codes and their keys, which defeats the encryption. Back them up separately. |
+| `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD` | They bootstrap the first admin, before anyone can sign in to edit settings. Remove them after the first deploy. |
+| `STRIPE_API_VERSION` | Code-coupled (ADR-023): webhook and response shapes depend on it, so it changes with a release, not from a screen. |
+| `SEO_SITEMAP_DISK` | Infrastructure: which filesystem disk the server writes to. |
+| `APP_*`, `DB_*`, cache, queue, session, mail transport, Redis, AWS, logs, `VITE_*`, `BCRYPT_ROUNDS` and the other Laravel framework keys | Needed to boot the framework and reach the database at all. `APP_KEY` also encrypts the secret settings. |
+
+### 3.2 Settings from the database
+
+Everything else this project added is an admin setting (Admin > Settings), stored in the `settings` table and applied over the matching config key at boot (`SettingsOverlay`); the secrets (`currency.oxr_app_id`, `automation.outbound_secret`, `automation.webhook_auth_token`, the FCM service-account JSON `push.fcm_service_account`) are encrypted with `APP_KEY` and write-only. A save takes effect at once in web requests; queue workers re-check a cached version before each job, so no `queue:restart` is needed. `config:cache` never captures these values (the overlay does not run during `config:cache` or `optimize`), so a settings change needs no cache rebuild.
+
+| Settings group (screen) | Keys (former `.env` key) | Permission |
+|---|---|---|
+| `payments` (Payment returns) | `return_url` (`PAYMENTS_RETURN_URL`), `cancel_url` (`PAYMENTS_CANCEL_URL`), `app_return_url` (`PAYMENTS_APP_RETURN_URL`), `app_cancel_url` (`PAYMENTS_APP_CANCEL_URL`), `stripe_app_return_url` (`PAYMENTS_STRIPE_APP_RETURN_URL`) | `settings.manage` |
+| `currency` | secret `oxr_app_id` (`OPEN_EXCHANGE_RATES_APP_ID`) | `settings.manage_critical` |
+| `geoip` | `geoip_driver` (`GEOIP_DRIVER`), `geoip_country_header` (`GEOIP_COUNTRY_HEADER`) | `settings.manage_critical` |
+| `mcp` | `pending_action_ttl_minutes`, `coupon_tier1_max_percent`, `coupon_tier1_max_fixed_base`, `mcp_token_ttl_days` (`MCP_*`) | `settings.manage` |
+| `automation` | `outbox_enabled` (`AUTOMATION_OUTBOX_ENABLED`), `webhook_url` (`N8N_WEBHOOK_URL`), `automation_store_name` (`AUTOMATION_STORE_NAME`), `automation_token_ttl_days` (`AUTOMATION_TOKEN_TTL_DAYS`); secrets `outbound_secret` (`N8N_OUTBOUND_SECRET`), `webhook_auth_token` (`N8N_WEBHOOK_AUTH_TOKEN`) | `settings.manage_critical` |
+| `account_links` | `password_reset_url` (`PASSWORD_RESET_URL`), `email_verified_url` (`EMAIL_VERIFIED_URL`) | `settings.manage_critical` |
+| `app_links` | `android_packages`, `android_sha256_fingerprints`, `ios_app_ids` (`MOBILE_ANDROID_PACKAGES`, `MOBILE_ANDROID_SHA256_FINGERPRINTS`, `MOBILE_IOS_APP_IDS`), `biometric_challenge_ttl_seconds` (`MOBILE_BIOMETRIC_CHALLENGE_TTL_SECONDS`) | `settings.manage_critical` |
+| `app` (Mobile app) | `web_checkout_redirect`, `web_checkout_url`, `forgot_password_url` (`MOBILE_WEB_CHECKOUT_REDIRECT`, `MOBILE_WEB_CHECKOUT_URL`, `MOBILE_FORGOT_PASSWORD_URL`) and the other app config keys | `settings.manage` |
+| `push` | `push_enabled` (`FCM_ENABLED`), `fcm_project_id` (`FCM_PROJECT_ID`); secret `fcm_service_account` (the JSON file named by `FCM_CREDENTIALS_PATH`) | `settings.manage_critical` |
+| `checkout` | `guest_checkout` (`STOREFRONT_GUEST_CHECKOUT`) | `settings.manage_critical` |
+| `security` | `admin_idle_minutes` (`ADMIN_IDLE_MINUTES`) | `settings.manage_critical` |
+| `seo` (Search engines) | `block_all_crawlers` (`SEO_BLOCK_ALL_CRAWLERS`) | `settings.manage` |
+| `admin` (Admin panel) | `admin_theme` (`ADMIN_THEME`) | `settings.manage` |
+
+The config files keep safe built-in defaults (switches off, no secrets), used on a fresh install and whenever the database cannot be read.
+
+**Migrating an existing installation (once, after deploying this release):**
 
 ```
-PAYMENTS_RETURN_URL=                 (web return page, default /checkout/orders/{order}/return)
-PAYMENTS_CANCEL_URL=                 (web cancel page for PayPal, default: the return page)
-PAYMENTS_APP_RETURN_URL=             (path only, default /app/payments/return/{order}?attempt={attempt})
-PAYMENTS_APP_CANCEL_URL=             (path only, default /app/payments/cancel/{order}?attempt={attempt})
-PAYMENTS_STRIPE_APP_RETURN_URL=      (the app's custom scheme for Stripe PaymentSheet, e.g. boxcards://stripe-redirect)
-MOBILE_ANDROID_PACKAGES=shop.boxcards.app            (comma-separated; add shop.boxcards.app.staging,shop.boxcards.app.dev on those hosts)
-MOBILE_ANDROID_SHA256_FINGERPRINTS=                  (comma-separated AA:BB:..., from the Play Console App signing page; empty publishes [])
-MOBILE_IOS_APP_IDS=                                  (comma-separated TEAMID.shop.boxcards.app; empty publishes no apps)
+php artisan migrate --force             (no new migration; harmless)
+php artisan config:clear                (the import reads .env, which a cached config hides)
+php artisan settings:import-env         (prints each key with imported, skipped, empty or invalid; never a value)
+php artisan config:cache
 ```
 
-Values are supplied by the owner (open decision 4 in `MOBILE_APP_ROADMAP.md`); never invent a fingerprint or team id. Run `php artisan config:cache` after a change; Android re-verifies only on install or update (Android 15+ periodically), Apple caches through its CDN.
+The import copies the current value of every moved key into the settings once. A key that already has a database value is skipped (a seeded built-in default that no one changed does not count); `--force` overwrites. For FCM it reads the JSON file at `FCM_CREDENTIALS_PATH` and stores its content encrypted. A value its setting refuses (for example an `http` URL in production) is reported `invalid`, stored nowhere, and the command exits non-zero: fix it in the admin screen. Then remove the moved lines from `.env` and delete the FCM key file from the server.
+
+Mobile payment returns and app links (M-A6, `API_DOCUMENTATION.md` 1e). `APP_URL` must be the HTTPS store domain the app links are verified on (`https://boxcards.shop`); an app attempt is refused in production otherwise. The return templates, packages, fingerprints and iOS app ids are set in Settings > Payment returns and Settings > App links. Values are supplied by the owner (open decision 4 in `MOBILE_APP_ROADMAP.md`); never invent a fingerprint or team id. Android re-verifies only on install or update (Android 15+ periodically), Apple caches through its CDN.
 
 ## 4. Database
 

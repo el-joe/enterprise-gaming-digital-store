@@ -41,7 +41,7 @@ A token is a Sanctum personal access token of a `service_accounts` row with `kin
 
 `get_action_status` needs any write scope.
 
-**Issuing tokens.** `php artisan mcp:token issue {account} [--scope=...] [--allow-writes] [--rate-limit=N] [--ip=CIDR] [--days=N]`, `mcp:token list`, `mcp:token revoke --id=N`; or `GET|POST /admin/api/mcp-tokens`, `DELETE /admin/api/mcp-tokens/{id}` (`service_accounts.manage`). Without `--scope` the token gets the six read scopes. Write scopes and `actions:confirm` are refused unless writes are allowed explicitly, which also sets the account's `is_read_only = false`. Tokens expire after 90 days by default (`MCP_TOKEN_TTL_DAYS`). The plain token is shown once; issuance and revocation are written to `audit_logs` without the token.
+**Issuing tokens.** `php artisan mcp:token issue {account} [--scope=...] [--allow-writes] [--rate-limit=N] [--ip=CIDR] [--days=N]`, `mcp:token list`, `mcp:token revoke --id=N`; or `GET|POST /admin/api/mcp-tokens`, `DELETE /admin/api/mcp-tokens/{id}` (`service_accounts.manage`). Without `--scope` the token gets the six read scopes. Write scopes and `actions:confirm` are refused unless writes are allowed explicitly, which also sets the account's `is_read_only = false`. Tokens expire after 90 days by default (admin setting `mcp.mcp_token_ttl_days`, Settings > MCP). The plain token is shown once; issuance and revocation are written to `audit_logs` without the token.
 
 **Read-only by default, in two layers.** (1) `MCP_READ_ONLY=true` is the server default: write tools are not registered, so they are absent from `tools/list`. The server also hides write tools when the account is read-only or the token lacks the scope (it reads `GET /api/v1/mcp/session` at start-up). (2) Laravel independently refuses every write for an account with `is_read_only = true` (`403 read_only`) and every tool whose scope the token lacks (`403 scope_missing`), before validating arguments. Both layers must be opened to enable writes.
 
@@ -139,7 +139,7 @@ Each call stores a pending action and returns `202` with `{ action_id, tool, sta
 | `update_product_price` | `variant_sku`, `new_price_base` (decimal string), `reason` | `products:write` | 1; 2 if the change exceeds 10%, there is no current price, the cost is unknown, or the price is below the margin floor | `VariantPriceService` (explicit price, country `*`, base currency): the margin guard applies; below the floor needs a staff approver with `pricing.override_margin`, and `reason` is the override reason |
 | `activate_product` | `product_sku`, `reason` | `products:write` | 1 | `ProductPublicationService::activate` (refuses a product customers could not buy) |
 | `deactivate_product` | `product_sku`, `reason` | `products:write` | 1 | `ProductPublicationService::deactivate` |
-| `create_coupon` | `code`, `type` (percent, fixed), `value`, `starts_at`, `ends_at`, `usage_limit`, `reason` | `coupons:write` | 1 up to 20% or 10.00 base (`MCP_COUPON_TIER1_MAX_*`), else 2 | `CouponService` with `created_by_type = mcp`, one use per buyer, never below the margin floor; fixed amounts in the base currency |
+| `create_coupon` | `code`, `type` (percent, fixed), `value`, `starts_at`, `ends_at`, `usage_limit`, `reason` | `coupons:write` | 1 up to 20% or 10.00 base (settings `mcp.coupon_tier1_max_*`), else 2 | `CouponService` with `created_by_type = mcp`, one use per buyer, never below the margin floor; fixed amounts in the base currency |
 | `trigger_catalog_sync` | `supplier` (id, name or adapter key), `reason` | `catalog:sync` | 1 | `SyncSupplierCatalog` job, `triggered_by = mcp:{account id}`; active suppliers only |
 | `retry_verified_failed_order` | `order_number`, `unit_public_id`, `reason` | `orders:retry` | always 2 | `FulfilmentAdminService::retryVerifiedUnit` as the approving staff member (`orders.review`), through the order state machine and the supplier gate |
 | `get_action_status` | `action_id` | any write scope | none | Own account's actions only |
@@ -203,7 +203,7 @@ cd mcp-server && npm ci && npm run build
 | `MCP_HTTP_TIMEOUT_MS` | `15000` | Per request to Laravel |
 | `MCP_RATE_LIMIT_PER_MINUTE` | `60` | Local token bucket |
 
-Laravel (`backend/.env`, defaults in `config/mcp.php`): `MCP_PENDING_ACTION_TTL_MINUTES` (15), `MCP_COUPON_TIER1_MAX_PERCENT` (20), `MCP_COUPON_TIER1_MAX_FIXED_BASE` (10), `MCP_TOKEN_TTL_DAYS` (90).
+Laravel: admin settings in Settings > MCP (group `mcp`, `settings.manage`; built-in defaults in `config/mcp.php`): `pending_action_ttl_minutes` (15), `coupon_tier1_max_percent` (20), `coupon_tier1_max_fixed_base` (10), `mcp_token_ttl_days` (90). They were the `MCP_*` keys of `backend/.env` until 2026-11-12; `php artisan settings:import-env` copies them once (`DEPLOYMENT.md` 3.2).
 
 ### Claude Desktop (`claude_desktop_config.json`)
 

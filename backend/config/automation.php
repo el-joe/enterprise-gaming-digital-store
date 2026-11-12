@@ -19,7 +19,7 @@ return [
     /*
     | Lifetime of an issued token in days.
     */
-    'token_ttl_days' => (int) (env('AUTOMATION_TOKEN_TTL_DAYS') ?: 365),
+    'token_ttl_days' => 365,
 
     /*
     |--------------------------------------------------------------------------
@@ -31,13 +31,17 @@ return [
     | delivery waits the next delay in `retry_delays_seconds`; after the last one the event is
     | marked failed and reported by GET /monitor/webhooks.
     |
+    | `enabled`, `webhook_url`, `secret` and `auth_token` (and `token_ttl_days`, `store_name`) are
+    | admin settings (Settings > Automation, group `automation`; the secrets encrypted), applied
+    | over these built-in defaults by SettingsOverlay. Never put them in `.env`.
+    |
     */
     'outbox' => [
-        'enabled' => (bool) env('AUTOMATION_OUTBOX_ENABLED', false),
-        'webhook_url' => (string) env('N8N_WEBHOOK_URL', ''),
-        'secret' => (string) env('N8N_OUTBOUND_SECRET', ''),
+        'enabled' => false,
+        'webhook_url' => '',
+        'secret' => '',
         'auth_header' => 'X-EGS-Webhook-Token',
-        'auth_token' => (string) env('N8N_WEBHOOK_AUTH_TOKEN', ''),
+        'auth_token' => '',
         'batch_size' => 50,
         'lease_seconds' => 120,
         'timeout_seconds' => 10,
@@ -88,5 +92,5 @@ return [
 
     'segment_page_size' => 100,
 
-    'store_name' => (string) (env('AUTOMATION_STORE_NAME') ?: env('APP_NAME', 'Store')),
+    'store_name' => (string) env('APP_NAME', 'Store'),
 ];

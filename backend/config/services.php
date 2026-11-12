@@ -29,7 +29,8 @@ return [
     ],
 
     'open_exchange_rates' => [
-        'app_id' => env('OPEN_EXCHANGE_RATES_APP_ID'),
+        // Admin setting currency.oxr_app_id (encrypted), applied by SettingsOverlay.
+        'app_id' => null,
         'base_url' => env('OPEN_EXCHANGE_RATES_BASE_URL', 'https://openexchangerates.org/api/'),
         'connect_timeout' => (int) env('OPEN_EXCHANGE_RATES_CONNECT_TIMEOUT', 5),
         'timeout' => (int) env('OPEN_EXCHANGE_RATES_TIMEOUT', 15),

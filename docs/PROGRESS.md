@@ -27,6 +27,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M17 | n8n workflows | Complete (run before M14 and BD9 by PM decision; Laravel automation API, outbox and heartbeats built and tested; 58 workflows authored and validated, **not executed**: n8n is not installed here; admin screen is M15) |
 | M18 | SEO and analytics | Complete (2026-11-11, not committed; GA4 Measurement Protocol and Search Console mocked only, awaiting credentials; Lighthouse not run: not installed, manual headless-Chrome check recorded) |
 | M19 | Full test pass | Complete (2026-11-12; D1 fixed during the run, D2 after it; final run backend 2,890 and app 1,660 passed; coverage matrix in `TEST_COVERAGE.md`; manual checklist 70 steps: 68 PASS, 1 FAIL (D2, since fixed), 1 BLOCKED (covered by tests)) |
+| DB-S | Settings from the database (owner request, `OWNER_DECISIONS.md` 10) | Complete (2026-11-12, not committed; owner runs `settings:import-env` per environment) |
 | M20 | Production readiness | Not started |
 
 Status values: Not started, In progress, Blocked (state why), Complete.
@@ -1228,7 +1229,7 @@ None. No new packages (composer or npm). `backend/.yarn/`, `.yarnrc.yml` and `ya
 ### Decisions made
 
 - Wallet adjustments stay single-step (no maker-checker): the spec and SECURITY.md do not require it; each adjustment needs a reason, an idempotency key and `customers.wallet_adjust`, and is audited.
-- Guest checkout is shown read-only: it is the config flag `storefront.guest_checkout` (owner decision 4), not a DB setting. The gateway charge currency is shown, never edited (OD-1).
+- Guest checkout is shown read-only: it is the config flag `storefront.guest_checkout` (owner decision 4), not a DB setting. (Superseded 2026-11-12: an editable critical setting, see "Settings from the database".) The gateway charge currency is shown, never edited (OD-1).
 - Reviews keep `catalog.manage` (M11 open item unchanged).
 - AI review approval records the decision only; nothing is published or drafted automatically.
 
@@ -2066,3 +2067,79 @@ None.
 ### Next milestone
 
 M20 (production readiness), which needs credentials, a server and developer accounts.
+
+---
+
+## Settings from the database
+
+Date: 2026-11-12. Completed by the senior Laravel developer, alone and in sequence. Not committed. Owner request: "Change all new variables in .env to be changed from the database instead." (`OWNER_DECISIONS.md` decision 10.)
+
+### Summary of completed work
+
+Every `.env` key this project added is now an admin setting edited in Admin > Settings (EN and AR, RTL, dark theme, M15 style), stored in the `settings` table and applied over the config key the code already reads. Running code still calls `config()`; nothing else changed for callers.
+
+- **Overlay** (`SettingsOverlay`, registered first by `SettingsServiceProvider`): at boot, every setting with a `config` mapping in `config/admin_settings.php` that has a stored value is written into its config key; a key without one keeps the config file's built-in default (captured before the first write, so clearing a setting restores it). The stored rows are cached under `settings:overlay:version`, which every `SettingsService::set` replaces; a save re-applies in the saving process at once. Queue workers (`queue:work`, `queue:listen`, Horizon) re-check the version before each job (one cache read; reload only on change); an Octane `RequestReceived` listener does the same per request (by class name, Octane not installed). Fail soft: no database, no `settings` table or no cache leaves the config defaults. It never runs during `config:cache`, `config:clear`, `optimize`, `optimize:clear`, `package:discover`, `key:generate` or `clear-compiled`, so `bootstrap/cache/config.php` never holds a setting or a decrypted secret.
+- **Config files** keep safe built-in defaults (switches off, empty secrets) and no `env()` call for any moved key; their comments point at the settings group.
+- **Secrets** (`currency.oxr_app_id`, `automation.outbound_secret`, `automation.webhook_auth_token`, `push.fcm_service_account`): `Crypt` with `APP_KEY`, encrypted in the caches too, write-only (configured or not, replace, clear), `settings.manage_critical`; audited as `{"value": "changed"|"cleared"}` only (this now applies to every encrypted setting).
+- **FCM**: the service-account JSON itself replaces `FCM_CREDENTIALS_PATH`; pasted or uploaded (multipart `file`, 20 KB) on Settings > Push, validated (`type` service_account, `project_id`, `client_email`, a private key openssl can load, https `token_uri`), read only by `FcmClient` (project id from the setting, else the key's own).
+- **Validation** per field (`SettingValueFormat` plus the field's rules, envelope errors beside the fields): https URLs (http only while `app.env` is `local`, no user info), paths, path-or-URL with required placeholders (`{order}`, `{token}`), app scheme URLs, header names, Android package, SHA-256 fingerprint and Apple app id lists, Firebase project id, integer ranges for TTLs and limits, enums for the GeoIP driver and the admin theme. Fields may be saved partially.
+- **Mobile app config**: the `app` group (`AppConfigSetting`) was already the source of truth; its `config/mobile.php` defaults no longer read `MOBILE_*` env fallbacks, and the import copies any such values into the `app` group.
+- **Guest checkout** is now an editable critical setting (the M15 read-only row and its "set in configuration" note are gone).
+- **Import**: `php artisan settings:import-env [--force]` copies the current environment values once and prints only key names with `imported`, `skipped`, `empty` or `invalid`; it refuses to run while config is cached.
+
+### Where each key lives now
+
+| Former `.env` key | Settings group.key (screen) | Permission |
+|---|---|---|
+| `PAYMENTS_RETURN_URL`, `PAYMENTS_CANCEL_URL`, `PAYMENTS_APP_RETURN_URL`, `PAYMENTS_APP_CANCEL_URL`, `PAYMENTS_STRIPE_APP_RETURN_URL` | `payments.return_url`, `.cancel_url`, `.app_return_url`, `.app_cancel_url`, `.stripe_app_return_url` (Payment returns) | `settings.manage` |
+| `OPEN_EXCHANGE_RATES_APP_ID` | `currency.oxr_app_id` (secret, Currency) | `settings.manage_critical` |
+| `GEOIP_DRIVER`, `GEOIP_COUNTRY_HEADER` | `geoip.geoip_driver`, `geoip.geoip_country_header` (GeoIP) | `settings.manage_critical` |
+| `MCP_PENDING_ACTION_TTL_MINUTES`, `MCP_COUPON_TIER1_MAX_PERCENT`, `MCP_COUPON_TIER1_MAX_FIXED_BASE`, `MCP_TOKEN_TTL_DAYS` | `mcp.pending_action_ttl_minutes`, `.coupon_tier1_max_percent`, `.coupon_tier1_max_fixed_base`, `.mcp_token_ttl_days` (MCP) | `settings.manage` |
+| `AUTOMATION_TOKEN_TTL_DAYS`, `AUTOMATION_OUTBOX_ENABLED`, `AUTOMATION_STORE_NAME`, `N8N_WEBHOOK_URL` | `automation.automation_token_ttl_days`, `.outbox_enabled`, `.automation_store_name`, `.webhook_url` (Automation) | `settings.manage_critical` (the group was already critical) |
+| `N8N_OUTBOUND_SECRET`, `N8N_WEBHOOK_AUTH_TOKEN` | `automation.outbound_secret`, `automation.webhook_auth_token` (secrets) | `settings.manage_critical` |
+| `PASSWORD_RESET_URL`, `EMAIL_VERIFIED_URL` | `account_links.password_reset_url`, `.email_verified_url` (Account email links) | `settings.manage_critical` |
+| `MOBILE_ANDROID_PACKAGES`, `MOBILE_ANDROID_SHA256_FINGERPRINTS`, `MOBILE_IOS_APP_IDS`, `MOBILE_BIOMETRIC_CHALLENGE_TTL_SECONDS` | `app_links.android_packages`, `.android_sha256_fingerprints`, `.ios_app_ids`, `.biometric_challenge_ttl_seconds` (App links and biometrics) | `settings.manage_critical` |
+| `MOBILE_WEB_CHECKOUT_REDIRECT`, `MOBILE_WEB_CHECKOUT_URL`, `MOBILE_FORGOT_PASSWORD_URL` (and the undocumented `MOBILE_*` app config fallbacks) | `app.web_checkout_redirect`, `app.web_checkout_url`, `app.forgot_password_url` (Mobile app) | `settings.manage` |
+| `FCM_ENABLED`, `FCM_PROJECT_ID`, `FCM_CREDENTIALS_PATH` | `push.push_enabled`, `push.fcm_project_id`, `push.fcm_service_account` (secret JSON; Push notifications) | `settings.manage_critical` |
+| `STOREFRONT_GUEST_CHECKOUT` | `checkout.guest_checkout` (Checkout) | `settings.manage_critical` |
+| `ADMIN_IDLE_MINUTES` | `security.admin_idle_minutes` (Security and risk) | `settings.manage_critical` |
+| `ADMIN_THEME` | `admin.admin_theme` (Admin panel) | `settings.manage` |
+| `SEO_BLOCK_ALL_CRAWLERS` | `seo.block_all_crawlers` (Search engines) | `settings.manage` |
+
+Kept in `.env` (`DEPLOYMENT.md` 3.1): `DIGITAL_CODE_KEYS`, `DIGITAL_CODE_ACTIVE_KID`, `DIGITAL_CODE_BLIND_INDEX_KEY` (they protect the code vault; next to the ciphertext they would defeat it), `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD` (bootstrap), `STRIPE_API_VERSION` (code-coupled), `SEO_SITEMAP_DISK` (infrastructure) and the framework keys.
+
+### Files created
+
+- `app/Providers/SettingsServiceProvider.php`; `app/Domains/Settings/Services/{SettingsOverlay,SettingDefinitions,EnvSettingsImporter}.php`; `app/Domains/Settings/DTOs/SettingDefinition.php`; `app/Domains/Settings/Rules/SettingValueFormat.php`; `app/Console/Commands/Settings/ImportEnvSettingsCommand.php`.
+- Tests: `tests/Feature/Admin/DatabaseSettingsTest.php`, `tests/Support/SettingsFixtures.php`.
+
+### Files changed
+
+`bootstrap/providers.php`; `config/{admin_settings,admin,auth,automation,identity,mcp,mobile,payments,push,seo,services,storefront}.php`; `SettingsService` (overlay version on save, `has`, `stored`, secret audit as changed or cleared, public `decodeStored`), `AdminSettingsService` (config-backed defaults, format rules, uploads, `rulesFor`), `AppLinkAssociationService` (public patterns), `FcmClient` (key from the settings), `SettingsController`, `SetSecretRequest` (file upload, 20,000 characters), `SettingsSeeder` (built-in defaults of the moved non-secret settings), `admin/settings/show.blade.php` (JSON paste or upload and clear for the FCM key), `lang/{en,ar}/admin.php`, `.env.example`. Tests adapted (not weakened): `AdminSettingsTest` (every new group in the page dataset; guest checkout now asserted editable with `manage_critical` and forbidden with `manage`; the secret canary now also covers the n8n secrets and the FCM key on every page in EN and AR, the stored rows and the audit), `AppConfigTest` (canary includes the n8n secret and the FCM key), `PushNotificationsTest` (key stored through `SettingsService`; "missing file" became "no key stored"), `CheckoutConcurrencyTest` and its worker (guest checkout through a config override instead of an env variable), `tests/Pest.php`. Docs: `DEPLOYMENT.md` 3, `SECURITY.md` 5 and 10, `INTEGRATIONS.md` (Stripe, PayPal, OXR, FCM), `API_DOCUMENTATION.md` (app config, 5f settings), `MCP_SERVER.md`, `N8N_AUTOMATIONS.md`, `n8n/README.md`, `OWNER_DECISIONS.md`.
+
+### Migrations
+
+None: the existing `settings` table holds everything. No new packages.
+
+### Owner migration (once, after deploying)
+
+```
+php artisan config:clear
+php artisan settings:import-env
+php artisan config:cache
+```
+
+Then remove the moved lines from `backend/.env` (`.env.example` shows what stays) and delete the FCM key file. `--force` re-imports over database values. A seeded built-in default that staff never changed counts as unset.
+
+### Tests and results
+
+- New: `tests/Feature/Admin/DatabaseSettingsTest.php`. It covers the overlay (the database value wins, including in a freshly booted process; a cleared value restores the default; the version is re-read only after a save and otherwise costs no query; queue workers re-check before each job and other processes do not; it fails soft without the database or the table; it never runs under `config:cache` or `optimize`; no `env()` is left for a moved key). It also covers encryption at rest and write-only secrets (the n8n secrets, OXR, and the FCM JSON pasted or uploaded and read by `FcmClient`), `manage` vs `manage_critical` per group, 23 invalid-value cases, http allowed only locally, audit of old and new values, and the import command (prints no values, idempotent with `--force`, imports over seeded defaults, imports the FCM JSON from the old path, reports and stores nothing for invalid values).
+- Files run while working: `DatabaseSettingsTest`, `AdminSettingsTest`, `PushNotificationsTest`, `AppConfigTest` and `CheckoutConcurrencyTest` all passed (130 tests in the last combined run).
+- Full suite, run once, sequentially (`php artisan test --compact`, MySQL `gaming-store_testing`): **2,969 passed, 0 failed, 23,384 assertions, about 261 s**. This count includes the PM's new `ExplicitGrantCommandTest`. `vendor/bin/pint --dirty`: passed. `npm run build`: passed.
+
+### Outstanding requirements
+
+- The owner runs the import on each environment and removes the lines from `.env` (this pass did not read or edit `backend/.env`).
+- Undocumented env knobs that were never in `.env.example` stay env-driven: `MOBILE_ACCESS_TOKEN_TTL_MINUTES`, `MOBILE_REFRESH_TOKEN_TTL_DAYS`, `MOBILE_2FA_CHALLENGE_TTL_SECONDS`, `GUEST_ORDER_TOKEN_TTL_HOURS`, `AFFILIATE_ATTRIBUTION_DAYS`, `BRAND_NAME`, `MEDIA_BASE_URL`, `PAYMENTS_CONNECT_TIMEOUT`, `PAYMENTS_TIMEOUT`, `OPEN_EXCHANGE_RATES_BASE_URL` and timeouts.
+- The Octane per-request refresh is untested against a real Octane server (not installed).
+- Settings > General, Notifications and SMTP are still stored but not applied (unchanged from M15).

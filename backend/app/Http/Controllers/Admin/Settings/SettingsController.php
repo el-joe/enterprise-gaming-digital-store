@@ -26,9 +26,9 @@ class SettingsController extends Controller
 
     public function secret(SetSecretRequest $request, string $group, string $key): JsonResponse
     {
-        $value = $request->validated('value');
-        $this->settings->setSecret($request->user(), $group, $key, $value === null || $value === '' ? null : (string) $value);
+        $value = $request->secret();
+        $this->settings->setSecret($request->user(), $group, $key, $value, upload: $request->hasFile('file'));
 
-        return $this->success(['configured' => $value !== null && $value !== ''], $value === null || $value === '' ? 'Secret cleared.' : 'Secret replaced.');
+        return $this->success(['configured' => $value !== null], $value === null ? 'Secret cleared.' : 'Secret replaced.');
     }
 }

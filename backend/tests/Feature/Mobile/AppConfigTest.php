@@ -202,13 +202,18 @@ describe('payment gateways', function (): void {
         PaymentGatewayCredential::factory()->create(['payment_gateway_id' => $paypal->id, 'mode' => $paypal->mode, 'credentials' => ['client_id' => 'AYPublicPayPalClientId', 'client_secret' => APP_CONFIG_PAYPAL_SECRET], 'webhook_secret' => APP_CONFIG_WEBHOOK_SECRET]);
         app(SettingsService::class)->set('currency', 'oxr_app_id', APP_CONFIG_OXR_SECRET, SettingType::String, encrypted: true);
         app(SettingsService::class)->set('app', 'maintenance', true, SettingType::Bool);
+        // Settings from the database: the n8n secrets and the FCM key are encrypted settings applied
+        // to config (or read by FcmClient); none may reach the public app config.
+        app(SettingsService::class)->set('automation', 'outbound_secret', APP_CONFIG_OXR_SECRET.'-n8n', SettingType::String, encrypted: true);
+        ['json' => $serviceAccount] = fakeServiceAccountJson('boxcards-appconfig');
+        app(SettingsService::class)->set('push', 'fcm_service_account', $serviceAccount, SettingType::String, encrypted: true);
 
         $json = appConfig()->assertOk()
             ->assertJsonPath('data.config.payment_gateways.stripe.publishable_key', 'pk_test_51PublicKeyValue')
             ->assertJsonPath('data.config.payment_gateways.paypal.client_id', 'AYPublicPayPalClientId')
             ->getContent();
 
-        foreach ([APP_CONFIG_STRIPE_SECRET, APP_CONFIG_WEBHOOK_SECRET, APP_CONFIG_PAYPAL_SECRET, APP_CONFIG_OXR_SECRET, (string) config('app.key')] as $secret) {
+        foreach ([APP_CONFIG_STRIPE_SECRET, APP_CONFIG_WEBHOOK_SECRET, APP_CONFIG_PAYPAL_SECRET, APP_CONFIG_OXR_SECRET, (string) config('app.key'), 'PRIVATE KEY', 'boxcards-appconfig'] as $secret) {
             expect($json)->not->toContain($secret);
         }
 

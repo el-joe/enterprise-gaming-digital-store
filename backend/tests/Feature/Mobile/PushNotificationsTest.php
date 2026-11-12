@@ -28,6 +28,8 @@ use App\Domains\Payments\Enums\ProviderPaymentStatus;
 use App\Domains\Payments\Models\Payment;
 use App\Domains\Payments\Notifications\PaymentFailed;
 use App\Domains\Payments\Services\PaymentStateApplier;
+use App\Domains\Settings\Enums\SettingType;
+use App\Domains\Settings\Services\SettingsService;
 use App\Domains\Support\Models\SupportTicket;
 use App\Domains\Support\Notifications\SupportTicketReplied;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -63,24 +65,11 @@ afterEach(function (): void {
  */
 function enablePushWithTestKey(): OpenSSLAsymmetricKey
 {
-    $key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 2048]);
-    openssl_pkey_export($key, $pem);
-    $directory = storage_path('framework/testing');
+    ['json' => $json, 'key' => $key] = fakeServiceAccountJson('boxcards-test');
 
-    if (! is_dir($directory)) {
-        mkdir($directory, 0775, true);
-    }
-
-    $path = $directory.'/fcm-'.Str::random(12).'.json';
-    file_put_contents($path, json_encode([
-        'type' => 'service_account',
-        'project_id' => 'boxcards-test',
-        'client_email' => 'push-sender@boxcards-test.iam.gserviceaccount.com',
-        'private_key' => $pem,
-        'token_uri' => 'https://oauth2.googleapis.com/token',
-    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
-
-    config(['push.enabled' => true, 'push.fcm.project_id' => 'boxcards-test', 'push.fcm.credentials_path' => $path]);
+    // Settings from the database: the key is the encrypted admin setting push.fcm_service_account.
+    app(SettingsService::class)->set('push', 'fcm_service_account', $json, SettingType::String, encrypted: true);
+    config(['push.enabled' => true, 'push.fcm.project_id' => 'boxcards-test']);
 
     return $key;
 }
@@ -444,8 +433,9 @@ describe('sending', function (): void {
             && substr_count((string) $request['assertion'], '.') === 2);
     });
 
-    it('fails without retrying and without sending when the credentials file is missing', function (): void {
-        config(['push.enabled' => true, 'push.fcm.project_id' => 'boxcards-test', 'push.fcm.credentials_path' => storage_path('framework/testing/fcm-missing.json')]);
+    it('fails without retrying and without sending when no service-account key is stored', function (): void {
+        config(['push.enabled' => true, 'push.fcm.project_id' => 'boxcards-test']);
+        expect(app(SettingsService::class)->has('push', 'fcm_service_account'))->toBeFalse();
         Http::preventStrayRequests();
         Http::fake();
 

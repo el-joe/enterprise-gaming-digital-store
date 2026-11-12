@@ -62,7 +62,7 @@ These steps follow `docs/DEPLOYMENT.md` (Nginx server block, Supervisor program,
 | `N8N_BLOCK_ENV_ACCESS_IN_NODE` | `false` (the documented default); workflows read the variables below through `$env` |
 | `EGS_API_BASE_URL` | Laravel base URL, for example `https://example.com` |
 | `EGS_AUTOMATION_HMAC_SECRET` | the HMAC secret printed by `php artisan automation:credentials issue` |
-| `EGS_OUTBOUND_SECRET` | equal to Laravel's `N8N_OUTBOUND_SECRET` |
+| `EGS_OUTBOUND_SECRET` | equal to Laravel's outbound signing secret (Admin > Settings > Automation) |
 | `EGS_ALERT_CHANNEL` | `slack` or `telegram` |
 | `EGS_SLACK_CHANNEL_ID` | Slack channel id (when the channel is Slack) |
 | `EGS_TELEGRAM_CHAT_ID` | Telegram chat id (when the channel is Telegram) |
@@ -75,14 +75,16 @@ Custom n8n Variables (`$vars`) are not used: n8n documents them for the Business
 
 ### Laravel side
 
-In `backend/.env` (empty in `.env.example`):
+In Admin > Settings > Automation (`settings.manage_critical`; these were `.env` keys until 2026-11-12, see `docs/DEPLOYMENT.md` 3.2, and are no longer read from `.env`):
 
-```
-AUTOMATION_OUTBOX_ENABLED=true
-N8N_WEBHOOK_URL=https://n8n.example.com/webhook/egs-events
-N8N_OUTBOUND_SECRET=<long random value, also EGS_OUTBOUND_SECRET in n8n>
-N8N_WEBHOOK_AUTH_TOKEN=<long random value, also the LaravelOutboundWebhook credential>
-```
+| Setting | Value |
+|---|---|
+| Send events to n8n (outbox) | on |
+| n8n webhook URL | `https://n8n.example.com/webhook/egs-events` (https; http only on a local install) |
+| Outbound signing secret (HMAC), write-only | long random value, also `EGS_OUTBOUND_SECRET` in n8n |
+| Webhook header token, write-only | long random value, also the LaravelOutboundWebhook credential |
+
+The two secrets are stored encrypted and never shown again; keep the values in n8n only. An installation that still has `AUTOMATION_OUTBOX_ENABLED`, `N8N_WEBHOOK_URL`, `N8N_OUTBOUND_SECRET` and `N8N_WEBHOOK_AUTH_TOKEN` in `backend/.env` copies them once with `php artisan config:clear && php artisan settings:import-env`, then removes the lines.
 
 Issue the credential (token and HMAC secret are printed once; issuing again replaces the account's secret):
 
@@ -110,13 +112,12 @@ This runs a local n8n of its own on `127.0.0.1:5710`, away from the other local 
 1. Install n8n: `cd n8n/runtime && npm ci`.
 2. Start it as a user service. This creates `.env` with a random `N8N_ENCRYPTION_KEY`; back that key up. Run `./install-user-service.sh`, then check it with `systemctl --user status n8n-boxcards`.
 3. Set up Apache and the hosts file once, as root: `sudo deploy/setup-local-sudo.sh`. Add `--linger` to keep n8n running when you are logged out. This installs `deploy/apache/boxcards.loc.conf` (pointing at `backend/public`; `admin.boxcards.loc` is an alias) and `deploy/apache/000-n8n.boxcards.loc.conf` (a reverse proxy with WebSocket support), and replaces the old `admin.boxcards.loc` vhost.
-4. In `backend/.env`, set:
-   - `APP_URL=http://boxcards.loc`
-   - `N8N_WEBHOOK_URL=http://n8n.boxcards.loc/webhook/egs-events`
-   - `N8N_OUTBOUND_SECRET` and `N8N_WEBHOOK_AUTH_TOKEN`.
+4. In `backend/.env`, set `APP_URL=http://boxcards.loc` (with `APP_ENV=local`, so the http webhook URL is accepted). In Admin > Settings > Automation, set:
+   - n8n webhook URL `http://n8n.boxcards.loc/webhook/egs-events`;
+   - the outbound signing secret and the webhook header token.
 
    In `n8n/runtime/.env`, set:
-   - `EGS_OUTBOUND_SECRET` (equal to `N8N_OUTBOUND_SECRET`);
+   - `EGS_OUTBOUND_SECRET` (equal to the outbound signing secret);
    - `EGS_AUTOMATION_HMAC_SECRET` (from `php artisan automation:credentials issue`).
 
    Then restart n8n with `systemctl --user restart n8n-boxcards`.

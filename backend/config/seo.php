@@ -22,10 +22,10 @@ return [
 
     /*
     | robots.txt (strategy section 5). `block_all` answers `Disallow: /` (staging and preview
-    | hosts that must never be indexed).
+    | hosts that must never be indexed). Admin setting seo.block_all_crawlers (SettingsOverlay).
     */
     'robots' => [
-        'block_all' => (bool) env('SEO_BLOCK_ALL_CRAWLERS', false),
+        'block_all' => false,
         'disallow' => ['/admin', '/checkout', '/cart', '/account', '/api', '/search', '/orders'],
     ],
 

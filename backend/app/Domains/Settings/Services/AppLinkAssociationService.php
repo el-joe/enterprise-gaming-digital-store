@@ -3,7 +3,8 @@
 namespace App\Domains\Settings\Services;
 
 /**
- * The app link association files (M-A6, ADR-039), built from `mobile.app_links` only.
+ * The app link association files (M-A6, ADR-039), built from `mobile.app_links` only (packages,
+ * fingerprints and app ids are the `app_links` admin settings, applied there by SettingsOverlay).
  *
  * Formats (official docs, read 2026-11-10):
  * - Android Digital Asset Links: a JSON array of statements with relation
@@ -17,11 +18,11 @@ namespace App\Domains\Settings\Services;
  */
 class AppLinkAssociationService
 {
-    private const string FINGERPRINT = '/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/';
+    public const string FINGERPRINT = '/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/';
 
-    private const string PACKAGE = '/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/';
+    public const string PACKAGE = '/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/';
 
-    private const string APPLE_APP_ID = '/^[A-Z0-9]{10}\.[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*$/';
+    public const string APPLE_APP_ID = '/^[A-Z0-9]{10}\.[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*$/';
 
     /**
      * @return list<array{relation: list<string>, target: array{namespace: string, package_name: string, sha256_cert_fingerprints: list<string>}}>

@@ -36,6 +36,7 @@ require_once __DIR__.'/Support/StorefrontFixtures.php';
 require_once __DIR__.'/Support/AccountPageFixtures.php';
 require_once __DIR__.'/Support/AdminFixtures.php';
 require_once __DIR__.'/Support/SeoFixtures.php';
+require_once __DIR__.'/Support/SettingsFixtures.php';
 
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)

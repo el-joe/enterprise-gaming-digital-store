@@ -41,10 +41,11 @@ return [
     | (M12) only shows a "checking" state and asks the server to verify; it never
     | marks anything paid. `{order}` is replaced by the order public id.
     */
-    'return_url' => env('PAYMENTS_RETURN_URL') ?: '/checkout/orders/{order}/return',
+    // Admin settings group `payments` (SettingsOverlay) override the five templates below.
+    'return_url' => '/checkout/orders/{order}/return',
 
     // Where a cancelled provider page (PayPal `cancel_url`) sends the browser; null uses `return_url`.
-    'cancel_url' => env('PAYMENTS_CANCEL_URL') ?: null,
+    'cancel_url' => null,
 
     /*
     | App channel (M-A6, ADR-039): `client=app` attempts return to these paths on APP_URL (HTTPS
@@ -58,9 +59,9 @@ return [
     | universal links, so set it to the app's registered scheme (for example
     | `boxcards://stripe-redirect`) once the app defines one; null publishes the app return URL.
     */
-    'app_return_url' => env('PAYMENTS_APP_RETURN_URL') ?: '/app/payments/return/{order}?attempt={attempt}',
-    'app_cancel_url' => env('PAYMENTS_APP_CANCEL_URL') ?: '/app/payments/cancel/{order}?attempt={attempt}',
-    'stripe_app_return_url' => env('PAYMENTS_STRIPE_APP_RETURN_URL') ?: null,
+    'app_return_url' => '/app/payments/return/{order}?attempt={attempt}',
+    'app_cancel_url' => '/app/payments/cancel/{order}?attempt={attempt}',
+    'stripe_app_return_url' => null,
 
     'http' => [
         'connect_timeout' => (int) env('PAYMENTS_CONNECT_TIMEOUT', 5),
@@ -107,9 +108,10 @@ return [
     | by a trusted edge proxy such as Cloudflare; enable it only when the origin
     | accepts traffic from that proxy alone, since a client can send the header itself.
     | GeoLite2 needs the geoip2/geoip2 package and a MaxMind database, not installed.
+    | Admin settings geoip.geoip_driver and geoip.geoip_country_header (SettingsOverlay).
     */
     'geoip' => [
-        'driver' => env('GEOIP_DRIVER') ?: 'null',
-        'header' => env('GEOIP_COUNTRY_HEADER') ?: 'CF-IPCountry',
+        'driver' => 'null',
+        'header' => 'CF-IPCountry',
     ],
 ];

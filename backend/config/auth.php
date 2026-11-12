@@ -141,11 +141,14 @@ return [
     | redirects here with `{status}` replaced by `verified`, `already_verified` or `invalid`.
     | Null uses the site root with `?email_verification={status}`.
     |
+    | Both are admin settings (Settings > Account links, group `account_links`), applied by
+    | SettingsOverlay; null here is the built-in default.
+    |
     */
 
     'links' => [
-        'password_reset_url' => env('PASSWORD_RESET_URL') ?: null,
-        'email_verified_url' => env('EMAIL_VERIFIED_URL') ?: null,
+        'password_reset_url' => null,
+        'email_verified_url' => null,
     ],
 
 ];

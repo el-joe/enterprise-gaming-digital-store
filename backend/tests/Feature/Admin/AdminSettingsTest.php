@@ -16,7 +16,7 @@ use Database\Factories\Currency\CurrencyFactory;
 
 const SETTINGS_SECRET_CANARY = 'oxr_CANARY_m15_settings_never_rendered_91c2';
 
-dataset('setting groups', ['general', 'orders', 'checkout', 'pricing', 'currency', 'security', 'suppliers', 'notifications', 'mail', 'analytics', 'mobile', 'automation']);
+dataset('setting groups', ['general', 'orders', 'checkout', 'payments', 'pricing', 'currency', 'security', 'geoip', 'suppliers', 'notifications', 'mail', 'analytics', 'mobile', 'app_links', 'account_links', 'push', 'mcp', 'automation', 'seo', 'admin']);
 
 describe('settings pages', function (): void {
     it('renders every group read-only for settings.view, in English and Arabic', function (string $group): void {
@@ -34,12 +34,21 @@ describe('settings pages', function (): void {
         $this->get('/admin/settings/nope')->assertNotFound();
     });
 
-    it('shows guest checkout read-only from configuration', function (): void {
+    it('makes guest checkout an editable critical setting that reaches the storefront flag', function (): void {
         config(['storefront.guest_checkout' => false]);
         adminWith(['settings.view', 'settings.manage']);
 
-        $this->get('/admin/settings/checkout')->assertOk()->assertSee(__('admin.settings.field.guest_checkout'))->assertSee('off')
-            ->assertDontSee('name="guest_checkout"', false);
+        $this->get('/admin/settings/checkout')->assertOk()->assertSee(__('admin.settings.field.guest_checkout'))
+            ->assertSee('name="guest_checkout"', false)->assertSee(__('admin.settings.needs', ['permission' => 'settings.manage_critical']));
+        $this->putJson('/admin/api/settings/checkout', ['guest_checkout' => true])->assertForbidden();
+        expect(config('storefront.guest_checkout'))->toBeFalse();
+
+        adminWith(['settings.view', 'settings.manage_critical']);
+        $this->putJson('/admin/api/settings/checkout', ['guest_checkout' => true])->assertOk();
+
+        expect(config('storefront.guest_checkout'))->toBeTrue()
+            ->and(app(SettingsService::class)->get('checkout', 'guest_checkout'))->toBeTrue();
+        $this->get('/admin/settings/checkout')->assertOk()->assertDontSee(__('admin.settings.needs', ['permission' => 'settings.manage_critical']));
     });
 });
 
@@ -98,8 +107,22 @@ describe('write-only secrets', function (): void {
             ->and(AuditLog::query()->get()->toJson())->not->toContain(SETTINGS_SECRET_CANARY)
             ->and(app(SettingsService::class)->get('currency', 'oxr_app_id'))->toBe(SETTINGS_SECRET_CANARY);
 
+        // Settings from the database: the n8n secrets and the FCM service-account key are write-only too.
+        ['json' => $serviceAccount] = fakeServiceAccountJson('boxcards-canary', 'canary-sender@boxcards-canary.iam.gserviceaccount.com');
+        $this->putJson('/admin/api/settings/automation/secrets/outbound_secret', ['value' => SETTINGS_SECRET_CANARY.'-outbound'])->assertOk();
+        $this->putJson('/admin/api/settings/automation/secrets/webhook_auth_token', ['value' => SETTINGS_SECRET_CANARY.'-header'])->assertOk();
+        $fcm = $this->putJson('/admin/api/settings/push/secrets/fcm_service_account', ['value' => $serviceAccount])->assertOk();
+        $privateKeyLine = explode("\n", (string) json_decode($serviceAccount, true)['private_key'])[1];
+
+        expect($fcm->getContent())->not->toContain($privateKeyLine)->not->toContain('canary-sender')
+            ->and(AuditLog::query()->get()->toJson())->not->toContain(SETTINGS_SECRET_CANARY)->not->toContain($privateKeyLine)
+            ->and(Setting::query()->pluck('value')->implode(' '))->not->toContain(SETTINGS_SECRET_CANARY)->not->toContain($privateKeyLine);
+
         foreach (array_keys((array) config('admin_settings.groups')) as $group) {
-            expect($this->get('/admin/settings/'.$group)->getContent())->not->toContain(SETTINGS_SECRET_CANARY);
+            expect($this->get('/admin/settings/'.$group)->getContent())->not->toContain(SETTINGS_SECRET_CANARY)->not->toContain($privateKeyLine)->not->toContain('canary-sender');
+            $this->withSession(['admin.locale' => 'ar']);
+            expect($this->get('/admin/settings/'.$group)->getContent())->not->toContain(SETTINGS_SECRET_CANARY)->not->toContain($privateKeyLine);
+            $this->withSession(['admin.locale' => 'en']);
         }
 
         $this->putJson('/admin/api/settings/currency/secrets/oxr_app_id', ['value' => null])->assertOk();

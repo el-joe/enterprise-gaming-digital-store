@@ -4,7 +4,8 @@
  * Runs one POST /api/v1/checkout/place-order in its own PHP process, with its own database
  * connection, for the concurrency tests. Argument 1 is a JSON payload file:
  *   key, body, gateway_id, user_id | guest_token, start_at (optional unix time with fraction),
- *   crash_after_units (optional: SIGKILL the process mid-transaction).
+ *   crash_after_units (optional: SIGKILL the process mid-transaction), guest_checkout (optional:
+ *   the storefront.guest_checkout override).
  * Prints {"status": int, "replayed": bool, "body": object}.
  */
 
@@ -30,6 +31,11 @@ $kernel->bootstrap();
 if (config('database.default') !== 'mysql' || config('database.connections.mysql.database') !== 'gaming-store_testing') {
     fwrite(STDERR, "Refusing to run outside the test database.\n");
     exit(2);
+}
+
+// Guest checkout is the admin setting checkout.guest_checkout (applied to this config key).
+if ($payload['guest_checkout'] ?? false) {
+    config(['storefront.guest_checkout' => true]);
 }
 
 Http::preventStrayRequests();
