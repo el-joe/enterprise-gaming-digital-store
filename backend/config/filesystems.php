@@ -13,7 +13,8 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'local'),
+    // Admin settings storage.* (critical, owner decision 11), applied by SettingsOverlay.
+    'default' => 'local',
 
     /*
     |--------------------------------------------------------------------------
@@ -41,7 +42,8 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Derived from app.url by SettingsOverlay.
+            'url' => 'http://localhost/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -49,13 +51,14 @@ return [
 
         's3' => [
             'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            // Needs league/flysystem-aws-s3-v3 (not installed). The secret is an encrypted setting.
+            'key' => null,
+            'secret' => null,
+            'region' => null,
+            'bucket' => null,
+            'url' => null,
+            'endpoint' => null,
+            'use_path_style_endpoint' => false,
             'throw' => false,
             'report' => false,
         ],

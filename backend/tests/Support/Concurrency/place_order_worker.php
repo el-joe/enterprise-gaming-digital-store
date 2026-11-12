@@ -17,6 +17,7 @@ use Illuminate\Cookie\CookieValuePrefix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\Support\FakePaymentCurrencyResolver;
+use Tests\Support\TestConfiguration;
 
 $root = dirname(__DIR__, 3);
 
@@ -26,6 +27,7 @@ $payload = json_decode((string) file_get_contents($argv[1]), true, flags: JSON_T
 
 $app = require $root.'/bootstrap/app.php';
 $kernel = $app->make(Kernel::class);
+TestConfiguration::register($app);
 $kernel->bootstrap();
 
 if (config('database.default') !== 'mysql' || config('database.connections.mysql.database') !== 'gaming-store_testing') {

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Domains\Fulfillment\Services\DigitalCodeKeyManager;
 use App\Domains\Settings\Enums\SettingType;
 use App\Domains\Settings\Models\Setting;
 use App\Domains\Settings\Services\SettingDefinitions;
@@ -14,8 +15,14 @@ class SettingsSeeder extends Seeder
      * Seed documented defaults. Existing values are kept so a re-seed never undoes an admin change.
      * The settings that replaced `.env` keys are seeded with their config file's built-in default
      * (feature switches off, no secrets); `settings:import-env` treats such untouched rows as unset.
+     * Derived config keys (the session cookie, sender and store names, the EHLO domain) are not
+     * seeded, so they keep following their source.
+     *
+     * The code-vault keys are never seeded as defaults: on a first install (no keys anywhere, no
+     * codes, nothing left to import in the environment) they are generated, encrypted with APP_KEY
+     * (owner decision 11); otherwise nothing happens.
      */
-    public function run(SettingDefinitions $definitions, SettingsOverlay $overlay): void
+    public function run(SettingDefinitions $definitions, SettingsOverlay $overlay, DigitalCodeKeyManager $vaultKeys): void
     {
         $settings = [
             ['currency', 'base', 'USD', SettingType::String],
@@ -36,10 +43,12 @@ class SettingsSeeder extends Seeder
             ['automation', 'task_drivers', '{}', SettingType::Json],
         ];
 
+        $derived = $definitions->derived();
+
         foreach ($definitions->overlaid() as $definition) {
             $default = $overlay->defaultFor((string) $definition->configKey);
 
-            if ($definition->encrypted || $default === null || $default === '') {
+            if ($definition->encrypted || $definition->vault || isset($derived[(string) $definition->configKey]) || $default === null || $default === '') {
                 continue;
             }
 
@@ -56,5 +65,7 @@ class SettingsSeeder extends Seeder
                 ['value' => $value, 'type' => $type, 'is_encrypted' => false],
             );
         }
+
+        $vaultKeys->generateIfAbsent();
     }
 }

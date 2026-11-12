@@ -21,12 +21,22 @@ use Illuminate\Contracts\Validation\ValidationRule;
  * - `fcm_project_id`: a Firebase (Google Cloud) project id.
  * - `fcm_service_account`: a Google service-account JSON key: `type` service_account,
  *   `project_id`, `client_email`, a usable `private_key` and an https `token_uri` when present.
+ * - `host`: a host name or an IP address, without scheme, port or path (SMTP host, EHLO domain).
+ * - `cookie_domain`: a cookie domain (a host name, optionally with a leading dot).
+ * - `disk`: a configured filesystem disk whose driver is installed (the S3 driver needs
+ *   league/flysystem-aws-s3-v3, which is not installed).
+ * - `locale_code`: a locale such as en_US or ar_SA (Faker).
  */
 class SettingValueFormat implements ValidationRule
 {
     private const array FORBIDDEN_SCHEMES = ['javascript', 'data', 'file', 'vbscript', 'ftp'];
 
     private const string PROJECT_ID = '/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/';
+
+    private const string HOST_NAME = '/^(?=.{1,253}$)([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$/';
+
+    /** The adapter class each filesystem driver needs, when it is not part of the framework. */
+    private const array DRIVER_ADAPTERS = ['s3' => 'League\Flysystem\AwsS3V3\AwsS3V3Adapter'];
 
     /**
      * @param  list<string>  $placeholders
@@ -67,6 +77,10 @@ class SettingValueFormat implements ValidationRule
             'apple_app_ids' => self::isList($value, AppLinkAssociationService::APPLE_APP_ID),
             'fcm_project_id' => preg_match(self::PROJECT_ID, $value) === 1,
             'fcm_service_account' => self::isServiceAccount($value),
+            'host' => preg_match(self::HOST_NAME, $value) === 1 || filter_var($value, FILTER_VALIDATE_IP) !== false,
+            'cookie_domain' => preg_match(self::HOST_NAME, ltrim($value, '.')) === 1,
+            'disk' => self::isUsableDisk($value),
+            'locale_code' => preg_match('/^[a-z]{2,3}(_[A-Z]{2})?$/', $value) === 1,
             default => false,
         };
     }
@@ -119,6 +133,17 @@ class SettingValueFormat implements ValidationRule
         }
 
         return $items !== [];
+    }
+
+    private static function isUsableDisk(string $value): bool
+    {
+        $driver = config("filesystems.disks.{$value}.driver");
+
+        if (! is_string($driver)) {
+            return false;
+        }
+
+        return ! isset(self::DRIVER_ADAPTERS[$driver]) || class_exists(self::DRIVER_ADAPTERS[$driver]);
     }
 
     private static function isServiceAccount(string $value): bool

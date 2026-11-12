@@ -2,10 +2,12 @@
 
 namespace Tests;
 
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Tests\Support\TestConfiguration;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -16,7 +18,14 @@ abstract class TestCase extends BaseTestCase
      */
     public function createApplication(): Application
     {
-        $app = parent::createApplication();
+        $app = require Application::inferBasePath().'/bootstrap/app.php';
+
+        $this->traitsUsedByTest = class_uses_recursive(static::class);
+
+        // Test-only code-vault keys and mailer (owner decision 11: no longer read from the environment).
+        TestConfiguration::register($app);
+
+        $app->make(Kernel::class)->bootstrap();
 
         $connection = $app['config']->get('database.default');
         $database = $app['config']->get("database.connections.{$connection}.database");

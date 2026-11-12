@@ -14,7 +14,8 @@ return [
     | them (generated on the first request when missing). At most `chunk_size` URLs per file.
     */
     'sitemaps' => [
-        'disk' => env('SEO_SITEMAP_DISK', 'local'),
+        // Admin setting storage.sitemap_disk (owner decision 11).
+        'disk' => 'local',
         'directory' => 'sitemaps',
         'chunk_size' => 50000,
         'max_age_seconds' => 3600,

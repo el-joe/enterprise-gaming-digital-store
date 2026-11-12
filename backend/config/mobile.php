@@ -14,13 +14,17 @@ return [
     | A pending two-factor sign-in lives `challenge_ttl_seconds` and allows
     | `challenge_max_attempts` wrong codes before it is spent.
     |
+    | The three lifetimes are the admin settings security.mobile_access_token_ttl_minutes,
+    | security.mobile_refresh_token_ttl_days and security.mobile_2fa_challenge_ttl_seconds
+    | (owner decision 11), applied by SettingsOverlay.
+    |
     */
     'auth' => [
-        'access_token_ttl_minutes' => (int) (env('MOBILE_ACCESS_TOKEN_TTL_MINUTES') ?: 15),
+        'access_token_ttl_minutes' => 15,
 
-        'refresh_token_ttl_days' => (int) (env('MOBILE_REFRESH_TOKEN_TTL_DAYS') ?: 30),
+        'refresh_token_ttl_days' => 30,
 
-        'challenge_ttl_seconds' => (int) (env('MOBILE_2FA_CHALLENGE_TTL_SECONDS') ?: 300),
+        'challenge_ttl_seconds' => 300,
 
         'challenge_max_attempts' => 5,
 

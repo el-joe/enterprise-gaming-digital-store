@@ -63,6 +63,20 @@ class SettingDefinitions
                 }
             }
 
+            foreach ((array) ($group['vault_keys'] ?? []) as $key => $vaultKey) {
+                $definitions[] = new SettingDefinition(
+                    screen: (string) $screen,
+                    group: $store,
+                    key: (string) $key,
+                    type: self::typeOf((string) $vaultKey['type']),
+                    encrypted: (bool) $vaultKey['encrypted'],
+                    permission: 'settings.manage_critical',
+                    configKey: $vaultKey['config'] ?? null,
+                    envKey: $vaultKey['env'] ?? null,
+                    vault: true,
+                );
+            }
+
             if (($group['app_config'] ?? false) === true) {
                 foreach ((array) ($group['env'] ?? []) as $key => $envKey) {
                     $definitions[] = new SettingDefinition(
@@ -89,6 +103,34 @@ class SettingDefinitions
     public function overlaid(): array
     {
         return array_values(array_filter($this->all(), static fn (SettingDefinition $definition): bool => $definition->configKey !== null));
+    }
+
+    /**
+     * The code-vault key definitions (group digital_codes), by key.
+     *
+     * @return array<string, SettingDefinition>
+     */
+    public function vault(): array
+    {
+        $vault = [];
+
+        foreach ($this->all() as $definition) {
+            if ($definition->vault) {
+                $vault[$definition->key] = $definition;
+            }
+        }
+
+        return $vault;
+    }
+
+    /**
+     * Config keys that follow another config key while no setting of their own is stored.
+     *
+     * @return array<string, array{from: string, as: string}>
+     */
+    public function derived(): array
+    {
+        return (array) config('admin_settings.derived', []);
     }
 
     public function find(string $group, string $key): ?SettingDefinition

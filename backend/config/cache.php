@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
 
     /*
@@ -86,9 +84,10 @@ return [
 
         'dynamodb' => [
             'driver' => 'dynamodb',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            // Cache infrastructure (read before the database): its own keys, never the file storage ones.
+            'key' => env('DYNAMODB_ACCESS_KEY_ID'),
+            'secret' => env('DYNAMODB_SECRET_ACCESS_KEY'),
+            'region' => env('DYNAMODB_REGION', 'us-east-1'),
             'table' => env('DYNAMODB_CACHE_TABLE', 'cache'),
             'endpoint' => env('DYNAMODB_ENDPOINT'),
         ],
@@ -118,7 +117,8 @@ return [
     |
     */
 
-    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
+    // Infrastructure: no longer derived from APP_NAME, which is a database setting (owner decision 11).
+    'prefix' => env('CACHE_PREFIX', 'boxcards-cache-'),
 
     /*
     |--------------------------------------------------------------------------

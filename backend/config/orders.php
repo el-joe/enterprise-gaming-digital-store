@@ -10,7 +10,8 @@ return [
     | signed delivery link or the email one-time code. It stands in for the browser session.
     |
     */
-    'guest_order_token_ttl_hours' => (int) (env('GUEST_ORDER_TOKEN_TTL_HOURS') ?: 24),
+    // Admin setting security.guest_order_token_ttl_hours (owner decision 11).
+    'guest_order_token_ttl_hours' => 24,
 
     /*
     |--------------------------------------------------------------------------

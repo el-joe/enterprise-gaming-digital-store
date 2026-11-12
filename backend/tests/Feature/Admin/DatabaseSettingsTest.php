@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /*
 | Settings from the database (owner request 2026-11-12): the `.env` keys added by this project are
@@ -253,6 +254,12 @@ describe('permissions', function (): void {
         'push' => ['push', ['push_enabled' => true, 'fcm_project_id' => 'boxcards-prod']],
         'admin idle' => ['security', ['admin_idle_minutes' => 20, 'risk_review_score' => 30, 'risk_block_score' => 70, 'risk_first_order_amount_base' => '50']],
         'automation' => ['automation', ['outbox_enabled' => true, 'webhook_url' => 'https://n8n.boxcards.shop/webhook/egs-events']],
+        // Owner decision 11.
+        'address and sessions' => ['session', ['app_url' => 'https://boxcards.shop', 'session_lifetime' => 60, 'session_secure_cookie' => true, 'session_same_site' => 'strict']],
+        'mail' => ['mail', ['mailer' => 'smtp', 'smtp_host' => 'smtp.boxcards.shop', 'smtp_port' => 587, 'from_address' => 'orders@boxcards.shop']],
+        'storage' => ['storage', ['sitemap_disk' => 'public', 'media_base_url' => 'https://cdn.boxcards.shop', 'aws_bucket' => 'boxcards-media']],
+        'token lifetimes' => ['security', ['risk_review_score' => 30, 'risk_block_score' => 70, 'risk_first_order_amount_base' => '50', 'password_timeout' => 900, 'mobile_access_token_ttl_minutes' => 20, 'guest_order_token_ttl_hours' => 12, 'api_token_prefix' => 'bxc_']],
+        'exchange rates api' => ['currency', ['max_age_minutes' => 720, 'max_change_pct' => '12', 'oxr_base_url' => 'https://oxr.example.com/api/', 'oxr_timeout' => 10]],
     ]);
 
     dataset('standard moved groups', [
@@ -260,6 +267,10 @@ describe('permissions', function (): void {
         'mcp' => ['mcp', ['pending_action_ttl_minutes' => 30, 'coupon_tier1_max_percent' => '15', 'coupon_tier1_max_fixed_base' => '5.50', 'mcp_token_ttl_days' => 30]],
         'seo' => ['seo', ['block_all_crawlers' => true]],
         'admin theme' => ['admin', ['admin_theme' => 'light']],
+        // Owner decision 11.
+        'store and languages' => ['site', ['app_name' => 'Boxcards', 'brand_name' => 'Boxcards Shop', 'locale' => 'ar', 'faker_locale' => 'ar_SA']],
+        'affiliates' => ['affiliates', ['attribution_days' => 45]],
+        'gateway timeouts' => ['payments', ['http_connect_timeout' => 3, 'http_timeout' => 30]],
     ]);
 
     it('needs settings.manage_critical for security-sensitive groups', function (string $group, array $values): void {
@@ -326,6 +337,34 @@ describe('validation', function (): void {
         'mcp coupon fixed not a decimal' => ['mcp', 'coupon_tier1_max_fixed_base', '1e3'],
         'automation ttl' => ['automation', 'automation_token_ttl_days', 9999],
         'fcm project id' => ['push', 'fcm_project_id', 'Bad_Project'],
+        // Owner decision 11.
+        'store address http outside local' => ['session', 'app_url', 'http://boxcards.shop'],
+        'store address not a url' => ['session', 'app_url', 'boxcards.shop'],
+        'session lifetime zero' => ['session', 'session_lifetime', 0],
+        'session path without slash' => ['session', 'session_path', 'account'],
+        'session domain with a scheme' => ['session', 'session_domain', 'https://boxcards.shop'],
+        'session same site' => ['session', 'session_same_site', 'sometimes'],
+        'session cookie name' => ['session', 'session_cookie', 'bad cookie;'],
+        'mailer not offered' => ['mail', 'mailer', 'array'],
+        'smtp scheme' => ['mail', 'smtp_scheme', 'tls'],
+        'smtp host with a scheme' => ['mail', 'smtp_host', 'https://smtp.boxcards.shop'],
+        'smtp port' => ['mail', 'smtp_port', 70000],
+        'from address' => ['mail', 'from_address', 'not-an-email'],
+        'ehlo domain' => ['mail', 'ehlo_domain', 'bad host!'],
+        's3 without its driver' => ['storage', 'filesystem_disk', 's3'],
+        'unknown disk' => ['storage', 'sitemap_disk', 'ftp'],
+        'media url http outside local' => ['storage', 'media_base_url', 'http://cdn.boxcards.shop'],
+        'bucket name' => ['storage', 'aws_bucket', 'Bad_Bucket'],
+        'region' => ['storage', 'aws_default_region', 'EU West'],
+        'locale not supported' => ['site', 'locale', 'fr'],
+        'faker locale' => ['site', 'faker_locale', 'english'],
+        'empty store name' => ['site', 'app_name', ''],
+        'token prefix' => ['security', 'api_token_prefix', 'Bad-Prefix'],
+        'password timeout' => ['security', 'password_timeout', 10],
+        'app access token too long' => ['security', 'mobile_access_token_ttl_minutes', 100000],
+        'rates api http' => ['currency', 'oxr_base_url', 'http://openexchangerates.org/api/'],
+        'gateway timeout' => ['payments', 'http_timeout', 0],
+        'attribution days' => ['affiliates', 'attribution_days', 0],
     ]);
 
     it('refuses a bad value with an envelope error beside the field', function (string $group, string $key, mixed $value): void {
@@ -474,5 +513,147 @@ describe('settings:import-env', function (): void {
         expect($exit)->toBe(1)
             ->and(Artisan::output())->toMatch('/N8N_WEBHOOK_URL\s*\|\s*automation\.webhook_url\s*\|\s*invalid/')->toMatch('/FCM_CREDENTIALS_PATH\s*\|\s*push\.fcm_service_account\s*\|\s*invalid/')
             ->and(Setting::query()->whereIn('key', ['webhook_url', 'fcm_service_account'])->exists())->toBeFalse();
+    });
+});
+
+describe('owner decision 11: everything but the bootstrap keys', function (): void {
+    it('applies the saved values to the framework and project config keys', function (): void {
+        adminWith(['settings.view', 'settings.manage', 'settings.manage_critical']);
+
+        $this->putJson('/admin/api/settings/site', ['app_name' => 'Boxcards Shop', 'brand_name' => 'Boxcards', 'fallback_locale' => 'ar', 'faker_locale' => 'ar_SA'])->assertOk();
+        $this->putJson('/admin/api/settings/session', ['app_url' => 'https://shop.boxcards.test', 'session_lifetime' => 45, 'session_encrypt' => true, 'session_secure_cookie' => true, 'session_path' => '/store', 'session_domain' => '.boxcards.test'])->assertOk();
+        $this->putJson('/admin/api/settings/mail', ['mailer' => 'log', 'smtp_scheme' => 'smtps', 'smtp_host' => 'smtp.boxcards.test', 'smtp_port' => 465, 'smtp_username' => 'mailer', 'from_address' => 'orders@boxcards.test'])->assertOk();
+        $this->putJson('/admin/api/settings/storage', ['filesystem_disk' => 'public', 'sitemap_disk' => 'public', 'media_base_url' => 'https://cdn.boxcards.test', 'aws_default_region' => 'eu-west-1', 'aws_use_path_style_endpoint' => true])->assertOk();
+        $this->putJson('/admin/api/settings/security', ['risk_review_score' => 40, 'risk_block_score' => 80, 'risk_first_order_amount_base' => '100', 'password_timeout' => 900, 'mobile_access_token_ttl_minutes' => 20, 'mobile_refresh_token_ttl_days' => 14, 'mobile_2fa_challenge_ttl_seconds' => 120, 'guest_order_token_ttl_hours' => 12, 'api_token_prefix' => 'bxc_'])->assertOk();
+        $this->putJson('/admin/api/settings/currency', ['max_age_minutes' => 1440, 'max_change_pct' => '10', 'oxr_base_url' => 'https://oxr.boxcards.test/api/', 'oxr_connect_timeout' => 2, 'oxr_timeout' => 9])->assertOk();
+        $this->putJson('/admin/api/settings/payments', ['http_connect_timeout' => 3, 'http_timeout' => 30])->assertOk();
+        $this->putJson('/admin/api/settings/affiliates', ['attribution_days' => 45])->assertOk();
+
+        expect(config('app.name'))->toBe('Boxcards Shop')
+            ->and(config('brand.name'))->toBe('Boxcards')
+            ->and(config('app.fallback_locale'))->toBe('ar')
+            ->and(config('app.faker_locale'))->toBe('ar_SA')
+            ->and(config('app.url'))->toBe('https://shop.boxcards.test')
+            ->and(config('session'))->toMatchArray(['lifetime' => 45, 'encrypt' => true, 'secure' => true, 'path' => '/store', 'domain' => '.boxcards.test', 'http_only' => true])
+            ->and(config('mail.default'))->toBe('log')
+            ->and(config('mail.mailers.smtp'))->toMatchArray(['scheme' => 'smtps', 'host' => 'smtp.boxcards.test', 'port' => 465, 'username' => 'mailer'])
+            ->and(config('mail.from.address'))->toBe('orders@boxcards.test')
+            ->and(config('filesystems.default'))->toBe('public')
+            ->and(config('filesystems.disks.s3'))->toMatchArray(['region' => 'eu-west-1', 'use_path_style_endpoint' => true])
+            ->and(config('seo.sitemaps.disk'))->toBe('public')
+            ->and(config('catalog.media.base_url'))->toBe('https://cdn.boxcards.test')
+            ->and(config('auth.password_timeout'))->toBe(900)
+            ->and(config('mobile.auth'))->toMatchArray(['access_token_ttl_minutes' => 20, 'refresh_token_ttl_days' => 14, 'challenge_ttl_seconds' => 120])
+            ->and(config('orders.guest_order_token_ttl_hours'))->toBe(12)
+            ->and(config('sanctum.token_prefix'))->toBe('bxc_')
+            ->and(config('services.open_exchange_rates'))->toMatchArray(['base_url' => 'https://oxr.boxcards.test/api/', 'connect_timeout' => 2, 'timeout' => 9])
+            ->and(config('payments.http'))->toBe(['connect_timeout' => 3, 'timeout' => 30])
+            ->and(config('affiliates.attribution_days'))->toBe(45);
+    });
+
+    it('derives the cookie, sender and store names and the address-based keys until they are set', function (): void {
+        adminWith(['settings.manage', 'settings.manage_critical']);
+
+        $this->putJson('/admin/api/settings/site', ['app_name' => 'Boxcards Shop'])->assertOk();
+        $this->putJson('/admin/api/settings/session', ['app_url' => 'https://shop.boxcards.test/'])->assertOk();
+
+        expect(config('session.cookie'))->toBe('boxcards-shop-session')
+            ->and(config('mail.from.name'))->toBe('Boxcards Shop')
+            ->and(config('automation.store_name'))->toBe('Boxcards Shop')
+            ->and(config('mail.mailers.smtp.local_domain'))->toBe('shop.boxcards.test')
+            ->and(config('filesystems.disks.public.url'))->toBe('https://shop.boxcards.test/storage');
+
+        $this->putJson('/admin/api/settings/mail', ['from_name' => 'Boxcards Orders', 'ehlo_domain' => 'mx.boxcards.test'])->assertOk();
+        $this->putJson('/admin/api/settings/session', ['session_cookie' => 'bx_session'])->assertOk();
+
+        expect(config('mail.from.name'))->toBe('Boxcards Orders')
+            ->and(config('mail.mailers.smtp.local_domain'))->toBe('mx.boxcards.test')
+            ->and(config('session.cookie'))->toBe('bx_session')
+            ->and(config('automation.store_name'))->toBe('Boxcards Shop');
+
+        $this->putJson('/admin/api/settings/session', ['session_cookie' => null])->assertOk();
+        expect(config('session.cookie'))->toBe('boxcards-shop-session');
+    });
+
+    it('keeps the mail password and the S3 secret write-only, encrypted and applied', function (): void {
+        adminWith(['settings.view', 'settings.manage_critical']);
+        $smtp = 'smtp-CANARY-decision11-3b9a';
+        $s3 = 's3-CANARY-decision11-secret-7c1d';
+
+        $this->putJson('/admin/api/settings/mail/secrets/smtp_password', ['value' => $smtp])->assertOk()->assertJsonPath('data.configured', true);
+        $this->putJson('/admin/api/settings/storage/secrets/aws_secret_access_key', ['value' => $s3])->assertOk();
+
+        expect(config('mail.mailers.smtp.password'))->toBe($smtp)
+            ->and(config('filesystems.disks.s3.secret'))->toBe($s3)
+            ->and(Setting::query()->whereIn('key', ['smtp_password', 'aws_secret_access_key'])->pluck('is_encrypted')->all())->toBe([true, true])
+            ->and(Setting::query()->pluck('value')->implode(' '))->not->toContain($smtp)->not->toContain($s3)
+            ->and(AuditLog::query()->get()->toJson())->not->toContain($smtp)->not->toContain($s3);
+
+        foreach (['mail', 'storage'] as $group) {
+            expect($this->get('/admin/settings/'.$group)->assertOk()->getContent())->not->toContain($smtp)->not->toContain($s3);
+        }
+
+        adminWith(['settings.manage']);
+        $this->putJson('/admin/api/settings/mail/secrets/smtp_password', ['value' => 'another-password'])->assertForbidden();
+    });
+
+    it('resets the locale, mailers and disks a queue worker already built when a setting changes', function (): void {
+        $overlay = app(SettingsOverlay::class);
+        $overlay->watch();
+        $mailer = app('mail.manager')->mailer('smtp');
+        Storage::disk('public');
+
+        foreach ([['site', 'locale', 'ar', SettingType::String], ['mail', 'smtp_host', 'smtp.worker.test', SettingType::String], ['session', 'app_url', 'https://worker.boxcards.test', SettingType::String]] as [$group, $key, $value, $type]) {
+            (new Setting)->forceFill(['group' => $group, 'key' => $key, 'value' => $value, 'type' => $type, 'is_encrypted' => false])->save();
+        }
+        Cache::forever(SettingsOverlay::VERSION_KEY, 'saved-by-the-admin');
+
+        event(new JobProcessing('redis', Mockery::mock(Job::class)->shouldIgnoreMissing()));
+
+        $fresh = app('mail.manager')->mailer('smtp');
+        expect(app()->getLocale())->toBe('ar')
+            ->and($fresh)->not->toBe($mailer)
+            ->and($fresh->getSymfonyTransport()->getStream()->getHost())->toBe('smtp.worker.test')
+            ->and(Storage::disk('public')->url('a.png'))->toBe('https://worker.boxcards.test/storage/a.png')
+            ->and(url('/x'))->toBe('https://worker.boxcards.test/x');
+
+        $overlay->watch(false);
+    });
+
+    it('imports the framework keys once without printing a value', function (): void {
+        $keys = array_values(array_filter(array_map(static fn ($definition): ?string => $definition->envKey, app(SettingDefinitions::class)->all())));
+        withoutEnvironment($keys);
+        withEnvironment([
+            'APP_NAME' => 'Imported Store Name',
+            'APP_URL' => 'https://imported.boxcards.test',
+            'SESSION_LIFETIME' => '75',
+            'MAIL_MAILER' => 'smtp',
+            'MAIL_PASSWORD' => 'mail-CANARY-import-11aa',
+            'MAIL_USERNAME' => 'null',
+            'FILESYSTEM_DISK' => 'public',
+            'AWS_SECRET_ACCESS_KEY' => 'aws-CANARY-import-secret-22bb',
+            'MEDIA_BASE_URL' => 'https://cdn.imported.test',
+        ]);
+
+        try {
+            $exit = Artisan::call('settings:import-env');
+            $output = Artisan::output();
+        } finally {
+            withoutEnvironment($keys);
+        }
+
+        expect($exit)->toBe(0)
+            ->and($output)->toMatch('/APP_URL\s*\|\s*session\.app_url\s*\|\s*imported/')->toMatch('/MAIL_PASSWORD\s*\|\s*mail\.smtp_password\s*\|\s*imported/')
+            ->toMatch('/MAIL_USERNAME\s*\|\s*mail\.smtp_username\s*\|\s*empty/')
+            ->not->toContain('Imported Store Name')->not->toContain('imported.boxcards.test')->not->toContain('mail-CANARY')->not->toContain('aws-CANARY')
+            ->and(config('app.name'))->toBe('Imported Store Name')
+            ->and(config('app.url'))->toBe('https://imported.boxcards.test')
+            ->and(config('session.lifetime'))->toBe(75)
+            ->and(config('session.cookie'))->toBe('imported-store-name-session')
+            ->and(config('mail.default'))->toBe('smtp')
+            ->and(config('mail.mailers.smtp.password'))->toBe('mail-CANARY-import-11aa')
+            ->and(config('filesystems.default'))->toBe('public')
+            ->and(config('filesystems.disks.s3.secret'))->toBe('aws-CANARY-import-secret-22bb')
+            ->and(config('catalog.media.base_url'))->toBe('https://cdn.imported.test');
     });
 });

@@ -13,5 +13,6 @@ return [
     |
     */
     'cookie' => 'aff_ref',
-    'attribution_days' => (int) env('AFFILIATE_ATTRIBUTION_DAYS', 30),
+    // Admin setting affiliates.attribution_days (owner decision 11).
+    'attribution_days' => 30,
 ];

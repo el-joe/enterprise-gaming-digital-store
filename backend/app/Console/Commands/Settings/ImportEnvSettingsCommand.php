@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('settings:import-env
-    {--force : Overwrite settings that already have a value in the database}')]
+    {--force : Overwrite settings that already have a value in the database (never the code-vault keys)}')]
 #[Description('Copy the current .env values of the keys that moved to the admin settings into the database, once')]
 class ImportEnvSettingsCommand extends Command
 {
@@ -28,6 +28,11 @@ class ImportEnvSettingsCommand extends Command
         $this->table(['.env key', 'Setting', 'Result'], array_map(static fn (array $result): array => [$result['env'], $result['setting'], $result['status']], $results));
 
         $counts = array_count_values(array_column($results, 'status'));
+
+        if (($counts[EnvSettingsImporter::MISMATCH] ?? 0) > 0) {
+            $this->error('A code-vault key in the database differs from .env. Nothing was overwritten. Keep .env until it is resolved: codes encrypted with the .env keys cannot be read with the stored ones.');
+        }
+
         $this->info(sprintf(
             'Imported %d, skipped %d, empty %d, invalid %d. Remove the imported lines from .env; the admin settings are now the source of truth.',
             $counts[EnvSettingsImporter::IMPORTED] ?? 0,
@@ -36,6 +41,6 @@ class ImportEnvSettingsCommand extends Command
             $counts[EnvSettingsImporter::INVALID] ?? 0,
         ));
 
-        return ($counts[EnvSettingsImporter::INVALID] ?? 0) > 0 ? self::FAILURE : self::SUCCESS;
+        return ($counts[EnvSettingsImporter::INVALID] ?? 0) + ($counts[EnvSettingsImporter::MISMATCH] ?? 0) > 0 ? self::FAILURE : self::SUCCESS;
     }
 }

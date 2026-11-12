@@ -518,7 +518,7 @@ Built at M10 (`Payments\Services`): `WebhookIntake` (steps 1 to 3), `WebhookProc
 | Aspect | Decision |
 |---|---|
 | Algorithm | AES-256-GCM through a dedicated `Illuminate\Encryption\Encrypter` instance |
-| Key | `DIGITAL_CODE_KEYS` keyring (separate from `APP_KEY`), `kid`-indexed, with `DIGITAL_CODE_ACTIVE_KID`. `key_version` is stored per row. Rotation re-encrypts in a queued job. |
+| Key | A keyring of data keys separate from `APP_KEY`, `kid`-indexed, with an active kid; `key_version` is stored per row. Since owner decision 11 the keyring, active kid and blind index key are the settings `digital_codes.*` (formerly `DIGITAL_CODE_*`), envelope-encrypted with `APP_KEY` and written only by `codes:generate-keys`, `codes:rotate-key` (adds and activates a key, re-encrypts in chunks) and `codes:rebuild-blind-index` (`SECURITY.md` 5). |
 | Encrypted fields | code, PIN, redemption URL (separately) |
 | Duplicate detection | `code_hash = HMAC-SHA256(blind_index_key, normalized code)`, unique. Never a plain hash, since gift codes have low entropy. |
 | Display | `masked_code` (last 4 only) is the only value visible without reveal |
@@ -532,7 +532,7 @@ Built at M10 (`Payments\Services`): `WebhookIntake` (steps 1 to 3), `WebhookProc
 | Parsing | JSON decoded with `JSON_BIGINT_AS_STRING`; Reloadly types `cardNumber` as integer, and a numeric cast can lose digits or leading zeros. Treat as string. |
 | Logs | `supplier_api_logs` stores the redacted body. Deliverable endpoint bodies are never stored at all. A Monolog processor strips known key names. HTTP exceptions from deliverable endpoints are caught and rethrown without the response body. |
 | Queues | Jobs carry IDs only, never code material. `DeliverableItem` and `RevealedCode` refuse serialization and hide their values from dumps |
-| Built (M9) | `DigitalCodeVault` (store, decrypt, re-encrypt), `DigitalCodeKeyring` (`DIGITAL_CODE_KEYS` as `kid:base64` pairs), `CodeRevealService`, `digital-codes:rotate-keys`. Customer recent auth is `POST /api/v1/account/confirm-password`. Stock allocation forces `idx_dc_stock`, because an index-merge plan made `SKIP LOCKED` wait |
+| Built (M9) | `DigitalCodeVault` (store, decrypt, re-encrypt), `DigitalCodeKeyring` (`kid:base64` pairs; since owner decision 11 from the encrypted setting `digital_codes.code_keys`), `CodeRevealService`, `digital-codes:rotate-keys`. Customer recent auth is `POST /api/v1/account/confirm-password`. Stock allocation forces `idx_dc_stock`, because an index-merge plan made `SKIP LOCKED` wait |
 
 ---
 

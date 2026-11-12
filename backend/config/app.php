@@ -13,7 +13,8 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    // Admin setting site.app_name, applied by SettingsOverlay (owner decision 11).
+    'name' => 'boxcards.shop',
 
     /*
     |--------------------------------------------------------------------------
@@ -52,7 +53,8 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    // Admin setting session.app_url (critical), applied by SettingsOverlay (owner decision 11).
+    'url' => 'http://localhost',
 
     /*
     |--------------------------------------------------------------------------
@@ -78,9 +80,10 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    // Admin settings site.locale and site.fallback_locale (owner decision 11).
+    'locale' => 'en',
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'fallback_locale' => 'en',
 
     /*
     | Locales the JSON API answers in (M-A3, `SetLocaleFromRequest`). English is the base
@@ -88,7 +91,8 @@ return [
     */
     'supported_locales' => ['en', 'ar'],
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    // Admin setting site.faker_locale (factories and seeders only).
+    'faker_locale' => 'en_US',
 
     /*
     |--------------------------------------------------------------------------

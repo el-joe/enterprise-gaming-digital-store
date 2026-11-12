@@ -64,13 +64,15 @@ return [
     'stripe_app_return_url' => null,
 
     'http' => [
-        'connect_timeout' => (int) env('PAYMENTS_CONNECT_TIMEOUT', 5),
-        'timeout' => (int) env('PAYMENTS_TIMEOUT', 20),
+        // Admin settings payments.http_connect_timeout and http_timeout (owner decision 11).
+        'connect_timeout' => 5,
+        'timeout' => 20,
     ],
 
     'stripe' => [
-        // ADR-023: webhook and response shapes depend on the version, so it is pinned.
-        'api_version' => env('STRIPE_API_VERSION') ?: '2026-10-28.endive',
+        // ADR-023: webhook and response shapes depend on the version, so it is pinned in code and
+        // shown read-only in Settings > Payment returns (owner decision 11: no longer in .env).
+        'api_version' => '2026-10-28.endive',
         'webhook_tolerance_seconds' => 300,
     ],
 

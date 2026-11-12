@@ -14,7 +14,8 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    // Admin settings mail.* (critical, owner decision 11), applied by SettingsOverlay.
+    'default' => 'log',
 
     /*
     |--------------------------------------------------------------------------
@@ -39,14 +40,15 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+            'scheme' => null,
+            'url' => null,
+            'host' => '127.0.0.1',
+            'port' => 2525,
+            'username' => null,
+            'password' => null,
             'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            // Admin setting mail.ehlo_domain; when empty, the store address host (derived from app.url).
+            'local_domain' => 'localhost',
         ],
 
         'ses' => [
@@ -55,7 +57,7 @@ return [
 
         'postmark' => [
             'transport' => 'postmark',
-            // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
+            // 'message_stream_id' => null,
             // 'client' => [
             //     'timeout' => 5,
             // ],
@@ -67,12 +69,12 @@ return [
 
         'sendmail' => [
             'transport' => 'sendmail',
-            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+            'path' => '/usr/sbin/sendmail -bs -i',
         ],
 
         'log' => [
             'transport' => 'log',
-            'channel' => env('MAIL_LOG_CHANNEL'),
+            'channel' => null,
         ],
 
         'array' => [
@@ -111,8 +113,9 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => 'hello@example.com',
+        // Admin setting mail.from_name; when empty, the store name (derived from app.name).
+        'name' => 'boxcards.shop',
     ],
 
 ];

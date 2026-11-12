@@ -16,7 +16,7 @@ use Database\Factories\Currency\CurrencyFactory;
 
 const SETTINGS_SECRET_CANARY = 'oxr_CANARY_m15_settings_never_rendered_91c2';
 
-dataset('setting groups', ['general', 'orders', 'checkout', 'payments', 'pricing', 'currency', 'security', 'geoip', 'suppliers', 'notifications', 'mail', 'analytics', 'mobile', 'app_links', 'account_links', 'push', 'mcp', 'automation', 'seo', 'admin']);
+dataset('setting groups', ['general', 'site', 'session', 'orders', 'checkout', 'payments', 'pricing', 'currency', 'security', 'geoip', 'suppliers', 'notifications', 'mail', 'storage', 'affiliates', 'analytics', 'mobile', 'app_links', 'account_links', 'push', 'mcp', 'automation', 'seo', 'admin', 'digital_codes']);
 
 describe('settings pages', function (): void {
     it('renders every group read-only for settings.view, in English and Arabic', function (string $group): void {

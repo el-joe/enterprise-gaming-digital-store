@@ -112,7 +112,7 @@ This runs a local n8n of its own on `127.0.0.1:5710`, away from the other local 
 1. Install n8n: `cd n8n/runtime && npm ci`.
 2. Start it as a user service. This creates `.env` with a random `N8N_ENCRYPTION_KEY`; back that key up. Run `./install-user-service.sh`, then check it with `systemctl --user status n8n-boxcards`.
 3. Set up Apache and the hosts file once, as root: `sudo deploy/setup-local-sudo.sh`. Add `--linger` to keep n8n running when you are logged out. This installs `deploy/apache/boxcards.loc.conf` (pointing at `backend/public`; `admin.boxcards.loc` is an alias) and `deploy/apache/000-n8n.boxcards.loc.conf` (a reverse proxy with WebSocket support), and replaces the old `admin.boxcards.loc` vhost.
-4. In `backend/.env`, set `APP_URL=http://boxcards.loc` (with `APP_ENV=local`, so the http webhook URL is accepted). In Admin > Settings > Automation, set:
+4. With `APP_ENV=local` in `backend/.env` (so http URLs are accepted), set the store address to `http://boxcards.loc` in Admin > Settings > Address and sessions (owner decision 11: it is no longer `APP_URL` in `.env`). In Admin > Settings > Automation, set:
    - n8n webhook URL `http://n8n.boxcards.loc/webhook/egs-events`;
    - the outbound signing secret and the webhook header token.
 

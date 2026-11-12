@@ -28,6 +28,11 @@ use Throwable;
  * - Secrets stay encrypted in the cache and are decrypted only into config. Values are never
  *   logged; an undecryptable secret (APP_KEY rotated without APP_PREVIOUS_KEYS) is logged by key
  *   name and left at its default.
+ * - Derived keys (`admin_settings.derived`, owner decision 11) follow their source key while no
+ *   setting of their own is stored: the session cookie name, the mail sender name and the n8n
+ *   store name follow app.name; the public disk URL and the SMTP EHLO domain follow app.url.
+ * - boot() and refresh() return the config keys whose value changed, so the provider can reset
+ *   what was already built from them (translator locale, mailers, disks, the console URL).
  */
 class SettingsOverlay
 {
@@ -58,18 +63,24 @@ class SettingsOverlay
     /**
      * Apply the stored settings once at boot.
      */
-    public function boot(): void
+    /**
+     * @return list<string> the config keys whose value changed
+     */
+    public function boot(): array
     {
         $this->captureBaseline();
-        $this->refresh(force: true);
+
+        return $this->refresh(force: true);
     }
 
     /**
      * Re-apply when a save moved the version since the last apply to the application config (one
      * cache read otherwise). With `$config` (an Octane request sandbox cloned from the application
      * config) the values are written there and the application config is left as it is.
+     *
+     * @return list<string> the config keys whose value changed
      */
-    public function refresh(bool $force = false, ?Repository $config = null): void
+    public function refresh(bool $force = false, ?Repository $config = null): array
     {
         $this->captureBaseline();
 
@@ -77,19 +88,21 @@ class SettingsOverlay
             $version = $this->currentVersion();
 
             if (! $force && $version === $this->appliedVersion) {
-                return;
+                return [];
             }
 
             $rows = $this->payload($version);
         } catch (Throwable) {
-            return;
+            return [];
         }
 
-        $this->write($rows, $config ?? $this->config);
+        $changed = $this->write($rows, $config ?? $this->config);
 
         if ($config === null) {
             $this->appliedVersion = $version;
         }
+
+        return $changed;
     }
 
     /**
@@ -186,9 +199,17 @@ class SettingsOverlay
 
     /**
      * @param  array<string, array{value: string|null, type: string, is_encrypted: bool}>  $rows
+     * @return list<string> the config keys whose value changed
      */
-    private function write(array $rows, Repository $config): void
+    private function write(array $rows, Repository $config): array
     {
+        $keys = array_values(array_unique([...array_map(static fn (SettingDefinition $definition): string => (string) $definition->configKey, $this->definitions->overlaid()), ...array_keys($this->definitions->derived())]));
+        $before = [];
+
+        foreach ($keys as $key) {
+            $before[$key] = $config->get($key);
+        }
+
         $values = [];
 
         foreach ($this->definitions->overlaid() as $definition) {
@@ -216,5 +237,37 @@ class SettingsOverlay
                 unset($this->applied[$key]);
             }
         }
+
+        foreach ($this->definitions->derived() as $key => $rule) {
+            if (array_key_exists($key, $values)) {
+                continue;
+            }
+
+            $derived = self::derive((string) $rule['as'], $config->get((string) $rule['from']));
+
+            if ($derived !== null) {
+                $config->set($key, $derived);
+            }
+        }
+
+        return array_values(array_filter($keys, static fn (string $key): bool => $config->get($key) !== $before[$key]));
+    }
+
+    /**
+     * The value a derived config key takes from its source, or null to leave it as it is.
+     */
+    public static function derive(string $as, mixed $source): ?string
+    {
+        if (! is_string($source) || trim($source) === '') {
+            return null;
+        }
+
+        return match ($as) {
+            'same' => $source,
+            'host' => is_string($host = parse_url($source, PHP_URL_HOST)) && $host !== '' ? $host : null,
+            'storage_url' => rtrim($source, '/').'/storage',
+            'session_cookie' => Str::slug($source).'-session',
+            default => null,
+        };
     }
 }

@@ -14,7 +14,8 @@ return [
     |
     */
 
-    'name' => env('BRAND_NAME', 'boxcards.shop'),
+    // Admin setting site.brand_name (owner decision 11), applied by SettingsOverlay.
+    'name' => 'boxcards.shop',
 
     'theme_color' => '#07080B',
 

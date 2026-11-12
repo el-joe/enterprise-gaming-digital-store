@@ -14,6 +14,7 @@ use App\Domains\Suppliers\Models\Supplier;
 use App\Domains\Suppliers\Services\SupplierAdapterRegistry;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\TestConfiguration;
 
 $root = dirname(__DIR__, 3);
 
@@ -23,6 +24,7 @@ require $root.'/tests/Support/FulfilmentFixtures.php';
 $payload = json_decode((string) file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);
 
 $app = require $root.'/bootstrap/app.php';
+TestConfiguration::register($app);
 $app->make(Kernel::class)->bootstrap();
 
 if (config('database.default') !== 'mysql' || config('database.connections.mysql.database') !== 'gaming-store_testing') {

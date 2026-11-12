@@ -93,6 +93,19 @@ class DigitalCodeVault
         return true;
     }
 
+    /**
+     * Recompute one row's blind index with `$blindIndexKey` (codes:rebuild-blind-index). The code is
+     * decrypted in memory only and never leaves this method.
+     */
+    public function rehash(DigitalCode $code, string $blindIndexKey): void
+    {
+        $plain = $this->decrypt($code);
+
+        DigitalCode::query()->whereKey($code->id)->update([
+            'code_hash' => DigitalCodeKeyring::blindIndexWith(self::normalize(trim($plain->code)), $blindIndexKey),
+        ]);
+    }
+
     public function hashFor(string $code): string
     {
         return $this->keys->blindIndex(self::normalize($code));

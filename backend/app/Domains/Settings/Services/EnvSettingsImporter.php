@@ -2,6 +2,7 @@
 
 namespace App\Domains\Settings\Services;
 
+use App\Domains\Fulfillment\Services\DigitalCodeKeyManager;
 use App\Domains\Settings\DTOs\SettingDefinition;
 use App\Domains\Settings\Enums\AppConfigSetting;
 use App\Domains\Settings\Enums\SettingType;
@@ -18,6 +19,10 @@ use Illuminate\Support\Facades\Validator;
  * seeded database still imports. Values are never returned, printed or logged: secrets are stored
  * encrypted and audited only as changed. `env_file` keys (FCM_CREDENTIALS_PATH) name a file whose
  * content is imported.
+ *
+ * The code-vault keys (DIGITAL_CODE_*, owner decision 11) go through DigitalCodeKeyManager: copied
+ * exactly as the environment holds them (not trimmed), so every existing code still decrypts and
+ * its blind index still matches; never over a stored key, even with `force`.
  */
 class EnvSettingsImporter
 {
@@ -29,12 +34,26 @@ class EnvSettingsImporter
 
     public const string INVALID = 'invalid';
 
+    /** A stored code-vault key differs from the environment value (nothing is changed). */
+    public const string MISMATCH = 'mismatch';
+
     public function __construct(
         private SettingDefinitions $definitions,
         private SettingsService $settings,
         private AdminSettingsService $admin,
         private SettingsOverlay $overlay,
+        private DigitalCodeKeyManager $vaultKeys,
     ) {}
+
+    /**
+     * Whether the environment still holds a value for this key (a `.env` not yet imported).
+     */
+    public static function environmentHas(string $envKey): bool
+    {
+        $value = Env::get($envKey);
+
+        return is_scalar($value) && trim((string) $value) !== '';
+    }
 
     /**
      * @return list<array{env: string, setting: string, status: string}>
@@ -62,6 +81,10 @@ class EnvSettingsImporter
             return self::EMPTY;
         }
 
+        if ($definition->vault) {
+            return $this->vaultKeys->import($definition, $raw);
+        }
+
         if (! $force && $this->alreadySet($definition)) {
             return self::SKIPPED;
         }
@@ -87,6 +110,10 @@ class EnvSettingsImporter
 
         if (! is_scalar($value) || trim((string) $value) === '') {
             return null;
+        }
+
+        if ($definition->vault) {
+            return (string) $value;
         }
 
         $value = trim((string) $value);

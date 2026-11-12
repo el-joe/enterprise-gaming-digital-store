@@ -2,6 +2,7 @@
 
 namespace App\Domains\Settings\Services;
 
+use App\Domains\Fulfillment\Services\DigitalCodeKeyManager;
 use App\Domains\Identity\Models\User;
 use App\Domains\Settings\Enums\AppConfigSetting;
 use App\Domains\Settings\Enums\SettingType;
@@ -21,10 +22,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * Fields and secrets with `config` replaced `.env` keys: their default is the config file's
  * built-in value (SettingsOverlay::defaultFor), their `format` adds a SettingValueFormat rule,
  * and a save reaches running code through the overlay.
+ *
+ * The digital_codes group (owner decision 11) has no editable value: its screen shows only the
+ * code-vault status (configured, active key id, number of keys) to holders of every one of its
+ * `view_permissions`, and saving it is refused; the keys change only through artisan commands.
  */
 class AdminSettingsService
 {
-    public function __construct(private SettingsService $settings, private SettingsOverlay $overlay) {}
+    public function __construct(private SettingsService $settings, private SettingsOverlay $overlay, private DigitalCodeKeyManager $vaultKeys) {}
 
     /**
      * @return list<string>
@@ -38,7 +43,7 @@ class AdminSettingsService
      * Everything a group's screen shows: fields with current values, secret states and
      * read-only values. Never a secret value.
      *
-     * @return array{key: string, permission: string, applied: bool, fields: array<string, array<string, mixed>>, secrets: array<string, bool>, uploads: list<string>, readonly: array<string, string>}
+     * @return array{key: string, permission: string, applied: bool, fields: array<string, array<string, mixed>>, secrets: array<string, bool>, uploads: list<string>, readonly: array<string, string>, vault: array{configured: bool, active_kid: int|null, key_count: int, blind_index: bool, stored: bool}|null, view_permissions: list<string>}
      */
     public function screen(string $group): array
     {
@@ -69,6 +74,8 @@ class AdminSettingsService
             'secrets' => $secrets,
             'uploads' => $uploads,
             'readonly' => $this->readonly((array) ($definition['readonly'] ?? [])),
+            'vault' => ($definition['vault_keys'] ?? []) === [] ? null : $this->vaultKeys->status(),
+            'view_permissions' => array_values((array) ($definition['view_permissions'] ?? [])),
         ];
     }
 
@@ -84,7 +91,7 @@ class AdminSettingsService
         $this->authorize($actor, (string) $definition['permission']);
         $store = $definition['store'] ?? null;
 
-        if ($store === null) {
+        if ($store === null || ($definition['vault_keys'] ?? []) !== []) {
             throw new ApplicationException(__('admin.settings.read_only_group'), 'conflict', 409);
         }
 

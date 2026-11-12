@@ -50,6 +50,37 @@
                 </x-admin.card>
             @endif
 
+            @if ($screen['vault'] !== null)
+                {{-- Code-vault keys (owner decision 11): status only, never a key; changed only by artisan commands. --}}
+                @php($canViewVault = collect($screen['view_permissions'])->every(fn (string $permission): bool => $viewer->can($permission)))
+                <x-admin.card :title="__('admin.settings.vault.title')" :subtitle="__('admin.settings.intro.'.$group)">
+                    @if ($canViewVault)
+                        @php($vault = $screen['vault'])
+                        <dl class="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 text-sm">
+                            <dt class="text-content-muted">{{ __('admin.settings.vault.state') }}</dt>
+                            <dd><x-admin.badge :tone="$vault['configured'] ? 'success' : 'danger'" :dot="false">{{ $vault['configured'] ? __('admin.common.configured') : __('admin.common.not_configured') }}</x-admin.badge></dd>
+                            <dt class="text-content-muted">{{ __('admin.settings.vault.active_kid') }}</dt>
+                            <dd class="font-mono text-xs" dir="ltr">{{ $vault['active_kid'] ?? '—' }}</dd>
+                            <dt class="text-content-muted">{{ __('admin.settings.vault.key_count') }}</dt>
+                            <dd class="font-mono text-xs" dir="ltr">{{ $vault['key_count'] }}</dd>
+                            <dt class="text-content-muted">{{ __('admin.settings.vault.blind_index') }}</dt>
+                            <dd><x-admin.badge :tone="$vault['blind_index'] ? 'success' : 'danger'" :dot="false">{{ $vault['blind_index'] ? __('admin.common.configured') : __('admin.common.not_configured') }}</x-admin.badge></dd>
+                            <dt class="text-content-muted">{{ __('admin.settings.vault.stored') }}</dt>
+                            <dd>{{ $vault['stored'] ? __('admin.settings.vault.stored_yes') : __('admin.settings.vault.stored_no') }}</dd>
+                        </dl>
+                        <p class="mt-4 text-sm text-content-secondary">{{ __('admin.settings.vault.commands') }}</p>
+                        <ul class="mt-2 flex flex-col gap-1 font-mono text-xs" dir="ltr">
+                            <li>php artisan codes:rotate-key</li>
+                            <li>php artisan codes:rebuild-blind-index</li>
+                            <li>php artisan codes:generate-keys</li>
+                        </ul>
+                        <p class="mt-3 text-xs text-content-muted">{{ __('admin.settings.vault.never_shown') }}</p>
+                    @else
+                        <p class="text-sm text-content-muted">{{ __('admin.settings.vault.needs', ['permissions' => implode(', ', $screen['view_permissions'])]) }}</p>
+                    @endif
+                </x-admin.card>
+            @endif
+
             @if ($screen['fields'] !== [])
                 <x-admin.card :title="__('admin.settings.group.'.$group)" :subtitle="__('admin.settings.intro.'.$group)">
                     <form class="grid gap-4 md:grid-cols-2" data-module="form" data-action="{{ $api }}" data-method="PUT" data-success="reload" @if ($screen['permission'] === 'settings.manage_critical') data-confirm="{{ __('admin.settings.critical_confirm') }}" @endif novalidate>

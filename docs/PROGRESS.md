@@ -28,6 +28,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M18 | SEO and analytics | Complete (2026-11-11, not committed; GA4 Measurement Protocol and Search Console mocked only, awaiting credentials; Lighthouse not run: not installed, manual headless-Chrome check recorded) |
 | M19 | Full test pass | Complete (2026-11-12; D1 fixed during the run, D2 after it; final run backend 2,890 and app 1,660 passed; coverage matrix in `TEST_COVERAGE.md`; manual checklist 70 steps: 68 PASS, 1 FAIL (D2, since fixed), 1 BLOCKED (covered by tests)) |
 | DB-S | Settings from the database (owner request, `OWNER_DECISIONS.md` 10) | Complete (2026-11-12, not committed; owner runs `settings:import-env` per environment) |
+| DB-S2 | Only bootstrap keys in `.env` (owner decision 11) | Complete (2026-11-12, not committed; owner runs the migration in `DEPLOYMENT.md` 3.2) |
 | M20 | Production readiness | Not started |
 
 Status values: Not started, In progress, Blocked (state why), Complete.
@@ -2140,6 +2141,76 @@ Then remove the moved lines from `backend/.env` (`.env.example` shows what stays
 ### Outstanding requirements
 
 - The owner runs the import on each environment and removes the lines from `.env` (this pass did not read or edit `backend/.env`).
-- Undocumented env knobs that were never in `.env.example` stay env-driven: `MOBILE_ACCESS_TOKEN_TTL_MINUTES`, `MOBILE_REFRESH_TOKEN_TTL_DAYS`, `MOBILE_2FA_CHALLENGE_TTL_SECONDS`, `GUEST_ORDER_TOKEN_TTL_HOURS`, `AFFILIATE_ATTRIBUTION_DAYS`, `BRAND_NAME`, `MEDIA_BASE_URL`, `PAYMENTS_CONNECT_TIMEOUT`, `PAYMENTS_TIMEOUT`, `OPEN_EXCHANGE_RATES_BASE_URL` and timeouts.
+- Undocumented env knobs that were never in `.env.example` stay env-driven: `MOBILE_ACCESS_TOKEN_TTL_MINUTES`, `MOBILE_REFRESH_TOKEN_TTL_DAYS`, `MOBILE_2FA_CHALLENGE_TTL_SECONDS`, `GUEST_ORDER_TOKEN_TTL_HOURS`, `AFFILIATE_ATTRIBUTION_DAYS`, `BRAND_NAME`, `MEDIA_BASE_URL`, `PAYMENTS_CONNECT_TIMEOUT`, `PAYMENTS_TIMEOUT`, `OPEN_EXCHANGE_RATES_BASE_URL` and timeouts. (Superseded: all moved in "Only bootstrap keys in .env".)
 - The Octane per-request refresh is untested against a real Octane server (not installed).
-- Settings > General, Notifications and SMTP are still stored but not applied (unchanged from M15).
+- Settings > General, Notifications and SMTP are still stored but not applied (unchanged from M15). (SMTP superseded: applied since "Only bootstrap keys in .env".)
+
+---
+
+## Only bootstrap keys in .env
+
+Date: 2026-11-12. Completed by the senior Laravel developer, alone and in sequence. Not committed. Owner request: "Don't leave anything in .env except the super admin." (`OWNER_DECISIONS.md` decision 11.)
+
+### Summary of completed work
+
+Every key that can work from the database is now a setting, applied by the same `SettingsOverlay` (mapped to the existing `config()` keys, cached under the version key, fail soft, never applied during config caching), edited in Admin > Settings (EN and AR, M15 dark style), seeded with its built-in default and imported once by `settings:import-env`. `.env` keeps only the Super Admin and the technical bootstrap keys (`DEPLOYMENT.md` 3.1); `BootstrapEnvironmentTest` fails if a config file reads, or `.env.example` lists, any other key, or if application code calls `env()`.
+
+- **Code-vault keys** (`DIGITAL_CODE_*`): settings `digital_codes.code_keys` and `blind_index_key` (encrypted with `APP_KEY`: envelope encryption) and `active_kid`. Never shown or edited in the admin: Settings > Code vault keys shows configured, active key id, number of keys, blind index set, stored in the database, to holders of `settings.manage_critical` and `digital_codes.reveal` (both explicit grants); saving the group answers 409. Written only by `DigitalCodeKeyManager` under one lock: `codes:generate-keys` (first install, also from `SettingsSeeder`; refused while keys are configured, codes exist or `DIGITAL_CODE_KEYS` is still in the environment), `codes:rotate-key` (new random key, next kid, active at once, re-encrypts older codes in chunks; `--no-reencrypt` leaves them on their readable kid), `codes:rebuild-blind-index` (the only way to change the blind index key: new key, every `code_hash` recomputed in two passes around the switch), and the import (byte for byte, never over a stored key even with `--force`, `mismatch` when a stored key differs). Every change is audited (keys as changed only) and recorded as a security event with key ids and counts. `DigitalCodeKeyring` now follows the config value (a rotation reaches long-running workers). Details: `SECURITY.md` 5.
+- **Framework keys**: app name, URL and locales; session lifetime, encryption, path, domain, secure cookie, SameSite, expire on close, partitioned, cookie name; mail (mailer, scheme, host, port, username, password secret, from address and name, EHLO domain; the M15 SMTP group is now applied and its "not used yet" note is gone); files (default disk, S3 key id, secret, region, bucket, URL, endpoint, path style; `s3` refused until its Flysystem adapter is installed); the password confirmation timeout and the Sanctum token prefix.
+- **Project keys**: app token lifetimes, guest order token lifetime, affiliate attribution window, brand name, media base URL, payment and Open Exchange Rates timeouts and base URL, the sitemap disk. The Stripe API version is pinned in `config/payments.php` and shown read-only.
+- **Derived keys** follow their source while their own setting is empty: the session cookie name (slug of the store name + `-session`, so an imported `APP_NAME` keeps today's cookie), the mail sender name and the n8n store name follow the store name; the public disk URL and the EHLO domain follow the store address.
+- **Runtime sync**: `boot()` and `refresh()` return the changed config keys; at boot and before a queue job the provider resets the translator locales, resolved mailers and disks, and in the console the request links are built from (`app.url` is read into it before any provider runs). Never in the middle of a request.
+- **Session keys** take effect from the database: the session is started by middleware, after the overlay ran. None had to stay.
+- **Removed, not moved** (code structure or packages not installed): `AUTH_GUARD`, `AUTH_MODEL`, `AUTH_PASSWORD_BROKER`, `AUTH_PASSWORD_RESET_TOKEN_TABLE`, `SESSION_HTTP_ONLY` (always on), `SANCTUM_STATEFUL_DOMAINS` (unused), `MAIL_URL`, `MAIL_SENDMAIL_PATH`, `MAIL_LOG_CHANNEL`, `POSTMARK_*`, `RESEND_API_KEY`, `SLACK_BOT_USER_*`, SES keys. The DynamoDB cache and SQS queue now read their own `DYNAMODB_*` / `SQS_*` keys (infrastructure), never the S3 ones. `CACHE_PREFIX` and `REDIS_PREFIX` default to `boxcards-cache-` and `boxcards-database-` instead of a slug of `APP_NAME` (`DEPLOYMENT.md` 3.3).
+
+### Where each key lives now
+
+See the table in `DEPLOYMENT.md` 3.2 (group, key, former `.env` key, permission). New groups: `site` (manage), `session` (critical), `storage` (critical), `affiliates` (manage), `digital_codes` (view: `settings.manage_critical` + `digital_codes.reveal`; change: server only). Extended: `mail` (critical, now applied), `security`, `currency` (critical), `payments` (manage).
+
+### Files created
+
+- `app/Domains/Fulfillment/Services/DigitalCodeKeyManager.php`, `app/Domains/Fulfillment/Exceptions/DigitalCodeKeyChangeRefused.php`, `app/Console/Commands/Fulfillment/{GenerateDigitalCodeKeysCommand,RotateDigitalCodeKeyCommand,RebuildBlindIndexCommand}.php`.
+- Tests: `tests/Feature/Fulfillment/VaultKeySettingsTest.php`, `tests/Feature/Foundation/BootstrapEnvironmentTest.php`, `tests/Support/TestConfiguration.php`.
+
+### Files changed
+
+`config/{admin_settings,app,auth,affiliates,automation,brand,cache,catalog,database,filesystems,fulfillment,logging,mail,mobile,orders,payments,queue,sanctum,seo,services,session}.php`; `SettingsOverlay` (derived keys, changed keys returned), `SettingsServiceProvider` (runtime sync), `SettingDefinitions` and `SettingDefinition` (vault keys, derived), `SettingValueFormat` (`host`, `cookie_domain`, `disk`, `locale_code`), `AdminSettingsService` (vault status, vault group read-only), `EnvSettingsImporter` (vault keys through the manager, untrimmed; `mismatch`; `environmentHas`), `ImportEnvSettingsCommand`, `DigitalCodeKeyring` (`parse`, `blindIndexWith`, follows config), `DigitalCodeVault` (`rehash`), `SettingsSeeder` (no vault or derived defaults; first-install key generation), `admin/settings/show.blade.php` (vault card), `lang/{en,ar}/admin.php`, `.env.example`, `phpunit.xml`. Docs: `DEPLOYMENT.md` 3 (3.1 to 3.3, backups), `SECURITY.md` 5, `OWNER_DECISIONS.md` 10 and 11, `PROJECT_ARCHITECTURE.md` (code keys), `API_DOCUMENTATION.md` (media base URL), `n8n/README.md` (store address).
+
+Tests adapted only where the source of a value changed (none weakened):
+- `tests/TestCase.php`: builds the application itself so `TestConfiguration` (the former `phpunit.xml` code-vault keys and `MAIL_MAILER=array`, same values) is applied right after the config files load, before any provider boots; the test-database guard is unchanged.
+- `phpunit.xml`: `DIGITAL_CODE_*` and `MAIL_MAILER` removed (moved to `TestConfiguration`).
+- `tests/Support/Concurrency/{m11,payment_race,place_order,submit_unit}_worker.php`: register `TestConfiguration` before bootstrapping; `SupplierConcurrencyTest` no longer passes `DIGITAL_CODE_*` to its worker.
+- `AdminSettingsTest`: the page dataset lists the new groups.
+- `DatabaseSettingsTest`: new groups in the permission datasets, 27 new invalid values, and five new tests (framework and project keys applied, derived keys, SMTP and S3 secrets write-only, worker runtime reset, import of framework keys).
+- `CatalogDiscoveryTest`: the "same host" case used `env('APP_URL')`; it now uses the test store address `http://localhost` (the config default the app sees).
+
+### Migrations
+
+None: the `settings` table holds everything. No new packages.
+
+### Owner migration (once, when deploying)
+
+```
+php artisan down
+php artisan migrate --force
+php artisan config:clear
+php artisan settings:import-env
+php artisan config:cache
+php artisan queue:restart
+php artisan up
+```
+
+Then check Admin > Settings > Code vault keys shows "configured" and "stored in the database", keep the old `.env` in the separate secure store (it holds the code keys) with `APP_KEY`, and reduce `.env` to `.env.example`. With Redis queues or sessions, read `DEPLOYMENT.md` 3.3 before removing `APP_NAME`. A new installation runs `php artisan migrate --seed`, which generates the vault keys.
+
+### Tests and results
+
+- New: `VaultKeySettingsTest` (12: codes encrypted before the import decrypt after it and keep their blind index; import exact, never overwritten, mismatch and invalid refused; admin shows status only, EN and AR, no save path; rotation with and without re-encryption; blind index rebuild; first-install generation and its refusals; seeder), `BootstrapEnvironmentTest` (4: no config `env()` outside the stay list, no `env()` in app code, `.env.example` stay list only, every former key importable), five new `DatabaseSettingsTest` tests and 27 invalid-value cases.
+- Files run while working: all touched files passed (108, 112 and 84 tests in three runs).
+- Full suite, run once, sequentially (`php artisan test --compact`, MySQL `gaming-store_testing`): **3,030 passed, 0 failed, 26,673 assertions, 230 s**. `vendor/bin/pint --dirty`: passed. `npm run build`: passed. `python3 tools/test_inventory.py`: regenerated `TEST_INVENTORY.md`.
+
+### Outstanding requirements
+
+- The owner runs the migration on each environment (this pass did not read or edit `backend/.env`).
+- The Octane per-request refresh and the console URL reset are untested against Octane and a real Redis worker.
+- Settings > General and Notifications are still stored but not applied (unchanged from M15).
+

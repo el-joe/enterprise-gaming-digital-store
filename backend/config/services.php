@@ -15,31 +15,34 @@ return [
     */
 
     'postmark' => [
-        'key' => env('POSTMARK_API_KEY'),
+        'key' => null, // Postmark transport not installed.
     ],
 
     'resend' => [
-        'key' => env('RESEND_API_KEY'),
+        'key' => null, // Resend transport not installed.
     ],
 
     'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        // SES needs the AWS SDK (not installed); mail uses the mail settings group.
+        'key' => null,
+        'secret' => null,
+        'region' => 'us-east-1',
     ],
 
     'open_exchange_rates' => [
         // Admin setting currency.oxr_app_id (encrypted), applied by SettingsOverlay.
         'app_id' => null,
-        'base_url' => env('OPEN_EXCHANGE_RATES_BASE_URL', 'https://openexchangerates.org/api/'),
-        'connect_timeout' => (int) env('OPEN_EXCHANGE_RATES_CONNECT_TIMEOUT', 5),
-        'timeout' => (int) env('OPEN_EXCHANGE_RATES_TIMEOUT', 15),
+        // Admin settings currency.oxr_base_url, oxr_connect_timeout, oxr_timeout (owner decision 11).
+        'base_url' => 'https://openexchangerates.org/api/',
+        'connect_timeout' => 5,
+        'timeout' => 15,
     ],
 
     'slack' => [
         'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+            // Slack notification channel not installed.
+            'bot_user_oauth_token' => null,
+            'channel' => null,
         ],
     ],
 

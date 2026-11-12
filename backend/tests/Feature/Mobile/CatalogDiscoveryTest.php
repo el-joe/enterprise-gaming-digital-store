@@ -528,7 +528,8 @@ describe('home', function (): void {
         'category' => ['/gift-cards', ['type' => 'category', 'value' => 'gift-cards']],
         'search' => ['/search?q=steam+card', ['type' => 'search', 'value' => 'steam card']],
         'reserved path' => ['/blog/news', ['type' => 'url', 'value' => 'APP/blog/news']],
-        'same host' => [rtrim((string) env('APP_URL', 'http://localhost'), '/').'/products/orbit-card', ['type' => 'product', 'value' => 'orbit-card']],
+        // app.url is the setting session.app_url (owner decision 11); in tests its config default.
+        'same host' => ['http://localhost/products/orbit-card', ['type' => 'product', 'value' => 'orbit-card']],
         'external' => ['https://example.com/products/x', ['type' => 'url', 'value' => 'https://example.com/products/x']],
         'none' => [null, null],
     ]);

@@ -80,9 +80,6 @@ function startGateWorker(array $payload): Process
         'SESSION_DRIVER' => 'array',
         'QUEUE_CONNECTION' => 'sync',
         'MAIL_MAILER' => 'array',
-        'DIGITAL_CODE_KEYS' => (string) config('fulfillment.code_keys'),
-        'DIGITAL_CODE_ACTIVE_KID' => (string) config('fulfillment.active_kid'),
-        'DIGITAL_CODE_BLIND_INDEX_KEY' => (string) config('fulfillment.blind_index_key'),
     ], null, 60);
     $process->start();
 

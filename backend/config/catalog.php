@@ -26,7 +26,8 @@ return [
         | Public origin of media files (a CDN), for example https://cdn.boxcards.shop. Empty: URLs
         | come from the disk (`public`: APP_URL/storage). Storefront APIs always return absolute URLs.
         */
-        'base_url' => env('MEDIA_BASE_URL') ?: null,
+        // Admin setting storage.media_base_url (owner decision 11).
+        'base_url' => null,
         'max_upload_kilobytes' => 8192,
         'max_dimension_pixels' => 8000,
     ],

@@ -33,7 +33,8 @@ return [
     |
     | `enabled`, `webhook_url`, `secret` and `auth_token` (and `token_ttl_days`, `store_name`) are
     | admin settings (Settings > Automation, group `automation`; the secrets encrypted), applied
-    | over these built-in defaults by SettingsOverlay. Never put them in `.env`.
+    | over these built-in defaults by SettingsOverlay. Never put them in `.env`. An empty
+    | `store_name` setting follows the store name (`app.name`, Settings > Store and languages).
     |
     */
     'outbox' => [
@@ -92,5 +93,5 @@ return [
 
     'segment_page_size' => 100,
 
-    'store_name' => (string) env('APP_NAME', 'Store'),
+    'store_name' => 'boxcards.shop',
 ];
