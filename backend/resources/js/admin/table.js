@@ -214,18 +214,21 @@ export default function adminTable(root) {
 
         button.addEventListener('click', async () => {
             const needsNote = button.dataset.needsNote !== undefined || action.note === true;
-            const { confirmed, reason } = await confirmDialog({
+            const send = (values, reason) => post(action.url, { ...(action.body ?? {}), ...(values ?? {}), ids: [...state.selected], ...(needsNote ? { [action.note_field ?? 'note']: reason } : {}) });
+            const outcome = await confirmDialog({
                 title: action.confirm,
                 text: t('selected_count', { count: state.selected.size }),
                 danger: action.danger,
                 reason: needsNote ? { label: t('note'), min: 5 } : null,
+                fields: action.fields ?? null,
+                submit: action.fields ? (values) => send(values, values.reason) : null,
             });
 
-            if (!confirmed) {
+            if (!outcome.confirmed) {
                 return;
             }
 
-            const result = await busy(button, () => post(action.url, { ...(action.body ?? {}), ids: [...state.selected], ...(needsNote ? { [action.note_field ?? 'note']: reason } : {}) }));
+            const result = outcome.result ?? await busy(button, () => send(outcome.values, outcome.reason));
             toast(result.ok ? (result.body?.message ?? '') : messageFor(result));
 
             if (result.ok) {

@@ -2214,3 +2214,10 @@ Then check Admin > Settings > Code vault keys shows "configured" and "stored in 
 - The Octane per-request refresh and the console URL reset are untested against Octane and a real Redis worker.
 - Settings > General and Notifications are still stored but not applied (unchanged from M15).
 
+
+## Supplier catalog: "Add to store"
+
+Admin → Catalog → Supplier catalog (`/admin/catalog/supplier-catalog`, `catalog.view`) lists the synced `supplier_products` (table `supplier-catalog`). "Add to store" (row or bulk, `catalog.manage` + `mappings.manage`, `POST /admin/api/supplier-catalog/add-to-store`) creates draft products through `SupplierCatalogImporter`. The category and platform default to the supplier's category name and brand: an existing category or platform with that name is reused, otherwise one is created (no logo, Arabic name left empty). A staff choice overrides this. "Create categories from supplier" (`POST /admin/api/supplier-catalog/create-categories`) creates only the categories. The importer uses the existing product, variant and mapping services: one variant per fixed amount, a primary mapping per variant (`supplier_unit_price` = face value, the engine's cost key), costs written by `SupplierPriceWriter` and prices from the `PricingEngine`. Variants it cannot price stay inactive with the reason. Range products get one custom-amount variant, which stays inactive because the engine does not price custom amounts yet. Afterwards a pricing sync is queued for the supplier. No images (BD8).
+
+- Tests: `tests/Feature/Suppliers/SupplierCatalogTest.php` (19). `tests/Feature/Suppliers` 98 passed, `tests/Feature/Catalog` 133 passed, `AdminCatalogPagesTest` 12 passed. Pint and `npm run build` passed.
+- Open: a product that needs the customer's user id is skipped until a `user_id` delivery field definition exists.

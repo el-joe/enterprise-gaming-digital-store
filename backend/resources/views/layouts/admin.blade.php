@@ -125,6 +125,8 @@
             <h2 id="confirm-title" class="font-display text-xl font-bold" data-confirm-title></h2>
             <p class="text-sm text-content-secondary" data-confirm-text></p>
         </div>
+        <div class="mt-4" data-confirm-fields hidden></div>
+        <p class="field-error mt-2" data-confirm-fields-error hidden></p>
         <div class="mt-4" data-confirm-reason hidden>
             <label for="confirm-reason" class="field-label">{{ __('admin.js.reason') }}</label>
             <textarea id="confirm-reason" rows="3" maxlength="1000" class="admin-input py-2" aria-describedby="confirm-reason-error"></textarea>

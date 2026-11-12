@@ -14,6 +14,7 @@ use App\DataTables\Catalog\MappingsDataTable;
 use App\DataTables\Catalog\PlatformsDataTable;
 use App\DataTables\Catalog\ProductsDataTable;
 use App\DataTables\Catalog\RegionsDataTable;
+use App\DataTables\Catalog\SupplierCatalogDataTable;
 use App\DataTables\Content\BlogCategoriesDataTable;
 use App\DataTables\Content\BlogPostsDataTable;
 use App\DataTables\Content\FaqGroupsDataTable;
@@ -82,6 +83,7 @@ final class AdminTables
         CustomerWalletDataTable::class,
         ProductsDataTable::class,
         MappingsDataTable::class,
+        SupplierCatalogDataTable::class,
         MediaDataTable::class,
         PlatformsDataTable::class,
         CategoriesDataTable::class,

@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\Seo\SearchConsoleController;
 use App\Http\Controllers\Admin\Seo\SeoMetadataController;
 use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\Settings\SettingsController;
+use App\Http\Controllers\Admin\Suppliers\SupplierCatalogController;
 use App\Http\Controllers\Admin\Suppliers\SupplierController;
 use App\Http\Controllers\Admin\Suppliers\SupplierMappingController;
 use App\Http\Controllers\Admin\Support\RefundRequestController;
@@ -160,6 +161,12 @@ Route::middleware('permission:mappings.manage')->group(static function (): void 
     Route::patch('supplier-mappings/{supplierMapping}', [SupplierMappingController::class, 'update'])->name('supplier-mappings.update');
     Route::delete('supplier-mappings/{supplierMapping}', [SupplierMappingController::class, 'destroy'])->name('supplier-mappings.destroy');
 });
+
+// Supplier catalog: "Add to store" creates draft products, variants and primary mappings
+Route::post('supplier-catalog/add-to-store', [SupplierCatalogController::class, 'addToStore'])
+    ->middleware(['permission:catalog.manage', 'permission:mappings.manage', 'throttle:20,1'])->name('supplier-catalog.add-to-store');
+Route::post('supplier-catalog/create-categories', [SupplierCatalogController::class, 'createCategories'])
+    ->middleware(['permission:catalog.manage', 'throttle:6,1'])->name('supplier-catalog.create-categories');
 
 // Fulfilment (M8, M9)
 Route::get('orders/{order}/timeline', [OrderFulfilmentController::class, 'timeline'])->middleware('permission:orders.view')->name('orders.timeline');

@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Support\AdminScreens\Options;
 use App\Http\Support\AdminScreens\ProductForm;
 use App\Http\Support\AdminTablePage;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -51,6 +52,37 @@ class CatalogPageController extends Controller
             'table' => $tables->make('mappings', $request->user()),
             'suppliers' => Options::suppliers(),
         ]);
+    }
+
+    public function supplierCatalog(Request $request, AdminTablePage $tables): View
+    {
+        $user = $request->user();
+
+        return view('admin.catalog.supplier-catalog', [
+            'table' => $tables->make('supplier-catalog', $user),
+            'canAdd' => $user->can('catalog.manage') && $user->can('mappings.manage'),
+            'canCreateCategories' => $user->can('catalog.manage'),
+            'categories' => $this->optionsOrNone(static fn (): array => Options::categories()),
+            'platforms' => $this->optionsOrNone(static fn (): array => Options::platforms()),
+        ]);
+    }
+
+    /**
+     * Select options that cannot break the page: a missing table (an environment not yet
+     * migrated) gives no options instead of an error.
+     *
+     * @param  \Closure(): array<int, string>  $read
+     * @return array<int, string>
+     */
+    private function optionsOrNone(\Closure $read): array
+    {
+        try {
+            return $read();
+        } catch (QueryException $exception) {
+            report($exception);
+
+            return [];
+        }
     }
 
     public function media(Request $request, AdminTablePage $tables): View

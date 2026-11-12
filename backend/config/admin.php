@@ -50,6 +50,7 @@ return [
             ['key' => 'regions', 'route' => 'admin.catalog.regions.index', 'permissions' => ['catalog.view']],
             ['key' => 'attributes', 'route' => 'admin.catalog.attributes.index', 'permissions' => ['catalog.view']],
             ['key' => 'delivery-fields', 'route' => 'admin.catalog.delivery-fields.index', 'permissions' => ['catalog.view']],
+            ['key' => 'supplier-catalog', 'route' => 'admin.catalog.supplier-catalog.index', 'permissions' => ['catalog.view']],
             ['key' => 'mappings', 'route' => 'admin.catalog.mappings.index', 'permissions' => ['mappings.manage']],
         ],
         'payments' => [
@@ -169,6 +170,7 @@ return [
     | lang/{locale}/admin.php `enums`. Unlisted values are neutral.
     */
     'tones' => [
+        'availability' => ['available' => 'success', 'unavailable' => 'danger', 'unknown' => 'neutral'],
         'order_status' => [
             'completed' => 'success', 'paid' => 'info', 'processing' => 'info', 'supplier_pending' => 'info', 'payment_processing' => 'info',
             'pending_payment' => 'neutral', 'pending_verification' => 'warning', 'manual_review' => 'warning', 'partially_fulfilled' => 'warning',

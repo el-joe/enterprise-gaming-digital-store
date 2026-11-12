@@ -66,6 +66,7 @@ Route::middleware(['auth', 'staff', 'two_factor:redirect', 'admin.idle', 'thrott
         Route::get('/catalog/products', [CatalogPageController::class, 'products'])->name('catalog.products.index');
         Route::get('/catalog/products/create', [CatalogPageController::class, 'createProduct'])->middleware('permission:catalog.manage')->name('catalog.products.create');
         Route::get('/catalog/products/{product}', [CatalogPageController::class, 'product'])->whereUlid('product')->name('catalog.products.edit');
+        Route::get('/catalog/supplier-catalog', [CatalogPageController::class, 'supplierCatalog'])->name('catalog.supplier-catalog.index');
     });
     Route::get('/catalog/mappings', [CatalogPageController::class, 'mappings'])->middleware('permission:mappings.manage')->name('catalog.mappings.index');
     Route::get('/content/media', [CatalogPageController::class, 'media'])->middleware('permission:content.media')->name('content.media.index');

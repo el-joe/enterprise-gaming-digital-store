@@ -89,7 +89,8 @@ final class Cell
     /**
      * A row action button (M15) for `admin/action.js` (delegated inside the table): the JSON
      * route, its method and body, the confirmation title and, with `reason`, a required written
-     * reason sent as `reasonField`. Every attribute is escaped.
+     * reason sent as `reasonField`; with `fields`, the id of a `<template>` whose inputs the dialog
+     * shows and sends with the body. Every attribute is escaped.
      *
      * @param  array<string, mixed>  $body
      */
@@ -102,6 +103,7 @@ final class Cell
         bool $danger = false,
         ?string $reason = null,
         string $reasonField = 'reason',
+        ?string $fields = null,
     ): string {
         $attributes = [
             'type' => 'button',
@@ -118,6 +120,10 @@ final class Cell
         if ($reason !== null) {
             $attributes['data-reason'] = $reason;
             $attributes['data-reason-field'] = $reasonField;
+        }
+
+        if ($fields !== null) {
+            $attributes['data-confirm-fields'] = $fields;
         }
 
         $html = '';
