@@ -77,6 +77,7 @@ class SupplierOverview
             'circuit' => ['open' => $circuitOpen, 'until' => $supplier->circuit_open_until],
             'balance' => $this->money($supplier->last_balance, $supplier->balance_currency),
             'balance_at' => $supplier->last_balance_at,
+            'balance_unavailable' => SupplierMonitor::balanceUnavailable($supplier),
             'low_balance_threshold' => $this->money($supplier->low_balance_threshold, $supplier->balance_currency),
             'per_request_cap' => $this->money($supplier->per_request_cap_base, $this->rates->baseCurrency()),
             'credentials' => $this->admin->credentialState($supplier),

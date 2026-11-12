@@ -302,6 +302,8 @@ return [
         'detail' => 'Supplier detail',
         'awaiting_sandbox' => 'Awaiting sandbox verification',
         'active_mode' => 'Active mode',
+        'balance_sandbox_unavailable' => 'Balance not available in sandbox',
+        'balance_sandbox_unavailable_help' => "This supplier's sandbox does not provide a balance, so it isn't checked in sandbox mode. Live mode shows the real balance.",
         'active_mode_help' => 'Calls go to this environment with its saved credentials.',
         'switch_mode' => 'Switch mode',
         'mode_confirm' => 'Switch this supplier to the selected mode? Catalog, prices and orders will use that environment.',

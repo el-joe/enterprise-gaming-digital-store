@@ -36,6 +36,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 function catalogBody(string $map = '{"25.0":24.5,"50":49}'): string
 {
@@ -216,7 +217,33 @@ describe('catalog and price sync', function (): void {
 });
 
 describe('balances, health and reconciliation', function (): void {
+    it('skips the balance in sandbox for adapters whose sandbox has none, but checks it in production', function (): void {
+        $supplier = reloadlySupplier(['last_balance' => null, 'last_balance_at' => null]);
+        fakeReloadly();
+        Log::spy();
+
+        expect(app(SupplierMonitor::class)->refreshBalance($supplier))->toBeNull();
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/accounts/balance'));
+        Log::shouldNotHaveReceived('warning');
+        expect($supplier->fresh()->last_balance)->toBeNull();
+
+        (new SupplierCredential)->forceFill(['supplier_id' => $supplier->id, 'mode' => 'production', 'credentials' => ['client_id' => 'live-id', 'client_secret' => 'live-secret']])->save();
+        $supplier->forceFill(['mode' => 'production'])->save();
+        fakeReloadly(overrides: ['https://giftcards.reloadly.com/accounts/balance' => Http::response('{"balance":42.5,"currencyCode":"USD"}')]);
+
+        app(SupplierMonitor::class)->refreshBalance($supplier->fresh());
+        expect($supplier->fresh()->last_balance)->toBe('42.500000');
+    });
+
+    it('shows that the sandbox balance is not available on the supplier page', function (): void {
+        $supplier = reloadlySupplier();
+        adminWith(['suppliers.view']);
+
+        $this->get("/admin/suppliers/{$supplier->id}")->assertOk()->assertSee('Balance not available in sandbox');
+    });
+
     it('caches the balance with a snapshot and opens the circuit after repeated failures', function (): void {
+        config(['suppliers.balance_unavailable_in_sandbox' => []]);
         $supplier = reloadlySupplier();
         fakeReloadly();
 

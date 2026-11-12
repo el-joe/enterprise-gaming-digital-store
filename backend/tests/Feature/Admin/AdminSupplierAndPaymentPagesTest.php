@@ -21,6 +21,7 @@ beforeEach(function (): void {
 describe('suppliers', function (): void {
     it('renders the capability matrix across adapters with the current supplier, and the health block', function (): void {
         adminWith(['suppliers.view']);
+        config(['suppliers.balance_unavailable_in_sandbox' => []]); // this test shows a known balance
         $reloadly = reloadlySupplier(['name' => 'Reloadly Gift Cards', 'circuit_open_until' => now()->addMinutes(10), 'last_balance' => '12840.2', 'balance_currency' => 'USD']);
         stockSupplier(['name' => 'Internal Stock']);
 

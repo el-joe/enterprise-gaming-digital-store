@@ -43,7 +43,11 @@
                     <x-admin.status group="supplier_health" :value="$supplier->health?->value" />
                 @endif
                 <x-admin.status group="supplier_status" :value="$supplier->status?->value" :dot="false" />
-                <x-admin.badge :dot="false">{{ __('admin.suppliers.balance', ['amount' => $detail['balance'] ?? '—']) }}</x-admin.badge>
+                @if ($detail['balance_unavailable'] ?? false)
+                    <x-admin.badge :dot="false" title="{{ __('admin.suppliers.balance_sandbox_unavailable_help') }}">{{ __('admin.suppliers.balance_sandbox_unavailable') }}</x-admin.badge>
+                @else
+                    <x-admin.badge :dot="false">{{ __('admin.suppliers.balance', ['amount' => $detail['balance'] ?? '—']) }}</x-admin.badge>
+                @endif
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 @can('suppliers.manage')
@@ -107,7 +111,8 @@
                     <div class="flex items-center justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.circuit') }}</dt><dd>@if ($detail['circuit']['open'])<x-admin.badge tone="danger" :dot="false">{{ __('admin.suppliers.open_until', ['date' => $detail['circuit']['until']->format('H:i')]) }}</x-admin.badge>@else<x-admin.badge tone="success" :dot="false">{{ __('admin.suppliers.closed') }}</x-admin.badge>@endif</dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.last_sync') }}</dt><dd class="text-end font-semibold">{{ $lastSync ? \App\DataTables\Cell::label('sync_type', $lastSync->type?->value).' · '.($lastSync->started_at?->diffForHumans() ?? '—') : __('admin.suppliers.never') }}</dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.low_alert') }}</dt><dd class="font-semibold" dir="ltr">{{ $detail['low_balance_threshold'] ?? '—' }}</dd></div>
-                    <div class="flex justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.balance_at') }}</dt><dd>{{ $detail['balance_at']?->diffForHumans() ?? '—' }}</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.balance_at') }}</dt><dd>{{ ($detail['balance_unavailable'] ?? false) ? __('admin.suppliers.balance_sandbox_unavailable') : ($detail['balance_at']?->diffForHumans() ?? '—') }}</dd></div>
+                    @if ($detail['balance_unavailable'] ?? false)<p class="text-xs text-content-muted">{{ __('admin.suppliers.balance_sandbox_unavailable_help') }}</p>@endif
                     <div class="flex justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.request_cap') }}</dt><dd dir="ltr">{{ $detail['per_request_cap'] ?? '—' }}</dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.pending_verification') }}</dt><dd>{{ $detail['pending_verification'] }}</dd></div>
                     <div class="flex justify-between gap-3"><dt class="text-content-secondary">{{ __('admin.suppliers.fallback_supplier') }}</dt><dd class="text-end">{{ $supplier->fallback_enabled ? ($detail['fallback'] ?? __('admin.suppliers.fallback_any')) : __('admin.common.off') }}</dd></div>

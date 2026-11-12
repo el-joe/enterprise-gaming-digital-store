@@ -83,4 +83,11 @@ return [
         'default_per_request_cap' => ['amount' => '100', 'currency' => 'USD'],
         'page_size' => 100,
     ],
+
+    /*
+    | Adapters whose sandbox has no working balance endpoint. Reloadly's sandbox never answers
+    | GET /accounts/balance (checked 2026-11-12, no reply after 60 s) while its other endpoints do,
+    | so in sandbox mode the balance refresh is skipped and the admin says so; live is unchanged.
+    */
+    'balance_unavailable_in_sandbox' => ['reloadly_giftcards'],
 ];

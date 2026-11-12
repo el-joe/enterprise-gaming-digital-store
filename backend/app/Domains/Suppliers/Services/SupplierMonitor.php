@@ -2,6 +2,7 @@
 
 namespace App\Domains\Suppliers\Services;
 
+use App\Domains\Shared\Enums\EnvironmentMode;
 use App\Domains\Suppliers\DTOs\ConnectionResult;
 use App\Domains\Suppliers\Enums\SupplierCapability;
 use App\Domains\Suppliers\Enums\SupplierHealth;
@@ -21,8 +22,22 @@ class SupplierMonitor
 {
     public function __construct(private SupplierAdapterRegistry $registry) {}
 
+    /**
+     * Whether this supplier's current environment offers no balance (see config
+     * `suppliers.balance_unavailable_in_sandbox`).
+     */
+    public static function balanceUnavailable(Supplier $supplier): bool
+    {
+        return $supplier->mode === EnvironmentMode::Sandbox
+            && in_array($supplier->adapter_key, (array) config('suppliers.balance_unavailable_in_sandbox', []), true);
+    }
+
     public function refreshBalance(Supplier $supplier): ?SupplierBalanceSnapshot
     {
+        if (self::balanceUnavailable($supplier)) {
+            return null;
+        }
+
         $adapter = $this->registry->for($supplier);
 
         if (! $adapter->capabilities()->supports(SupplierCapability::Balance)) {
