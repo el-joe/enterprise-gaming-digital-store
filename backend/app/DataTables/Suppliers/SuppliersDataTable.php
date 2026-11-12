@@ -40,6 +40,7 @@ class SuppliersDataTable extends AdminDataTable
             new Column('mappings', __('admin.suppliers.col.mappings'), 'mappings_count', numeric: true),
             new Column('credentials', __('admin.suppliers.col.credentials'), html: true),
             new Column('priority', __('admin.suppliers.col.priority'), 'suppliers.priority', numeric: true),
+            new Column('actions', __('admin.col.actions'), html: true, exportable: false),
         ];
     }
 
@@ -94,6 +95,9 @@ class SuppliersDataTable extends AdminDataTable
                 ? Cell::badge(__('admin.common.configured'), 'success', false)
                 : Cell::badge(__('admin.common.not_configured'), 'neutral', false),
             'priority' => (string) $row->priority,
+            'actions' => $this->viewer->can('suppliers.manage')
+                ? Cell::actions('<a href="'.e(route('admin.suppliers.show', $row).'#supplier-edit').'" class="admin-btn h-8 min-h-8">'.e(__('admin.common.edit')).'</a>')
+                : Cell::actions('<a href="'.e(route('admin.suppliers.show', $row)).'" class="admin-btn h-8 min-h-8">'.e(__('admin.suppliers.open')).'</a>'),
         ];
     }
 

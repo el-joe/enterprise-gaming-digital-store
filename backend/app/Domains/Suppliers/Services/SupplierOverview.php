@@ -8,6 +8,7 @@ use App\Domains\Shared\ValueObjects\Money;
 use App\Domains\Suppliers\Enums\SupplierCapability;
 use App\Domains\Suppliers\Enums\SupplierTransactionStatus;
 use App\Domains\Suppliers\Models\Supplier;
+use App\Domains\Suppliers\Models\SupplierCredential;
 use App\Domains\Suppliers\Models\SupplierHealthCheck;
 use App\Domains\Suppliers\Models\SupplierSyncRun;
 use App\Domains\Suppliers\Models\SupplierTransaction;
@@ -80,6 +81,10 @@ class SupplierOverview
             'per_request_cap' => $this->money($supplier->per_request_cap_base, $this->rates->baseCurrency()),
             'credentials' => $this->admin->credentialState($supplier),
             'credential_fields' => (array) config("admin.credential_fields.suppliers.{$supplier->adapter_key}", []),
+            // When each mode's credentials were last saved; only the timestamp column is read.
+            'credentials_rotated' => SupplierCredential::query()->where('supplier_id', $supplier->id)->get(['mode', 'rotated_at', 'updated_at'])
+                ->mapWithKeys(static fn (SupplierCredential $row): array => [$row->mode->value => $row->rotated_at ?? $row->updated_at])->all(),
+            'base_url_override_allowed' => (array) config("suppliers.override_hosts.{$supplier->adapter_key}", []) !== [],
             'health_checks' => SupplierHealthCheck::query()->where('supplier_id', $supplier->id)->latest('id')->limit(5)->get(['id', 'reachable', 'latency_ms', 'error', 'created_at']),
             'sync_runs' => SupplierSyncRun::query()->where('supplier_id', $supplier->id)->latest('id')->limit(5)->get(),
             'pending_verification' => SupplierTransaction::query()->where('supplier_id', $supplier->id)->where('status', SupplierTransactionStatus::PendingVerification)->count(),

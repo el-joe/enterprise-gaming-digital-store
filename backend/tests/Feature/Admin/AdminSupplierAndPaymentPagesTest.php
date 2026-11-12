@@ -44,11 +44,65 @@ describe('suppliers', function (): void {
         SupplierCredential::factory()->create(['supplier_id' => $supplier->id, 'mode' => 'sandbox', 'credentials' => ['client_id' => ADMIN_CREDENTIAL_CANARY, 'client_secret' => ADMIN_CREDENTIAL_CANARY]]);
 
         adminWith(['suppliers.view']);
-        $page = $this->get("/admin/suppliers/{$supplier->id}")->assertOk()->assertSee('Configured')->assertDontSee('Replace credentials');
+        $page = $this->get("/admin/suppliers/{$supplier->id}")->assertOk()->assertSee('Configured')
+            ->assertDontSee('data-modal-open="credentials-sandbox"', false)->assertDontSee('name="credentials[client_secret]"', false);
         expect($page->getContent())->not->toContain(ADMIN_CREDENTIAL_CANARY);
 
-        adminWith(['suppliers.view', 'suppliers.credentials']);
-        $this->get("/admin/suppliers/{$supplier->id}")->assertSee('Replace credentials')->assertSee('name="credentials[client_secret]"', false)->assertDontSee(ADMIN_CREDENTIAL_CANARY);
+        adminWith(['suppliers.view', 'suppliers.manage', 'suppliers.credentials']);
+        $page = $this->get("/admin/suppliers/{$supplier->id}")
+            ->assertSee('data-modal-open="credentials-sandbox"', false)->assertSee('data-modal-open="credentials-production"', false)
+            ->assertSee('Replace Sandbox credentials')->assertSee('Replace Live credentials')
+            ->assertSee('name="credentials[client_secret]"', false)->assertSee('Saved ')->assertSee('Never saved');
+        $html = $page->getContent();
+        expect($html)->not->toContain(ADMIN_CREDENTIAL_CANARY);
+        // The write-only fields are never prefilled.
+        preg_match_all('/<input[^>]*name="(credentials\[[a-z_]+\]|webhook_secret)"[^>]*>/', $html, $fields);
+        expect($fields[0])->not->toBeEmpty();
+        foreach ($fields[0] as $field) {
+            expect($field)->toContain('type="password"')->toContain('value=""');
+        }
+        assertCspSafeHtml($page);
+    });
+
+    it('shows the Edit button and the edit dialog only with suppliers.manage', function (): void {
+        $supplier = reloadlySupplier();
+
+        adminWith(['suppliers.view']);
+        $this->get("/admin/suppliers/{$supplier->id}")->assertOk()
+            ->assertDontSee('data-supplier-edit', false)->assertDontSee('id="supplier-edit"', false)
+            ->assertDontSee('data-mode-option', false);
+
+        adminWith(['suppliers.view', 'suppliers.manage']);
+        $this->get("/admin/suppliers/{$supplier->id}")->assertOk()
+            ->assertSee('data-supplier-edit', false)->assertSee('id="supplier-edit"', false)
+            ->assertSee('name="fallback_supplier_id"', false)->assertSee('name="max_fallback_attempts"', false)
+            ->assertSee('name="retry_policy[max_attempts]"', false)->assertSee('data-error-for="name"', false)
+            ->assertSee('Test connection')->assertDontSee('Sync catalog');
+    });
+
+    it('shows the Sandbox / Live control with the current mode and a real-money warning for Live', function (): void {
+        $supplier = reloadlySupplier(['mode' => 'sandbox']);
+        adminWith(['suppliers.view', 'suppliers.manage']);
+
+        $this->get("/admin/suppliers/{$supplier->id}")->assertOk()
+            ->assertSee('data-module="mode-switch"', false)
+            ->assertSee('data-mode="sandbox"', false)->assertSee('data-mode="production"', false)
+            ->assertSee('aria-pressed="true" data-mode-option data-mode="sandbox"', false)
+            ->assertSee('data-mode-badge', false)
+            ->assertSee('real money will be spent')
+            ->assertSee('data-error-for="mode"', false);
+
+        SupplierCredential::query()->where('supplier_id', $supplier->id)->where('mode', 'production')->delete();
+        $this->patchJson("/admin/api/suppliers/{$supplier->id}", ['mode' => 'production'])->assertUnprocessable()->assertJsonValidationErrors('mode');
+    });
+
+    it('renders the supplier detail and list in Arabic, right to left', function (): void {
+        $supplier = reloadlySupplier();
+        adminWith(['suppliers.view', 'suppliers.manage', 'suppliers.credentials']);
+
+        $this->withSession(['admin.locale' => 'ar'])->get("/admin/suppliers/{$supplier->id}")->assertOk()
+            ->assertSee('dir="rtl"', false)->assertSee('مباشر')->assertSee('تعديل المورد');
+        $this->withSession(['admin.locale' => 'ar'])->get('/admin/suppliers')->assertOk()->assertSee('dir="rtl"', false)->assertSee('إضافة مورد');
     });
 
     it('replaces supplier credentials through the write-only endpoint, audited without values', function (): void {
@@ -80,7 +134,17 @@ describe('suppliers', function (): void {
         adminWith(['suppliers.view']);
         reloadlySupplier(['last_balance' => '50', 'balance_currency' => 'USD', 'low_balance_threshold' => '100']);
 
-        $this->get('/admin/suppliers')->assertOk()->assertSee('Below alert level')->assertSee('data-module="table"', false)->assertSee('1 active supplier');
+        $this->get('/admin/suppliers')->assertOk()->assertSee('Below alert level')->assertSee('data-module="table"', false)->assertSee('1 active supplier')
+            ->assertDontSee('id="supplier-create"', false);
+    });
+
+    it('offers Add supplier with suppliers.manage and creates one through the JSON route', function (): void {
+        adminWith(['suppliers.view', 'suppliers.manage']);
+
+        $this->get('/admin/suppliers')->assertOk()->assertSee('id="supplier-create"', false)->assertSee('name="adapter_key"', false)->assertSee('Add supplier');
+        $this->postJson('/admin/api/suppliers', ['name' => 'New Supplier', 'adapter_key' => 'internal_stock', 'mode' => 'sandbox', 'priority' => 50, 'status' => 'inactive'])->assertCreated();
+
+        expect(Supplier::query()->where('name', 'New Supplier')->exists())->toBeTrue();
     });
 });
 
