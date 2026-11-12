@@ -77,11 +77,12 @@ class ReloadlyClient
         ?int $supplierTransactionId = null,
         bool $logResponse = true,
         ?string $accept = null,
+        ?int $timeoutSeconds = null,
     ): Response {
-        $response = $this->attempt($operation, $method, $path, $query, $jsonBody, $loggedBody, $supplierTransactionId, $logResponse, $accept, $this->token());
+        $response = $this->attempt($operation, $method, $path, $query, $jsonBody, $loggedBody, $supplierTransactionId, $logResponse, $accept, $this->token(), $timeoutSeconds);
 
         if ($response->status() === 401) {
-            $response = $this->attempt($operation.'.after_token_refresh', $method, $path, $query, $jsonBody, $loggedBody, $supplierTransactionId, $logResponse, $accept, $this->token(fresh: true));
+            $response = $this->attempt($operation.'.after_token_refresh', $method, $path, $query, $jsonBody, $loggedBody, $supplierTransactionId, $logResponse, $accept, $this->token(fresh: true), $timeoutSeconds);
         }
 
         return $response;
@@ -110,11 +111,12 @@ class ReloadlyClient
         bool $logResponse,
         ?string $accept,
         string $token,
+        ?int $timeoutSeconds = null,
     ): Response {
         $url = $this->baseUrl().'/'.ltrim($path, '/');
         $started = hrtime(true);
 
-        $request = $this->http()
+        $request = $this->http($timeoutSeconds)
             ->withToken($token)
             ->withHeaders(['Accept' => $accept ?? config('suppliers.reloadly.accept')]);
 
@@ -221,10 +223,15 @@ class ReloadlyClient
         return ['client_id' => $values['client_id'], 'client_secret' => $values['client_secret']];
     }
 
-    private function http(): PendingRequest
+    /**
+     * @param  int|null  $timeoutSeconds  a shorter limit for one call (never longer than the supplier's)
+     */
+    private function http(?int $timeoutSeconds = null): PendingRequest
     {
+        $timeout = max(1, min(60, intdiv($this->supplier->request_timeout_ms, 1000)));
+
         return Http::connectTimeout(max(1, intdiv($this->supplier->connect_timeout_ms, 1000)))
-            ->timeout(max(1, min(60, intdiv($this->supplier->request_timeout_ms, 1000))));
+            ->timeout($timeoutSeconds === null ? $timeout : max(1, min($timeout, $timeoutSeconds)));
     }
 
     /**

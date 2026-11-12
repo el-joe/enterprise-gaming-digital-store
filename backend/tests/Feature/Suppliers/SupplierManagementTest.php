@@ -32,6 +32,8 @@ use App\Domains\Suppliers\Services\SupplierPriceWriter;
 use App\Domains\Suppliers\Services\SupplierReconciler;
 use Carbon\CarbonImmutable;
 use Database\Factories\Shared\CountryFactory;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -117,6 +119,22 @@ describe('admin API', function (): void {
         $this->postJson("/admin/api/suppliers/{$supplier->id}/sync-catalog")->assertStatus(202);
 
         expect(SupplierProduct::query()->where('supplier_id', $supplier->id)->count())->toBe(1);
+    });
+
+    // The Reloadly sandbox balance endpoint can hang without answering (seen 2026-11-12), so Test
+    // connection reads one product page instead and never depends on /accounts/balance.
+    it('tests the connection with one product page, even while the balance endpoint fails', function (): void {
+        $supplier = reloadlySupplier();
+        fakeReloadly(overrides: [
+            RELOADLY_API.'/accounts/balance' => fn () => throw new ConnectionException('timed out'),
+            RELOADLY_API.'/products*' => Http::response(catalogBody()),
+        ]);
+        actingAsStaffWith(['suppliers.manage']);
+
+        $this->postJson("/admin/api/suppliers/{$supplier->id}/test-connection")->assertOk()->assertJsonPath('data.reachable', true);
+
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/products') && str_contains($request->url(), 'size=1'));
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), '/accounts/balance'));
     });
 
     it('manages mappings with one primary per variant and a matching supplier product', function (): void {

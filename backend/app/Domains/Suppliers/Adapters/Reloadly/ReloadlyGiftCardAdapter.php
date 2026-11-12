@@ -52,6 +52,9 @@ class ReloadlyGiftCardAdapter extends AbstractSupplierAdapter
     /** Response keys that may carry code material; redacted from every log. */
     private const array SENSITIVE_KEYS = ['cardNumber', 'pinCode', 'redemptionUrl', 'access_token', 'client_secret'];
 
+    /** Test connection and balance give up after this many seconds instead of the full request timeout. */
+    private const int QUICK_CALL_TIMEOUT_SECONDS = 10;
+
     private ReloadlyClient $client;
 
     public function __construct(
@@ -105,7 +108,9 @@ class ReloadlyGiftCardAdapter extends AbstractSupplierAdapter
         $started = hrtime(true);
 
         try {
-            $response = $this->client->send('test_connection', 'GET', 'accounts/balance');
+            // One product page, not /accounts/balance: the sandbox balance endpoint can hang without
+            // answering, which made a working connection look broken.
+            $response = $this->client->send('test_connection', 'GET', 'products', ['page' => 1, 'size' => 1], timeoutSeconds: self::QUICK_CALL_TIMEOUT_SECONDS);
         } catch (ConnectionException|SupplierNotConfigured $exception) {
             return new ConnectionResult(false, error: $exception instanceof SupplierNotConfigured ? $exception->getMessage() : 'Connection failed.');
         }
@@ -175,7 +180,7 @@ class ReloadlyGiftCardAdapter extends AbstractSupplierAdapter
 
     public function getBalance(): SupplierBalanceData
     {
-        $payload = $this->read('balance', 'accounts/balance');
+        $payload = $this->read('balance', 'accounts/balance', timeoutSeconds: self::QUICK_CALL_TIMEOUT_SECONDS);
         $amount = ExactJson::decimal($payload['balance'] ?? null);
         $currency = $payload['currencyCode'] ?? null;
 
@@ -378,10 +383,10 @@ class ReloadlyGiftCardAdapter extends AbstractSupplierAdapter
      *
      * @throws SupplierRequestFailed
      */
-    private function read(string $operation, string $path, array $query = []): array
+    private function read(string $operation, string $path, array $query = [], ?int $timeoutSeconds = null): array
     {
         try {
-            $response = $this->client->send($operation, 'GET', $path, $query);
+            $response = $this->client->send($operation, 'GET', $path, $query, timeoutSeconds: $timeoutSeconds);
         } catch (ConnectionException) {
             throw new SupplierRequestFailed("Reloadly {$operation} failed: connection error.");
         }
