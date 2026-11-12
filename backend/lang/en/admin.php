@@ -63,6 +63,7 @@ return [
     ],
 
     'common' => [
+        'close' => 'Close',
         'none' => 'None',
         'none_selected' => 'None',
         'create' => 'Create',
@@ -769,6 +770,7 @@ return [
     ],
 
     'js' => [
+        'bulk_failed_title' => 'Some rows were not changed',
         'json_invalid' => 'This is not valid JSON.',
         'confirm' => 'Confirm',
         'reason' => 'Reason',
@@ -1281,7 +1283,13 @@ return [
     ],
 
     'products' => [
-        'intro' => 'Every product with its platform, category and status. Publishing needs a sellable variant and a supplier route.',
+        'intro' => 'Every product with its platform, category and status. Publishing needs at least one active, priced variant.',
+        'publish_needs_active_variant' => 'No active variant: activate a variant that has a price.',
+        'publish_custom_amount_only' => 'Only custom-amount (range) variants, which cannot be priced yet. Add fixed amounts to sell this product.',
+        'publish_needs_delivery_field' => 'This delivery type needs at least one required delivery field.',
+        'bulk_not_found' => 'Product not found.',
+        'bulk_result' => ':done done, :failed not done.',
+        'bulk_failed_title' => 'Some products were not changed',
         'new' => 'New product',
         'edit' => 'Edit product',
         'save' => 'Save product',

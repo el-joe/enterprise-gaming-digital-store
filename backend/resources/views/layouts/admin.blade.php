@@ -138,6 +138,13 @@
             <button type="button" class="admin-btn-primary min-h-10 px-5" data-confirm-ok></button>
         </div>
     </dialog>
+    {{-- Bulk action results: which rows were not changed and why (filled by resources/js/admin/dialog.js). --}}
+    <dialog class="m-auto w-[min(560px,calc(100vw-2rem))] rounded-xl border border-line-subtle bg-surface-raised p-6 text-content-primary shadow-overlay backdrop:bg-ink-950/50" data-report-dialog aria-labelledby="report-title">
+        <h2 id="report-title" class="font-display text-lg font-bold" data-report-title></h2>
+        <p class="mt-1 text-sm text-content-secondary" data-report-summary></p>
+        <ul class="mt-4 flex max-h-[60vh] flex-col gap-2 overflow-y-auto text-sm" data-report-list></ul>
+        <div class="mt-5 flex justify-end"><button type="button" class="admin-btn" data-report-close>{{ __('admin.common.close') }}</button></div>
+    </dialog>
 
     <div class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4" aria-live="polite" role="status" data-toast-region></div>
     <script type="application/json" id="store-config" nonce="{{ Vite::cspNonce() }}">@json($config)</script>

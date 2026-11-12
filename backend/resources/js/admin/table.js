@@ -2,7 +2,7 @@ import DataTable from 'datatables.net';
 import { t } from '../lib/config.js';
 import { del, get, post, request } from '../lib/http.js';
 import { busy, messageFor, toast } from '../lib/forms.js';
-import { confirmDialog } from './dialog.js';
+import { confirmDialog, reportDialog } from './dialog.js';
 
 /**
  * The admin table base (M14), on DataTables 3 (no jQuery, no styling package: Tailwind classes
@@ -229,7 +229,13 @@ export default function adminTable(root) {
             }
 
             const result = outcome.result ?? await busy(button, () => send(outcome.values, outcome.reason));
-            toast(result.ok ? (result.body?.message ?? '') : messageFor(result));
+            const failed = result.ok ? (result.body?.data?.failed ?? []) : [];
+
+            if (failed.length > 0) {
+                reportDialog({ title: t('bulk_failed_title'), summary: result.body?.message ?? '', failed });
+            } else {
+                toast(result.ok ? (result.body?.message ?? '') : messageFor(result));
+            }
 
             if (result.ok) {
                 table.draw(false);

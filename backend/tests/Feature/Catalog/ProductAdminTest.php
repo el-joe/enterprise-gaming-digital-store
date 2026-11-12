@@ -123,7 +123,21 @@ it('applies bulk actions and reports individual failures', function (): void {
     $this->postJson('/admin/api/products/bulk', ['action' => 'activate', 'ids' => [$ready->public_id, $notReady->public_id]])
         ->assertOk()
         ->assertJsonPath('data.processed', 1)
-        ->assertJsonPath('data.failed.0.id', $notReady->public_id);
+        ->assertJsonPath('data.failed.0.id', $notReady->public_id)
+        ->assertJsonPath('data.failed.0.name', $notReady->name)
+        ->assertJsonPath('data.failed.0.reasons.0', 'No active variant: activate a variant that has a price.')
+        ->assertJsonPath('message', '1 done, 1 not done.');
+});
+
+it('explains that custom-amount-only products cannot be published yet', function (): void {
+    actingAsStaffWith(['catalog.publish']);
+    $range = Product::factory()->create();
+    ProductVariant::factory()->for($range)->create(['is_custom_amount' => true, 'is_active' => false, 'price_base' => null]);
+
+    $this->postJson('/admin/api/products/bulk', ['action' => 'activate', 'ids' => [$range->public_id]])
+        ->assertOk()
+        ->assertJsonPath('data.processed', 0)
+        ->assertJsonPath('data.failed.0.reasons.0', 'Only custom-amount (range) variants, which cannot be priced yet. Add fixed amounts to sell this product.');
 });
 
 it('requires catalog.manage for bulk delete', function (): void {

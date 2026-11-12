@@ -163,3 +163,42 @@ export function confirmDialog({ title, text = '', confirmLabel, danger = false, 
         ((template ? fieldsWrap.querySelector('[name]') : null) ?? (reason ? reasonInput : cancel)).focus();
     });
 }
+
+/**
+ * Bulk action report (`[data-report-dialog]` in the admin layout): lists each row that was not
+ * changed with its reasons. `failed` is the server's `data.failed` (`name`, `id`, `reasons`).
+ */
+export function reportDialog({ title, summary = '', failed = [] }) {
+    const dialog = document.querySelector('[data-report-dialog]');
+
+    if (!dialog) {
+        window.alert([title, summary, ...failed.map((row) => `${row.name ?? row.id}: ${(row.reasons ?? [row.error]).join(' ')}`)].join('\n'));
+
+        return;
+    }
+
+    dialog.querySelector('[data-report-title]').textContent = title;
+    dialog.querySelector('[data-report-summary]').textContent = summary;
+
+    const items = failed.map((row) => {
+        const item = document.createElement('li');
+        item.className = 'rounded-md border border-line-subtle bg-surface-sunken px-3 py-2';
+        const name = document.createElement('p');
+        name.className = 'font-medium';
+        name.textContent = row.name ?? row.id;
+        item.appendChild(name);
+
+        for (const reason of row.reasons ?? [row.error]) {
+            const line = document.createElement('p');
+            line.className = 'text-content-secondary';
+            line.textContent = reason;
+            item.appendChild(line);
+        }
+
+        return item;
+    });
+
+    dialog.querySelector('[data-report-list]').replaceChildren(...items);
+    dialog.querySelector('[data-report-close]').onclick = () => dialog.close();
+    dialog.showModal();
+}

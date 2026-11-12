@@ -39,7 +39,7 @@ class ProductPublicationService
      * Apply one action to many products; a failure on one does not stop the others.
      *
      * @param  list<string>  $publicIds
-     * @return array{processed: int, failed: list<array{id: string, error: string}>}
+     * @return array{processed: int, failed: list<array{id: string, name: ?string, error: string, reasons: list<string>}>}
      */
     public function bulk(string $action, array $publicIds): array
     {
@@ -52,7 +52,7 @@ class ProductPublicationService
             $product = $products->get($publicId);
 
             if ($product === null) {
-                $failed[] = ['id' => $publicId, 'error' => 'Product not found.'];
+                $failed[] = ['id' => $publicId, 'name' => null, 'error' => 'Product not found.', 'reasons' => [__('admin.products.bulk_not_found')]];
 
                 continue;
             }
@@ -66,7 +66,13 @@ class ProductPublicationService
 
                 $processed++;
             } catch (ApplicationException $exception) {
-                $failed[] = ['id' => $publicId, 'error' => $exception->getMessage()];
+                $reasons = array_values(array_merge(...array_values($exception->errors ?? [])));
+                $failed[] = [
+                    'id' => $publicId,
+                    'name' => $product->name,
+                    'error' => $exception->getMessage(),
+                    'reasons' => $reasons !== [] ? $reasons : [$exception->localizedMessage()],
+                ];
             }
         }
 
@@ -101,12 +107,18 @@ class ProductPublicationService
         $errors = [];
 
         if (! $product->productVariants()->where('is_active', true)->exists()) {
-            $errors['variants'] = ['A product needs at least one active variant before it can be published.'];
+            $onlyCustomAmounts = $product->productVariants()->exists()
+                && ! $product->productVariants()->where('is_custom_amount', false)->exists();
+
+            // Custom (range) amounts can't be priced yet, so their variants stay inactive.
+            $errors['variants'] = [$onlyCustomAmounts
+                ? __('admin.products.publish_custom_amount_only')
+                : __('admin.products.publish_needs_active_variant')];
         }
 
         if (in_array($product->delivery_type, self::TYPES_NEEDING_CUSTOMER_INPUT, true)
             && ! $product->productDeliveryFields()->where('is_required', true)->exists()) {
-            $errors['delivery_fields'] = ['This delivery type needs at least one required delivery field.'];
+            $errors['delivery_fields'] = [__('admin.products.publish_needs_delivery_field')];
         }
 
         if ($errors !== []) {

@@ -55,6 +55,8 @@ class ProductController extends Controller
 
     public function bulk(BulkProductRequest $request): JsonResponse
     {
-        return $this->success($this->publication->bulk($request->validated('action'), $request->validated('ids')), 'Done.');
+        $result = $this->publication->bulk($request->validated('action'), $request->validated('ids'));
+
+        return $this->success($result, __('admin.products.bulk_result', ['done' => $result['processed'], 'failed' => count($result['failed'])]));
     }
 }
