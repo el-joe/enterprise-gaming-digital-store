@@ -72,6 +72,16 @@ return [
         'reloadly_giftcards' => ['giftcards.reloadly.com', 'giftcards-sandbox.reloadly.com'],
     ],
 
+    /*
+    | Owner decision 12 (SECURITY.md section 2, SSRF): supplier product images are downloaded only
+    | over HTTPS from these hosts (exact names), without following redirects, within the timeout
+    | and size limit, and only as a raster image. Every Reloadly product checked on 2026-11-12
+    | (`logoUrls` and `brand.logoUrl`) is on cdn.reloadly.com.
+    */
+    'image_hosts' => ['cdn.reloadly.com'],
+    'image_timeout_seconds' => 10,
+    'image_max_kilobytes' => 5120,
+
     'reloadly' => [
         'auth_url' => 'https://auth.reloadly.com',
         'base_urls' => [

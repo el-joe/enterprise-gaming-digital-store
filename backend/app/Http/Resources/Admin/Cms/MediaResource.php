@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Admin\Cms;
 
 use App\Domains\Cms\Models\Media;
+use App\Domains\Cms\Services\MediaUrls;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,6 +23,7 @@ class MediaResource extends JsonResource
             'id' => $this->id,
             'public_id' => $this->public_id,
             'path' => $this->path,
+            'url' => app(MediaUrls::class)->url($this->disk, $this->path),
             'original_filename' => $this->original_filename,
             'mime' => $this->mime,
             'size_bytes' => $this->size_bytes,

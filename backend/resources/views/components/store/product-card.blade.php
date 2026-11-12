@@ -1,6 +1,6 @@
 {{--
     Product card (Figma `Product Card`, 6:1065): key-cut silhouette, colour tile with the platform
-    name, product name, delivery meta and the server-formatted price (ProductCardResource).
+    name (the product image as its background when there is one, owner decision 12), product name, delivery meta and the server-formatted price (ProductCardResource).
 --}}
 @props(['product', 'eager' => false])
 
@@ -15,6 +15,7 @@
         :overline="$product['category']['name'] ?? null"
         :name="$product['platform']['name'] ?? null"
         :image="$product['image']"
+        :alt="$product['name']"
         :eager="$eager"
         class="h-32 p-3.5"
     />

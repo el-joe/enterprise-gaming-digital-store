@@ -66,8 +66,8 @@ class PlatformScreen extends ResourceScreen
                 Field::textarea('description', $this->l('description'))->nullable(),
             ],
             'display' => [
-                Field::number('logo_media_id', $this->l('logo_media_id'))->nullable()->help(__('admin.help.media_id')),
-                Field::number('banner_media_id', $this->l('banner_media_id'))->nullable()->help(__('admin.help.media_id')),
+                Field::image('logo_media_id', $this->l('logo_media_id'))->nullable()->help(__('admin.help.image_upload')),
+                Field::image('banner_media_id', $this->l('banner_media_id'))->nullable()->help(__('admin.help.image_upload')),
                 Field::number('popularity_score', $this->l('popularity_score'))->default(0),
                 Field::number('sort_order', $this->l('sort_order'))->default(0),
                 Field::toggle('is_active', $this->l('is_active'))->default(true),

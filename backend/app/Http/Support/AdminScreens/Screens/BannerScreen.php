@@ -63,8 +63,8 @@ class BannerScreen extends ResourceScreen
                 Field::text('subtitle', $this->l('subtitle'))->nullable()->max(255),
                 Field::text('cta_label', $this->l('cta_label'))->nullable()->max(64),
                 Field::text('cta_url', $this->l('cta_url'))->nullable()->max(500)->ltr()->help(__('admin.help.safe_url')),
-                Field::number('media_id', $this->l('media_id'))->required()->help(__('admin.help.media_id')),
-                Field::number('mobile_media_id', $this->l('mobile_media_id'))->nullable()->help(__('admin.help.media_id')),
+                Field::image('media_id', $this->l('media_id'))->required()->help(__('admin.help.image_upload')),
+                Field::image('mobile_media_id', $this->l('mobile_media_id'))->nullable()->help(__('admin.help.image_upload')),
             ],
             'schedule' => [
                 Field::datetime('starts_at', $this->l('starts_at')),

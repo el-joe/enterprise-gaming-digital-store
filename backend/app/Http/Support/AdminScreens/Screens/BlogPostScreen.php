@@ -68,7 +68,7 @@ class BlogPostScreen extends ResourceScreen
                 Field::select('blog_category_id', $this->l('blog_category_id'), Options::blogCategories())->nullable(),
                 Field::select('status', $this->l('status'), Options::enum('blog_status', BlogPostStatus::cases()))->required(),
                 Field::datetime('published_at', $this->l('published_at')),
-                Field::number('cover_media_id', $this->l('cover_media_id'))->nullable()->help(__('admin.help.media_id')),
+                Field::image('cover_media_id', $this->l('cover_media_id'))->nullable()->help(__('admin.help.image_upload')),
                 Field::textarea('excerpt', $this->l('excerpt'))->nullable()->max(500),
                 Field::html('body', $this->l('body'))->required()->help(__('admin.help.html')),
             ],

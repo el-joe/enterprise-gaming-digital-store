@@ -110,6 +110,14 @@ These are editable Figma frames with live text in Changa (overline, headline) an
 
 Copy: EN "INSTANT DIGITAL DELIVERY / Every game. One vault. / Gift cards, wallet codes and game top-ups, delivered in minutes. / Shop now at boxcards.shop". AR "تسليم رقمي فوري / كل لعبة. خزنة واحدة. / بطاقات هدايا وأكواد محافظ وشحن ألعاب، تصلك خلال دقائق. / تسوّق الآن على boxcards.shop". The logo includes third-party platform symbols, which the owner accepted for the brand mark (trademark clearance pending, see the roadmap brand note).
 
+## Supplier product images (owner decision 12, 2026-11-12)
+
+- **Source:** the supplier's own product image from the synced catalog. For Reloadly, this is `logoUrls[0]` (the card image), else `brand.logoUrl`. All of these are on `https://cdn.reloadly.com`. This overrides BD8 for supplier-provided images only; the owner holds the rights under the reseller agreement. No other third-party logos are fetched.
+- **Processing:** downloaded by a queued job (HTTPS, allow-listed host, no redirects, 10 s, 5 MB, raster only, no SVG), decoded and re-encoded with GD (metadata stripped), and resized to 960 and 480 px wide (aspect ratio kept, no upscaling).
+- **Storage:** `public` disk, `media/supplier-products/{supplier_product_id}/{hash16}.avif|.webp` (960) and `{hash16}-480.avif|.webp`, with a `media` row whose `source` is `supplier`. The files are replaced when the supplier's URL changes.
+- **Use:** the primary product image when no staff image exists. It is the background of the storefront card and the product page tile (`<picture>`, AVIF then WebP), and it appears in the API `image` and `images` payloads (the Flutter `ProductTile`) and as a thumbnail in the admin supplier catalog. Without an image, the generated dial art stays.
+- **Admin uploads:** the same optimizer (AVIF and WebP at 480, 960 and 1920 px, at most 5 MB, no SVG).
+
 ## Missing Assets
 
 | Priority | Asset | Status |

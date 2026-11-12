@@ -12,6 +12,9 @@
     $describedBy = $id.'-error'.($field->help !== '' ? ' '.$id.'-help' : '');
 @endphp
 
+@if ($field->type === 'image')
+    <x-admin.image-upload :name="$name" :value="$value" :label="$field->label" :help="$field->help ?: null" :required="$field->required" :disabled="$disabled" :id="$id" :error-key="$field->errorKey()" @class(['md:col-span-2' => $field->wide]) />
+@else
 <div @class(['md:col-span-2' => $field->wide])>
     @if ($field->type === 'toggle')
         <label class="flex min-h-10 items-center gap-3 text-sm">
@@ -65,3 +68,4 @@
     @if ($field->help !== '')<p id="{{ $id }}-help" class="field-help">{{ $field->help }}</p>@endif
     <p id="{{ $id }}-error" class="field-error" data-error-for="{{ $field->errorKey() }}" hidden></p>
 </div>
+@endif

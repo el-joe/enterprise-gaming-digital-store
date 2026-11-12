@@ -28,7 +28,7 @@ return [
         */
         // Admin setting storage.media_base_url (owner decision 11).
         'base_url' => null,
-        'max_upload_kilobytes' => 8192,
+        'max_upload_kilobytes' => 5120,
         'max_dimension_pixels' => 8000,
     ],
 ];

@@ -33,7 +33,7 @@
             {{-- Gallery (first on every width) --}}
             <div class="min-w-0">
                 <x-store.tile :slug="$product['platform']['slug'] ?? $product['slug']" :overline="$product['category']['name']" :name="$product['platform']['name']"
-                    :image="$product['images'][0] ?? null" large eager class="aspect-[16/9] p-5 md:aspect-[752/340] md:p-6" />
+                    :image="$product['images'][0] ?? null" :alt="$product['name']" large eager class="aspect-[16/9] p-5 md:aspect-[752/340] md:p-6" />
 
                 @if (count($product['images']) > 1)
                     <ul class="mt-2.5 grid grid-cols-3 gap-2" aria-label="{{ __('storefront.product.gallery') }}">

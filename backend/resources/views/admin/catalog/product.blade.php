@@ -167,6 +167,13 @@
                                 @if ($image->media)
                                     <img src="{{ $mediaUrls->url((string) $image->media->disk, (string) $image->media->path) }}" alt="{{ $image->alt ?? '' }}" class="aspect-video w-full rounded-md bg-surface-sunken object-cover" loading="lazy">
                                 @endif
+                                <p class="flex flex-wrap gap-1 text-xs">
+                                    @if ($loop->first)<x-admin.badge tone="success">{{ __('admin.products.primary') }}</x-admin.badge>@endif
+                                    @if ($image->media?->source?->value === 'supplier')<x-admin.badge>{{ __('admin.products.supplier_image') }}</x-admin.badge>@endif
+                                </p>
+                                @if ($canManage && ! $loop->first)
+                                    <button type="button" class="admin-btn h-8" data-action-url="{{ $api.'/images/'.$image->id.'/primary' }}">{{ __('admin.products.make_primary') }}</button>
+                                @endif
                                 @if ($canManage)
                                     <button type="button" class="admin-btn h-8 text-status-danger" data-action-url="{{ $api.'/images/'.$image->id }}" data-action-method="DELETE" data-confirm-title="{{ __('admin.products.remove_image') }}" data-confirm-danger>{{ __('admin.products.remove_image') }}</button>
                                 @endif
@@ -177,7 +184,7 @@
                     </ul>
                     @if ($canManage)
                         <form class="mt-4 flex flex-col gap-3 border-t border-line-subtle pt-4" data-module="form" data-action="{{ $api.'/images' }}" data-method="POST" data-success="reload" novalidate>
-                            <x-admin.field name="media_id" id="pi-media" type="number" :label="__('admin.fields.media_id')" :help="__('admin.products.media_help')" dir="ltr" />
+                            <x-admin.image-upload name="media_id" id="pi-media" :label="__('admin.products.new_image')" :help="__('admin.help.image_upload')" required />
                             <x-admin.field name="alt" id="pi-alt" :label="__('admin.media.alt')" maxlength="190" />
                             <x-admin.form-alerts />
                             <div><button type="submit" class="admin-btn">{{ __('admin.products.attach_image') }}</button></div>

@@ -6,6 +6,7 @@ use App\DataTables\AdminDataTable;
 use App\DataTables\Cell;
 use App\DataTables\Column;
 use App\DataTables\Filter;
+use App\Domains\Cms\Services\MediaUrls;
 use App\Domains\Suppliers\Enums\DenominationType;
 use App\Domains\Suppliers\Enums\SupplierAvailability;
 use App\Domains\Suppliers\Models\SupplierProduct;
@@ -37,6 +38,7 @@ class SupplierCatalogDataTable extends AdminDataTable
     public function columns(): array
     {
         $columns = [
+            new Column('image', __('admin.supplier_catalog.col_image'), html: true, exportable: false),
             new Column('supplier', __('admin.col.supplier'), 'supplier_products.supplier_id'),
             new Column('external', __('admin.supplier_catalog.col_external'), 'supplier_products.external_id', html: true),
             new Column('name', __('admin.supplier_catalog.col_name'), 'supplier_products.name'),
@@ -119,6 +121,7 @@ class SupplierCatalogDataTable extends AdminDataTable
             ->selectSub(self::latestPrice('cost_currency'), 'latest_cost_currency')
             ->with([
                 'supplier:id,name',
+                'imageMedia:id,disk,path,conversions',
                 'supplierProductMappings' => static fn ($query) => $query->select(['id', 'supplier_product_id', 'product_variant_id'])->orderBy('id'),
                 'supplierProductMappings.productVariant:id,product_id',
                 'supplierProductMappings.productVariant.product:id,public_id,name',
@@ -134,6 +137,7 @@ class SupplierCatalogDataTable extends AdminDataTable
         $linked = $row->supplierProductMappings->isNotEmpty();
 
         return [
+            'image' => $this->thumbnail($row),
             'supplier' => (string) ($row->supplier?->name ?? '—'),
             'external' => Cell::mono($row->external_id),
             'name' => $row->name,
@@ -161,6 +165,23 @@ class SupplierCatalogDataTable extends AdminDataTable
                 fields: self::FIELDS_TEMPLATE,
             ),
         ];
+    }
+
+    /**
+     * The synced supplier image (owner decision 12) as a small lazy thumbnail (the 480 px WebP).
+     */
+    private function thumbnail(SupplierProduct $row): string
+    {
+        $media = $row->imageMedia;
+
+        if ($media === null) {
+            return Cell::muted('—');
+        }
+
+        $conversions = (array) $media->conversions;
+        $path = $conversions['webp_480'] ?? $conversions['webp'] ?? $media->path;
+
+        return '<img src="'.e(app(MediaUrls::class)->url((string) $media->disk, (string) $path)).'" alt="" width="48" height="32" class="h-8 w-12 rounded-sm bg-surface-sunken object-cover" loading="lazy" decoding="async">';
     }
 
     private function canAdd(): bool

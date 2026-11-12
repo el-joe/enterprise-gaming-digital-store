@@ -16,7 +16,8 @@ use Illuminate\Support\Carbon;
  *
  * Types: text, textarea, html (sanitized server side), number, decimal (money and percent as
  * strings, never a float), select, multi (a list of checkboxes), toggle, datetime, date, json
- * (an object or list typed as JSON), password (write-only, never filled).
+ * (an object or list typed as JSON), password (write-only, never filled), image (an upload that
+ * fills the media id).
  */
 final class Field
 {
@@ -116,6 +117,14 @@ final class Field
     public static function csv(string $name, string $label): self
     {
         return (new self($name, $label, 'csv'))->wide()->ltr();
+    }
+
+    /**
+     * An image chosen by upload (`<x-admin.image-upload>`); the form still sends the media id.
+     */
+    public static function image(string $name, string $label): self
+    {
+        return (new self($name, $label, 'image'))->nullable();
     }
 
     public static function password(string $name, string $label): self

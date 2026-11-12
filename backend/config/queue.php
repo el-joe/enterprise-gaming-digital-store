@@ -40,7 +40,9 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Above the longest job timeout (SyncSupplierCatalog, 600 s), so a running job is never
+            // handed to a second worker; QueueTimingTest keeps it that way.
+            'retry_after' => 900,
             'after_commit' => false,
         ],
 

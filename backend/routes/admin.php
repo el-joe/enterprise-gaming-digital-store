@@ -95,6 +95,7 @@ $crud('products', ProductController::class, 'catalog.view', 'catalog.manage');
 
 Route::scopeBindings()->group(static function () use ($crud): void {
     $crud('products.variants', ProductVariantController::class, 'catalog.view', 'catalog.manage', ['products' => 'product', 'variants' => 'productVariant']);
+    Route::post('products/{product}/images/{productImage}/primary', [ProductImageController::class, 'primary'])->middleware('permission:catalog.manage')->name('products.images.primary');
     $crud('products.images', ProductImageController::class, 'catalog.view', 'catalog.manage', ['products' => 'product', 'images' => 'productImage']);
     $crud('menus.items', MenuItemController::class, 'content.menus', 'content.menus', ['items' => 'menuItem']);
 });
@@ -114,6 +115,10 @@ $crud('homepage-sections', HomepageSectionController::class, 'content.homepage',
 $reorder('banners', BannerController::class, 'marketing.banners');
 $crud('banners', BannerController::class, 'marketing.banners', 'marketing.banners');
 $crud('redirects', RedirectController::class, 'seo.redirects', 'seo.redirects');
+// Image fields of the admin forms (<x-admin.image-upload>): the same pipeline as the media library,
+// open to every role that edits a form with an image.
+Route::post('media/images', [MediaController::class, 'store'])
+    ->middleware(['permission:content.media|catalog.manage|marketing.banners|content.blog', 'throttle:30,1'])->name('media.images.store');
 $crud('media', MediaController::class, 'content.media', 'content.media', ['media' => 'media']);
 
 // Currency

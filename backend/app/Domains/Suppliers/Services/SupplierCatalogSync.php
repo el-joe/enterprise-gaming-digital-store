@@ -8,6 +8,7 @@ use App\Domains\Suppliers\Enums\SupplierCapability;
 use App\Domains\Suppliers\Enums\SupplierSyncRunStatus;
 use App\Domains\Suppliers\Enums\SupplierSyncRunType;
 use App\Domains\Suppliers\Exceptions\SupplierRequestFailed;
+use App\Domains\Suppliers\Jobs\FetchSupplierProductImage;
 use App\Domains\Suppliers\Models\Supplier;
 use App\Domains\Suppliers\Models\SupplierProduct;
 use App\Domains\Suppliers\Models\SupplierSyncRun;
@@ -19,11 +20,15 @@ use Throwable;
  * Catalog sync: pages through the supplier's products, upserts supplier_products (uq_spd), marks
  * products absent from a complete run as removed, and writes each fixed denomination's effective
  * cost to supplier_product_prices, which is the only cost source the pricing engine reads. One
- * run per supplier, type and window (uq_ssr_window).
+ * run per supplier, type and window (uq_ssr_window). Products whose image URL is new or changed get
+ * a queued FetchSupplierProductImage job after the run (owner decision 12).
  */
 class SupplierCatalogSync
 {
     private const int MAX_PAGES = 500;
+
+    /** @var list<int> supplier products whose image source changed in this run (owner decision 12) */
+    private array $imageQueue = [];
 
     public function __construct(private SupplierAdapterRegistry $registry, private SupplierPriceWriter $prices) {}
 
@@ -73,6 +78,8 @@ class SupplierCatalogSync
             $this->close($run, SupplierSyncRunStatus::Completed, $counts);
         } catch (SupplierRequestFailed $exception) {
             $this->close($run, SupplierSyncRunStatus::Failed, $counts, $exception->getMessage());
+        } finally {
+            $this->queueImages();
         }
 
         return $run->refresh();
@@ -138,6 +145,30 @@ class SupplierCatalogSync
 
         $this->prices->writeFor($row);
 
+        $imageUrl = $row->sourceImageUrl();
+
+        if ($imageUrl !== null && ($imageUrl !== $row->image_url || ($row->image_media_id === null && in_array($row->image_error, [null, 'network'], true)))) {
+            $this->imageQueue[] = $row->id;
+        }
+
         return $created;
+    }
+
+    /**
+     * One FetchSupplierProductImage job (`sync` queue) per product whose image source is new or
+     * changed; an unchanged URL is never downloaded again.
+     */
+    private function queueImages(): void
+    {
+        $ids = array_values(array_unique($this->imageQueue));
+        $this->imageQueue = [];
+
+        foreach ($ids as $id) {
+            try {
+                FetchSupplierProductImage::dispatch($id);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
     }
 }

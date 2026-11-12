@@ -74,7 +74,7 @@ class CategoryScreen extends ResourceScreen
                 Field::textarea('description', $this->l('description'))->nullable(),
             ],
             'display' => [
-                Field::number('banner_media_id', $this->l('banner_media_id'))->nullable()->help(__('admin.help.media_id')),
+                Field::image('banner_media_id', $this->l('banner_media_id'))->nullable()->help(__('admin.help.image_upload')),
                 Field::number('sort_order', $this->l('sort_order'))->default(0),
                 Field::toggle('is_active', $this->l('is_active'))->default(true),
             ],

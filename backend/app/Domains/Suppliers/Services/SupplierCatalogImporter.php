@@ -17,6 +17,7 @@ use App\Domains\Pricing\Services\PricingEngine;
 use App\Domains\Suppliers\Enums\DenominationType;
 use App\Domains\Suppliers\Enums\SupplierAvailability;
 use App\Domains\Suppliers\Enums\SupplierProductMappingRole;
+use App\Domains\Suppliers\Jobs\FetchSupplierProductImage;
 use App\Domains\Suppliers\Jobs\SyncSupplierCatalog;
 use App\Domains\Suppliers\Models\SupplierProduct;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,9 @@ use Illuminate\Support\Str;
  * created and audited by its own service. Costs for the mapped denominations are written by
  * SupplierPriceWriter and each variant is priced by the PricingEngine with the existing rules; a
  * variant the engine cannot price stays inactive with the engine's reason. Supplier products that
- * already have a mapping are not touched again. Images stay empty (no brand logos, BD8).
+ * already have a mapping are not touched again. The supplier's synced image becomes the product's
+ * primary image (owner decision 12, SupplierImageService); one not downloaded yet is queued and
+ * attached when it arrives.
  */
 class SupplierCatalogImporter
 {
@@ -51,6 +54,7 @@ class SupplierCatalogImporter
         private AuditLogger $audit,
         private SupplierCategoryResolver $categories,
         private SupplierPlatformResolver $platforms,
+        private SupplierImageService $images,
     ) {}
 
     /**
@@ -139,6 +143,12 @@ class SupplierCatalogImporter
 
         $this->prices->writeFor($source);
         $inactive = $this->price($created);
+
+        if ($source->image_media_id !== null) {
+            $this->images->attach($source, $product);
+        } elseif ($source->sourceImageUrl() !== null) {
+            FetchSupplierProductImage::dispatch($source->id)->afterCommit();
+        }
 
         $this->audit->record(new AuditEntry(
             action: 'suppliers.catalog.added_to_store',

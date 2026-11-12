@@ -32,8 +32,9 @@ class MediaUrls
     }
 
     /**
-     * A storefront image: the original (WebP) plus the format conversions the upload produced.
-     * Media has no resized variants; `width` and `height` are the original's.
+     * A storefront image: the main file (WebP) plus the format conversions ImageOptimizer wrote.
+     * `formats.avif` and `formats.webp` are the largest width (`width` and `height`); smaller widths
+     * are `formats.avif_480` and so on (the storefront tile builds `srcset` from them).
      *
      * @return array{path: string, url: string, alt: string|null, width: int|null, height: int|null, formats: array<string, string>}
      */

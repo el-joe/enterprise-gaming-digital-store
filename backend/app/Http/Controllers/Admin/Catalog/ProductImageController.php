@@ -22,7 +22,14 @@ class ProductImageController extends Controller
 
     public function store(Product $product, SaveProductImageRequest $request): JsonResponse
     {
-        return $this->success(ProductImageResource::make($this->service->createFor($product, $request->validated()))->resolve(), 'Created.', status: 201);
+        return $this->success(ProductImageResource::make($this->service->withRelations($this->service->addByStaff($product, $request->validated())))->resolve(), 'Created.', status: 201);
+    }
+
+    public function primary(Product $product, ProductImage $productImage): JsonResponse
+    {
+        $this->service->makePrimary($product, $productImage);
+
+        return $this->success(message: 'Saved.');
     }
 
     public function show(Product $product, ProductImage $productImage): JsonResponse
