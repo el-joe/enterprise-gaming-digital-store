@@ -46,6 +46,21 @@ describe('bag page', function (): void {
     });
 });
 
+describe('bag badge after a change on the bag page (M19 defect D1)', function (): void {
+    it('returns the cart lines on quantity change and remove, and the bag module updates the header badge from them', function (): void {
+        $variant = storefrontVariant(storefrontProduct('Steam Wallet $20', '20'));
+        $this->actingAs(User::factory()->create());
+        $line = $this->postJson('/api/v1/storefront/cart/items', ['variant_id' => $variant->public_id, 'quantity' => 1])->assertCreated()->json('data.cart.items.0.id');
+
+        $this->patchJson("/api/v1/storefront/cart/items/{$line}", ['quantity' => 3])->assertOk()->assertJsonPath('data.cart.items.0.quantity', 3);
+        $this->deleteJson("/api/v1/storefront/cart/items/{$line}")->assertOk()->assertJsonCount(0, 'data.cart.items');
+
+        expect(file_get_contents(resource_path('js/modules/cart.js')))
+            ->toContain("document.querySelectorAll('[data-bag-count]')")
+            ->toContain('updateBagCount(result.body?.data?.cart)');
+    });
+});
+
 describe('checkout access (owner decision 4)', function (): void {
     it('sends a guest to sign in and back to checkout while guest checkout is off', function (): void {
         $variant = storefrontVariant(storefrontProduct());

@@ -26,7 +26,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
 | M17 | n8n workflows | Complete (run before M14 and BD9 by PM decision; Laravel automation API, outbox and heartbeats built and tested; 58 workflows authored and validated, **not executed**: n8n is not installed here; admin screen is M15) |
 | M18 | SEO and analytics | Complete (2026-11-11, not committed; GA4 Measurement Protocol and Search Console mocked only, awaiting credentials; Lighthouse not run: not installed, manual headless-Chrome check recorded) |
-| M19 | Full test pass | Not started |
+| M19 | Full test pass | Complete with open defects (2026-11-12, not committed; final run backend 2,890 and app 1,660 passed; coverage matrix in `TEST_COVERAGE.md`; manual checklist 70 steps: 68 PASS, 1 FAIL (open defect D2), 1 BLOCKED; defect D1 fixed) |
 | M20 | Production readiness | Not started |
 
 Status values: Not started, In progress, Blocked (state why), Complete.
@@ -1997,3 +1997,72 @@ Every page: 4 font preloads, no image without width and height, one JSON-LD scri
 
 M19 (full test pass), or the app milestones per the build order.
 
+
+---
+
+## M19: Full test pass
+
+Status: **Complete with open defects** (2026-11-12, not committed). Completed by the M19 QA pass, working alone (owner rule: no sub-agents). The full suites were not re-run (owner rule: tests run once at the end).
+
+### Summary of completed work
+
+- The single final run of the automated suites (owner rule 2026-11-11) is recorded: backend `php artisan test --compact` **2,890 passed, 0 failed** (MySQL `gaming-store_testing`, commit `5e340e8`); app `flutter test` and `bash tool/ci.sh` **1,660 passed, 0 failed** (commit `2c7e2e9`).
+- `docs/TEST_COVERAGE.md`: every Phase 15 item and the Step 12 testing items mapped to the backend and app test files and test names that cover them, with a status, plus what the suites cannot prove.
+- `docs/MANUAL_TEST_CHECKLIST.md`: numbered storefront (EN and AR) and admin steps with expected results, executed in headless Chrome against preview data in the testing database, with the results table, defects and observations.
+- One defect found and fixed (D1), one left open (D2).
+
+### Files created
+
+- `docs/TEST_COVERAGE.md`, `docs/MANUAL_TEST_CHECKLIST.md`.
+
+### Files changed
+
+- `backend/resources/js/modules/cart.js`: D1 fix, the header bag badge follows quantity changes and removals on the bag page (it stayed stale until a reload). Assets rebuilt with `npm run build`.
+- `backend/tests/Feature/Storefront/CheckoutPagesTest.php`: regression test "returns the cart lines on quantity change and remove, and the bag module updates the header badge from them".
+- `docs/PROGRESS.md` (this section and the status board).
+
+### Migrations
+
+None.
+
+### Acceptance
+
+| Item | Result | Evidence |
+|---|---|---|
+| Entire Pest suite green on MySQL | Met | Final run 2,890 passed, 0 failed (`5e340e8`) |
+| MCP server suite | Met | `cd mcp-server && npm test`: 34 passed, 0 failed, re-run by the PM after M19 (mocked Laravel API; a live start against Laravel is M20) |
+| Coverage for each Phase 15 item mapped in a table | Met | `TEST_COVERAGE.md`: of 28 counted items, 15 Covered, 9 Covered with mocks (live sandbox verification is M20), 3 Partially covered, 1 Not covered here |
+| Manual test checklist completed for storefront and admin | Met, with one open defect | `MANUAL_TEST_CHECKLIST.md`: 70 steps, 68 PASS, 1 FAIL (A22, defect D2), 1 BLOCKED (A07b) |
+
+### Tests and results
+
+- Command: none of the full suites re-run. One file run alone after the D1 fix: `php artisan test --compact tests/Feature/Storefront/CheckoutPagesTest.php` **14 passed** (118 assertions). `vendor/bin/pint --dirty --format agent`: passed. `npm run build`: passed.
+- Note: that file run rebuilt `gaming-store_testing` with `migrate:fresh` (as every test run does), so the preview data was seeded again afterwards; the manual results are all from the reseeded data.
+- Manual run: 2026-11-12, `php artisan serve` on 127.0.0.1:8123 with environment overrides only (testing database, isolated `LARAVEL_STORAGE_PATH`, database cache and sessions, sync queue, log mail, outbox and FCM off, outbound HTTP to a closed local proxy), Google Chrome 157 headless over the DevTools protocol with external hosts unresolvable. `backend/.env` and the app database `gaming-store` were not read or touched. The server and Chrome were stopped at the end.
+- Not tested, and why: live provider calls (no credentials; M20); the on-device app suite (no emulator or device); iOS (not built here); Lighthouse (not installed); the n8n runtime (not installed); the MCP server suite (`npm test`, last run at M16, not part of the final run).
+
+### Defects
+
+| Id | Status | Summary |
+|---|---|---|
+| D1 | Fixed (not committed) | Bag page: the header bag badge did not follow quantity changes or removals until a reload |
+| D2 | **Open** | `GET /admin/login` shares the 5-per-minute `auth` limiter by IP, so a sixth load of the staff sign-in page within a minute shows 429. Suggested: throttle only the sign-in POST with `auth`. Left for an owner or security decision |
+
+### Coverage gaps found
+
+- No test reconciles a PayPal payment (`payments:reconcile-open` or `reconcile-daily`); Stripe, Paymob refunds and the wallet are covered.
+- The admin refund from the order page could not be exercised in the browser on the preview data (A07b); it is covered by `AdminOrderPagesTest` and `RefundTest`.
+- The MCP server suite passed its re-run (34/34, mocked Laravel API); the server has never run against a live Laravel instance.
+
+### Outstanding requirements (M20)
+
+- Sandbox verification of every external integration, resolving each `UNVERIFIED` item in `INTEGRATIONS.md`: Stripe (and the BD1 merchant entity), PayPal, Paymob, Reloadly, Open Exchange Rates, GA4 Measurement Protocol, Search Console OAuth, FCM, and the n8n workflows on a real n8n with the BD9 alert channel.
+- Run the on-device suite (`integration_test` journeys on an emulator; frame timing on a physical device) and an iOS build.
+- Lighthouse run recorded (Performance, SEO, Accessibility), not claimed.
+- Re-run the MCP server suite and start the server against a running Laravel.
+- Decide and fix D2; add the PayPal reconciliation test; commit the D1 fix and its test, then run the full backend suite once more as the owner's rules allow.
+- Production checks from `SECURITY.md` section 15: Supervisor workers, scheduler, Redis, Nginx and SSL, backups with a tested restore, real mail delivery, GeoIP behind Cloudflare.
+
+### Next milestone
+
+M20 (production readiness), which needs credentials, a server and developer accounts.

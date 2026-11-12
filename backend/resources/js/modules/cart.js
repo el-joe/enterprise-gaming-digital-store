@@ -5,6 +5,23 @@ import { t } from '../lib/config.js';
 const API = '/api/v1/storefront/cart';
 
 /**
+ * Keep the header bag badge in step with the cart JSON a change returned (as product.js does on
+ * add): the badge sits outside the refreshed fragment, so it would otherwise stay stale until a
+ * reload (M19 defect D1).
+ */
+const updateBagCount = (cartData) => {
+    if (!cartData || !Array.isArray(cartData.items)) {
+        return;
+    }
+
+    const count = cartData.items.reduce((sum, item) => sum + Number(item.quantity), 0);
+    document.querySelectorAll('[data-bag-count]').forEach((badge) => {
+        badge.textContent = String(count);
+        badge.classList.toggle('hidden', count === 0);
+    });
+};
+
+/**
  * Bag actions (quantity, remove, coupon) through the cart JSON, then the server fragment is
  * fetched again so all amounts stay server-rendered. Used on the bag page (`cart` fragment) and
  * the checkout summary (`summary` fragment); dispatches `cart:updated` after each change.
@@ -46,6 +63,7 @@ export default function cart(root) {
         }
 
         await refresh();
+        updateBagCount(result.body?.data?.cart);
 
         return true;
     };
