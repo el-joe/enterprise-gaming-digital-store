@@ -1130,6 +1130,7 @@ return [
     ],
 
     'col' => [
+        'image' => 'Image',
         'workflow' => 'Workflow',
         'draft' => 'Draft',
         'reviewer' => 'Reviewed by',
@@ -1351,6 +1352,17 @@ return [
         'supplier_product_id' => 'Supplier product id',
     ],
 
+    'supplier_images' => [
+        'title' => 'Supplier images',
+        'note' => 'One image per supplier. A supplier image is used automatically only while there is no image; an image you upload or choose is never replaced.',
+        'empty' => 'No supplier image yet.',
+        'active' => 'Active',
+        'use' => 'Use this',
+        'use_confirm' => 'Use the image from :supplier?',
+        'alt' => 'Image from :supplier',
+        'activated' => 'Image activated.',
+        'unavailable' => 'This supplier image is no longer available.',
+    ],
     'supplier_catalog' => [
         'reason_no_brand' => 'no brand: the supplier gives none, choose a platform',
         'col_category' => 'Category',

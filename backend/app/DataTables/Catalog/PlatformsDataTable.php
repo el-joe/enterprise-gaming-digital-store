@@ -27,6 +27,7 @@ class PlatformsDataTable extends AdminDataTable
     public function columns(): array
     {
         return [
+            new Column('image', __('admin.col.image'), html: true, exportable: false),
             new Column('name', __('admin.col.name'), 'gaming_platforms.name', html: true),
             new Column('slug', __('admin.col.slug'), 'gaming_platforms.slug', html: true),
             new Column('products', __('admin.col.products'), 'products_count', numeric: true),
@@ -53,7 +54,7 @@ class PlatformsDataTable extends AdminDataTable
 
     protected function query(): Builder
     {
-        return GamingPlatform::query()->select('gaming_platforms.*')->withCount('products');
+        return GamingPlatform::query()->select('gaming_platforms.*')->with('logoMedia')->withCount('products');
     }
 
     /**
@@ -64,6 +65,7 @@ class PlatformsDataTable extends AdminDataTable
         $edit = route('admin.catalog.platforms.edit', ['record' => $row->getRouteKey()]);
 
         return [
+            'image' => Cell::thumbnail($row->logoMedia, (string) $row->name),
             'name' => Cell::link($edit, (string) $row->name),
             'slug' => Cell::mono($row->slug),
             'products' => (string) $row->getAttribute('products_count'),

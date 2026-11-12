@@ -27,6 +27,7 @@ class CategoriesDataTable extends AdminDataTable
     public function columns(): array
     {
         return [
+            new Column('image', __('admin.col.image'), html: true, exportable: false),
             new Column('name', __('admin.col.name'), 'categories.name', html: true),
             new Column('slug', __('admin.col.slug'), 'categories.slug', html: true),
             new Column('parent', __('admin.col.parent'), html: true),
@@ -52,7 +53,7 @@ class CategoriesDataTable extends AdminDataTable
 
     protected function query(): Builder
     {
-        return Category::query()->select('categories.*')->with('parent:id,name');
+        return Category::query()->select('categories.*')->with(['parent:id,name', 'bannerMedia']);
     }
 
     /**
@@ -63,6 +64,7 @@ class CategoriesDataTable extends AdminDataTable
         $edit = route('admin.catalog.categories.edit', ['record' => $row->getRouteKey()]);
 
         return [
+            'image' => Cell::thumbnail($row->bannerMedia, (string) $row->name),
             'name' => Cell::link($edit, (string) $row->name),
             'slug' => Cell::mono($row->slug),
             'parent' => $row->parent === null ? Cell::muted('—') : e((string) $row->parent->name),

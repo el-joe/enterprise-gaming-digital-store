@@ -2,6 +2,8 @@
 
 namespace App\DataTables;
 
+use App\Domains\Cms\Models\Media;
+use App\Domains\Cms\Services\MediaUrls;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 
@@ -148,5 +150,34 @@ final class Cell
         return $value
             ? self::badge((string) __('admin.common.yes'), 'success', false)
             : self::badge((string) __('admin.common.no'), 'neutral', false);
+    }
+
+    /**
+     * A 40 px thumbnail of a record's active image for the image column of admin tables: `<picture>`
+     * with the 480 px AVIF and WebP from the media formats (MediaUrls), lazy, the record's name as
+     * `alt`; a neutral placeholder when there is no image. No inline style (CSP).
+     */
+    public static function thumbnail(?Media $media, string $alt): string
+    {
+        if ($media === null) {
+            return '<span class="block size-10 rounded-md border border-line-subtle bg-surface-sunken" data-thumb="empty" aria-hidden="true"></span>';
+        }
+
+        $image = app(MediaUrls::class)->image($media);
+        $formats = $image['formats'];
+        $sources = '';
+
+        foreach (['avif', 'webp'] as $format) {
+            $url = $formats[$format.'_480'] ?? $formats[$format] ?? null;
+
+            if ($url !== null) {
+                $sources .= '<source type="image/'.$format.'" srcset="'.e($url).'">';
+            }
+        }
+
+        $fallback = $formats['webp_480'] ?? $formats['webp'] ?? $image['url'];
+
+        return '<picture class="block size-10 shrink-0" data-thumb>'.$sources
+            .'<img src="'.e($fallback).'" alt="'.e($alt).'" width="40" height="40" class="size-10 rounded-md bg-surface-sunken object-cover" loading="lazy" decoding="async"></picture>';
     }
 }

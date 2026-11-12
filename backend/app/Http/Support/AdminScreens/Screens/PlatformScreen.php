@@ -3,6 +3,7 @@
 namespace App\Http\Support\AdminScreens\Screens;
 
 use App\Domains\Catalog\Models\GamingPlatform;
+use App\Domains\Suppliers\Services\SupplierImageCandidates;
 use App\Http\Support\AdminScreens\Field;
 use App\Http\Support\AdminScreens\ResourceScreen;
 use Illuminate\Database\Eloquent\Model;
@@ -55,6 +56,21 @@ class PlatformScreen extends ResourceScreen
     public function seoType(): ?string
     {
         return 'gaming_platform';
+    }
+
+    /**
+     * Supplier images gallery (owner request 2026-11-12) beside the image field.
+     */
+    public function panel(): ?string
+    {
+        return 'admin.partials.supplier-images-panel';
+    }
+
+    public function panelData(Model $record): array
+    {
+        $candidates = app(SupplierImageCandidates::class);
+
+        return ['candidates' => $candidates->forSubject($record), 'active_media_id' => $candidates->activeMediaId($record)];
     }
 
     public function fields(?Model $record): array

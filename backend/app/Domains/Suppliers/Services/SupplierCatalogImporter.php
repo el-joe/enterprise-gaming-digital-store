@@ -7,6 +7,7 @@ use App\Domains\Audit\Services\AuditLogger;
 use App\Domains\Catalog\Enums\DeliveryType;
 use App\Domains\Catalog\Enums\ProductVariantAvailability;
 use App\Domains\Catalog\Models\DeliveryFieldDefinition;
+use App\Domains\Catalog\Models\GamingPlatform;
 use App\Domains\Catalog\Models\Product;
 use App\Domains\Catalog\Models\ProductVariant;
 use App\Domains\Catalog\Services\ProductService;
@@ -34,7 +35,8 @@ use Illuminate\Support\Str;
  * variant the engine cannot price stays inactive with the engine's reason. Supplier products that
  * already have a mapping are not touched again. The supplier's synced image becomes the product's
  * primary image (owner decision 12, SupplierImageService); one not downloaded yet is queued and
- * attached when it arrives.
+ * attached when it arrives. A platform created or reused for the brand gets the supplier's brand
+ * logo queued as a candidate (SupplierBrandLogos), once per platform and supplier.
  */
 class SupplierCatalogImporter
 {
@@ -55,6 +57,7 @@ class SupplierCatalogImporter
         private SupplierCategoryResolver $categories,
         private SupplierPlatformResolver $platforms,
         private SupplierImageService $images,
+        private SupplierBrandLogos $brandLogos,
     ) {}
 
     /**
@@ -65,6 +68,7 @@ class SupplierCatalogImporter
     {
         $result = ['added' => 0, 'already' => 0, 'skipped' => [], 'inactive' => [], 'products' => []];
         $suppliers = [];
+        $logos = [];
 
         foreach (array_values(array_unique($supplierProductIds)) as $id) {
             $outcome = DB::transaction(fn (): array => $this->addOne($id, $categoryId, $platformId));
@@ -79,6 +83,19 @@ class SupplierCatalogImporter
                 $result['products'][] = $outcome['product'];
                 $result['inactive'] = [...$result['inactive'], ...$outcome['inactive']];
                 $suppliers[$outcome['supplier_id']] = true;
+
+                if ($outcome['logo_platform_id'] !== null) {
+                    $logos[$outcome['logo_platform_id'].':'.$outcome['supplier_id']] ??= [$outcome['logo_platform_id'], $id];
+                }
+            }
+        }
+
+        foreach ($logos as [$platformId, $sourceId]) {
+            $platform = GamingPlatform::query()->find($platformId);
+            $source = SupplierProduct::query()->find($sourceId);
+
+            if ($platform !== null && $source !== null) {
+                $this->brandLogos->queue($source, $platform);
             }
         }
 
@@ -90,7 +107,7 @@ class SupplierCatalogImporter
     }
 
     /**
-     * @return array{status: string, name: string, reason?: string, product?: string, supplier_id?: int, inactive?: list<array{sku: string, reason: string}>}
+     * @return array{status: string, name: string, reason?: string, product?: string, supplier_id?: int, inactive?: list<array{sku: string, reason: string}>, logo_platform_id?: int|null}
      */
     private function addOne(int $id, ?int $categoryId, ?int $platformId): array
     {
@@ -156,7 +173,7 @@ class SupplierCatalogImporter
             after: ['supplier_product_id' => $source->id, 'supplier_id' => $source->supplier_id, 'external_id' => $source->external_id, 'variants' => count($created), 'inactive' => $inactive],
         ));
 
-        return ['status' => 'added', 'name' => $source->name, 'product' => $product->public_id, 'supplier_id' => $source->supplier_id, 'inactive' => $inactive];
+        return ['status' => 'added', 'name' => $source->name, 'product' => $product->public_id, 'supplier_id' => $source->supplier_id, 'inactive' => $inactive, 'logo_platform_id' => $platformId === null ? $platform : null];
     }
 
     /**

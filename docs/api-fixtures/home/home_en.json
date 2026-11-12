@@ -98,6 +98,16 @@
                                 },
                                 "name": "Orbit Card",
                                 "platform": {
+                                    "logo": {
+                                        "alt": "Orbit",
+                                        "formats": {
+                                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                                        },
+                                        "height": 600,
+                                        "path": "media/2026/11/orbit-logo.webp",
+                                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                                        "width": 1200
+                                    },
                                     "name": "Orbit",
                                     "slug": "orbit"
                                 },
@@ -192,6 +202,16 @@
                                 },
                                 "name": "Orbit Card",
                                 "platform": {
+                                    "logo": {
+                                        "alt": "Orbit",
+                                        "formats": {
+                                            "webp": "https://media.boxcards.test/media/2026/11/orbit-logo.webp"
+                                        },
+                                        "height": 600,
+                                        "path": "media/2026/11/orbit-logo.webp",
+                                        "url": "https://media.boxcards.test/media/2026/11/orbit-logo.webp",
+                                        "width": 1200
+                                    },
                                     "name": "Orbit",
                                     "slug": "orbit"
                                 },
@@ -224,6 +244,7 @@
                                 },
                                 "name": "Nova Points",
                                 "platform": {
+                                    "logo": null,
                                     "name": "Nova",
                                     "slug": "nova"
                                 },

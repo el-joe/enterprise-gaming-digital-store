@@ -17,7 +17,8 @@ class ProductCardResource extends JsonResource
     /**
      * Transform the resource into an array. Names and the short description are in the request
      * locale, with the English base column as the fallback (ContentTranslator). `image.path` is
-     * kept for existing clients; `image.url` is absolute (M-A4, MediaUrls).
+     * kept for existing clients; `image.url` is absolute (M-A4, MediaUrls). `platform.logo` is the
+     * platform's active logo (staff upload or supplier brand logo), null without one.
      *
      * @return array<string, mixed>
      */
@@ -35,7 +36,11 @@ class ProductCardResource extends JsonResource
             'slug' => $product->slug,
             'short_description' => $translator->text($product, 'short_description'),
             'delivery_type' => $product->delivery_type->value,
-            'platform' => ['name' => $translator->text($product->gamingPlatform, 'name'), 'slug' => $product->gamingPlatform?->slug],
+            'platform' => [
+                'name' => $translator->text($product->gamingPlatform, 'name'),
+                'slug' => $product->gamingPlatform?->slug,
+                'logo' => $product->gamingPlatform?->logoMedia === null ? null : app(MediaUrls::class)->image($product->gamingPlatform->logoMedia, $product->gamingPlatform->name),
+            ],
             'category' => ['name' => $translator->text($product->primaryCategory, 'name'), 'slug' => $product->primaryCategory?->slug],
             'image' => $image?->media === null ? null : app(MediaUrls::class)->image($image->media, $image->alt),
             'price_from' => $this->resource->priceFrom,

@@ -4,7 +4,7 @@
                     <div>
                         <div class="flex flex-wrap gap-2">
                             @if ($product['platform']['slug'])
-                                <a href="{{ url()->localized('storefront.platforms.show', ['slug' => $product['platform']['slug']]) }}" class="chip hover:text-content-primary">{{ $product['platform']['name'] }}</a>
+                                <a href="{{ url()->localized('storefront.platforms.show', ['slug' => $product['platform']['slug']]) }}" class="chip inline-flex items-center gap-1.5 hover:text-content-primary"><x-store.platform-logo :image="$product['platform']['logo'] ?? null" class="size-4" />{{ $product['platform']['name'] }}</a>
                             @endif
                             @if ($product['category']['slug'])
                                 <a href="{{ url()->localized('storefront.category', ['slug' => $product['category']['slug']]) }}" class="chip hover:text-content-primary">{{ $product['category']['name'] }}</a>

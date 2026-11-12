@@ -117,6 +117,7 @@ Copy: EN "INSTANT DIGITAL DELIVERY / Every game. One vault. / Gift cards, wallet
 - **Storage:** `public` disk, `media/supplier-products/{supplier_product_id}/{hash16}.avif|.webp` (960) and `{hash16}-480.avif|.webp`, with a `media` row whose `source` is `supplier`. The files are replaced when the supplier's URL changes.
 - **Use:** the primary product image when no staff image exists. It is the background of the storefront card and the product page tile (`<picture>`, AVIF then WebP), and it appears in the API `image` and `images` payloads (the Flutter `ProductTile`) and as a thumbnail in the admin supplier catalog. Without an image, the generated dial art stays.
 - **Admin uploads:** the same optimizer (AVIF and WebP at 480, 960 and 1920 px, at most 5 MB, no SVG).
+- **Brand logos and category images (owner request 2026-11-12):** each supplier's brand logo (`brand.logoUrl`, Reloadly `cdn.reloadly.com`) is kept per platform and supplier under `media/supplier-brand-logos/gaming_platform-{id}/{supplier}-{hash16}`; it becomes the platform logo only when the platform has none, and staff pick another with "Use this". Reloadly has no category images, so none are fetched or generated. A logo a staff member uploaded or chose is never replaced.
 
 ## Missing Assets
 

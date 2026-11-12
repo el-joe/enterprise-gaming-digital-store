@@ -67,6 +67,16 @@ class SupplierCategoryResolver
         return $counts;
     }
 
+    /**
+     * The existing store category for a supplier category name, never created.
+     */
+    public function match(string $name): ?Category
+    {
+        $name = trim(Str::limit(trim($name), 120, ''));
+
+        return $name === '' ? null : $this->find($name);
+    }
+
     private function find(string $name, bool $lock = false): ?Category
     {
         return Category::query()->whereRaw('LOWER(name) = ?', [Str::lower($name)])

@@ -42,7 +42,8 @@ class ProductRepository
     public static function cardRelations(): array
     {
         return [
-            'gamingPlatform:id,name,slug',
+            'gamingPlatform:id,name,slug,logo_media_id',
+            'gamingPlatform.logoMedia',
             'primaryCategory:id,name,slug',
             'productImages' => static fn ($images) => $images->orderBy('sort_order'),
             'productImages.media',

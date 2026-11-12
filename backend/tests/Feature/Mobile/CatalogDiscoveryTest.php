@@ -116,7 +116,7 @@ describe('product detail', function (): void {
             ->assertJsonPath('meta.display_currency', 'USD')
             ->assertJsonPath('data.product.name', 'Orbit Card')
             ->assertJsonPath('data.product.slug', 'orbit-card')
-            ->assertJsonPath('data.product.platform', ['name' => 'Orbit', 'slug' => 'orbit'])
+            ->assertJsonPath('data.product.platform', ['name' => 'Orbit', 'slug' => 'orbit', 'logo' => null])
             ->assertJsonPath('data.product.category', ['name' => 'Gift Cards', 'slug' => 'gift-cards'])
             ->assertJsonPath('data.product.description', '<p>Load your <strong>wallet</strong>.</p>')
             ->assertJsonPath('data.product.instructions', 'Open Orbit and enter the code.')

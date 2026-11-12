@@ -8,7 +8,9 @@ use App\Domains\Cms\Enums\MediaSource;
 use App\Domains\Cms\Models\Media;
 use App\Domains\Shared\DTOs\ListQuery;
 use App\Domains\Shared\Services\CrudService;
+use App\Domains\Suppliers\Services\SupplierImageCandidates;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -52,8 +54,10 @@ class ProductImageService extends CrudService
             }
 
             $attributes['sort_order'] ??= (int) ProductImage::query()->where('product_id', $product->id)->max('sort_order') + 1;
+            $image = $this->createFor($product, $attributes);
+            $this->markSource($product, SupplierImageCandidates::STAFF);
 
-            return $this->createFor($product, $attributes);
+            return $image;
         });
     }
 
@@ -65,6 +69,28 @@ class ProductImageService extends CrudService
         $ids = ProductImage::query()->where('product_id', $product->id)->orderBy('sort_order')->orderBy('id')->pluck('id')->all();
 
         $this->reorder([$image->id, ...array_values(array_diff($ids, [$image->id]))]);
+        $this->markSource($product, SupplierImageCandidates::STAFF);
+    }
+
+    /**
+     * Who set the primary image (`products.image_source`, owner request 2026-11-12): `staff` after a
+     * staff upload or "Make primary", so no supplier image replaces it; null once no image is left.
+     */
+    public function markSource(Product $product, ?string $source): void
+    {
+        Product::query()->whereKey($product->id)->update(['image_source' => $source]);
+        $product->setAttribute('image_source', $source);
+        $product->syncOriginalAttribute('image_source');
+    }
+
+    /**
+     * @param  ProductImage  $model
+     */
+    protected function afterDelete(Model $model): void
+    {
+        if (! ProductImage::query()->where('product_id', $model->product_id)->exists()) {
+            Product::query()->whereKey($model->product_id)->update(['image_source' => null]);
+        }
     }
 
     protected function model(): string

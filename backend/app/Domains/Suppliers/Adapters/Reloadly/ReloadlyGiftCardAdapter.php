@@ -6,6 +6,7 @@ use App\Domains\Catalog\Enums\DeliveryType;
 use App\Domains\Settings\Services\SettingsService;
 use App\Domains\Shared\ValueObjects\Money;
 use App\Domains\Suppliers\Adapters\AbstractSupplierAdapter;
+use App\Domains\Suppliers\Contracts\ProvidesCategoryImages;
 use App\Domains\Suppliers\DTOs\AvailabilityQuery;
 use App\Domains\Suppliers\DTOs\AvailabilityResult;
 use App\Domains\Suppliers\DTOs\ConnectionResult;
@@ -45,7 +46,7 @@ use Throwable;
  * One unit per request (`quantity = 1`), `customIdentifier` = our client reference, and
  * `recipientEmail` is never sent, so Reloadly emails no code outside our control.
  */
-class ReloadlyGiftCardAdapter extends AbstractSupplierAdapter
+class ReloadlyGiftCardAdapter extends AbstractSupplierAdapter implements ProvidesCategoryImages
 {
     public const string KEY = 'reloadly_giftcards';
 
@@ -138,6 +139,15 @@ class ReloadlyGiftCardAdapter extends AbstractSupplierAdapter
             $query->page,
             $isLast,
         );
+    }
+
+    /**
+     * Reloadly categories have no image: `category` on a product and `GET /product-categories`
+     * carry only `id` and `name` (checked against the synced catalog on 2026-11-12).
+     */
+    public function categoryImageUrl(string $categoryName, array $raw): ?string
+    {
+        return null;
     }
 
     public function getProductDetails(string $supplierProductId): SupplierProductData

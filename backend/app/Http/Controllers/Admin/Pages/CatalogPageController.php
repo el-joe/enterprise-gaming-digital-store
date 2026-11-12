@@ -7,6 +7,7 @@ use App\Domains\Catalog\Services\ContentTranslationAdminService;
 use App\Domains\Catalog\Services\ProductAdminReader;
 use App\Domains\Cms\Services\MediaUrls;
 use App\Domains\Seo\Services\SeoMetadataService;
+use App\Domains\Suppliers\Services\SupplierImageCandidates;
 use App\Http\Controllers\Controller;
 use App\Http\Support\AdminScreens\Options;
 use App\Http\Support\AdminScreens\ProductForm;
@@ -99,8 +100,12 @@ class CatalogPageController extends Controller
      */
     private function productPage(?Product $product, ProductForm $form, array $translationValues, array $seoValues): Response
     {
+        $images = app(SupplierImageCandidates::class);
+
         return response()->view('admin.catalog.product', [
             'product' => $product,
+            'supplierImages' => $product === null ? collect() : $images->forSubject($product),
+            'activeMediaId' => $product === null ? null : $images->activeMediaId($product),
             'groups' => $form->product($product),
             'variantFields' => $form->variant(),
             'definitions' => $this->reader->deliveryFieldDefinitions(),

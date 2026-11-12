@@ -25,6 +25,9 @@
             <div class="absolute inset-0 -z-10 bg-linear-to-r from-ink-950 via-ink-950/70 to-transparent rtl:bg-linear-to-l" aria-hidden="true"></div>
             <div class="flex min-h-40 flex-col justify-center gap-2 p-6 md:min-h-[200px] md:p-10">
                 <p class="eyebrow text-content-secondary">{{ __('storefront.home.platform') }}</p>
+                @if ($platform['logo'])
+                    <x-store.platform-logo :image="$platform['logo']" eager class="size-14 rounded-sm bg-surface-raised/80 p-1.5 md:size-16" />
+                @endif
                 <h1 class="font-display text-[32px] leading-[38px] font-bold md:text-[40px] md:leading-[46px]">{{ $platform['name'] }}</h1>
                 <p class="text-sm text-content-secondary">{{ trans_choice('storefront.listing.count', $products->total(), ['count' => $products->total()]) }}</p>
             </div>

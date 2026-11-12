@@ -16,6 +16,7 @@ use App\Domains\Seo\Models\SeoMetadata;
 use App\Domains\Shared\DTOs\ListQuery;
 use App\Domains\Shared\Exceptions\ApplicationException;
 use App\Domains\Shared\Services\ListQueryApplier;
+use App\Domains\Suppliers\Models\SupplierImageCandidate;
 use App\Domains\Suppliers\Models\SupplierProduct;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
@@ -107,6 +108,7 @@ class MediaService
             || Category::query()->where('banner_media_id', $mediaId)->exists()
             || BlogPost::query()->where('cover_media_id', $mediaId)->exists()
             || SeoMetadata::query()->where('og_image_media_id', $mediaId)->exists()
-            || SupplierProduct::query()->where('image_media_id', $mediaId)->exists();
+            || SupplierProduct::query()->where('image_media_id', $mediaId)->exists()
+            || SupplierImageCandidate::query()->where('media_id', $mediaId)->exists();
     }
 }

@@ -11,8 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * A storefront platform or category (M-A4). Images are null unless an admin uploaded one;
- * no official brand logo is supplied by the platform (BD8).
+ * A storefront platform or category (M-A4). `logo` and `banner` are the active images: a staff
+ * upload or an activated supplier image (brand logo, owner request 2026-11-12); null without one,
+ * and the storefront then shows the generated art (BD8).
  *
  * @property-read CatalogNode $resource
  */

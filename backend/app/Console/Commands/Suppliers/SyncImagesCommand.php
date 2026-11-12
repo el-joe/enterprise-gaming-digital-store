@@ -2,22 +2,26 @@
 
 namespace App\Console\Commands\Suppliers;
 
+use App\Domains\Suppliers\Enums\SupplierStatus;
 use App\Domains\Suppliers\Jobs\FetchSupplierProductImage;
 use App\Domains\Suppliers\Models\Supplier;
 use App\Domains\Suppliers\Models\SupplierProduct;
+use App\Domains\Suppliers\Services\SupplierBrandLogos;
+use App\Domains\Suppliers\Services\SupplierCategoryImages;
 use App\Domains\Suppliers\Services\SupplierImageService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('suppliers:sync-images {supplier? : Supplier id or adapter key}')]
-#[Description('Queue image downloads for supplier products that have no image yet (owner decision 12)')]
+#[Description('Queue supplier image downloads: product images not stored yet, brand logos of existing platforms and category images (owner decision 12)')]
 class SyncImagesCommand extends Command
 {
-    public function handle(SupplierImageService $images): int
+    public function handle(SupplierImageService $images, SupplierBrandLogos $brandLogos, SupplierCategoryImages $categoryImages): int
     {
         $query = SupplierProduct::query()->whereNull('removed_at');
         $supplier = $this->argument('supplier');
+        $found = null;
 
         if ($supplier !== null) {
             $found = Supplier::query()->where('id', is_numeric($supplier) ? (int) $supplier : 0)->orWhere('adapter_key', $supplier)->first();
@@ -51,7 +55,14 @@ class SyncImagesCommand extends Command
             }
         });
 
-        $this->components->info("Queued {$queued} image downloads; checked {$attached} products with an image.");
+        $logos = $brandLogos->backfill($found?->id);
+        $categories = 0;
+
+        foreach ($found !== null ? [$found] : Supplier::query()->where('status', SupplierStatus::Active)->get() as $each) {
+            $categories += $categoryImages->queue($each);
+        }
+
+        $this->components->info("Queued {$queued} image downloads, {$logos} brand logos and {$categories} category images; checked {$attached} products with an image.");
 
         return self::SUCCESS;
     }

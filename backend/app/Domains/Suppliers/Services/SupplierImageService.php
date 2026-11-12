@@ -3,14 +3,13 @@
 namespace App\Domains\Suppliers\Services;
 
 use App\Domains\Catalog\Models\Product;
-use App\Domains\Catalog\Models\ProductImage;
 use App\Domains\Catalog\Models\ProductVariant;
-use App\Domains\Catalog\Services\ProductImageService;
 use App\Domains\Cms\Enums\MediaSource;
 use App\Domains\Cms\Exceptions\ImageRejected;
 use App\Domains\Cms\Models\Media;
 use App\Domains\Cms\Services\ImageOptimizer;
 use App\Domains\Cms\Services\MediaService;
+use App\Domains\Suppliers\Enums\SupplierImageKind;
 use App\Domains\Suppliers\Models\SupplierProduct;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -21,16 +20,16 @@ use Illuminate\Support\Str;
  * `refresh()` downloads the supplier's image (SupplierImageDownloader), skips it when the source
  * URL is unchanged or the bytes hash the same, stores it with ImageOptimizer at the card widths
  * under `media/supplier-products/{id}/` as `supplier` media, and attaches it to every store product
- * mapped to the supplier product. `attach()` makes it a product's primary image only while the
- * product has no image a staff member chose: a staff image is never replaced or reordered.
+ * mapped to the supplier product as that supplier's candidate (SupplierImageCandidates), which
+ * activates it only under the candidate rules: a staff image or choice is never replaced.
  */
 class SupplierImageService
 {
     public function __construct(
         private SupplierImageDownloader $downloader,
         private ImageOptimizer $optimizer,
-        private ProductImageService $productImages,
         private MediaService $media,
+        private SupplierImageCandidates $candidates,
     ) {}
 
     /**
@@ -105,6 +104,10 @@ class SupplierImageService
     }
 
     /**
+     * Record the supplier image as this supplier's candidate for the store product
+     * (SupplierImageCandidates): it becomes the primary image only while the product has none, or
+     * refreshes the image this supplier set; a staff image or choice is never replaced.
+     *
      * @return bool true when the product now shows the supplier image
      */
     public function attach(SupplierProduct $source, Product $product): bool
@@ -113,21 +116,9 @@ class SupplierImageService
             return false;
         }
 
-        $images = ProductImage::query()->with('media')->where('product_id', $product->id)->orderBy('sort_order')->get();
+        $this->candidates->record($product, $source->supplier_id, SupplierImageKind::ProductCard, $source->image_media_id, $source->image_url, $source->image_hash);
 
-        if ($images->contains(static fn (ProductImage $image): bool => $image->media?->source !== MediaSource::Supplier)) {
-            return false;
-        }
-
-        $current = $images->first();
-
-        if ($current === null) {
-            $this->productImages->createFor($product, ['media_id' => $source->image_media_id, 'alt' => Str::limit($product->name, 190, ''), 'sort_order' => 0]);
-        } elseif ($current->media_id !== $source->image_media_id) {
-            $this->productImages->update($current, ['media_id' => $source->image_media_id]);
-        }
-
-        return true;
+        return $this->candidates->activeMediaId($product) === $source->image_media_id;
     }
 
     /**

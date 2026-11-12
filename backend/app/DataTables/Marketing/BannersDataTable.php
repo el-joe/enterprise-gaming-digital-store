@@ -27,6 +27,7 @@ class BannersDataTable extends AdminDataTable
     public function columns(): array
     {
         return [
+            new Column('image', __('admin.col.image'), html: true, exportable: false),
             new Column('title', __('admin.col.title'), 'banners.title', html: true),
             new Column('placement', __('admin.col.placement'), 'banners.placement'),
             new Column('window', __('admin.col.window'), html: true),
@@ -47,7 +48,7 @@ class BannersDataTable extends AdminDataTable
 
     protected function query(): Builder
     {
-        return Banner::query()->select('banners.*');
+        return Banner::query()->select('banners.*')->with('media');
     }
 
     /**
@@ -58,6 +59,7 @@ class BannersDataTable extends AdminDataTable
         $edit = route('admin.marketing.banners.edit', ['record' => $row->getRouteKey()]);
 
         return [
+            'image' => Cell::thumbnail($row->media, (string) ($row->title ?? '#'.$row->id)),
             'title' => Cell::link($edit, (string) ($row->title ?? '#'.$row->id)),
             'placement' => Cell::label('banner_placement', $row->placement?->value),
             'window' => Cell::muted($this->dateTime($row->starts_at).' → '.$this->dateTime($row->ends_at)),

@@ -3,6 +3,7 @@
 namespace App\Http\Support\AdminScreens\Screens;
 
 use App\Domains\Catalog\Models\Category;
+use App\Domains\Suppliers\Services\SupplierImageCandidates;
 use App\Http\Support\AdminScreens\Field;
 use App\Http\Support\AdminScreens\Options;
 use App\Http\Support\AdminScreens\ResourceScreen;
@@ -56,6 +57,21 @@ class CategoryScreen extends ResourceScreen
     public function seoType(): ?string
     {
         return 'category';
+    }
+
+    /**
+     * Supplier images gallery (owner request 2026-11-12) beside the image field.
+     */
+    public function panel(): ?string
+    {
+        return 'admin.partials.supplier-images-panel';
+    }
+
+    public function panelData(Model $record): array
+    {
+        $candidates = app(SupplierImageCandidates::class);
+
+        return ['candidates' => $candidates->forSubject($record), 'active_media_id' => $candidates->activeMediaId($record)];
     }
 
     public function fields(?Model $record): array

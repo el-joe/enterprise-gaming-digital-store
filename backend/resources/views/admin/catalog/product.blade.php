@@ -192,6 +192,8 @@
                     @endif
                 </x-admin.card>
 
+                @include('admin.partials.supplier-images', ['candidates' => $supplierImages, 'activeMediaId' => $activeMediaId, 'canManage' => $canManage])
+
                 <x-admin.card :title="__('admin.products.suppliers')" :subtitle="__('admin.products.suppliers_note')">
                     <ul class="flex flex-col gap-2 text-sm" data-module="action">
                         @forelse ($mappings as $mapping)

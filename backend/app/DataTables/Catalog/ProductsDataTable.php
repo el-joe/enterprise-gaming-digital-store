@@ -30,6 +30,7 @@ class ProductsDataTable extends AdminDataTable
     public function columns(): array
     {
         return [
+            new Column('image', __('admin.col.image'), html: true, exportable: false),
             new Column('name', __('admin.col.name'), 'products.name', html: true),
             new Column('sku', __('admin.col.sku'), 'products.sku', html: true),
             new Column('platform', __('admin.col.platform'), html: true),
@@ -93,7 +94,7 @@ class ProductsDataTable extends AdminDataTable
 
     protected function query(): Builder
     {
-        return Product::query()->select('products.*')->with(['gamingPlatform:id,name', 'primaryCategory:id,name'])->withCount('productVariants as variants_count');
+        return Product::query()->select('products.*')->with(['gamingPlatform:id,name', 'primaryCategory:id,name', 'productImages' => static fn ($images) => $images->orderBy('sort_order')->orderBy('id'), 'productImages.media'])->withCount('productVariants as variants_count');
     }
 
     /**
@@ -104,6 +105,7 @@ class ProductsDataTable extends AdminDataTable
         $edit = route('admin.catalog.products.edit', ['product' => $row->public_id]);
 
         return [
+            'image' => Cell::thumbnail($row->productImages->first()?->media, (string) $row->name),
             'name' => Cell::link($edit, (string) $row->name),
             'sku' => Cell::mono($row->sku),
             'platform' => e((string) ($row->gamingPlatform?->name ?? '—')),

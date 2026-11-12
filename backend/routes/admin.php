@@ -49,6 +49,7 @@ use App\Http\Controllers\Admin\SessionController;
 use App\Http\Controllers\Admin\Settings\SettingsController;
 use App\Http\Controllers\Admin\Suppliers\SupplierCatalogController;
 use App\Http\Controllers\Admin\Suppliers\SupplierController;
+use App\Http\Controllers\Admin\Suppliers\SupplierImageCandidateController;
 use App\Http\Controllers\Admin\Suppliers\SupplierMappingController;
 use App\Http\Controllers\Admin\Support\RefundRequestController;
 use App\Http\Controllers\Admin\Support\SupportTicketController;
@@ -92,6 +93,10 @@ Route::post('products/bulk', [ProductController::class, 'bulk'])->middleware('pe
 Route::post('products/{product}/activate', [ProductController::class, 'activate'])->middleware('permission:catalog.publish')->name('products.activate');
 Route::post('products/{product}/deactivate', [ProductController::class, 'deactivate'])->middleware('permission:catalog.publish')->name('products.deactivate');
 $crud('products', ProductController::class, 'catalog.view', 'catalog.manage');
+
+// Supplier images of products, platforms and categories: "Use this" (same permission as editing them).
+Route::post('supplier-image-candidates/{supplierImageCandidate}/activate', [SupplierImageCandidateController::class, 'activate'])
+    ->middleware('permission:catalog.manage')->name('supplier-image-candidates.activate');
 
 Route::scopeBindings()->group(static function () use ($crud): void {
     $crud('products.variants', ProductVariantController::class, 'catalog.view', 'catalog.manage', ['products' => 'product', 'variants' => 'productVariant']);

@@ -7,6 +7,7 @@ use App\Domains\Catalog\Jobs\ReindexCatalogScope;
 use App\Domains\Catalog\Models\Category;
 use App\Domains\Shared\Services\CrudService;
 use App\Domains\Shared\Services\ListQueryApplier;
+use App\Domains\Suppliers\Services\SupplierImageCandidates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 
@@ -60,6 +61,22 @@ class CategoryService extends CrudService
         }
 
         return $attributes;
+    }
+
+    /**
+     * Who set the image (`image_source`, owner request 2026-11-12): a staff change of `banner_media_id`
+     * marks it `staff` (or clears it with the image), so a supplier image never replaces it;
+     * SupplierImageCandidates passes the source it activates explicitly.
+     *
+     * @param  Category  $model
+     */
+    protected function applyGuarded(Model $model, array $data): void
+    {
+        if (array_key_exists('image_source', $data)) {
+            $model->setAttribute('image_source', $data['image_source']);
+        } elseif ($model->isDirty('banner_media_id')) {
+            $model->setAttribute('image_source', $model->getAttribute('banner_media_id') === null ? null : SupplierImageCandidates::STAFF);
+        }
     }
 
     /**

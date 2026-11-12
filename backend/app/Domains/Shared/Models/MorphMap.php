@@ -112,6 +112,7 @@ use App\Domains\Suppliers\Models\SupplierApiLog;
 use App\Domains\Suppliers\Models\SupplierBalanceSnapshot;
 use App\Domains\Suppliers\Models\SupplierCredential;
 use App\Domains\Suppliers\Models\SupplierHealthCheck;
+use App\Domains\Suppliers\Models\SupplierImageCandidate;
 use App\Domains\Suppliers\Models\SupplierProduct;
 use App\Domains\Suppliers\Models\SupplierProductMapping;
 use App\Domains\Suppliers\Models\SupplierProductPrice;
@@ -249,6 +250,7 @@ final class MorphMap
             'supplier_balance_snapshot' => SupplierBalanceSnapshot::class,
             'supplier_credential' => SupplierCredential::class,
             'supplier_health_check' => SupplierHealthCheck::class,
+            'supplier_image_candidate' => SupplierImageCandidate::class,
             'supplier_product' => SupplierProduct::class,
             'supplier_product_mapping' => SupplierProductMapping::class,
             'supplier_product_price' => SupplierProductPrice::class,

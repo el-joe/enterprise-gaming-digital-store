@@ -13,8 +13,9 @@ use Illuminate\Support\Str;
  * The brand is `brand_name`, else `raw.brand.brandName`. An existing platform whose name matches
  * ignoring case and spaces (or a known alias, or its slug) is reused; otherwise one is created
  * through GamingPlatformService (audited `catalog.platform.created`): the brand name as given,
- * active, a free slug, no logo (BD8: the supplier's logo URL is never read or stored). The unique
- * slug refuses a concurrent duplicate, after which the winner's row is read.
+ * active, a free slug. The logo comes later as the supplier's brand-logo candidate
+ * (SupplierBrandLogos, owner request 2026-11-12). The unique slug refuses a concurrent duplicate,
+ * after which the winner's row is read.
  */
 class SupplierPlatformResolver
 {
@@ -59,6 +60,16 @@ class SupplierPlatformResolver
         } catch (ApplicationException) {
             return $this->find($brand, lock: true) ?? GamingPlatform::query()->where('slug', $slug)->lockForUpdate()->firstOrFail();
         }
+    }
+
+    /**
+     * The existing platform for the brand, never created (brand-logo backfill).
+     */
+    public function match(string $brand): ?GamingPlatform
+    {
+        $brand = trim(Str::limit(trim($brand), 120, ''));
+
+        return $brand === '' ? null : $this->find($brand);
     }
 
     private function find(string $brand, bool $lock = false): ?GamingPlatform

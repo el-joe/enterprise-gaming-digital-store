@@ -165,6 +165,7 @@ it('creates exactly the tables in the design', function (): void {
         'supplier_balance_snapshots',
         'supplier_credentials',
         'supplier_health_checks',
+        'supplier_image_candidates',
         'supplier_product_mappings',
         'supplier_product_prices',
         'supplier_products',
