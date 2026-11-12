@@ -96,6 +96,39 @@ describe('sign-in and two-step verification', function (): void {
 
         $this->post('/admin/locale', ['locale' => 'fr'])->assertSessionHasErrors('locale');
     });
+
+    // M19 defect D2: page loads used the `auth` limiter (5 a minute, keyed on email + IP); a page load
+    // has no email, so every staff member behind one office IP shared five loads a minute.
+    it('lets staff behind one IP load the sign-in and two-step pages many times', function (): void {
+        storefrontWithoutBuild();
+
+        foreach (range(1, 10) as $load) {
+            $this->get('/admin/login')->assertOk();
+        }
+
+        $this->get('/admin/two-factor')->assertRedirect(route('admin.login'));
+    });
+
+    it('still limits sign-in attempts to five a minute per email and IP', function (): void {
+        User::factory()->create(['email' => 'staff@example.com']);
+
+        foreach (range(1, 5) as $attempt) {
+            $this->postJson('/login', ['email' => 'staff@example.com', 'password' => 'wrong'])->assertStatus(422);
+        }
+
+        $this->postJson('/login', ['email' => 'staff@example.com', 'password' => 'wrong'])->assertTooManyRequests();
+        $this->assertGuest();
+    });
+
+    it('still caps sign-in page loads per IP', function (): void {
+        storefrontWithoutBuild();
+
+        foreach (range(1, 60) as $load) {
+            $this->get('/admin/login')->assertOk();
+        }
+
+        $this->get('/admin/login')->assertTooManyRequests();
+    });
 });
 
 describe('permission-based navigation', function (): void {

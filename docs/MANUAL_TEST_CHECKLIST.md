@@ -181,7 +181,7 @@ Built for the run on top of `php artisan migrate:fresh --seed` (reference data a
 | A20 | PASS | 46 screens: 200, tables loaded, clean console, no overflow |
 | A19 | PASS | The same 46 screens in Arabic: RTL, clean; switched back |
 | A21 | PASS | Signed out; admin pages redirect |
-| A22 | **FAIL** | **Defect D2 (open)**: the sixth load of `/admin/login` within a minute shows the 429 page (screenshot `A04-FAIL-admin-login-page-429.png`) |
+| A22 | **FAIL, since fixed** | Defect D2: the sixth load of `/admin/login` within a minute showed the 429 page (screenshot `A04-FAIL-admin-login-page-429.png`). Fixed after the run; covered by regression tests |
 
 Screenshots of failures are kept outside the repository, in the session scratch folder (`shots/`).
 
@@ -190,7 +190,7 @@ Screenshots of failures are kept outside the repository, in the session scratch 
 | Id | Severity | Status | Description | Fix |
 |---|---|---|---|---|
 | D1 | Minor (wrong count shown) | **Fixed, not committed** | On the bag page, changing a quantity or removing a line refreshed the bag fragment but not the header bag badge, which stayed stale until a reload. The badge sits outside the refreshed fragment and only `product.js` updated it | `backend/resources/js/modules/cart.js` updates every `[data-bag-count]` from the cart JSON returned by the change. Regression test `tests/Feature/Storefront/CheckoutPagesTest.php` "returns the cart lines on quantity change and remove, and the bag module updates the header badge from them" (file run alone: 14 passed). Re-tested in the browser (S10) |
-| D2 | Minor (availability of the staff sign-in page) | **Open** | `GET /admin/login` uses `throttle:auth` (5 per minute keyed on email and IP). A page load carries no email, so every load from one IP shares one bucket: the sixth load in a minute returns 429. Staff behind one office IP, or a sign-out followed by a sign-in with a redirect, can hit it. The storefront `/login` page uses the `storefront` limiter instead | Not changed: it is a security control. Suggested: throttle only the sign-in POST with `auth`, and give the page the `admin` or `storefront` limiter. Owner or security review to decide |
+| D2 | Minor (availability of the staff sign-in page) | **Fixed** | **Fixed 2026-11-12** (owner approved): the staff sign-in and two-step pages use a page limiter `admin-auth-pages` (60 per minute per IP); attempts stay limited on `POST /login` (`auth`, 5 per minute per email and IP) and `POST /two-factor-challenge` (`otp`). Regression tests in `tests/Feature/Admin/AdminAccessTest.php`. Original finding: `GET /admin/login` uses `throttle:auth` (5 per minute keyed on email and IP). A page load carries no email, so every load from one IP shares one bucket: the sixth load in a minute returns 429. Staff behind one office IP, or a sign-out followed by a sign-in with a redirect, can hit it. The storefront `/login` page uses the `storefront` limiter instead | Not changed: it is a security control. Suggested: throttle only the sign-in POST with `auth`, and give the page the `admin` or `storefront` limiter. Owner or security review to decide |
 
 ## Observations (not defects)
 

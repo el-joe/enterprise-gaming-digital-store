@@ -209,5 +209,10 @@ class AppServiceProvider extends ServiceProvider
                 : Limit::perMinute(30)->by('automation|ip|'.$request->ip());
         });
         RateLimiter::for('admin', static fn (Request $request): Limit => Limit::perMinute(300)->by('admin|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+        // Loading the staff sign-in and two-step pages (M19 defect D2). The attempts themselves are
+        // limited where they are submitted: POST /login by `auth` (5 per minute per email and IP) and
+        // POST /two-factor-challenge by `otp`. A page load carries no email, so `auth` here made every
+        // staff member behind one office IP share 5 page loads a minute.
+        RateLimiter::for('admin-auth-pages', static fn (Request $request): Limit => Limit::perMinute(60)->by('admin-auth-pages|'.$request->ip()));
     }
 }

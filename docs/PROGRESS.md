@@ -26,7 +26,7 @@ Milestones are defined in `IMPLEMENTATION_ROADMAP.md`. Add a section per milesto
 | M16 | MCP server | Complete (run before M14 by PM decision; admin screens for tokens and approvals are M15; stdio only; not yet run against a live Laravel instance) |
 | M17 | n8n workflows | Complete (run before M14 and BD9 by PM decision; Laravel automation API, outbox and heartbeats built and tested; 58 workflows authored and validated, **not executed**: n8n is not installed here; admin screen is M15) |
 | M18 | SEO and analytics | Complete (2026-11-11, not committed; GA4 Measurement Protocol and Search Console mocked only, awaiting credentials; Lighthouse not run: not installed, manual headless-Chrome check recorded) |
-| M19 | Full test pass | Complete with open defects (2026-11-12, not committed; final run backend 2,890 and app 1,660 passed; coverage matrix in `TEST_COVERAGE.md`; manual checklist 70 steps: 68 PASS, 1 FAIL (open defect D2), 1 BLOCKED; defect D1 fixed) |
+| M19 | Full test pass | Complete (2026-11-12; D1 fixed during the run, D2 after it; final run backend 2,890 and app 1,660 passed; coverage matrix in `TEST_COVERAGE.md`; manual checklist 70 steps: 68 PASS, 1 FAIL (D2, since fixed), 1 BLOCKED (covered by tests)) |
 | M20 | Production readiness | Not started |
 
 Status values: Not started, In progress, Blocked (state why), Complete.
@@ -2009,7 +2009,7 @@ Status: **Complete with open defects** (2026-11-12, not committed). Completed by
 - The single final run of the automated suites (owner rule 2026-11-11) is recorded: backend `php artisan test --compact` **2,890 passed, 0 failed** (MySQL `gaming-store_testing`, commit `5e340e8`); app `flutter test` and `bash tool/ci.sh` **1,660 passed, 0 failed** (commit `2c7e2e9`).
 - `docs/TEST_COVERAGE.md`: every Phase 15 item and the Step 12 testing items mapped to the backend and app test files and test names that cover them, with a status, plus what the suites cannot prove.
 - `docs/MANUAL_TEST_CHECKLIST.md`: numbered storefront (EN and AR) and admin steps with expected results, executed in headless Chrome against preview data in the testing database, with the results table, defects and observations.
-- One defect found and fixed (D1), one left open (D2).
+- Two defects: D1 fixed during the run, D2 fixed after it with the owner's approval.
 
 ### Files created
 
@@ -2032,7 +2032,7 @@ None.
 | Entire Pest suite green on MySQL | Met | Final run 2,890 passed, 0 failed (`5e340e8`) |
 | MCP server suite | Met | `cd mcp-server && npm test`: 34 passed, 0 failed, re-run by the PM after M19 (mocked Laravel API; a live start against Laravel is M20) |
 | Coverage for each Phase 15 item mapped in a table | Met | `TEST_COVERAGE.md`: of 28 counted items, 15 Covered, 9 Covered with mocks (live sandbox verification is M20), 3 Partially covered, 1 Not covered here |
-| Manual test checklist completed for storefront and admin | Met, with one open defect | `MANUAL_TEST_CHECKLIST.md`: 70 steps, 68 PASS, 1 FAIL (A22, defect D2), 1 BLOCKED (A07b) |
+| Manual test checklist completed for storefront and admin | Met (D2 fixed after the run) | `MANUAL_TEST_CHECKLIST.md`: 70 steps, 68 PASS, 1 FAIL (A22, defect D2), 1 BLOCKED (A07b) |
 
 ### Tests and results
 
@@ -2046,7 +2046,7 @@ None.
 | Id | Status | Summary |
 |---|---|---|
 | D1 | Fixed (not committed) | Bag page: the header bag badge did not follow quantity changes or removals until a reload |
-| D2 | **Open** | `GET /admin/login` shares the 5-per-minute `auth` limiter by IP, so a sixth load of the staff sign-in page within a minute shows 429. Suggested: throttle only the sign-in POST with `auth`. Left for an owner or security decision |
+| D2 | **Fixed** | **Fixed 2026-11-12** (owner approved): the staff sign-in and two-step pages use a page limiter `admin-auth-pages` (60 per minute per IP); attempts stay limited on `POST /login` (`auth`, 5 per minute per email and IP) and `POST /two-factor-challenge` (`otp`). Regression tests in `tests/Feature/Admin/AdminAccessTest.php`. Original finding: `GET /admin/login` shares the 5-per-minute `auth` limiter by IP, so a sixth load of the staff sign-in page within a minute shows 429. Suggested: throttle only the sign-in POST with `auth`. Left for an owner or security decision |
 
 ### Coverage gaps found
 
@@ -2060,7 +2060,7 @@ None.
 - Run the on-device suite (`integration_test` journeys on an emulator; frame timing on a physical device) and an iOS build.
 - Lighthouse run recorded (Performance, SEO, Accessibility), not claimed.
 - Re-run the MCP server suite and start the server against a running Laravel.
-- Decide and fix D2; add the PayPal reconciliation test; commit the D1 fix and its test, then run the full backend suite once more as the owner's rules allow.
+- Add the PayPal reconciliation test.
 - Production checks from `SECURITY.md` section 15: Supervisor workers, scheduler, Redis, Nginx and SSL, backups with a tested restore, real mail delivery, GeoIP behind Cloudflare.
 
 ### Next milestone

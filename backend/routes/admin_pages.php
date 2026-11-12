@@ -26,7 +26,9 @@ use Illuminate\Support\Facades\Route;
  * check their own permission and write the audit log. Every page names its permission: hidden
  * navigation is a convenience, the route is the control (SECURITY.md section 4).
  */
-Route::middleware('throttle:auth')->group(function (): void {
+// Page loads only; sign-in and code attempts are limited on POST /login (`auth`) and
+// POST /two-factor-challenge (`otp`).
+Route::middleware('throttle:admin-auth-pages')->group(function (): void {
     Route::get('/login', [AuthPageController::class, 'login'])->name('login');
     Route::get('/two-factor', [AuthPageController::class, 'twoFactor'])->name('two-factor');
 });

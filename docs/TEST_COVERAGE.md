@@ -66,7 +66,7 @@ Paths: backend tests are under `backend/tests/`, app tests under `application/te
 | # | Requirement | Evidence | Status |
 |---|---|---|---|
 | 27 | Run automated tests | Final single run: backend 2,890 passed (`5e340e8`), app 1,660 passed (`2c7e2e9`), see the table at the top | **Covered**, except: on-device `integration_test` journeys and the frame-timing check (**Not covered here**, need an emulator or a physical device), and the MCP server suite (`npm test`: 34 passed on its re-run after M19) |
-| 28 | Run manual tests | `docs/MANUAL_TEST_CHECKLIST.md`: storefront (EN and AR) and admin, executed in headless Chrome on 2026-11-12 | **Covered**: 70 steps, 68 PASS, 1 FAIL (open defect D2), 1 BLOCKED (A07b). One defect found and fixed (D1) |
+| 28 | Run manual tests | `docs/MANUAL_TEST_CHECKLIST.md`: storefront (EN and AR) and admin, executed in headless Chrome on 2026-11-12 | **Covered**: 70 steps, 68 PASS, 1 FAIL (defect D2, fixed after the run), 1 BLOCKED (A07b). One defect found and fixed (D1) |
 | 29 | Rule 16: "Do not claim an integration works without testing it" | Every external integration is labelled mocked only in `PROGRESS.md` and `INTEGRATIONS.md`; this file does the same | Respected: nothing external is claimed as verified |
 
 ## Summary
