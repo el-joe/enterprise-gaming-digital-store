@@ -136,6 +136,19 @@
                     @endforeach
                 </ul>
                 <p class="mt-3 text-xs text-content-muted">{{ __('admin.common.write_only') }}</p>
+                @can('suppliers.manage')
+                    {{-- Active mode switch: calls go to the sandbox or production API with that mode's credentials. --}}
+                    <form class="mt-4 flex flex-col gap-3 border-t border-line-subtle pt-4" data-module="form" data-action="{{ $api() }}" data-method="PATCH" data-success="reload" data-confirm="{{ __('admin.suppliers.mode_confirm') }}" novalidate>
+                        <div>
+                            <label for="s-active-mode" class="field-label">{{ __('admin.suppliers.active_mode') }}</label>
+                            <select id="s-active-mode" name="mode" class="admin-input">@foreach ($detail['credentials'] as $mode => $configured)<option value="{{ $mode }}" @selected($supplier->mode?->value === $mode)>{{ \App\DataTables\Cell::label('mode', $mode) }}{{ $configured ? '' : ' · '.__('admin.common.not_configured') }}</option>@endforeach</select>
+                            <p class="field-help">{{ __('admin.suppliers.active_mode_help') }}</p>
+                            <p class="field-error" data-error-for="mode" hidden></p>
+                        </div>
+                        <x-admin.form-alerts />
+                        <div><button type="submit" class="admin-btn">{{ __('admin.suppliers.switch_mode') }}</button></div>
+                    </form>
+                @endcan
                 @can('suppliers.credentials')
                     @if ($detail['credential_fields'] !== [])
                         <details class="mt-4">

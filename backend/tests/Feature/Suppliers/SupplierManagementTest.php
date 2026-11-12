@@ -64,6 +64,21 @@ describe('admin API', function (): void {
         $this->postJson('/admin/api/suppliers', ['name' => 'Ok', 'adapter_key' => 'reloadly_giftcards', 'base_url_override' => 'https://giftcards-sandbox.reloadly.com'])->assertCreated();
     });
 
+    it('switches the active mode only to a mode with saved credentials, and audits it', function (): void {
+        $supplier = Supplier::factory()->create(['adapter_key' => 'reloadly_giftcards', 'mode' => 'sandbox']);
+        actingAsStaffWith(['suppliers.manage', 'suppliers.credentials', 'suppliers.view']);
+
+        $this->patchJson("/admin/api/suppliers/{$supplier->id}", ['mode' => 'production'])
+            ->assertUnprocessable()->assertJsonValidationErrors('mode');
+        expect($supplier->fresh()->mode->value)->toBe('sandbox');
+
+        $this->postJson("/admin/api/suppliers/{$supplier->id}/credentials", ['mode' => 'production', 'credentials' => ['client_id' => 'live-id', 'client_secret' => 'live-secret']])->assertOk();
+        $this->patchJson("/admin/api/suppliers/{$supplier->id}", ['mode' => 'production'])->assertOk()->assertJsonPath('data.mode', 'production');
+
+        expect($supplier->fresh()->mode->value)->toBe('production')
+            ->and(DB::table('audit_logs')->where('action', 'suppliers.supplier.updated')->latest('id')->value('after'))->toContain('production');
+    });
+
     it('stores credentials encrypted and never returns them', function (): void {
         $supplier = Supplier::factory()->create(['adapter_key' => 'reloadly_giftcards']);
         actingAsStaffWith(['suppliers.credentials', 'suppliers.view']);

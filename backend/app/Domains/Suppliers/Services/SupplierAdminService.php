@@ -153,6 +153,13 @@ class SupplierAdminService extends CrudService
             throw ValidationException::withMessages(['fallback_supplier_id' => ['A supplier cannot fall back to itself.']]);
         }
 
+        // Switching sandbox/production: the target mode must already have credentials, so a live
+        // supplier is never left calling a provider without keys (same rule as payment gateways).
+        if ($model->exists && isset($attributes['mode']) && $attributes['mode'] !== $model->mode?->value
+            && ! SupplierCredential::query()->where('supplier_id', $model->id)->where('mode', EnvironmentMode::from($attributes['mode']))->exists()) {
+            throw ValidationException::withMessages(['mode' => [__('admin.suppliers.mode_needs_credentials')]]);
+        }
+
         return $attributes;
     }
 
